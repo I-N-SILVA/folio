@@ -13,7 +13,7 @@ interface LeadGateProps {
 }
 
 export function LeadGate({ gating, isUnlocked, onUnlock, bookId, pageIndex }: LeadGateProps) {
-  if (!gating.enabled || isUnlocked || pageIndex < gating.page_number) {
+  if (!gating || !gating.enabled || isUnlocked || pageIndex < (gating.page_number ?? 3)) {
     return null
   }
 

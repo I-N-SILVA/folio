@@ -224,7 +224,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
 
               {/* Gating Overlay */}
               <LeadGate
-                gating={gating!}
+                gating={gating}
                 isUnlocked={isUnlocked}
                 onUnlock={() => setIsUnlocked(true)}
                 bookId={book.id}
