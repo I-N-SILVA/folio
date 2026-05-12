@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.events (
 );
 
 -- GIN index for fast per-book dashboard queries
-CREATE INDEX events_book_type ON public.events USING GIN (book_id, event_type);
+CREATE INDEX events_book_type ON public.events (book_id, event_type);
 -- B-tree for book_id filtering (most common query pattern)
 CREATE INDEX events_book_id ON public.events (book_id, created_at DESC);
 -- Partial index for page-level queries
