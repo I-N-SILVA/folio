@@ -1,8 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Sanitize env vars — Vercel can concatenate preview+production values with a space
+function sanitizeKey(val: string | undefined): string {
+  return (val ?? '').trim().split(/\s+/)[0] ?? ''
+}
+
+const supabaseUrl = sanitizeKey(process.env.NEXT_PUBLIC_SUPABASE_URL)
+const supabaseAnonKey = sanitizeKey(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
 // Server client — only use in Server Components, Route Handlers, Server Actions
 export async function createServerSupabase() {

@@ -1,9 +1,14 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY ?? ''
+// Sanitize env vars — Vercel can concatenate preview+production values with a space
+function sanitizeKey(val: string | undefined): string {
+  return (val ?? '').trim().split(/\s+/)[0] ?? ''
+}
+
+const supabaseUrl = sanitizeKey(process.env.NEXT_PUBLIC_SUPABASE_URL)
+const supabaseAnonKey = sanitizeKey(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+const supabaseServiceKey = sanitizeKey(process.env.SUPABASE_SERVICE_KEY)
 
 // Browser client — safe to use in client components
 export function createBrowserSupabase() {
