@@ -9,6 +9,8 @@ interface EditorStore {
   hotspotMode: boolean
   isDirty: boolean
   isSaving: boolean
+  past: Book[]
+  future: Book[]
 
   setBook: (book: Book) => void
   setCurrentPageIndex: (idx: number) => void
@@ -30,9 +32,15 @@ interface EditorStore {
   addPage: () => void
   removePage: (pageId: string) => void
   reorderPages: (fromIndex: number, toIndex: number) => void
+  setPageBlocks: (pageId: string, blocks: Block[]) => void
+  updateSettings: (updates: Partial<Book['settings']>) => void
+
+  undo: () => void
+  redo: () => void
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
+  // ... rest of state
   book: null,
   currentPageIndex: 0,
   selectedBlockId: null,
@@ -40,6 +48,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   hotspotMode: false,
   isDirty: false,
   isSaving: false,
+  past: [],
+  future: [],
 
   setBook: (book) => set({ book, isDirty: false }),
   setCurrentPageIndex: (idx) => set({ currentPageIndex: idx, selectedBlockId: null, selectedHotspotId: null }),
@@ -47,6 +57,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   selectHotspot: (id) => set({ selectedHotspotId: id, selectedBlockId: null }),
   setHotspotMode: (on) => set({ hotspotMode: on }),
   setIsSaving: (saving) => set({ isSaving: saving }),
+
+  updateSettings: (updates) => set((state) => {
+    if (!state.book) return state
+    return {
+      isDirty: true,
+      book: {
+        ...state.book,
+        settings: { ...state.book.settings, ...updates } as any,
+      },
+    }
+  }),
 
   updatePage: (pageId, updates) => set((state) => {
     if (!state.book?.pages) return state
@@ -79,6 +100,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return {
       isDirty: true,
       selectedBlockId: block.id,
+      past: [...state.past, state.book],
+      future: [],
       book: {
         ...state.book,
         pages: state.book.pages.map((p) =>
@@ -93,6 +116,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return {
       isDirty: true,
       selectedBlockId: null,
+      past: [...state.past, state.book],
+      future: [],
       book: {
         ...state.book,
         pages: state.book.pages.map((p) =>
@@ -113,6 +138,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     ;[newBlocks[idx], newBlocks[targetIdx]] = [newBlocks[targetIdx], newBlocks[idx]]
     return {
       isDirty: true,
+      past: [...state.past, state.book],
+      future: [],
       book: {
         ...state.book,
         pages: state.book.pages.map((p) => p.id === pageId ? { ...p, blocks: newBlocks } : p),
@@ -125,6 +152,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return {
       isDirty: true,
       selectedHotspotId: hotspot.id,
+      past: [...state.past, state.book],
+      future: [],
       book: {
         ...state.book,
         pages: state.book.pages.map((p) =>
@@ -154,6 +183,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return {
       isDirty: true,
       selectedHotspotId: null,
+      past: [...state.past, state.book],
+      future: [],
       book: {
         ...state.book,
         pages: state.book.pages.map((p) =>
@@ -177,6 +208,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
     return {
       isDirty: true,
+      past: [...state.past, state.book],
+      future: [],
       book: { ...state.book, pages: [...pages, newPage] },
       currentPageIndex: pages.length,
     }
@@ -189,6 +222,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       .map((p, i) => ({ ...p, page_number: i + 1 }))
     return {
       isDirty: true,
+      past: [...state.past, state.book],
+      future: [],
       currentPageIndex: Math.min(get().currentPageIndex, filtered.length - 1),
       book: { ...state.book, pages: filtered },
     }
@@ -202,8 +237,49 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const renumbered = pages.map((p, i) => ({ ...p, page_number: i + 1 }))
     return {
       isDirty: true,
+      past: [...state.past, state.book],
+      future: [],
       currentPageIndex: toIndex,
       book: { ...state.book, pages: renumbered },
+    }
+  }),
+
+  setPageBlocks: (pageId, blocks) => set((state) => {
+    if (!state.book?.pages) return state
+    return {
+      isDirty: true,
+      past: [...state.past, state.book],
+      future: [],
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) =>
+          p.id === pageId ? { ...p, blocks } : p
+        ),
+      },
+    }
+  }),
+
+  undo: () => set((state) => {
+    if (state.past.length === 0 || !state.book) return state
+    const previous = state.past[state.past.length - 1]
+    const newPast = state.past.slice(0, -1)
+    return {
+      book: previous,
+      past: newPast,
+      future: [state.book, ...state.future],
+      isDirty: true
+    }
+  }),
+
+  redo: () => set((state) => {
+    if (state.future.length === 0 || !state.book) return state
+    const next = state.future[0]
+    const newFuture = state.future.slice(1)
+    return {
+      book: next,
+      past: [...state.past, state.book],
+      future: newFuture,
+      isDirty: true
     }
   }),
 }))

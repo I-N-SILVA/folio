@@ -72,6 +72,18 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       <div className="sr-only" aria-live="polite">
         Page {currentPage + 1} of {totalPages}
       </div>
+
+      {/* Branding */}
+      {!book.settings?.whitelabel && (
+        <a
+          href="https://folio.new"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-4 right-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 shadow-sm border border-black/5 hover:text-gray-900 transition-colors z-[9000]"
+        >
+          Made with <span className="font-bold text-[#01696F]">Folio</span>
+        </a>
+      )}
     </div>
   )
 }

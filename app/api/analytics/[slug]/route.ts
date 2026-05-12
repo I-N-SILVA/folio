@@ -121,12 +121,23 @@ export async function GET(
     uniqueClicks: d.uniqueSessions.size,
   }))
 
+  // Heatmap Data (page_click)
+  const heatmapData: Record<number, Array<{ x: number; y: number }>> = {}
+  events.filter((e) => e.event_type === 'page_click').forEach((e) => {
+    const p = e.page_number ?? 0
+    if (!heatmapData[p]) heatmapData[p] = []
+    if (e.payload?.x != null && e.payload?.y != null) {
+      heatmapData[p].push({ x: e.payload.x as number, y: e.payload.y as number })
+    }
+  })
+
   return NextResponse.json({
     summary: { totalOpens, uniqueSessions, completionRate, avgSessionMs },
     pageViewData,
     funnelData,
     topHotspots,
     ctaData,
+    heatmapData,
     raw: events,
   })
 }

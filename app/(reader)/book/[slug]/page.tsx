@@ -36,16 +36,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const book = await getBook(slug)
   if (!book) return { title: 'Book Not Found' }
 
-  const coverPage = book.pages?.[0]
-  const coverImage = coverPage?.blocks.find((b: any) => b.type === 'image')
+  const seo = book.settings?.seo
+  const title = seo?.title || book.title
+  const description = seo?.description || book.description || `Read "${book.title}" on Folio`
+
+  // Use the dynamic OG image generator route
+  const ogImageUrl = `/book/${slug}/opengraph-image`
 
   return {
-    title: book.title,
-    description: book.description ?? `Read "${book.title}" on Folio`,
+    title,
+    description,
+    keywords: seo?.keywords,
     openGraph: {
-      title: book.title,
-      description: book.description ?? `Read "${book.title}" on Folio`,
-      images: coverImage ? [{ url: (coverImage as any).src }] : [],
+      title,
+      description,
+      images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl],
     },
   }
 }

@@ -94,9 +94,33 @@ export function HotspotModal({ hotspot, bookId, pageNumber, onClose }: HotspotMo
             <h2 id="hotspot-modal-title" className="text-xl font-bold text-gray-900 mb-3">
               {hotspot.modal.title}
             </h2>
-            <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+            <div className="text-gray-700 leading-relaxed whitespace-pre-wrap mb-6">
               {hotspot.modal.body}
             </div>
+
+            {hotspot.action === 'checkout' && hotspot.stripeUrl && (
+              <a
+                href={hotspot.stripeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'checkout' })}
+                className="block w-full text-center bg-[#635BFF] text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                Buy Now
+              </a>
+            )}
+
+            {hotspot.action === 'link' && hotspot.linkUrl && (
+              <a
+                href={hotspot.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'link' })}
+                className="block w-full text-center bg-gray-900 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                View More
+              </a>
+            )}
           </div>
         </motion.div>
       </motion.div>

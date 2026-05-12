@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { useEditorStore } from '@/lib/editor-store'
@@ -89,9 +89,11 @@ function TextBlockForm({
 
 function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: string }) {
   const { updateBlock } = useEditorStore()
-  const { register, watch } = useForm<Partial<ImageBlock>>({
+  const { register, watch, setValue } = useForm<Partial<ImageBlock>>({
     defaultValues: { src: block.src, alt: block.alt, caption: block.caption, lightbox: block.lightbox },
   })
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     const sub = watch((values) => {
@@ -100,10 +102,61 @@ function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: string }
     return () => sub.unsubscribe()
   }, [watch, pageId, block.id, updateBlock])
 
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const { createBrowserSupabase } = await import('@/lib/supabase')
+      const supabase = createBrowserSupabase()
+      const bookId = useEditorStore.getState().book?.id
+      if (!bookId) throw new Error('No book')
+
+      const ext = file.name.split('.').pop() ?? 'png'
+      const path = `books/${bookId}/uploads/${crypto.randomUUID()}.${ext}`
+
+      const { error } = await supabase.storage
+        .from('folio-assets')
+        .upload(path, file, { contentType: file.type, upsert: false })
+
+      if (error) throw error
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('folio-assets')
+        .getPublicUrl(path)
+
+      setValue('src', publicUrl, { shouldDirty: true })
+      updateBlock(pageId, block.id, { src: publicUrl } as Partial<Block>)
+    } catch (err) {
+      console.error('Image upload failed:', err)
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }, [pageId, block.id, setValue, updateBlock])
+
   return (
     <div className="space-y-3">
-      <Field label="Image URL">
-        <input {...register('src')} className={inputCls} placeholder="https://…" />
+      <Field label="Image">
+        <div className="space-y-2">
+          <input {...register('src')} className={inputCls} placeholder="https://…" />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleUpload}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="w-full py-1.5 rounded border border-dashed border-neutral-600 text-xs text-neutral-400 hover:text-neutral-200 hover:border-neutral-400 transition-colors disabled:opacity-50"
+          >
+            {uploading ? 'Uploading…' : '↑ Upload image file'}
+          </button>
+        </div>
       </Field>
       <Field label="Alt text">
         <input {...register('alt')} className={inputCls} placeholder="Describe the image" />
@@ -356,12 +409,18 @@ function HotspotSettingsForm({
     icon: string
     modalTitle: string
     modalBody: string
+    action: Hotspot['action']
+    linkUrl: string
+    stripeUrl: string
   }>({
     defaultValues: {
       label: hotspot.label,
       icon: hotspot.icon,
       modalTitle: hotspot.modal.title,
       modalBody: hotspot.modal.body,
+      action: hotspot.action || 'modal',
+      linkUrl: hotspot.linkUrl || '',
+      stripeUrl: hotspot.stripeUrl || '',
     },
   })
 
@@ -370,6 +429,9 @@ function HotspotSettingsForm({
       updateHotspot(pageId, hotspot.id, {
         label: values.label ?? hotspot.label,
         icon: values.icon ?? hotspot.icon,
+        action: values.action,
+        linkUrl: values.linkUrl,
+        stripeUrl: values.stripeUrl,
         modal: {
           ...hotspot.modal,
           title: values.modalTitle ?? hotspot.modal.title,
@@ -379,6 +441,8 @@ function HotspotSettingsForm({
     })
     return () => sub.unsubscribe()
   }, [watch, pageId, hotspot.id, updateHotspot]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const action = watch('action')
 
   return (
     <div className="space-y-4">
@@ -412,6 +476,26 @@ function HotspotSettingsForm({
       <Field label="Icon">
         <input {...register('icon')} className={inputCls} placeholder="e.g. Info, Star, Zap" />
       </Field>
+      
+      <Field label="Action">
+        <select {...register('action')} className={selectCls}>
+          <option value="modal">Show Modal</option>
+          <option value="link">External Link</option>
+          <option value="checkout">Stripe Checkout</option>
+        </select>
+      </Field>
+
+      {action === 'link' && (
+        <Field label="Link URL">
+          <input {...register('linkUrl')} className={inputCls} placeholder="https://..." />
+        </Field>
+      )}
+
+      {action === 'checkout' && (
+        <Field label="Stripe Payment Link URL">
+          <input {...register('stripeUrl')} className={inputCls} placeholder="https://buy.stripe.com/..." />
+        </Field>
+      )}
 
       <Field label="Modal Title">
         <input {...register('modalTitle')} className={inputCls} placeholder="Modal heading" />
@@ -429,10 +513,111 @@ function HotspotSettingsForm({
   )
 }
 
+// ─── Book Settings Form ───────────────────────────────────────────────────────
+
+function BookSettingsForm({ book }: { book: any }) {
+  const { updateSettings } = useEditorStore()
+  const { register, watch } = useForm({
+    defaultValues: {
+      password: book.settings?.password ?? '',
+      burn_after_reading: book.settings?.burn_after_reading ?? false,
+      unlisted: book.settings?.unlisted ?? false,
+      whitelabel: book.settings?.whitelabel ?? false,
+      gatingEnabled: book.settings?.gating?.enabled ?? false,
+      gatingPage: book.settings?.gating?.page_number ?? 3,
+      gatingTitle: book.settings?.gating?.title ?? 'Unlock the full version',
+      gatingDescription: book.settings?.gating?.description ?? 'Enter your email to continue reading.',
+    },
+  })
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      updateSettings({
+        password: values.password || undefined,
+        burn_after_reading: values.burn_after_reading,
+        unlisted: values.unlisted,
+        whitelabel: values.whitelabel,
+        gating: {
+          enabled: values.gatingEnabled ?? false,
+          page_number: values.gatingPage ?? 3,
+          type: 'email',
+          title: values.gatingTitle ?? 'Unlock the full version',
+          description: values.gatingDescription ?? 'Enter your email to continue reading.',
+        },
+      })
+    })
+    return () => sub.unsubscribe()
+  }, [watch, updateSettings])
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
+          Access Control
+        </span>
+
+        <Field label="Password Protection">
+          <input
+            {...register('password')}
+            className={inputCls}
+            placeholder="Optional password"
+            type="password"
+          />
+        </Field>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" {...register('burn_after_reading')} className="accent-blue-500" />
+          <span className="text-sm text-neutral-300">Burn after reading (View once)</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" {...register('unlisted')} className="accent-blue-500" />
+          <span className="text-sm text-neutral-300">Unlisted (Hide from search)</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" {...register('whitelabel')} className="accent-blue-500" />
+          <span className="text-sm text-neutral-300">Remove "Made with Folio" branding</span>
+        </label>
+      </div>
+
+      <div className="space-y-4 pt-4 border-t border-neutral-800">
+        <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
+          Lead Magnet Gating
+        </span>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" {...register('gatingEnabled')} className="accent-blue-500" />
+          <span className="text-sm text-neutral-300">Enable Email Gating</span>
+        </label>
+
+        {watch('gatingEnabled') && (
+          <div className="space-y-3 pl-4 border-l border-neutral-800">
+            <Field label="Gate at Page">
+              <input
+                type="number"
+                {...register('gatingPage', { valueAsNumber: true })}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Modal Title">
+              <input {...register('gatingTitle')} className={inputCls} />
+            </Field>
+            <Field label="Description">
+              <textarea {...register('gatingDescription')} className={twMerge(inputCls, 'resize-none')} rows={2} />
+            </Field>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Settings Panel ───────────────────────────────────────────────────────────
 
 export function SettingsPanel() {
   const { book, currentPageIndex, selectedBlockId, selectedHotspotId } = useEditorStore()
+  const [tab, setTab] = useState<'selection' | 'book'>('selection')
 
   const currentPage = book?.pages?.[currentPageIndex]
 
@@ -454,18 +639,31 @@ export function SettingsPanel() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-3 py-2 border-b border-neutral-800 shrink-0">
-        <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-          {selectedBlock
-            ? 'Block Settings'
-            : selectedHotspot
-              ? 'Hotspot Settings'
-              : 'Page Settings'}
-        </span>
+      <div className="flex items-center border-b border-neutral-800 shrink-0">
+        <button
+          onClick={() => setTab('selection')}
+          className={twMerge(
+            'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
+            tab === 'selection' ? 'text-white border-b-2 border-primary bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
+          )}
+        >
+          Selection
+        </button>
+        <button
+          onClick={() => setTab('book')}
+          className={twMerge(
+            'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
+            tab === 'book' ? 'text-white border-b-2 border-primary bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
+          )}
+        >
+          Book Settings
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
-        {selectedBlock ? (
+        {tab === 'book' ? (
+          <BookSettingsForm book={book} />
+        ) : selectedBlock ? (
           <BlockSettingsForm block={selectedBlock} pageId={currentPage.id} />
         ) : selectedHotspot ? (
           <HotspotSettingsForm hotspot={selectedHotspot} pageId={currentPage.id} />

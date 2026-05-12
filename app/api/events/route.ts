@@ -17,6 +17,8 @@ const EventBodySchema = z.object({
     'audio_play',
     'cta_click',
     'book_complete',
+    'page_click',
+    'gate_unlock',
   ]),
   pageNumber: z.number().int().optional(),
   payload: z.record(z.string(), z.unknown()).optional(),

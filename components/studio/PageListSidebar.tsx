@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { Plus, Trash2, GripVertical } from 'lucide-react'
+import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Wand2 } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -17,7 +18,53 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
-import type { Page } from '@/lib/book-schema'
+import { PageRenderer } from '@/components/viewer/PageRenderer'
+import { PAGE_TEMPLATES } from '@/lib/templates'
+import type { Page, Block } from '@/lib/book-schema'
+
+const BLOCK_LIBRARY: {
+  type: Block['type']
+  label: string
+  icon: React.ReactNode
+  defaults: Omit<Block, 'id' | 'type'>
+}[] = [
+  {
+    type: 'text',
+    label: 'Body Text',
+    icon: <Box size={16} />,
+    defaults: { variant: 'body', content: 'New body text section...', align: 'left' },
+  },
+  {
+    type: 'text',
+    label: 'Heading',
+    icon: <Box size={16} />,
+    defaults: { variant: 'title', content: 'Section Title', align: 'left' },
+  },
+  {
+    type: 'image',
+    label: 'Image',
+    icon: <Box size={16} />,
+    defaults: { src: 'https://placehold.co/800x450', alt: '', lightbox: true },
+  },
+  {
+    type: 'video',
+    label: 'Video',
+    icon: <Box size={16} />,
+    defaults: { src: 'https://www.w3schools.com/html/mov_bbb.mp4', poster: 'https://placehold.co/800x450' },
+  },
+  {
+    type: 'button',
+    label: 'Button',
+    icon: <Box size={16} />,
+    defaults: { label: 'Explore More', href: 'https://folio.app', variant: 'primary' },
+  },
+  {
+    type: 'divider',
+    label: 'Divider',
+    icon: <Box size={16} />,
+    defaults: {},
+  },
+]
 
 const PAGE_TYPE_COLORS: Record<Page['type'], string> = {
   cover: 'bg-violet-700 text-violet-100',
@@ -28,6 +75,7 @@ const PAGE_TYPE_COLORS: Record<Page['type'], string> = {
 interface SortablePageItemProps {
   page: Page
   index: number
+  bookId: string
   isSelected: boolean
   isOnly: boolean
   onSelect: () => void
@@ -37,6 +85,7 @@ interface SortablePageItemProps {
 function SortablePageItem({
   page,
   index,
+  bookId,
   isSelected,
   isOnly,
   onSelect,
@@ -74,26 +123,27 @@ function SortablePageItem({
         <GripVertical size={14} />
       </button>
 
-      {/* Page thumbnail placeholder */}
-      <div className="w-10 h-14 rounded bg-neutral-700 border border-neutral-600 flex items-center justify-center text-xs text-neutral-400 shrink-0">
-        {page.page_number}
+      {/* Page thumbnail preview */}
+      <div className="w-10 h-14 rounded bg-neutral-700 border border-neutral-600 shrink-0 overflow-hidden relative">
+        <div className="absolute inset-0 origin-top-left" style={{ width: 280, height: 396, transform: 'scale(0.0357)', transformOrigin: 'top left' }}>
+          <PageRenderer page={page} bookId={bookId} className="w-full h-full" />
+        </div>
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="text-xs text-neutral-300 truncate font-medium">
+        <div className="text-[11px] text-neutral-300 truncate font-medium">
           Page {page.page_number}
         </div>
         <div className="flex items-center gap-1 mt-0.5">
           <span
             className={twMerge(
-              'text-[10px] px-1 rounded font-medium',
+              'text-[9px] px-1 rounded font-bold uppercase',
               PAGE_TYPE_COLORS[page.type]
             )}
           >
             {page.type}
           </span>
-          <span className="text-[10px] text-neutral-500">{page.layout}</span>
         </div>
       </div>
 
@@ -119,8 +169,9 @@ function SortablePageItem({
 }
 
 export function PageListSidebar() {
-  const { book, currentPageIndex, setCurrentPageIndex, addPage, removePage, reorderPages } =
+  const { book, currentPageIndex, setCurrentPageIndex, addPage, removePage, reorderPages, addBlock, setPageBlocks, updatePage } =
     useEditorStore()
+  const [activeTab, setActiveTab] = useState<'pages' | 'library' | 'templates'>('pages')
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -129,6 +180,7 @@ export function PageListSidebar() {
   if (!book?.pages) return null
 
   const pages = book.pages
+  const currentPage = pages[currentPageIndex]
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -141,47 +193,147 @@ export function PageListSidebar() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-3 py-2 border-b border-neutral-800 shrink-0">
-        <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-          Pages
-        </span>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={pages.map((p) => p.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {pages.map((page, index) => (
-              <SortablePageItem
-                key={page.id}
-                page={page}
-                index={index}
-                isSelected={currentPageIndex === index}
-                isOnly={pages.length === 1}
-                onSelect={() => setCurrentPageIndex(index)}
-                onDelete={() => removePage(page.id)}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </div>
-
-      <div className="p-2 border-t border-neutral-800 shrink-0">
+    <div className="flex flex-col h-full overflow-hidden bg-neutral-900 border-r border-neutral-800">
+      {/* Tab Switcher */}
+      <div className="flex p-1 gap-1 bg-neutral-950 border-b border-neutral-800 shrink-0">
         <button
-          onClick={addPage}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded border border-dashed border-neutral-700 text-neutral-400 hover:text-neutral-200 hover:border-neutral-500 text-xs transition-colors"
+          onClick={() => setActiveTab('pages')}
+          className={twMerge(
+            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            activeTab === 'pages' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+          )}
         >
-          <Plus size={14} />
-          Add Page
+          <Layers size={13} />
+          Pages
+        </button>
+        <button
+          onClick={() => setActiveTab('library')}
+          className={twMerge(
+            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            activeTab === 'library' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+          )}
+        >
+          <Box size={13} />
+          Blocks
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={twMerge(
+            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            activeTab === 'templates' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+          )}
+        >
+          <LayoutIcon size={13} />
+          Layouts
         </button>
       </div>
+
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {activeTab === 'pages' && (
+          <div className="p-2 space-y-1">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={pages.map((p) => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {pages.map((page, index) => (
+                  <SortablePageItem
+                    key={page.id}
+                    page={page}
+                    index={index}
+                    bookId={book.id}
+                    isSelected={currentPageIndex === index}
+                    isOnly={pages.length === 1}
+                    onSelect={() => setCurrentPageIndex(index)}
+                    onDelete={() => removePage(page.id)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
+        )}
+
+        {activeTab === 'library' && (
+          <div className="p-4 space-y-4">
+            <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Content Library</div>
+            <div className="grid grid-cols-1 gap-2">
+              {BLOCK_LIBRARY.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    if (currentPage) {
+                      addBlock(currentPage.id, {
+                        id: crypto.randomUUID(),
+                        type: item.type,
+                        ...item.defaults,
+                      } as Block)
+                    }
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-neutral-800/50 border border-neutral-700 hover:border-neutral-500 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-left group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    {item.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-bold">{item.label}</div>
+                    <div className="text-[10px] text-neutral-500 mt-0.5 capitalize">{item.type}</div>
+                  </div>
+                  <Plus size={14} className="text-neutral-600 group-hover:text-neutral-300" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'templates' && (
+          <div className="p-4 space-y-4">
+            <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Page Templates</div>
+            <div className="grid grid-cols-1 gap-3">
+              {PAGE_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  onClick={() => {
+                    if (!currentPage) return
+                    const newBlocks = tpl.blocks.map(b => ({ ...b, id: crypto.randomUUID() })) as Block[]
+                    setPageBlocks(currentPage.id, newBlocks)
+                    updatePage(currentPage.id, { layout: tpl.layout })
+                  }}
+                  className="flex flex-col p-4 rounded-xl bg-neutral-800/50 border border-neutral-700 hover:border-blue-500/50 hover:bg-neutral-800 text-left transition-all group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs font-bold text-neutral-200">{tpl.label}</div>
+                    <Wand2 size={12} className="text-neutral-600 group-hover:text-blue-400 transition-colors" />
+                  </div>
+                  <div className="text-[10px] text-neutral-500 leading-relaxed line-clamp-2 mb-3">
+                    {tpl.description}
+                  </div>
+                  <div className="flex gap-1 mt-auto">
+                    {tpl.blocks.slice(0, 4).map((b, i) => (
+                      <div key={i} className="w-4 h-1 rounded-full bg-neutral-700 group-hover:bg-neutral-600" />
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {activeTab === 'pages' && (
+        <div className="p-3 border-t border-neutral-800 shrink-0">
+          <button
+            onClick={addPage}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-bold transition-all border border-neutral-700"
+          >
+            <Plus size={14} />
+            Append New Page
+          </button>
+        </div>
+      )}
     </div>
   )
 }

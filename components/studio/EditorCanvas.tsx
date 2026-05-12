@@ -186,16 +186,19 @@ export function EditorCanvas() {
       </div>
 
       {/* Canvas area */}
-      <div className="flex-1 overflow-auto flex items-center justify-center p-6">
+      <div className="flex-1 overflow-auto flex items-center justify-center p-6 bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:20px_20px]">
         <div
           ref={canvasRef}
           className={twMerge(
-            'relative bg-white rounded-lg shadow-2xl overflow-hidden',
+            'relative bg-white rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden',
             'w-full max-w-2xl aspect-[4/3]',
             hotspotMode && 'cursor-crosshair'
           )}
           onClick={handleCanvasClick}
         >
+          {/* Subtle grid on the page itself */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px]" />
+          
           {/* Wrap PageRenderer to intercept block clicks */}
           <div className="absolute inset-0">
             <PageRenderer page={currentPage} bookId={book.id} className="w-full h-full" />
@@ -208,22 +211,53 @@ export function EditorCanvas() {
               hotspotMode && 'pointer-events-none'
             )}
           >
-            {currentPage.blocks.map((block) => (
-              <div
-                key={block.id}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  selectBlock(block.id)
-                }}
-                className={twMerge(
-                  'cursor-pointer transition-all',
-                  selectedBlockId === block.id
-                    ? 'ring-2 ring-inset ring-blue-500'
-                    : 'hover:ring-1 hover:ring-inset hover:ring-neutral-400'
-                )}
-                style={{ flex: '1 1 auto', minHeight: 32 }}
-              />
-            ))}
+            {currentPage.blocks.map((block, blockIdx) => {
+              const isSelected = selectedBlockId === block.id
+              return (
+                <div
+                  key={block.id}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    selectBlock(block.id)
+                  }}
+                  className={twMerge(
+                    'cursor-pointer transition-all relative group/block',
+                    isSelected
+                      ? 'ring-2 ring-inset ring-blue-500'
+                      : 'hover:ring-1 hover:ring-inset hover:ring-neutral-400'
+                  )}
+                  style={{ flex: '1 1 auto', minHeight: 32 }}
+                >
+                  {/* Block reorder controls */}
+                  {isSelected && (
+                    <div className="absolute -right-1 top-1/2 -translate-y-1/2 translate-x-full flex flex-col gap-0.5 z-20">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          useEditorStore.getState().moveBlock(currentPage.id, block.id, 'up')
+                        }}
+                        disabled={blockIdx === 0}
+                        className="w-5 h-5 rounded bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        title="Move up"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          useEditorStore.getState().moveBlock(currentPage.id, block.id, 'down')
+                        }}
+                        disabled={blockIdx === currentPage.blocks.length - 1}
+                        className="w-5 h-5 rounded bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        title="Move down"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           {/* Hotspot markers */}

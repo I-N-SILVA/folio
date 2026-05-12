@@ -8,7 +8,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from 'react'
-import HTMLFlipBook from 'react-pageflip'
+import { LeadGate } from './LeadGate'
 import { PageRenderer } from './PageRenderer'
 import { HotspotLayer } from './HotspotLayer'
 import { trackEvent } from '@/lib/tracking'
@@ -44,9 +44,32 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
     const [ready, setReady] = useState(false)
     const [currentPage, setCurrentPage] = useState(0)
     const [modalOpen, setModalOpen] = useState(false)
+    const [isUnlocked, setIsUnlocked] = useState(false)
     const pageFlipTimes = useRef<Record<number, number>>({})
 
     const pages = book.pages ?? []
+    const gating = book.settings?.gating
+
+    // Check if current page is gated
+    const isGated = gating?.enabled && !isUnlocked && currentPage >= (gating.page_number ?? 3)
+
+    // Handle coordinate-based clicks for heatmaps
+    const handlePageClick = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>, pageIdx: number) => {
+        if (isGated) return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = ((e.clientX - rect.left) / rect.width) * 100
+        const y = ((e.clientY - rect.top) / rect.height) * 100
+
+        trackEvent(book.id, 'page_click', {
+          page_number: pageIdx + 1,
+          x: Math.round(x * 100) / 100,
+          y: Math.round(y * 100) / 100,
+        })
+      },
+      [book.id, isGated]
+    )
 
     // Responsive sizing
     useEffect(() => {
@@ -184,13 +207,27 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
           swipeDistance={30}
         >
           {pages.map((page, idx) => (
-            <div key={page.id} className="relative bg-white" style={{ width: dims.w, height: dims.h }}>
+            <div
+              key={page.id}
+              className="relative bg-white group cursor-crosshair"
+              style={{ width: dims.w, height: dims.h }}
+              onClick={(e) => handlePageClick(e, idx)}
+            >
               <PageRenderer page={page} bookId={book.id} />
               <HotspotLayer
                 hotspots={page.hotspots}
                 bookId={book.id}
                 pageNumber={idx + 1}
                 onModalOpenChange={setModalOpen}
+              />
+
+              {/* Gating Overlay */}
+              <LeadGate
+                gating={gating!}
+                isUnlocked={isUnlocked}
+                onUnlock={() => setIsUnlocked(true)}
+                bookId={book.id}
+                pageIndex={idx}
               />
             </div>
           ))}

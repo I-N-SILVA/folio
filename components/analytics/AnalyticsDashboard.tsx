@@ -41,6 +41,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
   const [range, setRange] = useState<DateRange>('30d')
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [heatmapPage, setHeatmapPage] = useState<number>(1)
 
   useEffect(() => {
     setLoading(true)
@@ -184,6 +185,47 @@ export function AnalyticsDashboard({ book }: { book: any }) {
               </ChartCard>
             )}
 
+            {/* Visual Heatmap */}
+            {Object.keys(data.heatmapData || {}).length > 0 && (
+              <ChartCard title="Click Heatmap">
+                <div className="flex gap-4 items-start">
+                  <div className="flex flex-col gap-2 w-24 shrink-0">
+                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Page</span>
+                    {Object.keys(data.heatmapData)
+                      .map(Number)
+                      .sort((a, b) => a - b)
+                      .map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setHeatmapPage(p)}
+                          className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${
+                            heatmapPage === p ? 'bg-[#01696F] text-white' : 'hover:bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          Page {p}
+                        </button>
+                      ))}
+                  </div>
+                  <div className="flex-1 bg-gray-100 rounded-xl overflow-hidden aspect-[1/1.41] relative shadow-inner max-w-sm mx-auto">
+                    {/* Placeholder for the page background, eventually could load the actual page image */}
+                    <div className="absolute inset-0 bg-white"></div>
+                    {data.heatmapData[heatmapPage]?.map((pt, i) => (
+                      <div
+                        key={i}
+                        className="absolute w-4 h-4 -ml-2 -mt-2 rounded-full bg-red-500/40 mix-blend-multiply blur-[2px]"
+                        style={{ left: `${pt.x}%`, top: `${pt.y}%` }}
+                      />
+                    ))}
+                    {(!data.heatmapData[heatmapPage] || data.heatmapData[heatmapPage].length === 0) && (
+                      <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
+                        No clicks recorded on this page
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </ChartCard>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Top Hotspots */}
               {data.topHotspots.length > 0 && (
@@ -273,4 +315,6 @@ function TableCard({ title, children }: { title: string; children: React.ReactNo
       {children}
     </div>
   )
+}
+
 }

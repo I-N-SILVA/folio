@@ -3,13 +3,14 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
-import { ArrowLeft, Globe, EyeOff, Loader2, Check } from 'lucide-react'
+import { ArrowLeft, Globe, EyeOff, Loader2, Check, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEditorStore } from '@/lib/editor-store'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { PageListSidebar } from '@/components/studio/PageListSidebar'
 import { EditorCanvas } from '@/components/studio/EditorCanvas'
 import { SettingsPanel } from '@/components/studio/SettingsPanel'
+import { PreviewModal } from '@/components/studio/PreviewModal'
 import type { Book } from '@/lib/book-schema'
 
 interface Props {
@@ -21,6 +22,7 @@ export function EditorClient({ book }: Props) {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [titleEditing, setTitleEditing] = useState(false)
   const [titleValue, setTitleValue] = useState(book.title)
+  const [showPreview, setShowPreview] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const supabase = createBrowserSupabase()
 
@@ -94,6 +96,71 @@ export function EditorClient({ book }: Props) {
   useEffect(() => {
     if (storeBook?.title) setTitleValue(storeBook.title)
   }, [storeBook?.title])
+
+  // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      const meta = e.metaKey || e.ctrlKey
+
+      // Cmd+S → force save
+      if (meta && e.key === 's') {
+        e.preventDefault()
+        save()
+        return
+      }
+
+      // Cmd+P → preview
+      if (meta && e.key === 'p') {
+        e.preventDefault()
+        setShowPreview(true)
+        return
+      }
+
+      // Escape → deselect block/hotspot
+      if (e.key === 'Escape') {
+        useEditorStore.getState().selectBlock(null)
+        useEditorStore.getState().selectHotspot(null)
+        setShowPreview(false)
+        return
+      }
+
+      // Cmd+Z → undo
+      if (meta && e.key === 'z' && !e.shiftKey) {
+        // Don't capture if user is typing in an input/textarea
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        e.preventDefault()
+        useEditorStore.getState().undo()
+        return
+      }
+
+      // Cmd+Shift+Z → redo
+      if (meta && e.key === 'z' && e.shiftKey) {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        e.preventDefault()
+        useEditorStore.getState().redo()
+        return
+      }
+
+      // Delete/Backspace → remove selected block
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Don't capture if user is typing in an input/textarea
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+
+        const { selectedBlockId, book } = useEditorStore.getState()
+        const currentPage = book?.pages?.[useEditorStore.getState().currentPageIndex]
+        if (selectedBlockId && currentPage) {
+          e.preventDefault()
+          useEditorStore.getState().removeBlock(currentPage.id, selectedBlockId)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [save])
 
   const handleTitleBlur = () => {
     setTitleEditing(false)
@@ -171,6 +238,16 @@ export function EditorClient({ book }: Props) {
           )}
         </div>
 
+        {/* Preview button */}
+        <button
+          onClick={() => setShowPreview(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors bg-neutral-700 hover:bg-neutral-600 text-neutral-200"
+          title="Preview (⌘P)"
+        >
+          <Eye size={13} />
+          Preview
+        </button>
+
         {/* Publish toggle */}
         <button
           onClick={handlePublishToggle}
@@ -211,6 +288,37 @@ export function EditorClient({ book }: Props) {
           <SettingsPanel />
         </aside>
       </div>
+
+      {/* Status Bar */}
+      <div className="h-8 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between px-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-neutral-400">
+            <div className={twMerge(
+              "w-1.5 h-1.5 rounded-full",
+              isDirty ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
+            )} />
+            {isDirty ? 'UNSAVED CHANGES' : 'ALL CHANGES SAVED'}
+          </div>
+          <div className="h-3 w-px bg-neutral-800" />
+          <div className="flex items-center gap-2 text-[10px] text-neutral-500 uppercase tracking-wider">
+            <span className="font-bold text-neutral-400">Studio</span>
+            <span>v1.2.4</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 text-[9px] font-medium text-neutral-500 uppercase tracking-tighter">
+            <kbd className="px-1 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400">⌘Z</kbd> Undo
+            <span className="mx-1 opacity-30">|</span>
+            <kbd className="px-1 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400">⇧⌘Z</kbd> Redo
+            <span className="mx-1 opacity-30">|</span>
+            <kbd className="px-1 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400">⌘S</kbd> Save
+          </div>
+        </div>
+      </div>
+
+      {/* Preview modal */}
+      {showPreview && <PreviewModal onClose={() => setShowPreview(false)} />}
     </div>
   )
 }

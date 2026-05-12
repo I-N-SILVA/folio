@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
+import { detectHotspots, analyzeBookSEO } from '@/lib/ai'
 
 const MAX_PAGES = 50
 
-export const maxDuration = 60 // seconds
+export const maxDuration = 300 // 5 minutes for AI processing
 
 export async function POST(request: NextRequest) {
   // ── Auth ────────────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
   const title = (formData.get('title') as string | null)?.trim()
   const slug = (formData.get('slug') as string | null)?.trim()
   const pageCount = parseInt(formData.get('pageCount') as string || '0', 10)
+  const aiEnhance = formData.get('aiEnhance') === 'true'
 
   if (!file || !title || !slug) {
     return NextResponse.json(
@@ -94,6 +96,7 @@ export async function POST(request: NextRequest) {
 
   // ── Upload page images if provided (from client-side rendering) ────────────
   const pageImageUrls: string[] = []
+  const pageHotspots: any[][] = []
 
   // Check for pre-rendered page images from the client
   for (let i = 0; i < MAX_PAGES; i++) {
@@ -102,6 +105,13 @@ export async function POST(request: NextRequest) {
 
     const pagePath = `books/${bookId}/pages/page-${i + 1}.png`
     const pageBytes = await pageFile.arrayBuffer()
+
+    // AI Enhancement: Detect hotspots
+    let detected: any[] = []
+    if (aiEnhance) {
+      detected = await detectHotspots(Buffer.from(pageBytes), i + 1)
+    }
+    pageHotspots.push(detected)
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from('folio-assets')
@@ -131,6 +141,23 @@ export async function POST(request: NextRequest) {
   // Use the actual page count: either from uploaded images or from the client-provided count
   const totalPages = pageImageUrls.length || Math.min(pageCount, MAX_PAGES) || 1
 
+  // AI Enhancement: Generate SEO Metadata
+  let seoMetadata = undefined
+  if (aiEnhance && pageImageUrls.length > 0) {
+    // Pass the first up to 3 pages for context
+    const limit = Math.min(pageImageUrls.length, 3)
+    const buffers = []
+    for (let i = 0; i < limit; i++) {
+      const pageFile = formData.get(`page_${i}`) as File | null
+      if (pageFile) {
+        buffers.push(Buffer.from(await pageFile.arrayBuffer()))
+      }
+    }
+    if (buffers.length > 0) {
+      seoMetadata = await analyzeBookSEO(buffers, title)
+    }
+  }
+
   // ── Create book record ──────────────────────────────────────────────────────
   const { error: bookError } = await supabaseAdmin.from('books').insert({
     id: bookId,
@@ -138,7 +165,7 @@ export async function POST(request: NextRequest) {
     title,
     owner_id: user.id,
     theme: { preset: 'ivory' },
-    settings: { published: false, unlisted: false },
+    settings: { published: false, unlisted: false, seo: seoMetadata },
   })
 
   if (bookError) {
@@ -171,7 +198,7 @@ export async function POST(request: NextRequest) {
           },
         ]
       : [],
-    hotspots: [],
+    hotspots: pageHotspots[idx] || [],
   }))
 
   const { error: pagesError } = await supabaseAdmin.from('pages').insert(pageRows)

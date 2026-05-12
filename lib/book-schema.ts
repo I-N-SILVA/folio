@@ -87,6 +87,9 @@ export const HotspotSchema = z.object({
     body: z.string(), // markdown
     media: HotspotMediaSchema.optional(),
   }),
+  action: z.enum(['modal', 'link', 'checkout']).default('modal'),
+  linkUrl: z.string().url().optional(),
+  stripeUrl: z.string().url().optional(),
 })
 
 // ─── Page Schema ───────────────────────────────────────────────────────────────
@@ -121,10 +124,28 @@ export const ThemeSchema = z.object({
 
 // ─── Book Settings Schema ──────────────────────────────────────────────────────
 
+export const GatingSchema = z.object({
+  enabled: z.boolean().default(false),
+  page_number: z.number().default(3),
+  type: z.enum(['email', 'password']).default('email'),
+  title: z.string().default('Unlock the full version'),
+  description: z.string().default('Enter your email to continue reading.'),
+})
+
+export const SEOSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  keywords: z.string().optional(),
+})
+
 export const BookSettingsSchema = z.object({
   published: z.boolean().default(false),
   unlisted: z.boolean().default(false),
   password: z.string().optional(),
+  gating: GatingSchema.default({ enabled: false }),
+  burn_after_reading: z.boolean().default(false),
+  seo: SEOSchema.optional(),
+  whitelabel: z.boolean().default(false),
 })
 
 // ─── Book Schema ───────────────────────────────────────────────────────────────
@@ -156,6 +177,7 @@ export type Hotspot = z.infer<typeof HotspotSchema>
 export type Page = z.infer<typeof PageSchema>
 export type Background = z.infer<typeof BackgroundSchema>
 export type Theme = z.infer<typeof ThemeSchema>
+export type Gating = z.infer<typeof GatingSchema>
 export type BookSettings = z.infer<typeof BookSettingsSchema>
 export type Book = z.infer<typeof BookSchema>
 
@@ -173,6 +195,8 @@ export type EventType =
   | 'audio_play'
   | 'cta_click'
   | 'book_complete'
+  | 'page_click' // New for Heatmaps
+  | 'gate_unlock' // New for Gating
 
 // ─── Theme presets ─────────────────────────────────────────────────────────────
 
