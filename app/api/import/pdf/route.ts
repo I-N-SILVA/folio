@@ -3,18 +3,9 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 
-// pdfjs legacy build works in Node.js without a browser worker
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs'
-import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api'
-import { createCanvas } from '@napi-rs/canvas'
-
-// Disable worker — not needed in Node.js
-;(GlobalWorkerOptions as any).workerSrc = ''
-
 const MAX_PAGES = 50
-const SCALE = 1.5
 
-export const maxDuration = 60 // seconds — PDF processing is slow
+export const maxDuration = 60 // seconds
 
 export async function POST(request: NextRequest) {
   // ── Auth ────────────────────────────────────────────────────────────────────
@@ -37,6 +28,7 @@ export async function POST(request: NextRequest) {
   const file = formData.get('file') as File | null
   const title = (formData.get('title') as string | null)?.trim()
   const slug = (formData.get('slug') as string | null)?.trim()
+  const pageCount = parseInt(formData.get('pageCount') as string || '0', 10)
 
   if (!file || !title || !slug) {
     return NextResponse.json(
@@ -70,7 +62,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // ── Load PDF ────────────────────────────────────────────────────────────────
+  const bookId = uuidv4()
+
+  // ── Upload the raw PDF to storage ──────────────────────────────────────────
   let pdfBytes: ArrayBuffer
   try {
     pdfBytes = await file.arrayBuffer()
@@ -78,69 +72,64 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to read file' }, { status: 400 })
   }
 
-  let pdf!: PDFDocumentProxy
-  try {
-    pdf = await getDocument({ data: new Uint8Array(pdfBytes) }).promise
-  } catch (err) {
-    console.error('[pdf-import] Failed to parse PDF:', err)
+  const pdfPath = `books/${bookId}/source.pdf`
+  const { error: pdfUploadError } = await supabaseAdmin.storage
+    .from('folio-assets')
+    .upload(pdfPath, pdfBytes, {
+      contentType: 'application/pdf',
+      upsert: false,
+    })
+
+  if (pdfUploadError) {
+    console.error('[pdf-import] PDF upload failed:', pdfUploadError)
     return NextResponse.json(
-      { error: 'Failed to parse PDF. Make sure it is a valid, non-encrypted PDF.' },
-      { status: 422 }
+      { error: `Failed to upload PDF: ${pdfUploadError.message}` },
+      { status: 500 }
     )
   }
 
-  const numPages = Math.min(pdf.numPages, MAX_PAGES)
-  const bookId = uuidv4()
+  const {
+    data: { publicUrl: pdfPublicUrl },
+  } = supabaseAdmin.storage.from('folio-assets').getPublicUrl(pdfPath)
 
-  // ── Render pages and upload to Storage ─────────────────────────────────────
+  // ── Upload page images if provided (from client-side rendering) ────────────
   const pageImageUrls: string[] = []
 
-  for (let i = 1; i <= numPages; i++) {
-    try {
-      const page = await pdf.getPage(i)
-      const viewport = page.getViewport({ scale: SCALE })
-      const canvas = createCanvas(viewport.width, viewport.height)
+  // Check for pre-rendered page images from the client
+  for (let i = 0; i < MAX_PAGES; i++) {
+    const pageFile = formData.get(`page_${i}`) as File | null
+    if (!pageFile) break
 
-      await page.render({
-        canvas: canvas as unknown as HTMLCanvasElement,
-        viewport,
-      }).promise
+    const pagePath = `books/${bookId}/pages/page-${i + 1}.png`
+    const pageBytes = await pageFile.arrayBuffer()
 
-      const buffer = canvas.toBuffer('image/png')
-      const storagePath = `books/${bookId}/pages/page-${i}.png`
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('folio-assets')
+      .upload(pagePath, pageBytes, {
+        contentType: 'image/png',
+        upsert: false,
+      })
 
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from('folio-assets')
-        .upload(storagePath, buffer, {
-          contentType: 'image/png',
-          upsert: false,
-        })
-
-      if (uploadError) {
-        console.error(`[pdf-import] Upload failed for page ${i}:`, uploadError)
-        throw new Error(`Storage upload failed: ${uploadError.message}`)
-      }
-
-      const {
-        data: { publicUrl },
-      } = supabaseAdmin.storage.from('folio-assets').getPublicUrl(storagePath)
-
-      pageImageUrls.push(publicUrl)
-
-      // Release page resources
-      page.cleanup()
-    } catch (err) {
-      console.error(`[pdf-import] Error processing page ${i}:`, err)
-      // Clean up any already-uploaded pages before returning error
+    if (uploadError) {
+      console.error(`[pdf-import] Page ${i + 1} upload failed:`, uploadError)
+      // Clean up and bail
       await supabaseAdmin.storage
         .from('folio-assets')
-        .remove(pageImageUrls.map((_, idx) => `books/${bookId}/pages/page-${idx + 1}.png`))
+        .remove([pdfPath, ...pageImageUrls.map((_, idx) => `books/${bookId}/pages/page-${idx + 1}.png`)])
       return NextResponse.json(
-        { error: `Failed to process page ${i}: ${(err as Error).message}` },
+        { error: `Failed to upload page ${i + 1}: ${uploadError.message}` },
         { status: 500 }
       )
     }
+
+    const {
+      data: { publicUrl },
+    } = supabaseAdmin.storage.from('folio-assets').getPublicUrl(pagePath)
+    pageImageUrls.push(publicUrl)
   }
+
+  // Use the actual page count: either from uploaded images or from the client-provided count
+  const totalPages = pageImageUrls.length || Math.min(pageCount, MAX_PAGES) || 1
 
   // ── Create book record ──────────────────────────────────────────────────────
   const { error: bookError } = await supabaseAdmin.from('books').insert({
@@ -154,10 +143,9 @@ export async function POST(request: NextRequest) {
 
   if (bookError) {
     console.error('[pdf-import] Failed to create book:', bookError)
-    // Clean up storage
     await supabaseAdmin.storage
       .from('folio-assets')
-      .remove(pageImageUrls.map((_, idx) => `books/${bookId}/pages/page-${idx + 1}.png`))
+      .remove([pdfPath])
     return NextResponse.json(
       { error: `Failed to create book: ${bookError.message}` },
       { status: 500 }
@@ -165,22 +153,24 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Create page records ─────────────────────────────────────────────────────
-  const pageRows = pageImageUrls.map((imageUrl, idx) => ({
+  const pageRows = Array.from({ length: totalPages }, (_, idx) => ({
     id: uuidv4(),
     book_id: bookId,
     page_number: idx + 1,
-    type: idx === 0 ? 'cover' : idx === pageImageUrls.length - 1 ? 'back' : 'content',
+    type: idx === 0 ? 'cover' : idx === totalPages - 1 ? 'back' : 'content',
     layout: 'blank',
     background: {},
-    blocks: [
-      {
-        type: 'image',
-        id: uuidv4(),
-        src: imageUrl,
-        alt: `Page ${idx + 1}`,
-        lightbox: false,
-      },
-    ],
+    blocks: pageImageUrls[idx]
+      ? [
+          {
+            type: 'image',
+            id: uuidv4(),
+            src: pageImageUrls[idx],
+            alt: `Page ${idx + 1}`,
+            lightbox: false,
+          },
+        ]
+      : [],
     hotspots: [],
   }))
 
@@ -188,16 +178,20 @@ export async function POST(request: NextRequest) {
 
   if (pagesError) {
     console.error('[pdf-import] Failed to create pages:', pagesError)
-    // Attempt book cleanup
     await supabaseAdmin.from('books').delete().eq('id', bookId)
     await supabaseAdmin.storage
       .from('folio-assets')
-      .remove(pageImageUrls.map((_, idx) => `books/${bookId}/pages/page-${idx + 1}.png`))
+      .remove([pdfPath])
     return NextResponse.json(
       { error: `Failed to create pages: ${pagesError.message}` },
       { status: 500 }
     )
   }
 
-  return NextResponse.json({ bookId, slug, pageCount: pageImageUrls.length })
+  return NextResponse.json({
+    bookId,
+    slug,
+    pageCount: totalPages,
+    pdfUrl: pdfPublicUrl,
+  })
 }
