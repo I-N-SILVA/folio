@@ -5,7 +5,7 @@ export interface PageTemplate {
   label: string
   description: string
   icon: string
-  blocks: Omit<Block, 'id'>[]
+  blocks: any[] // Simplified for templates to avoid complex union Omit issues
   layout: Page['layout']
 }
 

@@ -139,8 +139,10 @@ export function EditorCanvas() {
         y: Math.round(y * 10) / 10,
         label: 'New Hotspot',
         icon: 'Info',
-        modal: { title: 'Hotspot', body: '' },
+        action: 'modal',
+        modal: { title: 'New Hotspot', body: '' }
       })
+
     },
     [hotspotMode, currentPage, addHotspot]
   )

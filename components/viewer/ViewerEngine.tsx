@@ -8,6 +8,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from 'react'
+import HTMLFlipBook from 'react-pageflip'
 import { LeadGate } from './LeadGate'
 import { PageRenderer } from './PageRenderer'
 import { HotspotLayer } from './HotspotLayer'

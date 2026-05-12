@@ -21,6 +21,7 @@ interface AnalyticsData {
   funnelData: Array<{ page: number; sessions: number; pct: number }>
   topHotspots: Array<{ id: string; count: number }>
   ctaData: Array<{ id: string; href?: string; page?: number; clicks: number; uniqueClicks: number }>
+  heatmapData: Record<number, Array<{ x: number; y: number }>>
   raw: any[]
 }
 
@@ -315,6 +316,4 @@ function TableCard({ title, children }: { title: string; children: React.ReactNo
       {children}
     </div>
   )
-}
-
 }

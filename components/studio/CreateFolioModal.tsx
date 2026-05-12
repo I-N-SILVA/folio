@@ -123,69 +123,6 @@ export function CreateFolioModal({ onClose }: Props) {
     }
   }
 
-  const handlePdfUpload = async (file: File, title?: string, slug?: string) => {
-    setIsUploading(true)
-    setUploadProgress(0)
-    setError(null)
-
-    try {
-      // 1. Load PDF
-      const arrayBuffer = await file.arrayBuffer()
-      const pdfjs = await import('pdfjs-dist')
-      pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
-      
-      const loadingTask = pdfjs.getDocument(arrayBuffer)
-      const pdf = await loadingTask.promise
-      const numPages = Math.min(pdf.numPages, 50)
-      
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('title', title || file.name.replace('.pdf', ''))
-      formData.append('slug', slug || `folio-${Math.random().toString(36).substring(7)}`)
-      formData.append('pageCount', numPages.toString())
-
-      // 2. Render pages to images with high DPI
-      for (let i = 1; i <= numPages; i++) {
-        setUploadProgress(Math.round((i / numPages) * 100))
-        const page = await pdf.getPage(i)
-        const viewport = page.getViewport({ scale: 2.0 }) // High quality scale
-        
-        const canvas = document.createElement('canvas')
-        const context = canvas.getContext('2d')
-        if (!context) continue
-        
-        canvas.height = viewport.height
-        canvas.width = viewport.width
-        
-        await page.render({ canvasContext: context, viewport }).promise
-        
-        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 0.9))
-        if (blob) {
-          formData.append(`page_${i-1}`, new File([blob], `page_${i}.png`, { type: 'image/png' }))
-        }
-      }
-
-      // 3. Send to API
-      const res = await fetch('/api/import/pdf', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to upload PDF')
-      }
-
-      const { slug: newSlug } = await res.json()
-      router.push(`/editor/${newSlug}`)
-      onClose()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
   if (step === 'pdf') {
     return <ImportPDFModal onClose={onClose} />
   }

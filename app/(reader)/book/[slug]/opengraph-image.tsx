@@ -15,7 +15,7 @@ export const contentType = 'image/png'
 export default async function Image({ params }: { params: { slug: string } }) {
   const { data: book } = await supabaseAdmin
     .from('books')
-    .select('title, description, settings, pages(*)')
+    .select('title, description, theme, settings, pages(*)')
     .eq('slug', params.slug)
     .single()
 
@@ -60,7 +60,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
             }}
           />
         )}
-        <div style={{ display: 'flex', flexDirection: 'col', justifyContent: 'center', width: '50%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '50%' }}>
           <h1 style={{ fontSize: 64, fontWeight: 'bold', color: book.theme?.primary || '#111827', marginBottom: 24, lineHeight: 1.1 }}>
             {book.title}
           </h1>

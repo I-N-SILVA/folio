@@ -32,6 +32,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
+  const [aiEnhance, setAiEnhance] = useState(true) // Default to true for "Elite" experience
   const [status, setStatus] = useState<Status>('idle')
   const [progress, setProgress] = useState<RenderProgress>({
     current: 0,
@@ -115,6 +116,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
       form.append('title', title.trim())
       form.append('slug', slug.trim())
       form.append('pageCount', renderedPages.length.toString())
+      form.append('aiEnhance', aiEnhance.toString())
 
       // Attach each rendered page as a separate file
       renderedPages.forEach((page, idx) => {
@@ -283,6 +285,29 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
             <p className="text-xs text-gray-400 mt-1">
               Lowercase letters, numbers, and hyphens only
             </p>
+          </div>
+
+          {/* AI Enhancement */}
+          <div className="mb-6 bg-[#01696F]/5 p-4 rounded-xl border border-[#01696F]/10">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  checked={aiEnhance}
+                  onChange={(e) => setAiEnhance(e.target.checked)}
+                  disabled={isWorking || status === 'done'}
+                  className="w-4 h-4 text-[#01696F] border-gray-300 rounded focus:ring-[#01696F]/30"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-gray-900 group-hover:text-[#01696F] transition-colors">
+                  Magic AI Enhancement
+                </span>
+                <span className="text-xs text-gray-500 leading-relaxed mt-0.5">
+                  Automatically detect products, hotspots, and generate SEO tags.
+                </span>
+              </div>
+            </label>
           </div>
 
           {/* Progress bar */}

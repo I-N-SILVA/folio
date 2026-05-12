@@ -32,7 +32,7 @@ export async function detectHotspots(imageBuffer: Buffer, pageNumber: number): P
     ])
 
     const text = result.response.text()
-    const jsonStr = text.match(/\[.*\]/s)?.[0] || '[]'
+    const jsonStr = text.match(/\[[\s\S]*\]/)?.[0] || '[]'
     const detected = JSON.parse(jsonStr)
 
     return detected.map((item: any) => ({
@@ -78,7 +78,7 @@ export async function analyzeBookSEO(imageBuffers: Buffer[], title: string): Pro
     const result = await model.generateContent([prompt, ...imageParts])
 
     const text = result.response.text()
-    const jsonStr = text.match(/\{.*\}/s)?.[0] || '{"description": "", "keywords": ""}'
+    const jsonStr = text.match(/\{[\s\S]*\}/)?.[0] || '{"description": "", "keywords": ""}'
     return JSON.parse(jsonStr)
   } catch (error) {
     console.error(`[AI] SEO analysis failed:`, error)
