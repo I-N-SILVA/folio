@@ -1,0 +1,12 @@
+'use client'
+
+export default function BrowserPreview() {
+  return (
+    <iframe
+      src="/embed/demo"
+      className="w-full h-full border-0"
+      title="Folio demo preview"
+      loading="lazy"
+    />
+  )
+}
