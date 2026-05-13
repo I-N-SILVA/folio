@@ -35,6 +35,16 @@ export async function POST(request: NextRequest) {
 
     const { bookId, sessionId, eventType, pageNumber, payload } = parsed.data
 
+    // Verify book exists (basic sanity check)
+    const { count } = await supabaseAdmin
+      .from('books')
+      .select('*', { count: 'exact', head: true })
+      .eq('id', bookId)
+    
+    if (count === 0) {
+      return NextResponse.json({ error: 'Book not found' }, { status: 404 })
+    }
+
     await supabaseAdmin.from('events').insert({
       book_id: bookId,
       session_id: sessionId,

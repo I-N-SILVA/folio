@@ -26,6 +26,19 @@ export function EditorClient({ book }: Props) {
   const [titleValue, setTitleValue] = useState(book.title)
   const [showPreview, setShowPreview] = useState(false)
   const [showPageManager, setShowPageManager] = useState(false)
+
+  // Warn about unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
+
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const supabase = createBrowserSupabase()
 

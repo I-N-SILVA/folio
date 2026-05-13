@@ -26,6 +26,7 @@ interface AnalyticsData {
 }
 
 function formatDuration(ms: number) {
+  if (ms === 0) return '0s'
   if (!ms) return '—'
   const s = Math.round(ms / 1000)
   if (s < 60) return `${s}s`
