@@ -18,10 +18,11 @@ interface PageRendererProps {
   bookId: string
   theme?: Theme
   className?: string
+  renderBlockWrapper?: (block: import('@/lib/book-schema').Block, children: React.ReactNode) => React.ReactNode
 }
 
 export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
-  ({ page, bookId, theme, className }, ref) => {
+  ({ page, bookId, theme, className, renderBlockWrapper }, ref) => {
     const bg = page.background
 
     // Resolve theme colors
@@ -64,10 +65,11 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
         )}
 
         {/* Blocks */}
-        <div className="relative z-10 flex flex-col gap-4 w-full">
-          {page.blocks.map((block) => (
-            <BlockRenderer key={block.id} block={block} bookId={bookId} />
-          ))}
+        <div className={twMerge("relative z-10 w-full", page.layout !== 'split' && "flex flex-col gap-4")}>
+          {page.blocks.map((block) => {
+            const blockElement = <BlockRenderer key={block.id} block={block} bookId={bookId} pageId={page.id} />
+            return renderBlockWrapper ? renderBlockWrapper(block, blockElement) : blockElement
+          })}
         </div>
       </div>
     )

@@ -13,10 +13,64 @@ import {
   Minus,
   Code2,
   X,
+  GripVertical,
 } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import type { Block } from '@/lib/book-schema'
+
+// ─── Sortable Block Wrapper ───────────────────────────────────────────────────
+
+function SortableBlock({ id, isSelected, onClick, children }: { id: string; isSelected: boolean; onClick: (e: React.MouseEvent) => void; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={onClick}
+      className={twMerge(
+        'relative group/block transition-all outline-none rounded-lg',
+        isSelected ? 'ring-2 ring-inset ring-blue-500' : 'hover:ring-1 hover:ring-inset hover:ring-neutral-400',
+        isDragging && 'opacity-50 z-50 ring-2 ring-blue-500 shadow-xl',
+        !isSelected && 'cursor-pointer'
+      )}
+    >
+      {isSelected && (
+        <div 
+          {...listeners}
+          {...attributes}
+          className="absolute -left-3 top-1/2 -translate-y-1/2 -translate-x-full w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg z-50 transition-transform hover:scale-110"
+        >
+          <GripVertical size={16} />
+        </div>
+      )}
+      <div className={twMerge(isSelected ? 'pointer-events-auto' : 'pointer-events-none')}>
+        {children}
+      </div>
+    </div>
+  )
+}
 
 // ─── Block Picker Modal ───────────────────────────────────────────────────────
 
@@ -116,6 +170,7 @@ export function EditorCanvas() {
     currentPageIndex,
     hotspotMode,
     selectedBlockId,
+    selectedHotspotId,
     setHotspotMode,
     selectBlock,
     addBlock,
@@ -156,6 +211,25 @@ export function EditorCanvas() {
     },
     [currentPage, addBlock]
   )
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id || !currentPage) return
+    const fromIndex = currentPage.blocks.findIndex((b) => b.id === active.id)
+    const toIndex = currentPage.blocks.findIndex((b) => b.id === over.id)
+    if (fromIndex !== -1 && toIndex !== -1) {
+      // Reorder locally using existing or new store action. 
+      // Wait, we need to reorder blocks! The store has `setPageBlocks`.
+      const newBlocks = [...currentPage.blocks]
+      const [moved] = newBlocks.splice(fromIndex, 1)
+      newBlocks.splice(toIndex, 0, moved)
+      useEditorStore.getState().setPageBlocks(currentPage.id, newBlocks)
+    }
+  }
 
   if (!book || !currentPage) {
     return (
@@ -201,80 +275,67 @@ export function EditorCanvas() {
           {/* Subtle grid on the page itself */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px]" />
           
-          {/* Wrap PageRenderer to intercept block clicks */}
-          <div className="absolute inset-0">
-            <PageRenderer page={currentPage} bookId={book.id} theme={book.theme} className="w-full h-full" />
-          </div>
-
-          {/* Block click overlay: transparent divs per block (z-layered over renderer) */}
-          <div
-            className={twMerge(
-              'absolute inset-0 flex flex-col gap-0',
-              hotspotMode && 'pointer-events-none'
-            )}
-          >
-            {currentPage.blocks.map((block, blockIdx) => {
-              const isSelected = selectedBlockId === block.id
-              return (
-                <div
-                  key={block.id}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    selectBlock(block.id)
-                  }}
-                  className={twMerge(
-                    'cursor-pointer transition-all relative group/block',
-                    isSelected
-                      ? 'ring-2 ring-inset ring-blue-500'
-                      : 'hover:ring-1 hover:ring-inset hover:ring-neutral-400'
+          <div className={twMerge('absolute inset-0', hotspotMode && 'pointer-events-none')}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={currentPage.blocks.map(b => b.id)}
+                strategy={currentPage.layout === 'split' ? horizontalListSortingStrategy : verticalListSortingStrategy}
+              >
+                <PageRenderer 
+                  page={currentPage} 
+                  bookId={book.id} 
+                  theme={book.theme} 
+                  className="w-full h-full"
+                  renderBlockWrapper={(block, children) => (
+                    <SortableBlock
+                      key={block.id}
+                      id={block.id}
+                      isSelected={selectedBlockId === block.id}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        selectBlock(block.id)
+                      }}
+                    >
+                      {children}
+                    </SortableBlock>
                   )}
-                  style={{ flex: '1 1 auto', minHeight: 32 }}
-                >
-                  {/* Block reorder controls */}
-                  {isSelected && (
-                    <div className="absolute -right-1 top-1/2 -translate-y-1/2 translate-x-full flex flex-col gap-0.5 z-20">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          useEditorStore.getState().moveBlock(currentPage.id, block.id, 'up')
-                        }}
-                        disabled={blockIdx === 0}
-                        className="w-5 h-5 rounded bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        title="Move up"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          useEditorStore.getState().moveBlock(currentPage.id, block.id, 'down')
-                        }}
-                        disabled={blockIdx === currentPage.blocks.length - 1}
-                        className="w-5 h-5 rounded bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center text-xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        title="Move down"
-                      >
-                        ↓
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                />
+              </SortableContext>
+            </DndContext>
           </div>
 
           {/* Hotspot markers */}
           {!hotspotMode &&
             currentPage.hotspots.map((hotspot) => (
-              <button
+              <div
                 key={hotspot.id}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  useEditorStore.getState().selectHotspot(hotspot.id)
-                }}
-                className="absolute w-5 h-5 rounded-full bg-amber-400 border-2 border-white shadow-md cursor-pointer -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform"
+                className="absolute group z-30"
                 style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
-                title={hotspot.label}
-              />
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    useEditorStore.getState().selectHotspot(hotspot.id)
+                  }}
+                  className={twMerge(
+                    "w-5 h-5 rounded-full border-2 border-white shadow-md cursor-pointer -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform",
+                    selectedHotspotId === hotspot.id ? "bg-blue-500 ring-2 ring-white" : "bg-amber-400"
+                  )}
+                  title={hotspot.label}
+                />
+                
+                {/* Hover Peek */}
+                <div className="absolute left-1/2 bottom-full mb-3 -translate-x-1/2 w-48 p-3 bg-neutral-900 text-white rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all origin-bottom">
+                  <div className="text-xs font-bold mb-1 truncate">{hotspot.modal.title || 'Untitled Hotspot'}</div>
+                  <div className="text-[10px] text-neutral-400 line-clamp-2">{hotspot.modal.body || 'No description provided.'}</div>
+                  {/* Triangle pointer */}
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900" />
+                </div>
+              </div>
             ))}
 
           {hotspotMode &&

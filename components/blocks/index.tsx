@@ -16,10 +16,10 @@ function BlockFallback() {
   return <div className="h-8 bg-current opacity-10 rounded animate-pulse" />
 }
 
-export function BlockRenderer({ block, bookId }: { block: Block; bookId: string }) {
+export function BlockRenderer({ block, bookId, pageId }: { block: Block; bookId: string; pageId?: string }) {
   return (
     <Suspense fallback={<BlockFallback />}>
-      {block.type === 'text' && <TextBlock block={block} />}
+      {block.type === 'text' && <TextBlock block={block} pageId={pageId} />}
       {block.type === 'image' && <ImageBlock block={block} />}
       {block.type === 'video' && <VideoBlock block={block} bookId={bookId} />}
       {block.type === 'audio' && <AudioBlock block={block} bookId={bookId} />}

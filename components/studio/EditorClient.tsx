@@ -11,6 +11,8 @@ import { PageListSidebar } from '@/components/studio/PageListSidebar'
 import { EditorCanvas } from '@/components/studio/EditorCanvas'
 import { SettingsPanel } from '@/components/studio/SettingsPanel'
 import { PreviewModal } from '@/components/studio/PreviewModal'
+import { PageManagerModal } from '@/components/studio/PageManagerModal'
+import { Grid } from 'lucide-react'
 import type { Book } from '@/lib/book-schema'
 
 interface Props {
@@ -23,6 +25,7 @@ export function EditorClient({ book }: Props) {
   const [titleEditing, setTitleEditing] = useState(false)
   const [titleValue, setTitleValue] = useState(book.title)
   const [showPreview, setShowPreview] = useState(false)
+  const [showPageManager, setShowPageManager] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const supabase = createBrowserSupabase()
 
@@ -319,6 +322,9 @@ export function EditorClient({ book }: Props) {
 
       {/* Preview modal */}
       {showPreview && <PreviewModal onClose={() => setShowPreview(false)} />}
+
+      {/* Page Manager Modal */}
+      {showPageManager && <PageManagerModal onClose={() => setShowPageManager(false)} />}
     </div>
   )
 }
