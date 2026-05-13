@@ -6,11 +6,11 @@ import { twMerge } from 'tailwind-merge'
 
 const variantStyles: Record<ButtonBlock['variant'], string> = {
   primary:
-    'bg-current text-white hover:opacity-90 shadow-md',
+    'bg-[var(--primary)] text-white hover:opacity-90 shadow-md',
   secondary:
-    'border-2 border-current text-current hover:bg-current hover:text-white',
+    'border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white',
   ghost:
-    'text-current underline underline-offset-4 hover:opacity-70',
+    'text-[var(--primary)] underline underline-offset-4 hover:opacity-70',
 }
 
 export function ButtonBlock({ block, bookId }: { block: ButtonBlock; bookId: string }) {

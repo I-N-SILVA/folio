@@ -3,7 +3,8 @@
 import { forwardRef } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { BlockRenderer } from '@/components/blocks'
-import type { Page } from '@/lib/book-schema'
+import type { Page, Theme } from '@/lib/book-schema'
+import { THEME_PRESETS } from '@/lib/book-schema'
 
 const layoutStyles: Record<Page['layout'], string> = {
   hero: 'flex flex-col items-center justify-center text-center p-8',
@@ -15,15 +16,29 @@ const layoutStyles: Record<Page['layout'], string> = {
 interface PageRendererProps {
   page: Page
   bookId: string
+  theme?: Theme
   className?: string
 }
 
 export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
-  ({ page, bookId, className }, ref) => {
+  ({ page, bookId, theme, className }, ref) => {
     const bg = page.background
 
-    const backgroundStyle: React.CSSProperties = {}
-    if (bg?.color) backgroundStyle.backgroundColor = bg.color
+    // Resolve theme colors
+    const preset = theme?.preset && theme.preset !== 'custom' 
+      ? THEME_PRESETS[theme.preset as keyof typeof THEME_PRESETS] 
+      : null
+    
+    const primaryColor = theme?.primary || preset?.primary || '#01696F'
+    const bgColor = bg?.color || theme?.background || preset?.background || '#ffffff'
+
+    const backgroundStyle: React.CSSProperties = {
+      backgroundColor: bgColor,
+      // Inject CSS variables for blocks to use
+      ['--primary' as any]: primaryColor,
+      ['--background' as any]: bgColor,
+      color: theme?.preset === 'carbon' || theme?.preset === 'slate' ? 'white' : 'inherit',
+    }
     if (bg?.image) {
       backgroundStyle.backgroundImage = `url(${bg.image})`
       backgroundStyle.backgroundSize = 'cover'

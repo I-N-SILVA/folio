@@ -203,7 +203,7 @@ export function EditorCanvas() {
           
           {/* Wrap PageRenderer to intercept block clicks */}
           <div className="absolute inset-0">
-            <PageRenderer page={currentPage} bookId={book.id} className="w-full h-full" />
+            <PageRenderer page={currentPage} bookId={book.id} theme={book.theme} className="w-full h-full" />
           </div>
 
           {/* Block click overlay: transparent divs per block (z-layered over renderer) */}

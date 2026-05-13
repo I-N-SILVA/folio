@@ -619,6 +619,13 @@ export function SettingsPanel() {
   const { book, currentPageIndex, selectedBlockId, selectedHotspotId } = useEditorStore()
   const [tab, setTab] = useState<'selection' | 'book'>('selection')
 
+  // Auto-switch to selection tab when something is selected
+  useEffect(() => {
+    if (selectedBlockId || selectedHotspotId) {
+      setTab('selection')
+    }
+  }, [selectedBlockId, selectedHotspotId])
+
   const currentPage = book?.pages?.[currentPageIndex]
 
   if (!book || !currentPage) {

@@ -214,7 +214,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
               style={{ width: dims.w, height: dims.h }}
               onClick={(e) => handlePageClick(e, idx)}
             >
-              <PageRenderer page={page} bookId={book.id} />
+              <PageRenderer page={page} bookId={book.id} theme={book.theme} />
               <HotspotLayer
                 hotspots={page.hotspots}
                 bookId={book.id}

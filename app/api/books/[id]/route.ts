@@ -118,3 +118,33 @@ export async function PUT(
 
   return NextResponse.json({ success: true, count: parsed.data.pages.length })
 }
+
+// ─── DELETE /api/books/[id] — remove book ────────────────────────────────────
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const supabase = await createServerSupabase()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Verify ownership
+  const { data: book } = await supabase
+    .from('books')
+    .select('id, owner_id')
+    .eq('id', id)
+    .single()
+
+  if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (book.owner_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const { error } = await supabase.from('books').delete().eq('id', id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
