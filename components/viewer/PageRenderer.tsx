@@ -32,6 +32,8 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
     
     const primaryColor = theme?.primary || preset?.primary || '#01696F'
     const bgColor = bg?.color || theme?.background || preset?.background || '#ffffff'
+    const headingFont = theme?.headingFont || preset?.headingFont || 'inherit'
+    const bodyFont = theme?.bodyFont || preset?.bodyFont || 'inherit'
     
     // Determine text color based on background luminance (simple check)
     const isDark = theme?.preset === 'carbon' || theme?.preset === 'slate'
@@ -43,7 +45,10 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
       ['--primary' as any]: primaryColor,
       ['--background' as any]: bgColor,
       ['--text-color' as any]: textColor,
+      ['--heading-font' as any]: `"${headingFont}", sans-serif`,
+      ['--body-font' as any]: `"${bodyFont}", sans-serif`,
       color: 'var(--text-color)',
+      fontFamily: 'var(--body-font)',
     }
     if (bg?.image) {
       backgroundStyle.backgroundImage = `url(${bg.image})`

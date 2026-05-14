@@ -57,11 +57,15 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
     }
   }
 
+  const isHeading = ['title', 'heading', 'stat'].includes(block.variant)
+
   const containerClasses = twMerge(
     variantStyles[block.variant],
     alignStyles[block.align ?? 'left'],
     'text-[var(--text-color)] transition-all'
   )
+
+  const fontStyle = { fontFamily: isHeading ? 'var(--heading-font)' : 'var(--body-font)' }
 
   if (isEditing && pageId) {
     return (
@@ -75,7 +79,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
           containerClasses,
           'w-full bg-transparent border-0 outline-none resize-none ring-2 ring-blue-500 rounded p-1'
         )}
-        style={{ minHeight: '1em', overflow: 'hidden' }}
+        style={{ minHeight: '1em', overflow: 'hidden', ...fontStyle }}
         rows={content.split('\n').length || 1}
       />
     )
@@ -88,6 +92,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
         containerClasses,
         'prose-a:text-[var(--primary)] prose-a:underline hover:prose-a:opacity-80'
       )}
+      style={fontStyle}
     >
       <ReactMarkdown>{block.content}</ReactMarkdown>
     </div>

@@ -169,9 +169,9 @@ function SortablePageItem({
 }
 
 export function PageListSidebar() {
-  const { book, currentPageIndex, setCurrentPageIndex, addPage, removePage, reorderPages, addBlock, setPageBlocks, updatePage } =
+  const { book, currentPageIndex, setCurrentPageIndex, addPage, removePage, reorderPages, addBlock, setPageBlocks, updatePage, selectBlock, selectHotspot, selectedBlockId, selectedHotspotId } =
     useEditorStore()
-  const [activeTab, setActiveTab] = useState<'pages' | 'library' | 'templates'>('pages')
+  const [activeTab, setActiveTab] = useState<'pages' | 'layers' | 'library' | 'templates'>('pages')
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -205,6 +205,16 @@ export function PageListSidebar() {
         >
           <Layers size={13} />
           Pages
+        </button>
+        <button
+          onClick={() => setActiveTab('layers')}
+          className={twMerge(
+            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            activeTab === 'layers' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+          )}
+        >
+          <GripVertical size={13} />
+          Layers
         </button>
         <button
           onClick={() => setActiveTab('library')}
@@ -254,6 +264,47 @@ export function PageListSidebar() {
                 ))}
               </SortableContext>
             </DndContext>
+          </div>
+        )}
+
+        {activeTab === 'layers' && currentPage && (
+          <div className="p-4 space-y-4">
+            <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Page {currentPage.page_number} Layers</div>
+            
+            <div className="space-y-1">
+              <div className="text-[10px] font-bold text-neutral-600 uppercase mb-2">Blocks</div>
+              {currentPage.blocks.length === 0 && <div className="text-xs text-neutral-500 italic px-2">No blocks on this page.</div>}
+              {currentPage.blocks.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => selectBlock(b.id)}
+                  className={twMerge(
+                    "flex items-center gap-2 w-full p-2 text-left text-xs rounded transition-colors",
+                    selectedBlockId === b.id ? "bg-blue-500/20 text-blue-400" : "hover:bg-neutral-800 text-neutral-300"
+                  )}
+                >
+                  <Box size={14} className="opacity-50" />
+                  <span className="capitalize">{b.type} block</span>
+                  {b.type === 'text' && <span className="text-[10px] text-neutral-500 truncate max-w-[100px] ml-auto">{(b as any).content}</span>}
+                </button>
+              ))}
+
+              <div className="text-[10px] font-bold text-neutral-600 uppercase mt-4 mb-2">Hotspots</div>
+              {currentPage.hotspots.length === 0 && <div className="text-xs text-neutral-500 italic px-2">No hotspots on this page.</div>}
+              {currentPage.hotspots.map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => selectHotspot(h.id)}
+                  className={twMerge(
+                    "flex items-center gap-2 w-full p-2 text-left text-xs rounded transition-colors",
+                    selectedHotspotId === h.id ? "bg-blue-500/20 text-blue-400" : "hover:bg-neutral-800 text-neutral-300"
+                  )}
+                >
+                  <Wand2 size={14} className="opacity-50" />
+                  <span className="truncate">{h.label || 'Unnamed Hotspot'}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

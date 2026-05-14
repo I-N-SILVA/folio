@@ -516,7 +516,7 @@ function HotspotSettingsForm({
 // ─── Book Settings Form ───────────────────────────────────────────────────────
 
 function BookSettingsForm({ book }: { book: any }) {
-  const { updateSettings } = useEditorStore()
+  const { updateSettings, updatePage, setBook } = useEditorStore()
   const { register, watch } = useForm({
     defaultValues: {
       password: book.settings?.password ?? '',
@@ -527,11 +527,15 @@ function BookSettingsForm({ book }: { book: any }) {
       gatingPage: book.settings?.gating?.page_number ?? 3,
       gatingTitle: book.settings?.gating?.title ?? 'Unlock the full version',
       gatingDescription: book.settings?.gating?.description ?? 'Enter your email to continue reading.',
+      headingFont: book.theme?.headingFont ?? '',
+      bodyFont: book.theme?.bodyFont ?? '',
+      themePreset: book.theme?.preset ?? 'ivory',
     },
   })
 
   useEffect(() => {
     const sub = watch((values) => {
+      // Update book settings
       updateSettings({
         password: values.password || undefined,
         burn_after_reading: values.burn_after_reading,
@@ -545,6 +549,20 @@ function BookSettingsForm({ book }: { book: any }) {
           description: values.gatingDescription ?? 'Enter your email to continue reading.',
         },
       })
+      
+      // Update book theme globally via a direct store set if needed, or we can just patch it here
+      const state = useEditorStore.getState()
+      if (state.book) {
+        state.setBook({
+          ...state.book,
+          theme: {
+            ...state.book.theme,
+            preset: values.themePreset as any,
+            headingFont: values.headingFont || undefined,
+            bodyFont: values.bodyFont || undefined,
+          }
+        })
+      }
     })
     return () => sub.unsubscribe()
   }, [watch, updateSettings])
@@ -552,6 +570,27 @@ function BookSettingsForm({ book }: { book: any }) {
   return (
     <div className="space-y-6">
       <div className="space-y-4">
+        <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
+          Theme & Typography
+        </span>
+        <Field label="Theme Preset">
+          <select {...register('themePreset')} className={selectCls}>
+            <option value="ivory">Ivory (Light)</option>
+            <option value="slate">Slate (Dark)</option>
+            <option value="cream">Cream (Warm)</option>
+            <option value="carbon">Carbon (Black)</option>
+            <option value="sage">Sage (Green)</option>
+          </select>
+        </Field>
+        <Field label="Heading Font">
+          <input {...register('headingFont')} className={inputCls} placeholder="e.g. Inter, serif" />
+        </Field>
+        <Field label="Body Font">
+          <input {...register('bodyFont')} className={inputCls} placeholder="e.g. Roboto, sans-serif" />
+        </Field>
+      </div>
+
+      <div className="space-y-4 pt-4 border-t border-neutral-800">
         <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
           Access Control
         </span>

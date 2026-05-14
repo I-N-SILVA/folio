@@ -32,6 +32,8 @@ export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIco
     e.stopPropagation()
   }
 
+  const isEcomAction = hotspot.action === 'checkout' || hotspot.action === 'link'
+
   return (
     <button
       className="absolute pointer-events-auto transform -translate-x-1/2 -translate-y-1/2 group"
@@ -41,12 +43,12 @@ export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIco
       aria-label={hotspot.label}
       title={hotspot.label}
     >
-      {/* Pulsing ring — stops after first click */}
-      {!clicked && (
-        <span className="absolute inline-flex w-full h-full rounded-full bg-white/60 animate-ping" />
+      {/* Pulsing ring — stops after first click, unless it's a high-value action */}
+      {(!clicked || isEcomAction) && (
+        <span className={`absolute inline-flex w-full h-full rounded-full bg-white/60 ${isEcomAction ? 'animate-ping' : 'animate-ping'}`} style={isEcomAction ? { animationDuration: '2s' } : undefined} />
       )}
       <span className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/90 shadow-lg hover:scale-110 transition-transform">
-        <Icon size={16} className="text-gray-800" />
+        <Icon size={16} className={isEcomAction ? 'text-[#01696F]' : 'text-gray-800'} />
       </span>
     </button>
   )
