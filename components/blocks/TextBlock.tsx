@@ -60,7 +60,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
   const containerClasses = twMerge(
     variantStyles[block.variant],
     alignStyles[block.align ?? 'left'],
-    'transition-all'
+    'text-[var(--text-color)] transition-all'
   )
 
   if (isEditing && pageId) {

@@ -359,7 +359,7 @@ function PageSettingsForm({ page }: { page: Page }) {
       })
     })
     return () => sub.unsubscribe()
-  }, [watch, page.id, updatePage]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [watch, page.id, page.background, updatePage])
 
   return (
     <div className="space-y-4">

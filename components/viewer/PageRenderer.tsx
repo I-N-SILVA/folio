@@ -32,13 +32,18 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
     
     const primaryColor = theme?.primary || preset?.primary || '#01696F'
     const bgColor = bg?.color || theme?.background || preset?.background || '#ffffff'
+    
+    // Determine text color based on background luminance (simple check)
+    const isDark = theme?.preset === 'carbon' || theme?.preset === 'slate'
+    const textColor = isDark ? '#ffffff' : '#111827'
 
     const backgroundStyle: React.CSSProperties = {
       backgroundColor: bgColor,
       // Inject CSS variables for blocks to use
       ['--primary' as any]: primaryColor,
       ['--background' as any]: bgColor,
-      color: theme?.preset === 'carbon' || theme?.preset === 'slate' ? 'white' : 'inherit',
+      ['--text-color' as any]: textColor,
+      color: 'var(--text-color)',
     }
     if (bg?.image) {
       backgroundStyle.backgroundImage = `url(${bg.image})`
