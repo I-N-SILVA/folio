@@ -3,7 +3,7 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],
   turbopack: {
-    root: __dirname,
+    root: process.cwd(),
   },
   images: {
     remotePatterns: [

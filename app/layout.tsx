@@ -1,18 +1,15 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import { Providers } from './providers'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-
 export const metadata: Metadata = {
   title: { default: 'Folio', template: '%s | Folio' },
-  description: 'Self-hosted interactive flipbook platform',
+  description: 'A premium studio for interactive flipbooks, analytics, and embedded digital publications.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
       </body>

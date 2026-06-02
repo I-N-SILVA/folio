@@ -29,22 +29,29 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-[#F7F6F2]">
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-2">Folio</h1>
-        <p className="text-gray-600 mb-8">Sign in to access Creator Studio</p>
+    <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
+      <div className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+        <div className="mb-8">
+          <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.24em] text-[var(--folio-teal)]">
+            Creator Studio
+          </p>
+          <h1 className="font-display text-5xl font-semibold tracking-[-0.07em]">Folio</h1>
+          <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">
+            Sign in with a magic link to compose, publish, and measure your digital shelf.
+          </p>
+        </div>
 
         {sent ? (
-          <div className="rounded-xl border border-green-200 bg-green-50 p-6">
-            <h2 className="font-semibold text-green-800 mb-1">Check your email</h2>
-            <p className="text-green-700 text-sm">
+          <div className="rounded-[1.5rem] border border-green-200 bg-green-50 p-6">
+            <h2 className="mb-1 font-semibold text-green-800">Check your email</h2>
+            <p className="text-sm text-green-700">
               We sent a magic link to <strong>{email}</strong>. Click it to sign in.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
+              <label htmlFor="email" className="mb-2 block text-sm font-extrabold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
                 Email address
               </label>
               <input
@@ -54,7 +61,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#01696F]"
+                className="w-full rounded-2xl border border-[var(--folio-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--folio-teal)] focus:ring-4 focus:ring-[var(--folio-teal)]/10"
               />
             </div>
 
@@ -63,7 +70,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#01696F] text-white rounded-lg py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="rounded-full bg-[var(--folio-teal)] py-3.5 font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(13,102,97,0.22)] transition hover:-translate-y-0.5 hover:bg-[#09514d] disabled:translate-y-0 disabled:opacity-50"
             >
               {loading ? 'Sending…' : 'Send magic link'}
             </button>

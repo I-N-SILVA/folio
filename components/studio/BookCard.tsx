@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BarChart2, ExternalLink, Trash2, Edit2, Check, X, MoreVertical } from 'lucide-react'
+import { BarChart2, ExternalLink, Trash2, Edit2, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
+import type { Book } from '@/lib/book-schema'
 
 interface BookCardProps {
-  book: any
+  book: Omit<Book, 'pages'> & { pages?: { id: string }[] }
 }
 
 export function BookCard({ book: initialBook }: BookCardProps) {
@@ -18,6 +19,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   const router = useRouter()
 
   const published = book.settings?.published
+  const displayDate = book.updated_at || book.created_at || new Date().toISOString()
 
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete "${book.title}"?`)) return
@@ -59,13 +61,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   }
 
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
+    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/78 p-5 shadow-sm transition-all hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(43,31,18,0.14)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
+      <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(185,130,53,0.18)] blur-2xl transition group-hover:bg-[rgba(13,102,97,0.16)]" />
       <div className="flex items-start justify-between mb-3 gap-2">
         {isEditing ? (
           <div className="flex-1 flex items-center gap-1">
             <input
               autoFocus
-              className="flex-1 text-sm font-semibold text-gray-900 border-b-2 border-[#01696F] outline-none py-0.5"
+              className="flex-1 border-b-2 border-[var(--folio-teal)] bg-transparent py-0.5 text-sm font-semibold text-[var(--folio-ink)] outline-none"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => {
@@ -73,23 +76,23 @@ export function BookCard({ book: initialBook }: BookCardProps) {
                 if (e.key === 'Escape') setIsEditing(false)
               }}
             />
-            <button onClick={handleRename} className="p-1 text-green-600 hover:bg-green-50 rounded">
+            <button onClick={handleRename} className="rounded p-1 text-green-700 hover:bg-green-50">
               <Check size={14} />
             </button>
-            <button onClick={() => setIsEditing(false)} className="p-1 text-gray-400 hover:bg-gray-50 rounded">
+            <button onClick={() => setIsEditing(false)} className="rounded p-1 text-[var(--folio-muted)] hover:bg-black/5">
               <X size={14} />
             </button>
           </div>
         ) : (
-          <h2 className="font-semibold text-gray-900 truncate flex-1" title={book.title}>
+          <h2 className="font-display flex-1 truncate text-2xl font-semibold tracking-[-0.05em] text-[var(--folio-ink)]" title={book.title}>
             {book.title}
           </h2>
         )}
         
         {!isEditing && (
           <span
-            className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0 ${
-              published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+            className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] ${
+              published ? 'bg-[#dcebd7] text-[#3d6c38]' : 'bg-black/5 text-[var(--folio-muted)]'
             }`}
           >
             {published ? 'Published' : 'Draft'}
@@ -97,14 +100,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         )}
       </div>
 
-      <p className="text-xs text-gray-400 mb-4">
-        {new Date(book.updated_at || book.created_at).toLocaleDateString()} • {book.pages?.length || 0} pages
+      <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
+        {new Date(displayDate).toLocaleDateString()} / {book.pages?.length || 0} pages
       </p>
 
       <div className="flex items-center gap-2 mt-auto">
         <Link
           href={`/editor/${book.id}`}
-          className="flex-1 text-center text-sm bg-[#01696F] text-white py-2 rounded-lg transition-all hover:opacity-90 font-medium"
+          className="flex-1 rounded-full bg-[var(--folio-ink)] py-2.5 text-center text-sm font-extrabold text-[#fbf1df] transition-all hover:-translate-y-0.5 hover:bg-[var(--folio-teal)]"
         >
           Edit
         </Link>
@@ -113,7 +116,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
           <Link
             href={`/book/${book.slug}`}
             target="_blank"
-            className="p-2 text-gray-500 hover:text-[#01696F] hover:bg-[#01696F]/5 rounded-lg transition-colors"
+            className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-[var(--folio-teal)]/10 hover:text-[var(--folio-teal)]"
             aria-label="View live"
           >
             <ExternalLink size={18} />
@@ -122,17 +125,17 @@ export function BookCard({ book: initialBook }: BookCardProps) {
 
         <Link
           href={`/analytics/${book.slug}`}
-          className="p-2 text-gray-500 hover:text-[#01696F] hover:bg-[#01696F]/5 rounded-lg transition-colors"
+          className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-[var(--folio-teal)]/10 hover:text-[var(--folio-teal)]"
           aria-label="Analytics"
         >
           <BarChart2 size={18} />
         </Link>
 
-        <div className="h-4 w-px bg-gray-100 mx-1" />
+        <div className="mx-1 h-4 w-px bg-[var(--folio-border)]" />
 
         <button
           onClick={() => setIsEditing(true)}
-          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-blue-50 hover:text-blue-700"
           aria-label="Rename"
         >
           <Edit2 size={16} />
@@ -141,12 +144,12 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         <button
           disabled={isDeleting}
           onClick={handleDelete}
-          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-red-50 hover:text-red-700"
           aria-label="Delete"
         >
           <Trash2 size={16} />
         </button>
       </div>
-    </div>
+    </article>
   )
 }

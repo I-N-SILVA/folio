@@ -7,11 +7,8 @@
 
 import * as pdfjsLib from 'pdfjs-dist'
 
-// Use the bundled worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString()
+// Serve the bundled pdf.js worker from /public to avoid webpack ESM worker quirks.
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
 export interface RenderedPage {
   pageNumber: number

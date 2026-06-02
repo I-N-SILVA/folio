@@ -3,363 +3,315 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import {
-  BookOpen,
   BarChart2,
-  Target,
-  FileUp,
-  Code2,
-  Palette,
+  BookOpen,
   Check,
+  Code2,
+  FileUp,
+  Palette,
+  Sparkles,
+  Target,
 } from 'lucide-react'
 
-// Lazy-loaded browser mock with iframe — avoids SSR iframe issues
 const BrowserPreview = dynamic(() => import('@/components/landing/BrowserPreview'), {
   ssr: false,
   loading: () => (
-    <div className="w-full aspect-[16/9] rounded-xl bg-[#F7F6F2] border border-gray-200 animate-pulse" />
+    <div className="h-full w-full animate-pulse rounded-[1.75rem] border border-[var(--folio-border)] bg-[#f3eadb]" />
   ),
 })
-
-// ─── Data ──────────────────────────────────────────────────────────────────────
 
 const FEATURES = [
   {
     icon: BookOpen,
-    title: 'Page flip animation',
-    desc: 'Buttery smooth CSS 3D page turns on desktop and mobile.',
-  },
-  {
-    icon: BarChart2,
-    title: 'Built-in analytics',
-    desc: 'Track opens, dwell time, hotspot clicks, and completion funnels. Your data stays in your Supabase.',
+    title: 'Tactile page turns',
+    desc: 'A polished 3D reader that feels editorial, not like another static PDF viewer.',
   },
   {
     icon: Target,
     title: 'Interactive hotspots',
-    desc: 'Place clickable info points anywhere on a page. Opens a rich modal with text, images, or video.',
+    desc: 'Layer product details, video, links, and narrative cues directly onto the page.',
+  },
+  {
+    icon: BarChart2,
+    title: 'Reader intelligence',
+    desc: 'Measure opens, dwell time, completion, and hotspot clicks from your own Supabase.',
   },
   {
     icon: FileUp,
-    title: 'PDF import',
-    desc: 'Upload any PDF and get an interactive flipbook in seconds.',
+    title: 'PDF to experience',
+    desc: 'Import existing PDFs and turn them into hosted, interactive publications quickly.',
   },
   {
     icon: Code2,
-    title: 'Embed anywhere',
-    desc: 'One line of HTML to embed your book in any website or CMS.',
+    title: 'Elegant embeds',
+    desc: 'Drop a responsive folio into landing pages, stores, docs, CMS pages, or portfolios.',
   },
   {
     icon: Palette,
-    title: '5 beautiful themes',
-    desc: 'Ivory, Slate, Cream, Carbon, Sage — or customize your own.',
+    title: 'Brandable themes',
+    desc: 'Shape the look for catalogs, lookbooks, reports, pitch decks, and creative portfolios.',
   },
 ]
 
 const STEPS = [
-  {
-    num: '01',
-    title: 'Create',
-    desc: 'Set up a book with our form-based Studio. No code, no JSON.',
-  },
-  {
-    num: '02',
-    title: 'Publish',
-    desc: 'Hit publish. Your book is live at a shareable URL instantly.',
-  },
-  {
-    num: '03',
-    title: 'Analyse',
-    desc: 'Open the analytics dashboard to see how readers engage with every page.',
-  },
+  ['01', 'Compose', 'Start from a PDF or build page-by-page with modular content blocks.'],
+  ['02', 'Embellish', 'Add hotspots, lead gates, metadata, custom themes, and publication settings.'],
+  ['03', 'Publish', 'Share a hosted reader, embed it anywhere, and watch engagement unfold.'],
 ]
 
 const PLANS = [
   {
     name: 'Free',
-    price: null,
-    highlight: false,
+    price: 'Free',
+    desc: 'For testing the format and publishing a first interactive book.',
     cta: 'Start free',
-    features: ['1 book', 'Basic analytics (7 days)', 'Folio watermark'],
+    features: ['1 book', 'Basic analytics for 7 days', 'Folio watermark'],
   },
   {
     name: 'Pro',
     price: '$19/mo',
-    highlight: true,
+    desc: 'For creators and teams who publish polished digital experiences often.',
     cta: 'Start Pro',
-    features: [
-      'Unlimited books',
-      'Full analytics (90 days)',
-      'Custom domain',
-      'No watermark',
-      'CSV export',
-    ],
+    featured: true,
+    features: ['Unlimited books', '90-day analytics', 'Custom domain', 'No watermark', 'CSV export'],
   },
   {
     name: 'Self-hosted',
-    price: '$199 one-time',
-    highlight: false,
+    price: '$199',
+    desc: 'For teams who need ownership, data sovereignty, and infrastructure control.',
     cta: 'Get license',
-    features: [
-      'Everything in Pro',
-      'Your infrastructure',
-      'Data sovereignty',
-      'PDF import',
-    ],
+    features: ['Everything in Pro', 'Your infrastructure', 'Data sovereignty', 'PDF import'],
   },
 ]
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
-
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: 'var(--font-inter), sans-serif' }}>
-
-      {/* ── Nav ─────────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold tracking-tight text-gray-900">
-            Folio
+    <div className="min-h-screen overflow-hidden bg-[var(--background)] text-[var(--folio-ink)]">
+      <header className="fixed inset-x-0 top-0 z-50 px-4 py-4">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between rounded-full border border-white/55 bg-[#fff9ed]/78 px-5 shadow-[0_18px_60px_rgba(45,31,15,0.12)] backdrop-blur-xl">
+          <Link href="/" className="flex items-center gap-3" aria-label="Folio home">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--folio-ink)] text-sm font-semibold text-[#f7ead4] shadow-lg shadow-black/10">
+              F
+            </span>
+            <span className="font-display text-2xl font-semibold tracking-[-0.04em]">Folio</span>
           </Link>
-          <nav className="flex items-center gap-2 sm:gap-4">
-            <Link
-              href="/book/demo"
-              className="hidden sm:block text-sm text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
-            >
-              View Demo
+
+          <nav className="flex items-center gap-1 text-sm font-semibold text-[var(--folio-muted)]">
+            <Link href="/book/demo" className="hidden rounded-full px-4 py-2 transition hover:bg-black/5 hover:text-[var(--folio-ink)] sm:block">
+              Demo
+            </Link>
+            <Link href="/login" className="rounded-full px-4 py-2 transition hover:bg-black/5 hover:text-[var(--folio-ink)]">
+              Sign in
             </Link>
             <Link
               href="/login"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
+              className="rounded-full bg-[var(--folio-ink)] px-5 py-2.5 text-[#fbf1df] shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:bg-[#33291e]"
             >
-              Sign In
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm font-medium text-white px-4 py-2 rounded-lg transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#01696F' }}
-            >
-              Get Started
+              Open Studio
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* ── Hero ────────────────────────────────────────────────────────────── */}
-      <section id="hero" className="pt-20 pb-16 px-6" style={{ backgroundColor: '#F7F6F2' }}>
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-gray-900 leading-[1.1]">
-            Interactive flipbooks<br className="hidden sm:block" />{' '}
-            that tell your story
-          </h1>
-          <p className="mt-6 text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Build beautiful page-flip experiences with analytics, hotspots, and embeds.
-            Self-hosted — your content, your data.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/login"
-              className="w-full sm:w-auto text-center text-base font-medium text-white px-7 py-3 rounded-lg transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#01696F' }}
-            >
-              Start for free
-            </Link>
-            <Link
-              href="/book/demo"
-              className="w-full sm:w-auto text-center text-base font-medium text-gray-700 px-7 py-3 rounded-lg border border-gray-300 bg-white hover:border-gray-400 transition-colors"
-            >
-              See the demo →
-            </Link>
-          </div>
-
-          {/* Browser mock */}
-          <div className="mt-14 max-w-3xl mx-auto">
-            <div className="rounded-xl border border-gray-200 overflow-hidden shadow-xl bg-white">
-              {/* Browser chrome */}
-              <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <span className="w-3 h-3 rounded-full bg-red-400" />
-                <span className="w-3 h-3 rounded-full bg-yellow-400" />
-                <span className="w-3 h-3 rounded-full bg-green-400" />
-                <div className="ml-3 flex-1 bg-white border border-gray-200 rounded text-xs text-gray-400 px-3 py-1 text-left max-w-xs">
-                  folio.app/book/demo
-                </div>
+      <main>
+        <section className="folio-grain relative px-5 pb-20 pt-32 sm:pt-40">
+          <div className="absolute left-1/2 top-0 -z-10 h-[720px] w-[920px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(185,130,53,0.26),rgba(13,102,97,0.16)_38%,transparent_68%)] blur-3xl" />
+          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="animate-folio-rise">
+              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/45 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.24em] text-[var(--folio-teal)] shadow-sm">
+                <Sparkles size={14} />
+                Digital publishing with soul
               </div>
-              {/* Iframe content */}
-              <div className="aspect-[16/9] bg-[#F7F6F2]">
-                <BrowserPreview />
+              <h1 className="font-display text-6xl font-semibold leading-[0.9] tracking-[-0.075em] text-[var(--folio-ink)] sm:text-7xl lg:text-8xl">
+                Make every page feel collected.
+              </h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-[var(--folio-muted)]">
+                Folio turns static PDFs into immersive flipbooks with hotspots, analytics, embeds,
+                and brand control. Built for portfolios, catalogs, lookbooks, reports, and premium
+                stories that deserve more than a download link.
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/login"
+                  className="rounded-full bg-[var(--folio-teal)] px-7 py-4 text-center text-sm font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_35px_rgba(13,102,97,0.24)] transition hover:-translate-y-1 hover:bg-[#09514d]"
+                >
+                  Create a folio
+                </Link>
+                <Link
+                  href="/book/demo"
+                  className="rounded-full border border-[var(--folio-border)] bg-white/45 px-7 py-4 text-center text-sm font-extrabold uppercase tracking-[0.16em] text-[var(--folio-ink)] transition hover:-translate-y-1 hover:bg-white"
+                >
+                  View the demo
+                </Link>
+              </div>
+            </div>
+
+            <div className="relative animate-folio-rise [animation-delay:140ms]">
+              <div className="absolute -left-8 top-10 hidden h-28 w-28 rotate-[-9deg] rounded-[2rem] border border-[var(--folio-border)] bg-[#792f2b] p-5 text-xs font-bold uppercase tracking-[0.2em] text-[#ffe7c2] shadow-2xl lg:block">
+                Live reader
+              </div>
+              <div className="rounded-[2.25rem] border border-[#fff8ec] bg-[#211a13] p-3 shadow-[0_44px_110px_rgba(38,28,16,0.32)]">
+                <div className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#f6ead8]">
+                  <div className="flex items-center gap-2 border-b border-black/10 bg-[#2b2218] px-5 py-4">
+                    <span className="h-3 w-3 rounded-full bg-[#d96155]" />
+                    <span className="h-3 w-3 rounded-full bg-[#d7a847]" />
+                    <span className="h-3 w-3 rounded-full bg-[#6e9d74]" />
+                    <div className="ml-3 max-w-xs flex-1 rounded-full border border-white/10 bg-white/8 px-4 py-1.5 text-xs text-[#e9d8bd]">
+                      folio.app/book/demo
+                    </div>
+                  </div>
+                  <div className="aspect-[16/10] bg-[#efe2ce]">
+                    <BrowserPreview />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Features ────────────────────────────────────────────────────────── */}
-      <section id="features" className="py-20 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-              Everything a flipbook needs
-            </h2>
-            <p className="mt-3 text-gray-500 text-lg">
-              Built for creators who want full control without complexity.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div
-                key={title}
-                className="p-6 rounded-xl border border-gray-100 bg-[#F7F6F2] hover:border-gray-200 transition-colors"
-              >
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                  style={{ backgroundColor: 'rgba(1,105,111,0.1)' }}
-                >
-                  <Icon size={20} style={{ color: '#01696F' }} />
+        <section className="px-5 py-20">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-5 md:grid-cols-3">
+              {[
+                ['2 min', 'to publish a shareable interactive reader'],
+                ['100%', 'self-host friendly with your own data layer'],
+                ['1 line', 'to embed a folio into any marketing surface'],
+              ].map(([stat, label]) => (
+                <div key={stat} className="rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/68 p-7 shadow-sm backdrop-blur">
+                  <p className="font-display text-5xl font-semibold tracking-[-0.06em] text-[var(--folio-ink)]">{stat}</p>
+                  <p className="mt-3 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">{label}</p>
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── How it works ────────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-20 px-6" style={{ backgroundColor: '#F7F6F2' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-              How it works
-            </h2>
-            <p className="mt-3 text-gray-500 text-lg">
-              From zero to published in under five minutes.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {STEPS.map(({ num, title, desc }) => (
-              <div key={num} className="relative">
-                <div
-                  className="text-5xl font-bold mb-3 leading-none"
-                  style={{ color: 'rgba(1,105,111,0.15)' }}
+        <section id="features" className="px-5 py-24">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-14 max-w-3xl">
+              <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[var(--folio-brass)]">
+                The publishing layer
+              </p>
+              <h2 className="mt-4 font-display text-5xl font-semibold leading-none tracking-[-0.06em] sm:text-6xl">
+                A studio, a reader, and the intelligence between them.
+              </h2>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {FEATURES.map(({ icon: Icon, title, desc }, index) => (
+                <article
+                  key={title}
+                  className="group rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/72 p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(43,31,18,0.14)]"
+                  style={{ animationDelay: `${index * 65}ms` }}
                 >
-                  {num}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-                <p className="text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Pricing ─────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-20 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900">
-              Simple pricing
-            </h2>
-            <p className="mt-3 text-gray-500 text-lg">
-              Start free. Scale when you need it.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PLANS.map(({ name, price, highlight, cta, features }) => (
-              <div
-                key={name}
-                className={`relative rounded-2xl border p-8 flex flex-col ${
-                  highlight
-                    ? 'border-transparent text-white shadow-lg'
-                    : 'border-gray-200 bg-white'
-                }`}
-                style={highlight ? { backgroundColor: '#01696F' } : {}}
-              >
-                {highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-semibold px-3 py-1 rounded-full">
-                    Most popular
+                  <div className="mb-7 grid h-12 w-12 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#f7e7c9] shadow-lg shadow-black/10 transition group-hover:rotate-3 group-hover:bg-[var(--folio-teal)]">
+                    <Icon size={21} />
                   </div>
-                )}
-                <div className="mb-6">
-                  <h3
-                    className={`text-lg font-semibold mb-1 ${
-                      highlight ? 'text-white' : 'text-gray-900'
-                    }`}
-                  >
-                    {name}
-                  </h3>
-                  {price ? (
-                    <p
-                      className={`text-2xl font-bold ${
-                        highlight ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
-                      {price}
-                    </p>
-                  ) : (
-                    <p
-                      className={`text-2xl font-bold ${
-                        highlight ? 'text-white' : 'text-gray-900'
-                      }`}
-                    >
-                      Free
-                    </p>
-                  )}
-                </div>
-                <ul className="flex-1 space-y-3 mb-8">
-                  {features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm">
-                      <Check
-                        size={16}
-                        className={`mt-0.5 shrink-0 ${
-                          highlight ? 'text-white/80' : ''
-                        }`}
-                        style={highlight ? {} : { color: '#01696F' }}
-                      />
-                      <span className={highlight ? 'text-white/90' : 'text-gray-600'}>
-                        {f}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/login"
-                  className={`text-center text-sm font-semibold py-3 rounded-lg transition-colors ${
-                    highlight
-                      ? 'bg-white hover:bg-gray-50 text-[#01696F]'
-                      : 'border border-gray-300 hover:border-gray-400 text-gray-800'
+                  <h3 className="font-display text-2xl font-semibold tracking-[-0.04em]">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">{desc}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="how-it-works" className="bg-[var(--folio-ink)] px-5 py-24 text-[#fbf1df]">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#d6aa66]">
+                  Workflow
+                </p>
+                <h2 className="mt-4 font-display text-5xl font-semibold leading-none tracking-[-0.06em]">
+                  From flat asset to living publication.
+                </h2>
+              </div>
+              <div className="grid gap-4">
+                {STEPS.map(([num, title, desc]) => (
+                  <div key={num} className="grid gap-5 rounded-[2rem] border border-white/10 bg-white/[0.055] p-6 backdrop-blur sm:grid-cols-[90px_1fr]">
+                    <span className="font-display text-5xl font-semibold tracking-[-0.06em] text-[#d6aa66]">{num}</span>
+                    <div>
+                      <h3 className="text-xl font-extrabold">{title}</h3>
+                      <p className="mt-2 leading-7 text-[#d8c6aa]">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="px-5 py-24">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-14 text-center">
+              <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[var(--folio-brass)]">
+                Pricing
+              </p>
+              <h2 className="mt-4 font-display text-5xl font-semibold tracking-[-0.06em]">
+                Start small. Publish beautifully.
+              </h2>
+            </div>
+            <div className="grid items-stretch gap-5 lg:grid-cols-3">
+              {PLANS.map(({ name, price, desc, cta, features, featured }) => (
+                <article
+                  key={name}
+                  className={`relative flex rounded-[2rem] border p-7 shadow-sm ${
+                    featured
+                      ? 'border-[#dac196] bg-[var(--folio-ink)] text-[#fbf1df] shadow-[0_30px_80px_rgba(32,25,18,0.28)] lg:-mt-5 lg:mb-5'
+                      : 'border-[var(--folio-border)] bg-[#fffaf0]/72'
                   }`}
                 >
-                  {cta}
-                </Link>
-              </div>
-            ))}
+                  {featured && (
+                    <span className="absolute -top-3 left-7 rounded-full bg-[#d6aa66] px-4 py-1 text-xs font-extrabold uppercase tracking-[0.18em] text-[#271c10]">
+                      Most popular
+                    </span>
+                  )}
+                  <div className="flex w-full flex-col">
+                    <h3 className="font-display text-3xl font-semibold tracking-[-0.05em]">{name}</h3>
+                    <p className={`mt-3 min-h-14 text-sm leading-6 ${featured ? 'text-[#d8c6aa]' : 'text-[var(--folio-muted)]'}`}>
+                      {desc}
+                    </p>
+                    <p className="mt-7 font-display text-5xl font-semibold tracking-[-0.06em]">{price}</p>
+                    <ul className="mt-8 flex-1 space-y-3">
+                      {features.map((feature) => (
+                        <li key={feature} className="flex gap-3 text-sm font-semibold">
+                          <Check size={17} className={featured ? 'mt-0.5 text-[#d6aa66]' : 'mt-0.5 text-[var(--folio-teal)]'} />
+                          <span className={featured ? 'text-[#f7ead4]' : 'text-[var(--folio-ink)]'}>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href="/login"
+                      className={`mt-8 rounded-full px-5 py-3 text-center text-sm font-extrabold uppercase tracking-[0.16em] transition hover:-translate-y-1 ${
+                        featured
+                          ? 'bg-[#fbf1df] text-[var(--folio-ink)] hover:bg-white'
+                          : 'border border-[var(--folio-border)] bg-white/50 text-[var(--folio-ink)] hover:bg-white'
+                      }`}
+                    >
+                      {cta}
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* ── Footer ──────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-gray-100 py-12 px-6" style={{ backgroundColor: '#F7F6F2' }}>
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-center sm:text-left">
-            <p className="text-lg font-bold text-gray-900">Folio</p>
-            <p className="text-sm text-gray-500 mt-0.5">Self-hosted interactive flipbooks</p>
+      <footer className="border-t border-[var(--folio-border)] bg-[#eee1cc] px-5 py-12">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-display text-3xl font-semibold tracking-[-0.05em]">Folio</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--folio-muted)]">
+              Interactive flipbooks with craft, context, and control.
+            </p>
           </div>
-          <nav className="flex items-center gap-6 text-sm text-gray-500">
-            <Link href="/book/demo" className="hover:text-gray-900 transition-colors">
-              Demo
-            </Link>
-            <Link href="/login" className="hover:text-gray-900 transition-colors">
-              Sign in
-            </Link>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-gray-900 transition-colors"
-            >
+          <nav className="flex flex-wrap items-center gap-5 text-sm font-bold text-[var(--folio-muted)]">
+            <Link href="/book/demo" className="hover:text-[var(--folio-ink)]">Demo</Link>
+            <Link href="/login" className="hover:text-[var(--folio-ink)]">Sign in</Link>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--folio-ink)]">
               GitHub
             </a>
           </nav>
-          <p className="text-xs text-gray-400">Built with Next.js + Supabase</p>
         </div>
       </footer>
     </div>

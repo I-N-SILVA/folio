@@ -1,10 +1,12 @@
-import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { LibraryBig, Plus, Sparkles } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
 import { BookCard } from '@/components/studio/BookCard'
+import type { Book } from '@/lib/book-schema'
 
-async function getBooks() {
+type DashboardBook = Omit<Book, 'pages'> & { pages?: { id: string }[] }
+
+async function getBooks(): Promise<DashboardBook[]> {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
@@ -15,37 +17,76 @@ async function getBooks() {
     .eq('owner_id', user.id)
     .order('created_at', { ascending: false })
 
-  return data ?? []
+  return (data ?? []) as DashboardBook[]
 }
 
 export default async function DashboardPage() {
   const books = await getBooks()
+  const publishedCount = books.filter((book) => book.settings?.published).length
+  const pageCount = books.reduce((total, book) => total + (book.pages?.length ?? 0), 0)
 
   return (
-    <main className="min-h-screen bg-[#F7F6F2] p-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">My Books</h1>
-          <DashboardActions />
-        </div>
-
-        {books.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus size={32} className="text-gray-300" />
+    <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--folio-ink)] sm:px-8">
+      <div className="mx-auto max-w-6xl">
+        <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/76 p-6 shadow-[var(--folio-shadow)] backdrop-blur sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
+                <Sparkles size={13} />
+                Creator Studio
+              </div>
+              <h1 className="font-display text-5xl font-semibold leading-none tracking-[-0.06em] sm:text-6xl">
+                Your digital shelf
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--folio-muted)] sm:text-base">
+                Compose, publish, and measure interactive publications from one calm workspace.
+              </p>
             </div>
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Your digital shelf is empty</h2>
-            <p className="text-gray-500 text-sm mb-8 max-w-xs mx-auto">Create interactive portfolios and magazines that look stunning on any device.</p>
             <DashboardActions />
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {books.map((book: any) => (
-              <BookCard key={book.id} book={book} />
-            ))}
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <StatCard label="Books" value={books.length} />
+            <StatCard label="Published" value={publishedCount} />
+            <StatCard label="Pages" value={pageCount} />
           </div>
+        </section>
+
+        {books.length === 0 ? (
+          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/78 px-6 py-20 text-center shadow-sm">
+            <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(185,130,53,0.22)] blur-3xl" />
+            <div className="relative mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[2rem] border border-[var(--folio-border)] bg-white/70 shadow-lg">
+              <Plus size={34} className="text-[var(--folio-brass)]" />
+            </div>
+            <h2 className="font-display text-4xl font-semibold tracking-[-0.06em]">Your shelf is waiting.</h2>
+            <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--folio-muted)]">
+              Create interactive portfolios, catalogs, magazines, and reports that feel crafted on every device.
+            </p>
+            <DashboardActions />
+          </section>
+        ) : (
+          <section>
+            <div className="mb-4 flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.18em] text-[var(--folio-muted)]">
+              <LibraryBig size={16} />
+              Library
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {books.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </main>
+  )
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-3xl border border-[var(--folio-border)] bg-white/55 p-5 shadow-sm">
+      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--folio-muted)]">{label}</p>
+      <p className="mt-2 font-display text-4xl font-semibold tracking-[-0.06em]">{value}</p>
+    </div>
   )
 }

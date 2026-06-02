@@ -24,7 +24,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
+    <div className="flex w-full flex-col items-center gap-4">
       <ViewerEngine
         ref={engineRef}
         book={book}
@@ -33,23 +33,23 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       />
 
       {!embed && (
-        <div className="flex items-center gap-6 py-3 px-6 rounded-full bg-black/10 backdrop-blur-sm">
+        <div className="flex items-center gap-3 rounded-full border border-white/50 bg-[#fff8ec]/78 px-4 py-3 text-[var(--folio-ink)] shadow-[0_18px_60px_rgba(45,31,15,0.16)] backdrop-blur-xl sm:gap-6 sm:px-6">
           <button
             onClick={() => engineRef.current?.flipPrev()}
-            className="p-2 rounded-full hover:bg-black/10 transition-colors disabled:opacity-30 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
             aria-label="Previous page"
             disabled={currentPage === 0}
           >
             <ChevronLeft size={20} />
           </button>
 
-          <span className="text-sm font-medium tabular-nums min-w-[80px] text-center">
+          <span className="min-w-[80px] text-center text-sm font-extrabold tabular-nums tracking-[0.08em]">
             {currentPage + 1} / {totalPages}
           </span>
 
           <button
             onClick={() => engineRef.current?.flipNext()}
-            className="p-2 rounded-full hover:bg-black/10 transition-colors disabled:opacity-30 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
             aria-label="Next page"
             disabled={currentPage >= totalPages - 1}
           >
@@ -58,7 +58,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
 
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-full hover:bg-black/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10"
             aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
           >
             {fullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
@@ -79,9 +79,9 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
           href="https://folio.new"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-4 right-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 shadow-sm border border-black/5 hover:text-gray-900 transition-colors z-[9000]"
+          className="fixed bottom-4 right-4 z-[9000] rounded-full border border-white/50 bg-[#fff8ec]/82 px-3 py-1.5 text-xs font-extrabold text-[var(--folio-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--folio-ink)]"
         >
-          Made with <span className="font-bold text-[#01696F]">Folio</span>
+          Made with <span className="font-display text-[var(--folio-teal)]">Folio</span>
         </a>
       )}
     </div>
