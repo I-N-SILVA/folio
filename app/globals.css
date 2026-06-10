@@ -73,6 +73,46 @@ body {
   animation: folio-rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* Scroll reveal — toggled by IntersectionObserver via the Reveal component */
+.folio-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 760ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 760ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.folio-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Marquee for the trust / logo strip */
+@keyframes folio-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.folio-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: folio-marquee 38s linear infinite;
+}
+
+.folio-marquee:hover .folio-marquee-track {
+  animation-play-state: paused;
+}
+
+.folio-marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
