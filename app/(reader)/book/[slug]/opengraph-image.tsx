@@ -2,7 +2,10 @@ import { ImageResponse } from 'next/og'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 
-export const runtime = 'edge'
+// Runs on the Node.js runtime: this route imports the Supabase clients, which
+// push the bundle past Vercel's 1 MB Edge Function limit. Node serverless
+// functions have a much larger size cap and next/og works there too.
+export const runtime = 'nodejs'
 
 export const alt = 'Book Cover'
 export const size = {
