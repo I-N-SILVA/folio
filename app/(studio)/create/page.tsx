@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Crown } from 'lucide-react'
 import { THEME_PRESETS } from '@/lib/book-schema'
 
 type Step = 1 | 2 | 3
@@ -15,6 +17,13 @@ function slugify(s: string) {
     .slice(0, 100)
 }
 
+const inputCls =
+  'w-full rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--folio-teal)] focus:ring-2 focus:ring-[var(--folio-teal)]/20'
+const primaryBtn =
+  'rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#09514d] disabled:cursor-not-allowed disabled:opacity-50'
+const ghostBtn =
+  'rounded-full border border-[var(--folio-border)] bg-white/60 px-5 py-3 text-sm font-bold text-[var(--folio-ink)] transition hover:bg-white'
+
 export default function CreatePage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
@@ -25,6 +34,7 @@ export default function CreatePage() {
   const [theme, setTheme] = useState<keyof typeof THEME_PRESETS>('ivory')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [limitHit, setLimitHit] = useState(false)
 
   function handleTitleChange(val: string) {
     setTitle(val)
@@ -42,7 +52,12 @@ export default function CreatePage() {
       })
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error ?? 'Something went wrong')
+        if (data.code === 'plan_limit') {
+          setLimitHit(true)
+          setLoading(false)
+          return
+        }
+        setError(typeof data.error === 'string' ? data.error : 'Something went wrong')
         setLoading(false)
         return
       }
@@ -55,162 +70,124 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F7F6F2] flex items-center justify-center p-8">
-      <div className="w-full max-w-lg bg-white rounded-2xl p-8 shadow-sm">
-        {/* Progress */}
-        <div className="flex gap-2 mb-8">
-          {([1, 2, 3] as const).map((s) => (
-            <div
-              key={s}
-              className={`flex-1 h-1.5 rounded-full transition-colors ${s <= step ? 'bg-[#01696F]' : 'bg-gray-100'}`}
-            />
-          ))}
-        </div>
-
-        {step === 1 && (
-          <div className="flex flex-col gap-5">
-            <div>
-              <h2 className="text-xl font-bold mb-1">Book details</h2>
-              <p className="text-sm text-gray-500">Give your book a title and a URL slug.</p>
+    <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
+      <div className="w-full max-w-lg rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/85 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+        {limitHit ? (
+          <div className="text-center">
+            <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#d6aa66]">
+              <Crown size={26} />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Title *</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="My Interactive Book"
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01696F]"
-              />
+            <h2 className="font-display text-3xl font-semibold tracking-[-0.04em]">You've reached your book limit</h2>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[var(--folio-muted)]">
+              Upgrade your plan to publish more interactive folios, or redeem a lifetime-deal code.
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Link href="/#pricing" className={primaryBtn}>See plans</Link>
+              <Link href="/redeem" className={ghostBtn}>Redeem a code</Link>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="What's this book about?"
-                rows={3}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#01696F] resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">URL slug *</label>
-              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#01696F]">
-                <span className="px-3 py-2.5 text-sm text-gray-400 bg-gray-50 border-r border-gray-200">
-                  /book/
-                </span>
-                <input
-                  type="text"
-                  value={slug}
-                  onChange={(e) => { setSlug(e.target.value); setSlugEdited(true) }}
-                  placeholder="my-book"
-                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={() => setStep(2)}
-              disabled={!title || !slug}
-              className="bg-[#01696F] text-white rounded-lg py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
-            >
-              Next: Choose Theme →
-            </button>
+            <Link href="/dashboard" className="mt-5 inline-block text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
+              Back to studio
+            </Link>
           </div>
-        )}
-
-        {step === 2 && (
-          <div className="flex flex-col gap-5">
-            <div>
-              <h2 className="text-xl font-bold mb-1">Pick a theme</h2>
-              <p className="text-sm text-gray-500">Sets your book's colors and typography.</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              {(Object.entries(THEME_PRESETS) as [keyof typeof THEME_PRESETS, typeof THEME_PRESETS[keyof typeof THEME_PRESETS]][]).map(([key, preset]) => (
-                <button
-                  key={key}
-                  onClick={() => setTheme(key)}
-                  className={`flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
-                    theme === key ? 'border-[#01696F]' : 'border-gray-100 hover:border-gray-200'
-                  }`}
-                >
-                  <div
-                    className="w-10 h-10 rounded-lg flex-shrink-0"
-                    style={{ backgroundColor: preset.background, border: '1px solid rgba(0,0,0,0.1)' }}
-                  />
-                  <div>
-                    <p className="font-medium text-sm">{preset.label}</p>
-                    <p className="text-xs text-gray-400">{preset.headingFont} · {preset.bodyFont}</p>
-                  </div>
-                  <div
-                    className="ml-auto w-4 h-4 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: preset.primary }}
-                  />
-                </button>
+        ) : (
+          <>
+            <div className="mb-8 flex gap-2">
+              {([1, 2, 3] as const).map((s) => (
+                <div
+                  key={s}
+                  className={`h-1.5 flex-1 rounded-full transition-colors ${s <= step ? 'bg-[var(--folio-teal)]' : 'bg-black/8'}`}
+                />
               ))}
             </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setStep(1)}
-                className="flex-1 border border-gray-200 text-gray-700 rounded-lg py-3 font-medium hover:bg-gray-50 transition-colors"
-              >
-                ← Back
-              </button>
-              <button
-                onClick={() => setStep(3)}
-                className="flex-1 bg-[#01696F] text-white rounded-lg py-3 font-medium hover:opacity-90 transition-opacity"
-              >
-                Next: Review →
-              </button>
-            </div>
-          </div>
-        )}
+            {step === 1 && (
+              <div className="flex flex-col gap-5">
+                <div>
+                  <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Book details</h2>
+                  <p className="mt-1 text-sm text-[var(--folio-muted)]">Give your book a title and a URL slug.</p>
+                </div>
 
-        {step === 3 && (
-          <div className="flex flex-col gap-5">
-            <div>
-              <h2 className="text-xl font-bold mb-1">Ready to create</h2>
-              <p className="text-sm text-gray-500">Review your settings before creating.</p>
-            </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-extrabold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Title *</label>
+                  <input type="text" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="My Interactive Book" className={inputCls} />
+                </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Title</span>
-                <span className="font-medium">{title}</span>
+                <div>
+                  <label className="mb-1.5 block text-sm font-extrabold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Description</label>
+                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's this book about?" rows={3} className={`${inputCls} resize-none`} />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-extrabold uppercase tracking-[0.12em] text-[var(--folio-muted)]">URL slug *</label>
+                  <div className="flex items-center overflow-hidden rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 focus-within:border-[var(--folio-teal)] focus-within:ring-2 focus-within:ring-[var(--folio-teal)]/20">
+                    <span className="border-r border-[var(--folio-border)] bg-black/[0.03] px-3 py-3 text-sm text-[var(--folio-muted)]">/book/</span>
+                    <input type="text" value={slug} onChange={(e) => { setSlug(e.target.value); setSlugEdited(true) }} placeholder="my-book" className="flex-1 bg-transparent px-3 py-3 text-sm outline-none" />
+                  </div>
+                </div>
+
+                <button onClick={() => setStep(2)} disabled={!title || !slug} className={primaryBtn}>
+                  Next: Choose Theme →
+                </button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Slug</span>
-                <span className="font-mono text-xs bg-gray-200 px-2 py-0.5 rounded">/book/{slug}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Theme</span>
-                <span className="font-medium">{THEME_PRESETS[theme].label}</span>
-              </div>
-            </div>
+            )}
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {step === 2 && (
+              <div className="flex flex-col gap-5">
+                <div>
+                  <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Pick a theme</h2>
+                  <p className="mt-1 text-sm text-[var(--folio-muted)]">Sets your book's colors and typography.</p>
+                </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setStep(2)}
-                className="flex-1 border border-gray-200 text-gray-700 rounded-lg py-3 font-medium hover:bg-gray-50 transition-colors"
-              >
-                ← Back
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={loading}
-                className="flex-1 bg-[#01696F] text-white rounded-lg py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {loading ? 'Creating…' : 'Create Book'}
-              </button>
-            </div>
-          </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {(Object.entries(THEME_PRESETS) as [keyof typeof THEME_PRESETS, typeof THEME_PRESETS[keyof typeof THEME_PRESETS]][]).map(([key, preset]) => (
+                    <button
+                      key={key}
+                      onClick={() => setTheme(key)}
+                      className={`flex items-center gap-4 rounded-[1.25rem] border-2 p-4 text-left transition-all ${
+                        theme === key ? 'border-[var(--folio-teal)] bg-white/70' : 'border-[var(--folio-border)] hover:border-[var(--folio-muted)]/40'
+                      }`}
+                    >
+                      <div className="h-10 w-10 flex-shrink-0 rounded-lg" style={{ backgroundColor: preset.background, border: '1px solid rgba(0,0,0,0.1)' }} />
+                      <div>
+                        <p className="text-sm font-bold">{preset.label}</p>
+                        <p className="text-xs text-[var(--folio-muted)]">{preset.headingFont} · {preset.bodyFont}</p>
+                      </div>
+                      <div className="ml-auto h-4 w-4 flex-shrink-0 rounded-full" style={{ backgroundColor: preset.primary }} />
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <button onClick={() => setStep(1)} className={`flex-1 ${ghostBtn}`}>← Back</button>
+                  <button onClick={() => setStep(3)} className={`flex-1 ${primaryBtn}`}>Next: Review →</button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="flex flex-col gap-5">
+                <div>
+                  <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Ready to create</h2>
+                  <p className="mt-1 text-sm text-[var(--folio-muted)]">Review your settings before creating.</p>
+                </div>
+
+                <div className="space-y-2 rounded-[1.25rem] border border-[var(--folio-border)] bg-white/55 p-4 text-sm">
+                  <div className="flex justify-between"><span className="text-[var(--folio-muted)]">Title</span><span className="font-semibold">{title}</span></div>
+                  <div className="flex justify-between"><span className="text-[var(--folio-muted)]">Slug</span><span className="rounded bg-black/[0.06] px-2 py-0.5 font-mono text-xs">/book/{slug}</span></div>
+                  <div className="flex justify-between"><span className="text-[var(--folio-muted)]">Theme</span><span className="font-semibold">{THEME_PRESETS[theme].label}</span></div>
+                </div>
+
+                {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+
+                <div className="flex gap-3">
+                  <button onClick={() => setStep(2)} className={`flex-1 ${ghostBtn}`}>← Back</button>
+                  <button onClick={handleCreate} disabled={loading} className={`flex-1 ${primaryBtn}`}>
+                    {loading ? 'Creating…' : 'Create Book'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>

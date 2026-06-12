@@ -4,6 +4,8 @@ import { Check, Crown, Gift, Minus, Sparkles } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getProfile, effectivePlan, countUserBooks } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
+import { isBillingEnabled } from '@/lib/stripe'
+import { UpgradeButton, ManageBillingButton } from '@/components/studio/BillingButtons'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +41,8 @@ export default async function AccountPage() {
   }
 
   const quotaPct = Number.isFinite(e.maxBooks) ? Math.min(100, Math.round((used / e.maxBooks) * 100)) : 0
+  const billingOn = isBillingEnabled()
+  const isProSubscriber = plan.id === 'pro'
 
   return (
     <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--folio-ink)] sm:px-8">
@@ -112,14 +116,29 @@ export default async function AccountPage() {
                 <Sparkles size={20} className="text-[var(--folio-brass)]" />
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Go Pro</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--folio-muted)]">
-                  Unlimited books, custom domains, and 90-day analytics.
+                  Unlimited books, custom domains, and 90-day analytics — $19/mo.
                 </p>
-                <Link
-                  href="/#pricing"
-                  className="mt-5 inline-block rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#09514d]"
-                >
-                  See plans
-                </Link>
+                {billingOn ? (
+                  <UpgradeButton className="mt-5" />
+                ) : (
+                  <Link
+                    href="/#pricing"
+                    className="mt-5 inline-block rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#09514d]"
+                  >
+                    See plans
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {billingOn && isProSubscriber && (
+              <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/72 p-7 shadow-sm">
+                <Sparkles size={20} className="text-[var(--folio-brass)]" />
+                <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Billing</h2>
+                <p className="mt-2 text-sm leading-6 text-[var(--folio-muted)]">
+                  Update your card, view invoices, or cancel anytime.
+                </p>
+                <ManageBillingButton className="mt-5" />
               </div>
             )}
           </aside>

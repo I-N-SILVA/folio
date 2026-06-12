@@ -28,10 +28,10 @@ The cheapest "app" is the one users add to their home screen. Polish it first.
 - [x] Web app manifest with name, icons, theme color, shortcuts.
 - [x] Maskable + Apple touch icons.
 - [x] `theme-color` + `apple-mobile-web-app` meta.
-- [ ] **Offline shell / service worker** — cache the reader shell and the last
-      opened folio so a publication keeps working on a flaky connection.
-      Recommended: [`@serwist/next`](https://serwist.pages.dev/) (modern,
-      App-Router friendly). Add a `app/sw.ts` and register it client-side.
+- [x] **Offline shell / service worker** — `public/sw.js` (registered in prod via
+      `components/ServiceWorkerRegistrar.tsx`): network-first navigations with an
+      `/offline` fallback, cache-first for hashed assets, stale-while-revalidate
+      for the rest. API / auth / embed requests are bypassed.
 - [ ] **Install prompt UX** — listen for `beforeinstallprompt`, stash the event,
       and surface a tasteful "Install Folio" button in the dashboard header.
 - [ ] **iOS standalone polish** — `viewport-fit=cover` (done) + safe-area-inset

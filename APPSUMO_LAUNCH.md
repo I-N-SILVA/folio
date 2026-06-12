@@ -59,7 +59,11 @@ storage + edge), which makes LTD viable.
 | Account page | `app/(studio)/account/page.tsx` | Plan, usage meter, entitlements |
 | Quota enforcement | `app/api/books/route.ts` | 403 `plan_limit` when over book cap |
 | DB schema | `supabase/migrations/004,005_*.sql` | `profiles`, `appsumo_licenses` |
-| Config | `.env.example` | `APPSUMO_API_KEY`, Supabase keys |
+| Quota endpoint | `app/api/entitlements/route.ts` | Powers the create-modal quota meter + upgrade wall |
+| DB-level limit | `supabase/migrations/006_*.sql` | Trigger backstops the book cap on any insert path |
+| Stripe billing (Pro) | `lib/stripe.ts`, `app/api/billing/*` | Checkout, portal, webhook; coexists with LTD plans |
+| Offline / PWA | `public/sw.js`, `components/ServiceWorkerRegistrar.tsx`, `app/offline/page.tsx` | Installable + offline fallback |
+| Config | `.env.example` | `APPSUMO_API_KEY`, Supabase keys, optional Stripe |
 
 ### Webhook actions handled
 - `activate` — new purchase → create active license.
@@ -72,8 +76,11 @@ Signature: HMAC-SHA256 of the raw body using `APPSUMO_API_KEY`, compared in
 constant time. **Fails closed in production** if no key is set.
 
 ### Go-live checklist (technical)
-- [ ] Apply migrations `001`–`005` to the production Supabase project.
+- [ ] Apply migrations `001`–`007` to the production Supabase project.
 - [ ] Set `APPSUMO_API_KEY`, Supabase keys, and `NEXT_PUBLIC_SITE_URL` in prod.
+- [ ] (Optional, for the ongoing Pro channel) set `STRIPE_SECRET_KEY`,
+      `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_PRO`, and point a Stripe
+      webhook at `https://<domain>/api/billing/webhook`.
 - [ ] Set AppSumo "Notification URL" → `https://<domain>/api/appsumo/webhook`.
 - [ ] Reconcile field/header names in `lib/appsumo.ts` against AppSumo's current
       developer docs (payload keys can change between API versions).
