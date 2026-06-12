@@ -14,10 +14,18 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
+    // Honor an optional ?next= target so post-login flows (e.g. upgrade) land
+    // on the right page. Only allow same-origin relative paths.
+    const rawNext = new URLSearchParams(window.location.search).get('next')
+    const next = rawNext && rawNext.startsWith('/') ? rawNext : null
+    const redirectTo = `${window.location.origin}/auth/callback${
+      next ? `?next=${encodeURIComponent(next)}` : ''
+    }`
+
     const supabase = createBrowserSupabase()
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: redirectTo },
     })
 
     if (error) {

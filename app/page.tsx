@@ -132,12 +132,21 @@ const FAQS = [
   },
 ]
 
-const PLANS = [
+const PLANS: {
+  name: string
+  price: string
+  desc: string
+  cta: string
+  href: string
+  featured?: boolean
+  features: string[]
+}[] = [
   {
     name: 'Free',
     price: 'Free',
     desc: 'For testing the format and publishing a first interactive book.',
     cta: 'Start free',
+    href: '/login',
     features: ['1 book', 'Basic analytics for 7 days', 'Folio watermark'],
   },
   {
@@ -145,6 +154,7 @@ const PLANS = [
     price: '$19/mo',
     desc: 'For creators and teams who publish polished digital experiences often.',
     cta: 'Start Pro',
+    href: '/login?next=%2Faccount',
     featured: true,
     features: ['Unlimited books', '90-day analytics', 'Custom domain', 'No watermark', 'CSV export'],
   },
@@ -153,6 +163,7 @@ const PLANS = [
     price: '$199',
     desc: 'For teams who need ownership, data sovereignty, and infrastructure control.',
     cta: 'Get license',
+    href: '/login',
     features: ['Everything in Pro', 'Your infrastructure', 'Data sovereignty', 'PDF import'],
   },
 ]
@@ -466,7 +477,7 @@ export default function HomePage() {
               </h2>
             </Reveal>
             <div className="grid items-stretch gap-5 lg:grid-cols-3">
-              {PLANS.map(({ name, price, desc, cta, features, featured }) => (
+              {PLANS.map(({ name, price, desc, cta, features, featured, href }) => (
                 <article
                   key={name}
                   className={`relative flex rounded-[2rem] border p-7 shadow-sm ${
@@ -495,7 +506,7 @@ export default function HomePage() {
                       ))}
                     </ul>
                     <Link
-                      href="/login"
+                      href={href}
                       className={`mt-8 rounded-full px-5 py-3 text-center text-sm font-extrabold uppercase tracking-[0.16em] transition hover:-translate-y-1 ${
                         featured
                           ? 'bg-[#fbf1df] text-[var(--folio-ink)] hover:bg-white'

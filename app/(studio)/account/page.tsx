@@ -20,7 +20,12 @@ const FEATURE_ROWS: { key: string; label: string }[] = [
   { key: 'watermark', label: 'Reader watermark' },
 ]
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ upgraded?: string }>
+}) {
+  const { upgraded } = await searchParams
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -52,6 +57,15 @@ export default async function AccountPage() {
             ← Back to studio
           </Link>
         </div>
+
+        {upgraded && (
+          <div className="mb-6 flex items-center gap-3 rounded-[1.5rem] border border-green-200 bg-green-50 px-6 py-4">
+            <Check size={18} className="text-green-700" />
+            <p className="text-sm font-semibold text-green-800">
+              You're upgraded — welcome to Pro. It can take a moment to reflect here.
+            </p>
+          </div>
+        )}
 
         <section className="mb-6 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/78 p-7 shadow-[var(--folio-shadow)] backdrop-blur sm:p-9">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--folio-teal)]">

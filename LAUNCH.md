@@ -36,7 +36,9 @@ The cheapest "app" is the one users add to their home screen. Polish it first.
       and surface a tasteful "Install Folio" button in the dashboard header.
 - [ ] **iOS standalone polish** — `viewport-fit=cover` (done) + safe-area-inset
       padding on the reader chrome so it looks right on notched devices.
-- [ ] **Splash screens** for iOS standalone (generate per-device sizes).
+- [x] **Splash screens** for iOS standalone — generated on the fly at exact
+      device resolutions by `app/apple-splash/route.tsx`, wired via
+      `apple-touch-startup-image` links in `components/AppleSplashLinks.tsx`.
 - [ ] Lighthouse PWA audit ≥ 90 on Performance, Accessibility, Best Practices, SEO.
 
 **Exit criteria:** "Add to Home Screen" on iOS/Android produces a full-screen,
