@@ -626,8 +626,8 @@ export default function HomePage() {
               <nav className="mt-4 grid gap-2.5 text-sm font-bold text-[var(--folio-ink)]/75">
                 <Link href="#faq" className="hover:text-[var(--folio-ink)]">FAQ</Link>
                 <Link href="#testimonials" className="hover:text-[var(--folio-ink)]">Stories</Link>
+                <Link href="/press" className="hover:text-[var(--folio-ink)]">Press &amp; brand</Link>
                 <Link href="/login" className="hover:text-[var(--folio-ink)]">Sign in</Link>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--folio-ink)]">GitHub</a>
               </nav>
             </div>
 
@@ -644,8 +644,8 @@ export default function HomePage() {
           <div className="mt-12 flex flex-col gap-3 border-t border-[var(--folio-border)] pt-6 text-sm font-semibold text-[var(--folio-muted)] sm:flex-row sm:items-center sm:justify-between">
             <p>© {new Date().getFullYear()} Folio. Crafted for things worth keeping.</p>
             <div className="flex gap-5">
-              <Link href="/login" className="hover:text-[var(--folio-ink)]">Privacy</Link>
-              <Link href="/login" className="hover:text-[var(--folio-ink)]">Terms</Link>
+              <Link href="/privacy" className="hover:text-[var(--folio-ink)]">Privacy</Link>
+              <Link href="/terms" className="hover:text-[var(--folio-ink)]">Terms</Link>
             </div>
           </div>
         </div>

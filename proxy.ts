@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-const PROTECTED_ROUTES = ['/dashboard', '/create', '/editor', '/analytics']
+const PROTECTED_ROUTES = ['/dashboard', '/create', '/editor', '/analytics', '/account']
+
+// Sanitize env vars — Vercel can concatenate preview+production values with a space.
+function sanitize(val: string | undefined): string {
+  return (val ?? '').trim().split(/\s+/)[0] ?? ''
+}
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -12,8 +17,11 @@ export async function proxy(request: NextRequest) {
   )
   if (!isProtected) return NextResponse.next()
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabaseUrl = sanitize(process.env.NEXT_PUBLIC_SUPABASE_URL)
+  const supabaseAnonKey = sanitize(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
+  // If Supabase isn't configured (e.g. a misconfigured preview), don't hard-fail.
+  if (!supabaseUrl || !supabaseAnonKey) return NextResponse.next()
 
   const response = NextResponse.next()
 
@@ -48,5 +56,6 @@ export const config = {
     '/create/:path*',
     '/editor/:path*',
     '/analytics/:path*',
+    '/account/:path*',
   ],
 }

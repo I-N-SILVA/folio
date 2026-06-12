@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, UserCircle } from 'lucide-react'
 import { CreateFolioModal } from './CreateFolioModal'
+import { SignOutButton } from './SignOutButton'
 
 export function DashboardActions() {
   const [createOpen, setCreateOpen] = useState(false)
@@ -25,6 +26,7 @@ export function DashboardActions() {
           <Plus size={16} />
           Create New
         </button>
+        <SignOutButton className="px-4 py-3" />
       </div>
 
       {createOpen && <CreateFolioModal onClose={() => setCreateOpen(false)} />}

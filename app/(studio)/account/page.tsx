@@ -6,6 +6,7 @@ import { getProfile, effectivePlan, countUserBooks } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { isBillingEnabled } from '@/lib/stripe'
 import { UpgradeButton, ManageBillingButton } from '@/components/studio/BillingButtons'
+import { SignOutButton } from '@/components/studio/SignOutButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,6 +57,7 @@ export default async function AccountPage({
           <Link href="/dashboard" className="text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
             ← Back to studio
           </Link>
+          <SignOutButton />
         </div>
 
         {upgraded && (
