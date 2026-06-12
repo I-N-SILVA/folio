@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { checkBookQuota } from '@/lib/entitlements'
+import { formatQuota } from '@/lib/plans'
 
 const CreateBookSchema = z.object({
   title: z.string().min(1).max(200),
@@ -36,6 +38,23 @@ export async function POST(request: NextRequest) {
   const parsed = CreateBookSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  }
+
+  // Enforce the plan's book quota before doing any work.
+  const quota = await checkBookQuota(user.id, user.email)
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        error: `You've reached your plan's limit of ${formatQuota(quota.limit)} book${
+          quota.limit === 1 ? '' : 's'
+        }. Upgrade to publish more.`,
+        code: 'plan_limit',
+        plan: quota.plan.id,
+        used: quota.used,
+        limit: Number.isFinite(quota.limit) ? quota.limit : null,
+      },
+      { status: 403 }
+    )
   }
 
   // Check slug uniqueness

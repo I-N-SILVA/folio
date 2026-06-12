@@ -10,6 +10,7 @@ import {
   ChevronDown,
   Code2,
   FileUp,
+  Gift,
   Palette,
   Quote,
   Sparkles,
@@ -507,6 +508,28 @@ export default function HomePage() {
                 </article>
               ))}
             </div>
+
+            <Reveal className="mt-8">
+              <div className="flex flex-col items-center justify-between gap-4 rounded-[1.75rem] border border-[var(--folio-border)] bg-[#fffaf0]/72 px-7 py-6 text-center shadow-sm sm:flex-row sm:text-left">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#d6aa66]">
+                    <Gift size={20} />
+                  </span>
+                  <div>
+                    <p className="font-display text-xl font-semibold tracking-[-0.03em]">Got a lifetime deal?</p>
+                    <p className="text-sm text-[var(--folio-muted)]">
+                      Redeem your AppSumo license to unlock your tier instantly.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/redeem"
+                  className="shrink-0 rounded-full border border-[var(--folio-border)] bg-white/60 px-6 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-[var(--folio-ink)] transition hover:-translate-y-0.5 hover:bg-white"
+                >
+                  Redeem a code
+                </Link>
+              </div>
+            </Reveal>
           </div>
         </section>
 
