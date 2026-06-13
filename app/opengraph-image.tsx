@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 
-export const alt = 'Folio — Interactive flipbooks with soul'
+export const alt = 'Riffle — Flip through anything'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -15,69 +15,42 @@ export default function OgImage() {
           flexDirection: 'column',
           justifyContent: 'space-between',
           padding: 80,
-          background:
-            'radial-gradient(circle at 78% 18%, rgba(185,130,53,0.30), transparent 46%), radial-gradient(circle at 12% 92%, rgba(13,102,97,0.26), transparent 44%), #f6efe2',
-          fontFamily: 'Georgia, serif',
+          background: '#ffffff',
+          fontFamily: 'Helvetica, Arial, sans-serif',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 999,
-              background: '#1b1712',
-              color: '#f7ead4',
+              width: 56,
+              height: 56,
+              borderRadius: 14,
+              background: '#1d1d1f',
+              color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 42,
-              fontWeight: 700,
+              fontSize: 34,
+              fontWeight: 600,
             }}
           >
-            F
+            R
           </div>
-          <div style={{ fontSize: 40, fontWeight: 700, color: '#1b1712', letterSpacing: '-0.03em' }}>
-            Folio
-          </div>
+          <div style={{ fontSize: 34, fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.02em' }}>Riffle</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div
-            style={{
-              fontSize: 92,
-              fontWeight: 700,
-              color: '#1b1712',
-              lineHeight: 1.0,
-              letterSpacing: '-0.05em',
-              maxWidth: 980,
-            }}
-          >
-            Make every page feel collected.
+          <div style={{ fontSize: 96, fontWeight: 600, color: '#1d1d1f', lineHeight: 1.02, letterSpacing: '-0.04em' }}>
+            Flip through anything.
           </div>
-          <div style={{ marginTop: 28, fontSize: 34, color: '#6f675d', maxWidth: 900, lineHeight: 1.3 }}>
-            Turn static PDFs into immersive flipbooks with hotspots, analytics, and one-line embeds.
+          <div style={{ marginTop: 24, fontSize: 32, color: '#6e6e73', maxWidth: 880, lineHeight: 1.3 }}>
+            Turn static PDFs into interactive editions — hotspots, analytics, and one-line embeds.
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 16 }}>
-          {['Tactile reader', 'Interactive hotspots', 'Reader analytics'].map((tag) => (
-            <div
-              key={tag}
-              style={{
-                display: 'flex',
-                fontSize: 26,
-                fontWeight: 600,
-                color: '#1b1712',
-                padding: '12px 26px',
-                borderRadius: 999,
-                border: '2px solid rgba(47,39,29,0.18)',
-                background: 'rgba(255,250,240,0.7)',
-              }}
-            >
-              {tag}
-            </div>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ height: 10, width: 10, borderRadius: 999, background: '#0066ff' }} />
+          <div style={{ fontSize: 24, color: '#6e6e73' }}>riffle.app</div>
         </div>
       </div>
     ),

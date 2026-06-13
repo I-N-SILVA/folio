@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   return (
     <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--folio-ink)] sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/76 p-6 shadow-[var(--folio-shadow)] backdrop-blur sm:p-8">
+        <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/76 p-6 shadow-[var(--folio-shadow)] backdrop-blur sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
@@ -53,7 +53,7 @@ export default async function DashboardPage() {
         </section>
 
         {books.length === 0 ? (
-          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/78 px-6 py-20 text-center shadow-sm">
+          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">
             <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(185,130,53,0.22)] blur-3xl" />
             <div className="relative mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[2rem] border border-[var(--folio-border)] bg-white/70 shadow-lg">
               <Plus size={34} className="text-[var(--folio-brass)]" />

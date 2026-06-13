@@ -3,16 +3,16 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Press & Brand Kit',
-  description: 'Folio brand assets, colors, boilerplate, and press resources.',
+  description: 'Riffle brand assets, colors, boilerplate, and press resources.',
 }
 
 const COLORS = [
-  { name: 'Paper', hex: '#f6efe2' },
-  { name: 'Ink', hex: '#1b1712' },
-  { name: 'Teal', hex: '#0d6661' },
-  { name: 'Brass', hex: '#b98235' },
-  { name: 'Gold', hex: '#d6aa66' },
-  { name: 'Oxblood', hex: '#6f302d' },
+  { name: 'White', hex: '#ffffff' },
+  { name: 'Ink', hex: '#1d1d1f' },
+  { name: 'Accent', hex: '#0066ff' },
+  { name: 'Gray', hex: '#6e6e73' },
+  { name: 'Subtle', hex: '#f5f5f7' },
+  { name: 'Hairline', hex: '#d2d2d7' },
 ]
 
 const ASSETS = [
@@ -34,14 +34,14 @@ export default function PressPage() {
     <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-16 text-[var(--folio-ink)] sm:px-8">
       <div className="mx-auto max-w-4xl">
         <Link href="/" className="text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
-          ← Back to Folio
+          ← Back to Riffle
         </Link>
 
         <header className="mt-6">
           <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[var(--folio-brass)]">Press &amp; brand</p>
-          <h1 className="mt-3 font-display text-6xl font-semibold tracking-[-0.06em]">Folio brand kit</h1>
+          <h1 className="mt-3 font-display text-6xl font-semibold tracking-[-0.06em]">Riffle brand kit</h1>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--folio-muted)]">
-            Everything you need to write about or feature Folio — assets, colors, and boilerplate.
+            Everything you need to write about or feature Riffle — assets, colors, and boilerplate.
             For full guidelines, see BRAND.md in the repository.
           </p>
         </header>
@@ -50,13 +50,13 @@ export default function PressPage() {
         <section className="mt-12">
           <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Logo</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/72 p-8">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-2xl font-semibold text-[#f7ead4]">F</span>
-              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">Folio</span>
+            <div className="flex items-center gap-4 rounded-[2rem] border border-[var(--folio-border)] bg-white p-8">
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-2xl font-semibold text-white">R</span>
+              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">Riffle</span>
             </div>
-            <div className="flex items-center gap-4 rounded-[2rem] border border-white/10 bg-[var(--folio-ink)] p-8 text-[#fbf1df]">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#d6aa66] text-2xl font-semibold text-[#271c10]">F</span>
-              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">Folio</span>
+            <div className="flex items-center gap-4 rounded-[2rem] border border-white/10 bg-[var(--folio-ink)] p-8 text-white">
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl font-semibold text-[#1d1d1f]">R</span>
+              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">Riffle</span>
             </div>
           </div>
         </section>
@@ -87,7 +87,7 @@ export default function PressPage() {
                 href={a.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-[1.25rem] border border-[var(--folio-border)] bg-[#fffaf0]/72 px-5 py-4 text-sm font-bold transition hover:-translate-y-0.5 hover:bg-white"
+                className="flex items-center justify-between rounded-[1.25rem] border border-[var(--folio-border)] bg-[#ffffff]/72 px-5 py-4 text-sm font-bold transition hover:-translate-y-0.5 hover:bg-white"
               >
                 {a.label}
                 <span className="text-[var(--folio-teal)]">Open →</span>
@@ -98,7 +98,7 @@ export default function PressPage() {
 
         {/* Fast facts + boilerplate */}
         <section className="mt-12 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/72 p-7">
+          <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Fast facts</h2>
             <dl className="mt-4 divide-y divide-[var(--folio-border)]">
               {FACTS.map(([k, v]) => (
@@ -109,14 +109,14 @@ export default function PressPage() {
               ))}
             </dl>
           </div>
-          <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/72 p-7">
+          <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Boilerplate</h2>
             <p className="mt-4 text-[15px] leading-7 text-[var(--folio-muted)]">
-              Folio turns static PDFs into immersive, interactive flipbooks with hotspots, analytics,
+              Riffle turns static PDFs into immersive, interactive flipbooks with hotspots, analytics,
               embeds, and brand control. Built for portfolios, catalogs, lookbooks, reports, and premium
               stories that deserve more than a download link.
             </p>
-            <p className="mt-4 text-sm font-bold">Press: press@folio.new</p>
+            <p className="mt-4 text-sm font-bold">Press: press@riffle.app</p>
           </div>
         </section>
       </div>

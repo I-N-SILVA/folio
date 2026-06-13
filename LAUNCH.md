@@ -1,6 +1,6 @@
-# Folio — Premium Launch & App Store Plan
+# Riffle — Premium Launch & App Store Plan
 
-This is the playbook for taking Folio from a polished web app to a premium,
+This is the playbook for taking Riffle from a polished web app to a premium,
 installable product across the web, iOS, and Android — plus the marketing motion
 to launch it loudly.
 
@@ -8,7 +8,7 @@ to launch it loudly.
 
 ## 0. Where we are
 
-Folio already ships as a Next.js 16 web app with:
+Riffle already ships as a Next.js 16 web app with:
 
 - A premium marketing landing page (`app/page.tsx`) — hero, trust marquee,
   features, use cases, workflow, testimonials, pricing, FAQ, and a final CTA band.
@@ -33,7 +33,7 @@ The cheapest "app" is the one users add to their home screen. Polish it first.
       `/offline` fallback, cache-first for hashed assets, stale-while-revalidate
       for the rest. API / auth / embed requests are bypassed.
 - [ ] **Install prompt UX** — listen for `beforeinstallprompt`, stash the event,
-      and surface a tasteful "Install Folio" button in the dashboard header.
+      and surface a tasteful "Install Riffle" button in the dashboard header.
 - [ ] **iOS standalone polish** — `viewport-fit=cover` (done) + safe-area-inset
       padding on the reader chrome so it looks right on notched devices.
 - [x] **Splash screens** for iOS standalone — generated on the fly at exact
@@ -119,7 +119,7 @@ rate (PWA + stores), and reader completion on shared folios.
 
 ## 5. Backlog / nice-to-haves
 
-- Web Share Target API so users can "share to Folio" a PDF from other apps.
+- Web Share Target API so users can "share to Riffle" a PDF from other apps.
 - Push notifications for "your folio hit 1,000 reads".
 - Template gallery (catalog / lookbook / report starters) to shorten time-to-wow.
 - Custom-domain onboarding wizard for Pro.

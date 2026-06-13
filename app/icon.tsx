@@ -13,16 +13,16 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(145deg, #221a12 0%, #1b1712 60%, #0d6661 140%)',
-          color: '#f7ead4',
+          background: '#1d1d1f',
+          color: '#ffffff',
           fontSize: 320,
-          fontWeight: 700,
-          fontFamily: 'Georgia, serif',
-          letterSpacing: '-0.06em',
-          borderRadius: 96,
+          fontWeight: 600,
+          fontFamily: 'Helvetica, Arial, sans-serif',
+          letterSpacing: '-0.04em',
+          borderRadius: 112,
         }}
       >
-        F
+        R
       </div>
     ),
     { ...size }

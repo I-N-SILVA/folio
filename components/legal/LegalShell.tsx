@@ -14,7 +14,7 @@ export function LegalShell({
     <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-16 text-[var(--folio-ink)] sm:px-8">
       <div className="mx-auto max-w-3xl">
         <Link href="/" className="text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
-          ← Back to Folio
+          ← Back to Riffle
         </Link>
         <h1 className="mt-6 font-display text-5xl font-semibold tracking-[-0.06em] sm:text-6xl">{title}</h1>
         <p className="mt-3 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">

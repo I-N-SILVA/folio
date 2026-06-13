@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const seo = book.settings?.seo
   const title = seo?.title || book.title
-  const description = seo?.description || book.description || `Read "${book.title}" on Folio`
+  const description = seo?.description || book.description || `Read "${book.title}" on Riffle`
 
   // Use the dynamic OG image generator route
   const ogImageUrl = `/book/${slug}/opengraph-image`
@@ -73,7 +73,7 @@ export default async function BookPage({ params }: Props) {
   if (!book.settings.published && slug !== 'demo') {
     return (
       <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-8 text-[var(--folio-ink)]">
-        <div className="max-w-md rounded-[2rem] border border-[var(--folio-border)] bg-[#fff8ec]/80 p-8 text-center shadow-[var(--folio-shadow)]">
+        <div className="max-w-md rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 text-center shadow-[var(--folio-shadow)]">
           <h1 className="font-display mb-3 text-4xl font-semibold tracking-[-0.06em]">Still in the bindery.</h1>
           <p className="text-[var(--folio-muted)]">Check back later. The creator is still working on it.</p>
         </div>
@@ -82,7 +82,7 @@ export default async function BookPage({ params }: Props) {
   }
 
   return (
-    <main className="folio-grain flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#fff8ec_0%,#f1e2ca_42%,#d9c4a5_100%)] p-4">
+    <main className="folio-grain flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#ffffff_0%,#f1e2ca_42%,#d9c4a5_100%)] p-4">
       <ViewerChrome book={book} />
     </main>
   )

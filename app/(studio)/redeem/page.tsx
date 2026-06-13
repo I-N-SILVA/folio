@@ -39,9 +39,9 @@ export default function RedeemPage() {
 
   return (
     <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
-      <div className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+      <div className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
         <div className="mb-7">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#d6aa66] shadow-lg">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff] shadow-lg">
             <Gift size={22} />
           </span>
           <h1 className="mt-5 font-display text-4xl font-semibold tracking-[-0.05em]">Redeem your deal</h1>
@@ -84,7 +84,7 @@ export default function RedeemPage() {
             <button
               type="submit"
               disabled={loading || !code.trim()}
-              className="flex items-center justify-center gap-2 rounded-full bg-[var(--folio-teal)] px-5 py-3.5 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#09514d] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-full bg-[var(--folio-teal)] px-5 py-3.5 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? 'Redeeming…' : 'Redeem code'}

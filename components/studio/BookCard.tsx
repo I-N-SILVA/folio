@@ -61,7 +61,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   }
 
   return (
-    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#fffaf0]/78 p-5 shadow-sm transition-all hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(43,31,18,0.14)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
+    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/78 p-5 shadow-sm transition-all hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(43,31,18,0.14)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
       <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(185,130,53,0.18)] blur-2xl transition group-hover:bg-[rgba(13,102,97,0.16)]" />
       <div className="flex items-start justify-between mb-3 gap-2">
         {isEditing ? (
@@ -107,7 +107,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
       <div className="flex items-center gap-2 mt-auto">
         <Link
           href={`/editor/${book.id}`}
-          className="flex-1 rounded-full bg-[var(--folio-ink)] py-2.5 text-center text-sm font-extrabold text-[#fbf1df] transition-all hover:-translate-y-0.5 hover:bg-[var(--folio-teal)]"
+          className="flex-1 rounded-full bg-[var(--folio-ink)] py-2.5 text-center text-sm font-extrabold text-[#ffffff] transition-all hover:-translate-y-0.5 hover:bg-[var(--folio-teal)]"
         >
           Edit
         </Link>

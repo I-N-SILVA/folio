@@ -5,7 +5,7 @@ import { getStripe, isBillingEnabled, PRO_PRICE_ID } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://folio.new'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://riffle.app'
 
 export async function POST(request: NextRequest) {
   if (!isBillingEnabled()) {

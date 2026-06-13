@@ -2,16 +2,16 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Folio — Interactive flipbooks',
-    short_name: 'Folio',
+    name: 'Riffle — Interactive publishing',
+    short_name: 'Riffle',
     description:
-      'Turn static PDFs into immersive, interactive flipbooks with hotspots, analytics, and one-line embeds.',
+      'Turn static PDFs into interactive editions with hotspots, analytics, and one-line embeds.',
     start_url: '/dashboard',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait-primary',
-    background_color: '#f6efe2',
-    theme_color: '#1b1712',
+    background_color: '#ffffff',
+    theme_color: '#ffffff',
     categories: ['productivity', 'business', 'books'],
     icons: [
       { src: '/icon', sizes: '512x512', type: 'image/png', purpose: 'any' },
@@ -22,7 +22,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: 'Open Studio',
         short_name: 'Studio',
-        description: 'Jump straight into the Folio editor dashboard.',
+        description: 'Jump straight into the Riffle editor dashboard.',
         url: '/dashboard',
       },
       {

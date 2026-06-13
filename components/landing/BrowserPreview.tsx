@@ -5,7 +5,7 @@ export default function BrowserPreview() {
     <iframe
       src="/embed/demo"
       className="w-full h-full border-0"
-      title="Folio demo preview"
+      title="Riffle demo preview"
       loading="lazy"
     />
   )

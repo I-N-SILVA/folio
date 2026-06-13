@@ -1,67 +1,67 @@
-# Folio — Brand Guidelines
+# Riffle — Brand Guidelines
 
-The brand should feel like a beautifully made object: editorial, warm, and
-considered. Print sensibility meets modern software. Never loud, never generic.
+Riffle should feel like Apple-grade software: clean, confident, and effortless.
+Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 
 ---
 
 ## 1. Essence
 
-- **One-liner:** Digital publishing with soul.
-- **Promise:** Make every page feel collected.
-- **Personality:** Editorial · tactile · premium · calm · confident.
-- **We are:** a craftsperson's tool. **We are not:** a flashy SaaS gimmick.
+- **Name:** Riffle — to flip quickly through the pages of a book.
+- **One-liner:** Flip through anything.
+- **Promise:** Turn static PDFs into interactive editions people actually finish.
+- **Personality:** Minimal · precise · modern · calm · confident.
+- **We are:** sleek and product-led. **We are not:** ornamental or busy.
 
 ## 2. Logo
 
-- **Wordmark:** "Folio" set in the display serif, tight tracking (`-0.04em`).
-- **Monogram:** a single **F** in the display serif on the ink gradient,
-  rounded-square or circle lockup. Generated at `/icon` and `/apple-icon`.
-- **Clear space:** keep at least the height of the "F" around the mark.
-- **Don'ts:** don't recolor the mark arbitrarily, stretch it, add drop shadows
-  beyond the defined elevation, or place it on busy photography without a scrim.
+- **Wordmark:** "Riffle" in the display sans, tight tracking (`-0.02em`).
+- **Monogram:** a single **R** in white on a near-black (`#1d1d1f`) rounded
+  square. Generated at `/icon` and `/apple-icon`.
+- **Clear space:** keep at least the height of the "R" around the mark.
+- **Don'ts:** don't recolor the mark, add gradients or shadows, stretch it, or
+  place it on busy imagery without a solid scrim.
 
 ## 3. Color
 
-Source of truth: `app/globals.css` (`:root` custom properties).
+Monochrome base + a single accent. Source of truth: `app/globals.css` (`:root`).
 
 | Token | Hex | Use |
 | ----- | --- | --- |
-| `--background` | `#f6efe2` | Page background (warm paper) |
-| `--folio-ink` | `#1b1712` | Primary text, dark surfaces, monogram |
-| `--folio-muted` | `#6f675d` | Secondary text |
-| `--folio-paper` | `#fbf7ee` | Cards / raised surfaces |
-| `--folio-vellum` | `#f2e6d2` | Subtle fills |
-| `--folio-brass` | `#b98235` | Accent / eyebrow labels |
-| `--folio-teal` | `#0d6661` | Primary action / CTAs |
-| `--folio-oxblood` | `#6f302d` | Rare editorial accent |
-| Gold highlight | `#d6aa66` | On-dark accent (badges, on ink) |
+| White | `#ffffff` | Primary background |
+| Off-white | `#fbfbfd` | Alternating section background |
+| Ink (`--folio-ink`) | `#1d1d1f` | Text, dark sections, monogram |
+| Gray (`--folio-muted`) | `#6e6e73` | Secondary text |
+| Subtle | `#f5f5f7` | Fills, chips, secondary buttons |
+| Hairline (`--folio-border`) | `#d2d2d7` | Borders / separators |
+| **Accent** (`--accent`) | `#0066ff` | Primary actions + links **only** |
+| Accent hover | `#0a5be0` | Hover state for accent |
 
-Rules: **teal** is the primary action color; **brass/gold** is for accents and
-eyebrows only; keep large fields on the warm paper background. Aim for AA
-contrast on text.
+Rule: the accent is reserved for primary CTAs and links. Everything else is
+monochrome. Maintain AA contrast on text.
 
 ## 4. Typography
 
-- **Display (headings):** `--font-display` — "Iowan Old Style", Palatino,
-  Georgia serif. Tight tracking, large sizes, `font-semibold`.
-- **Body / UI:** `--font-body` — "Avenir Next", Helvetica Neue, system sans.
-- **Eyebrows / labels:** uppercase, `tracking-[0.18em–0.24em]`, `font-extrabold`,
-  small, often in brass or teal.
+- **One typeface, system sans** (SF Pro on Apple devices): `--font-display` /
+  `--font-body` both use the `-apple-system, BlinkMacSystemFont, "SF Pro…"`
+  stack. Headings are the same family, heavier weight + tighter tracking.
+- **Headlines:** large, `font-semibold`, tracking `-0.03em` to `-0.04em`.
+- **Body:** 15–20px, `leading-7/8`, gray for secondary copy.
+- No serifs, no decorative fonts, no all-caps except small eyebrow labels.
 
 ## 5. Surfaces & motion
 
-- **Radii:** generous — cards `~2rem`, pills/buttons fully rounded.
-- **Elevation:** soft, warm shadows (e.g. `0 24px 70px rgba(32,25,16,0.16)`).
-- **Texture:** the subtle `folio-grain` overlay on hero / feature surfaces.
-- **Motion:** restrained — `folio-rise` on load, `Reveal` on scroll, gentle
-  `-translate-y` on hover. Always honor `prefers-reduced-motion`.
+- **Radii:** soft and generous — cards `1.5–2rem`, buttons fully rounded.
+- **Elevation:** subtle, neutral shadows (e.g. `0 40px 120px rgba(0,0,0,0.12)`)
+  on the product shot; most surfaces use a hairline border instead.
+- **No texture/grain** — the aesthetic is clean and flat.
+- **Motion:** restrained — `Reveal` fade-up on scroll, gentle hover states.
+  Always honor `prefers-reduced-motion`.
 
 ## 6. Voice & tone
 
-- Confident and warm; short, editorial sentences.
-- Concrete nouns over hype. "Tactile page turns," not "next-gen experiences."
-- Speak to craft and outcomes (readers finishing what you publish).
+- Confident and plain. Short sentences. Concrete nouns.
+- Outcome-led ("readers actually finish it"), never hypey.
 - Avoid exclamation marks, jargon, and growth-hacker clichés.
 
 ## 7. Asset routes (live in the app)

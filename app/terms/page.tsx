@@ -3,14 +3,14 @@ import { LegalShell, LegalSection } from '@/components/legal/LegalShell'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
-  description: 'The terms that govern your use of Folio.',
+  description: 'The terms that govern your use of Riffle.',
 }
 
 export default function TermsPage() {
   return (
     <LegalShell title="Terms of Service" updated="June 12, 2026">
       <p className="text-[15px] leading-7 text-[var(--folio-muted)]">
-        These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of Folio (the
+        These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of Riffle (the
         &ldquo;Service&rdquo;). By using the Service you agree to these Terms. This is a template and
         should be reviewed by counsel before launch.
       </p>
@@ -51,7 +51,7 @@ export default function TermsPage() {
       <LegalSection heading="Disclaimers & liability">
         <p>
           The Service is provided &ldquo;as is&rdquo; without warranties of any kind. To the maximum
-          extent permitted by law, Folio is not liable for indirect, incidental, or consequential
+          extent permitted by law, Riffle is not liable for indirect, incidental, or consequential
           damages, and our total liability is limited to the amount you paid in the prior twelve months.
         </p>
       </LegalSection>
@@ -66,7 +66,7 @@ export default function TermsPage() {
 
       <LegalSection heading="Contact">
         <p>
-          Questions about these Terms? Email <strong>legal@folio.new</strong>.
+          Questions about these Terms? Email <strong>legal@riffle.app</strong>.
         </p>
       </LegalSection>
     </LegalShell>

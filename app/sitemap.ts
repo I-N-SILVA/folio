@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://folio.new'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://riffle.app'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()

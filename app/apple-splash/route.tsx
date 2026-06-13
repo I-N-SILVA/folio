@@ -21,10 +21,9 @@ export async function GET(request: Request) {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: Math.round(mark * 0.28),
-          background:
-            'radial-gradient(circle at 50% 38%, #25201a 0%, #1b1712 58%, #120f0b 100%)',
-          fontFamily: 'Georgia, serif',
+          gap: Math.round(mark * 0.3),
+          background: '#ffffff',
+          fontFamily: 'Helvetica, Arial, sans-serif',
         }}
       >
         <div
@@ -34,26 +33,25 @@ export async function GET(request: Request) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: Math.round(mark * 0.26),
-            background: 'linear-gradient(145deg, #221a12 0%, #1b1712 55%, #0d6661 150%)',
-            color: '#f7ead4',
-            fontSize: Math.round(mark * 0.62),
-            fontWeight: 700,
-            letterSpacing: '-0.06em',
-            boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
+            borderRadius: Math.round(mark * 0.24),
+            background: '#1d1d1f',
+            color: '#ffffff',
+            fontSize: Math.round(mark * 0.6),
+            fontWeight: 600,
+            letterSpacing: '-0.04em',
           }}
         >
-          F
+          R
         </div>
         <div
           style={{
-            color: '#e9d8bd',
-            fontSize: Math.round(mark * 0.2),
+            color: '#1d1d1f',
+            fontSize: Math.round(mark * 0.18),
             fontWeight: 600,
             letterSpacing: '-0.03em',
           }}
         >
-          Folio
+          Riffle
         </div>
       </div>
     ),

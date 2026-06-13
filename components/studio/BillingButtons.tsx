@@ -27,7 +27,7 @@ export function UpgradeButton({ className = '' }: { className?: string }) {
     <button
       onClick={() => go('/api/billing/checkout', setLoading)}
       disabled={loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#09514d] disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:opacity-50 ${className}`}
     >
       {loading && <Loader2 size={15} className="animate-spin" />}
       {loading ? 'Starting…' : 'Upgrade to Pro'}

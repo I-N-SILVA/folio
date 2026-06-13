@@ -56,7 +56,7 @@ const BLOCK_LIBRARY: {
     type: 'button',
     label: 'Button',
     icon: <Box size={16} />,
-    defaults: { label: 'Explore More', href: 'https://folio.app', variant: 'primary' },
+    defaults: { label: 'Explore More', href: 'https://riffle.app', variant: 'primary' },
   },
   {
     type: 'divider',

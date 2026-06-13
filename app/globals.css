@@ -1,60 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6efe2;
-  --foreground: #1b1712;
-  --folio-ink: #1b1712;
-  --folio-muted: #6f675d;
-  --folio-paper: #fbf7ee;
-  --folio-vellum: #f2e6d2;
-  --folio-brass: #b98235;
-  --folio-teal: #0d6661;
-  --folio-oxblood: #6f302d;
-  --folio-border: rgba(47, 39, 29, 0.14);
-  --folio-shadow: 0 24px 70px rgba(32, 25, 16, 0.16);
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-body: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, sans-serif;
+  /* Riffle — monochrome + single accent (Apple-esque) */
+  --background: #ffffff;
+  --background-alt: #fbfbfd;
+  --foreground: #1d1d1f;
+  --folio-ink: #1d1d1f;
+  --folio-muted: #6e6e73;
+  --folio-paper: #ffffff;
+  --folio-vellum: #f5f5f7;
+  --folio-subtle: #f5f5f7;
+  /* Accent is reserved for primary actions + links only */
+  --accent: #0066ff;
+  --accent-hover: #0a5be0;
+  --folio-brass: var(--accent);
+  --folio-teal: var(--accent);
+  --folio-oxblood: #1d1d1f;
+  --folio-border: #d2d2d7;
+  --folio-hairline: rgba(0, 0, 0, 0.08);
+  --folio-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-display), ui-serif, Georgia, serif;
+  --font-serif: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: rgba(185, 130, 53, 0.28);
+  background: rgba(0, 102, 255, 0.16);
   color: var(--folio-ink);
 }
 
 .font-display {
-  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
+/* Grain texture intentionally neutralized — the Riffle aesthetic is clean. */
 .folio-grain {
   position: relative;
   isolation: isolate;
-}
-
-.folio-grain::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.48;
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1px),
-    radial-gradient(circle at 80% 10%, rgba(73, 48, 22, 0.08) 0 1px, transparent 1px);
-  background-size: 18px 18px, 23px 23px;
-  mask-image: linear-gradient(to bottom, black, transparent 85%);
 }
 
 @keyframes folio-rise {

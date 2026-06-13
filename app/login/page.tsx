@@ -38,12 +38,12 @@ export default function LoginPage() {
 
   return (
     <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
-      <div className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+      <div className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
         <div className="mb-8">
           <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.24em] text-[var(--folio-teal)]">
             Creator Studio
           </p>
-          <h1 className="font-display text-5xl font-semibold tracking-[-0.07em]">Folio</h1>
+          <h1 className="font-display text-5xl font-semibold tracking-[-0.07em]">Riffle</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">
             Sign in with a magic link to compose, publish, and measure your digital shelf.
           </p>
@@ -78,7 +78,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-full bg-[var(--folio-teal)] py-3.5 font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(13,102,97,0.22)] transition hover:-translate-y-0.5 hover:bg-[#09514d] disabled:translate-y-0 disabled:opacity-50"
+              className="rounded-full bg-[var(--folio-teal)] py-3.5 font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(13,102,97,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:translate-y-0 disabled:opacity-50"
             >
               {loading ? 'Sending…' : 'Send magic link'}
             </button>

@@ -20,7 +20,7 @@ function slugify(s: string) {
 const inputCls =
   'w-full rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--folio-teal)] focus:ring-2 focus:ring-[var(--folio-teal)]/20'
 const primaryBtn =
-  'rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#09514d] disabled:cursor-not-allowed disabled:opacity-50'
+  'rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50'
 const ghostBtn =
   'rounded-full border border-[var(--folio-border)] bg-white/60 px-5 py-3 text-sm font-bold text-[var(--folio-ink)] transition hover:bg-white'
 
@@ -71,10 +71,10 @@ export default function CreatePage() {
 
   return (
     <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
-      <div className="w-full max-w-lg rounded-[2.25rem] border border-[var(--folio-border)] bg-[#fff8ec]/85 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+      <div className="w-full max-w-lg rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/85 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
         {limitHit ? (
           <div className="text-center">
-            <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#d6aa66]">
+            <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff]">
               <Crown size={26} />
             </div>
             <h2 className="font-display text-3xl font-semibold tracking-[-0.04em]">You've reached your book limit</h2>

@@ -616,7 +616,7 @@ function BookSettingsForm({ book }: { book: any }) {
 
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" {...register('whitelabel')} className="accent-blue-500" />
-          <span className="text-sm text-neutral-300">Remove "Made with Folio" branding</span>
+          <span className="text-sm text-neutral-300">Remove "Made with Riffle" branding</span>
         </label>
       </div>
 

@@ -1,6 +1,6 @@
-# Folio — AppSumo Launch & Go-To-Market Plan
+# Riffle — AppSumo Launch & Go-To-Market Plan
 
-A complete plan to launch Folio as a premium SaaS on **AppSumo** (lifetime-deal
+A complete plan to launch Riffle as a premium SaaS on **AppSumo** (lifetime-deal
 marketplace), covering the deal structure, the technical integration already
 wired into this repo, the listing assets, pricing math, and the week-by-week
 go-to-market motion.
@@ -17,7 +17,7 @@ go-to-market motion.
 - A built-in audience of ~1M+ buyers actively looking for tools.
 - A burst of revenue + reviews + backlinks in a short window.
 - Lifetime deals (LTDs) are a one-time payment, so we don't need Stripe live to
-  launch — we need a **license + entitlements** system, which Folio now has.
+  launch — we need a **license + entitlements** system, which Riffle now has.
 
 Trade-off: LTD buyers are demanding and churn-proof (they paid once, forever).
 Tier the deal so support cost stays sane and there's an upsell path.
@@ -36,12 +36,12 @@ via `APPSUMO_TIER_TO_PLAN`.
 | **3** | ~$239 | Unlimited | 365 days | ✓ | ✓ | Agencies, power users |
 
 All tiers include: interactive reader, hotspots, PDF import, lead gating, CSV
-export, no Folio watermark. Stack-friendly (AppSumo buyers can stack codes to
+export, no Riffle watermark. Stack-friendly (AppSumo buyers can stack codes to
 move up tiers — handled by the `enhance`/`reduce` webhook actions).
 
 **Pricing math:** AppSumo takes ~70% of LTD revenue and another cut on the
 platform. Price so that even after the split each sale covers ~18–24 months of
-that user's marginal infra cost. Folio's per-user cost is low (Supabase rows +
+that user's marginal infra cost. Riffle's per-user cost is low (Supabase rows +
 storage + edge), which makes LTD viable.
 
 ---

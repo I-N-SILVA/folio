@@ -161,7 +161,7 @@ export function CreateFolioModal({ onClose }: Props) {
 
   const shell = (children: React.ReactNode, maxW = 'max-w-xl') => (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1b1712]/55 p-4 backdrop-blur-sm">
-      <div className={`w-full ${maxW} overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#fff8ec] shadow-[0_40px_120px_rgba(27,23,18,0.35)]`}>
+      <div className={`w-full ${maxW} overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff] shadow-[0_40px_120px_rgba(27,23,18,0.35)]`}>
         {children}
       </div>
     </div>
@@ -171,7 +171,7 @@ export function CreateFolioModal({ onClose }: Props) {
   if (limitHit) {
     return shell(
       <div className="p-8 text-center">
-        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#d6aa66]">
+        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff]">
           <Crown size={26} />
         </div>
         <h2 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">
@@ -185,7 +185,7 @@ export function CreateFolioModal({ onClose }: Props) {
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/#pricing"
-            className="rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#09514d]"
+            className="rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
           >
             See plans
           </Link>
@@ -208,7 +208,7 @@ export function CreateFolioModal({ onClose }: Props) {
     return shell(
       <>
         <div className="flex items-center justify-between border-b border-[var(--folio-border)] p-6">
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Name your Folio</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Name your Riffle</h2>
           <button onClick={onClose} className="rounded-full p-2 text-[var(--folio-muted)] transition-colors hover:bg-black/5">
             <X size={20} />
           </button>
@@ -238,9 +238,9 @@ export function CreateFolioModal({ onClose }: Props) {
             <button
               type="submit"
               disabled={loading || !newTitle.trim()}
-              className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#09514d] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Creating…' : 'Create Folio'}
+              {loading ? 'Creating…' : 'Create Riffle'}
             </button>
           </div>
         </form>
@@ -253,7 +253,7 @@ export function CreateFolioModal({ onClose }: Props) {
     <>
       <div className="flex items-center justify-between border-b border-[var(--folio-border)] p-6">
         <div>
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Create New Folio</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Create New Riffle</h2>
           {quota && (
             <p className="mt-1 text-xs font-semibold text-[var(--folio-muted)]">
               {quota.used} / {quota.limit ?? '∞'} books used · {quota.planName}

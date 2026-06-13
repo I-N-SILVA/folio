@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 
 /**
- * Registers the Folio service worker for offline support + installability.
+ * Registers the Riffle service worker for offline support + installability.
  * Only runs in production builds so it never interferes with dev/HMR.
  */
 export function ServiceWorkerRegistrar() {
