@@ -2,18 +2,18 @@ import Link from 'next/link'
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-[#F7F6F2]">
-      <div className="text-center max-w-md">
-        <p className="text-6xl font-bold text-gray-200 mb-4">404</p>
-        <h1 className="text-2xl font-bold mb-2">Page not found</h1>
-        <p className="text-gray-500 mb-6">
-          This book doesn't exist or has been removed.
+    <main className="flex min-h-screen items-center justify-center bg-[var(--background)] p-8 text-[var(--folio-ink)]">
+      <div className="max-w-md text-center">
+        <p className="text-sm font-semibold text-[var(--accent)]">404</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.03em]">Page not found</h1>
+        <p className="mx-auto mt-3 max-w-xs text-[15px] leading-7 text-[var(--folio-muted)]">
+          This edition doesn't exist or has been removed.
         </p>
         <Link
           href="/dashboard"
-          className="inline-block bg-[#01696F] text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          className="mt-7 inline-block rounded-full bg-[var(--accent)] px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
         >
-          Go to Dashboard
+          Go to dashboard
         </Link>
       </div>
     </main>

@@ -16,7 +16,7 @@ export default function OfflinePage() {
         </p>
         <Link
           href="/dashboard"
-          className="mt-7 inline-block rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
+          className="mt-7 inline-block rounded-full bg-[var(--accent)] px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
         >
           Retry
         </Link>

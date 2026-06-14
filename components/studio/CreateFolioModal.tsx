@@ -160,7 +160,7 @@ export function CreateFolioModal({ onClose }: Props) {
   }
 
   const shell = (children: React.ReactNode, maxW = 'max-w-xl') => (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1b1712]/55 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1d1d1f]/55 p-4 backdrop-blur-sm">
       <div className={`w-full ${maxW} overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff] shadow-[0_40px_120px_rgba(27,23,18,0.35)]`}>
         {children}
       </div>
@@ -185,13 +185,13 @@ export function CreateFolioModal({ onClose }: Props) {
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/#pricing"
-            className="rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
+            className="rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
           >
             See plans
           </Link>
           <Link
             href="/redeem"
-            className="rounded-full border border-[var(--folio-border)] bg-white/60 px-6 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-[var(--folio-ink)] transition hover:-translate-y-0.5 hover:bg-white"
+            className="rounded-full border border-[var(--folio-border)] bg-white/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-ink)] transition hover:-translate-y-0.5 hover:bg-white"
           >
             Redeem a code
           </Link>
@@ -215,7 +215,7 @@ export function CreateFolioModal({ onClose }: Props) {
         </div>
 
         <form onSubmit={handleCreateBlank} className="p-8">
-          <label className="mb-2 block text-sm font-extrabold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
+          <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
             Book title
           </label>
           <input
@@ -238,7 +238,7 @@ export function CreateFolioModal({ onClose }: Props) {
             <button
               type="submit"
               disabled={loading || !newTitle.trim()}
-              className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create Riffle'}
             </button>
@@ -278,7 +278,7 @@ export function CreateFolioModal({ onClose }: Props) {
               onClick={onClick}
               className="group flex flex-col items-center gap-4 rounded-[1.5rem] border border-[var(--folio-border)] bg-white/55 p-6 text-center transition-all hover:-translate-y-1 hover:border-[var(--folio-teal)] hover:bg-white disabled:opacity-50"
             >
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#f7e7c9] transition-colors group-hover:bg-[var(--folio-teal)]">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#f5f5f7] transition-colors group-hover:bg-[var(--folio-teal)]">
                 <Icon size={26} />
               </div>
               <div>

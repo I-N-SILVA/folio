@@ -20,7 +20,7 @@ function slugify(s: string) {
 const inputCls =
   'w-full rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--folio-teal)] focus:ring-2 focus:ring-[var(--folio-teal)]/20'
 const primaryBtn =
-  'rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50'
+  'rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50'
 const ghostBtn =
   'rounded-full border border-[var(--folio-border)] bg-white/60 px-5 py-3 text-sm font-bold text-[var(--folio-ink)] transition hover:bg-white'
 
@@ -108,17 +108,17 @@ export default function CreatePage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-extrabold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Title *</label>
+                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Title *</label>
                   <input type="text" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="My Interactive Book" className={inputCls} />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-extrabold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Description</label>
+                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Description</label>
                   <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's this book about?" rows={3} className={`${inputCls} resize-none`} />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-extrabold uppercase tracking-[0.12em] text-[var(--folio-muted)]">URL slug *</label>
+                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--folio-muted)]">URL slug *</label>
                   <div className="flex items-center overflow-hidden rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 focus-within:border-[var(--folio-teal)] focus-within:ring-2 focus-within:ring-[var(--folio-teal)]/20">
                     <span className="border-r border-[var(--folio-border)] bg-black/[0.03] px-3 py-3 text-sm text-[var(--folio-muted)]">/book/</span>
                     <input type="text" value={slug} onChange={(e) => { setSlug(e.target.value); setSlugEdited(true) }} placeholder="my-book" className="flex-1 bg-transparent px-3 py-3 text-sm outline-none" />

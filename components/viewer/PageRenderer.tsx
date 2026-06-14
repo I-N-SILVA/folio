@@ -41,7 +41,7 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
       ? THEME_PRESETS[theme.preset as keyof typeof THEME_PRESETS] 
       : null
     
-    const primaryColor = theme?.primary || preset?.primary || '#01696F'
+    const primaryColor = theme?.primary || preset?.primary || '#0066ff'
     const bgColor = bg?.color || theme?.background || preset?.background || '#ffffff'
     const headingFont = theme?.headingFont || preset?.headingFont || 'inherit'
     const bodyFont = theme?.bodyFont || preset?.bodyFont || 'inherit'

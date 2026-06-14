@@ -80,7 +80,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
   ]
 
   return (
-    <main className="min-h-screen bg-[#F7F6F2] p-6">
+    <main className="min-h-screen bg-[#f5f5f7] p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -102,7 +102,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                   key={r.value}
                   onClick={() => setRange(r.value)}
                   className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                    range === r.value ? 'bg-[#01696F] text-white' : 'text-gray-600 hover:bg-gray-50'
+                    range === r.value ? 'bg-[#0066ff] text-white' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   {r.label}
@@ -129,22 +129,22 @@ export function AnalyticsDashboard({ book }: { book: any }) {
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
-                icon={<BookOpen size={18} className="text-[#01696F]" />}
+                icon={<BookOpen size={18} className="text-[#0066ff]" />}
                 label="Total Opens"
                 value={data.summary.totalOpens.toLocaleString()}
               />
               <StatCard
-                icon={<Users size={18} className="text-[#01696F]" />}
+                icon={<Users size={18} className="text-[#0066ff]" />}
                 label="Unique Sessions"
                 value={data.summary.uniqueSessions.toLocaleString()}
               />
               <StatCard
-                icon={<CheckCircle size={18} className="text-[#01696F]" />}
+                icon={<CheckCircle size={18} className="text-[#0066ff]" />}
                 label="Completion Rate"
                 value={`${data.summary.completionRate}%`}
               />
               <StatCard
-                icon={<Clock size={18} className="text-[#01696F]" />}
+                icon={<Clock size={18} className="text-[#0066ff]" />}
                 label="Avg Session"
                 value={formatDuration(data.summary.avgSessionMs)}
               />
@@ -181,7 +181,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                     <XAxis dataKey="page" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
                     <Tooltip formatter={(val: any) => [`${val}%`, '% Sessions']} />
-                    <Bar dataKey="pct" fill="#01696F" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="pct" fill="#0066ff" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -201,7 +201,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                           key={p}
                           onClick={() => setHeatmapPage(p)}
                           className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${
-                            heatmapPage === p ? 'bg-[#01696F] text-white' : 'hover:bg-gray-100 text-gray-700'
+                            heatmapPage === p ? 'bg-[#0066ff] text-white' : 'hover:bg-gray-100 text-gray-700'
                           }`}
                         >
                           Page {p}

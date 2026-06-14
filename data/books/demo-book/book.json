@@ -4,7 +4,7 @@
   "title": "Riffle",
   "description": "An interactive tour of everything Riffle can do",
   "owner_id": "demo",
-  "theme": { "preset": "custom", "primary": "#0066ff", "background": "#ffffff" },
+  "theme": { "preset": "custom", "primary": "#0066ff", "background": "#ffffff", "headingFont": "Georgia" },
   "settings": { "published": true, "unlisted": false },
   "pages": [
     {

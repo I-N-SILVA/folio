@@ -60,7 +60,7 @@ export default function RedeemPage() {
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="code" className="mb-2 block text-sm font-extrabold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
+              <label htmlFor="code" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
                 License code
               </label>
               <input
@@ -84,7 +84,7 @@ export default function RedeemPage() {
             <button
               type="submit"
               disabled={loading || !code.trim()}
-              className="flex items-center justify-center gap-2 rounded-full bg-[var(--folio-teal)] px-5 py-3.5 text-sm font-extrabold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-full bg-[var(--folio-teal)] px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? 'Redeeming…' : 'Redeem code'}

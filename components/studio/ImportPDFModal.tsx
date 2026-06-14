@@ -212,7 +212,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
               isWorking
                 ? 'border-gray-200 bg-gray-50 cursor-default'
                 : file
-                  ? 'border-[#01696F] bg-[#01696F]/5 cursor-pointer'
+                  ? 'border-[#0066ff] bg-[#0066ff]/5 cursor-pointer'
                   : 'border-gray-200 hover:border-gray-300 bg-gray-50 cursor-pointer'
             }`}
             onClick={() => !isWorking && status !== 'done' && fileInputRef.current?.click()}
@@ -229,11 +229,11 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
             />
             <FileUp
               size={24}
-              className={`mx-auto mb-2 ${file ? 'text-[#01696F]' : 'text-gray-400'}`}
+              className={`mx-auto mb-2 ${file ? 'text-[#0066ff]' : 'text-gray-400'}`}
             />
             {file ? (
               <div>
-                <p className="text-sm font-medium text-[#01696F] truncate px-2">{file.name}</p>
+                <p className="text-sm font-medium text-[#0066ff] truncate px-2">{file.name}</p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {(file.size / 1024 / 1024).toFixed(1)} MB
                   {!isWorking && status !== 'done' && ' — click to change'}
@@ -260,7 +260,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
               onChange={handleTitleChange}
               placeholder="My Book Title"
               disabled={isWorking || status === 'done'}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#01696F]/30 focus:border-[#01696F] disabled:opacity-50 transition"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0066ff]/30 focus:border-[#0066ff] disabled:opacity-50 transition"
             />
           </div>
 
@@ -269,7 +269,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
             <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">
               URL Slug
             </label>
-            <div className="flex items-center border border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-[#01696F]/30 focus-within:border-[#01696F] transition">
+            <div className="flex items-center border border-gray-200 rounded-lg focus-within:ring-2 focus-within:ring-[#0066ff]/30 focus-within:border-[#0066ff] transition">
               <span className="pl-3 text-xs text-gray-400 select-none whitespace-nowrap">
                 /book/
               </span>
@@ -288,7 +288,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
           </div>
 
           {/* AI Enhancement */}
-          <div className="mb-6 bg-[#01696F]/5 p-4 rounded-xl border border-[#01696F]/10">
+          <div className="mb-6 bg-[#0066ff]/5 p-4 rounded-xl border border-[#0066ff]/10">
             <label className="flex items-start gap-3 cursor-pointer group">
               <div className="flex items-center h-5">
                 <input
@@ -296,11 +296,11 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
                   checked={aiEnhance}
                   onChange={(e) => setAiEnhance(e.target.checked)}
                   disabled={isWorking || status === 'done'}
-                  className="w-4 h-4 text-[#01696F] border-gray-300 rounded focus:ring-[#01696F]/30"
+                  className="w-4 h-4 text-[#0066ff] border-gray-300 rounded focus:ring-[#0066ff]/30"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900 group-hover:text-[#01696F] transition-colors">
+                <span className="text-sm font-bold text-gray-900 group-hover:text-[#0066ff] transition-colors">
                   Magic AI Enhancement
                 </span>
                 <span className="text-xs text-gray-500 leading-relaxed mt-0.5">
@@ -315,7 +315,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
             <div className="mb-5">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Loader2 size={14} className="animate-spin text-[#01696F] flex-shrink-0" />
+                  <Loader2 size={14} className="animate-spin text-[#0066ff] flex-shrink-0" />
                   <span>
                     {status === 'rendering'
                       ? `Rendering page ${progress.current} of ${progress.total}…`
@@ -326,7 +326,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
               </div>
               <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-[#01696F] rounded-full"
+                  className="h-full bg-[#0066ff] rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -363,7 +363,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="flex-1 py-2.5 rounded-lg bg-[#01696F] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-lg bg-[#0066ff] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isWorking ? (
                 <>

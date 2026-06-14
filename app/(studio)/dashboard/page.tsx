@@ -31,7 +31,7 @@ export default async function DashboardPage() {
         <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/76 p-6 shadow-[var(--folio-shadow)] backdrop-blur sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
                 <Sparkles size={13} />
                 Creator Studio
               </div>
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
           </section>
         ) : (
           <section>
-            <div className="mb-4 flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.18em] text-[var(--folio-muted)]">
+            <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">
               <LibraryBig size={16} />
               Library
             </div>
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-3xl border border-[var(--folio-border)] bg-white/55 p-5 shadow-sm">
-      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--folio-muted)]">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">{label}</p>
       <p className="mt-2 font-display text-4xl font-semibold tracking-[-0.06em]">{value}</p>
     </div>
   )

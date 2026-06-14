@@ -9,22 +9,24 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
   }, [error])
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-[#F7F6F2]">
-      <div className="text-center max-w-md">
-        <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
-        <p className="text-gray-500 mb-6">{error.message || 'An unexpected error occurred.'}</p>
-        <div className="flex gap-3 justify-center">
+    <main className="flex min-h-screen items-center justify-center bg-[var(--background)] p-8 text-[var(--folio-ink)]">
+      <div className="max-w-md text-center">
+        <h1 className="text-4xl font-semibold tracking-[-0.03em]">Something went wrong</h1>
+        <p className="mx-auto mt-3 max-w-sm text-[15px] leading-7 text-[var(--folio-muted)]">
+          {error.message || 'An unexpected error occurred.'}
+        </p>
+        <div className="mt-7 flex justify-center gap-3">
           <button
             onClick={reset}
-            className="bg-[#01696F] text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            className="rounded-full bg-[var(--accent)] px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
           >
             Try again
           </button>
           <Link
             href="/dashboard"
-            className="border border-gray-200 text-gray-700 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="rounded-full border border-[var(--folio-border)] px-6 py-3 text-[15px] font-semibold text-[var(--folio-ink)] transition hover:bg-black/5"
           >
-            Go to Dashboard
+            Go to dashboard
           </Link>
         </div>
       </div>

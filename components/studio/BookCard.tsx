@@ -91,7 +91,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         
         {!isEditing && (
           <span
-            className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] ${
+            className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
               published ? 'bg-[#dcebd7] text-[#3d6c38]' : 'bg-black/5 text-[var(--folio-muted)]'
             }`}
           >
@@ -107,7 +107,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
       <div className="flex items-center gap-2 mt-auto">
         <Link
           href={`/editor/${book.id}`}
-          className="flex-1 rounded-full bg-[var(--folio-ink)] py-2.5 text-center text-sm font-extrabold text-[#ffffff] transition-all hover:-translate-y-0.5 hover:bg-[var(--folio-teal)]"
+          className="flex-1 rounded-full bg-[var(--folio-ink)] py-2.5 text-center text-sm font-semibold text-[#ffffff] transition-all hover:-translate-y-0.5 hover:bg-[var(--folio-teal)]"
         >
           Edit
         </Link>

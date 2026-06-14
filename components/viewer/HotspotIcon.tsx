@@ -48,7 +48,7 @@ export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIco
         <span className={`absolute inline-flex w-full h-full rounded-full bg-white/60 ${isEcomAction ? 'animate-ping' : 'animate-ping'}`} style={isEcomAction ? { animationDuration: '2s' } : undefined} />
       )}
       <span className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/90 shadow-lg hover:scale-110 transition-transform">
-        <Icon size={16} className={isEcomAction ? 'text-[#01696F]' : 'text-gray-800'} />
+        <Icon size={16} className={isEcomAction ? 'text-[#0066ff]' : 'text-gray-800'} />
       </span>
     </button>
   )

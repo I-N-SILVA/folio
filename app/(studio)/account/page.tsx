@@ -70,7 +70,7 @@ export default async function AccountPage({
         )}
 
         <section className="mb-6 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 p-7 shadow-[var(--folio-shadow)] backdrop-blur sm:p-9">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
             <Crown size={13} />
             {plan.lifetime ? 'Lifetime plan' : 'Current plan'}
           </div>
@@ -121,7 +121,7 @@ export default async function AccountPage({
               </p>
               <Link
                 href="/redeem"
-                className="mt-5 inline-block rounded-full bg-[#ffffff] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-[#1d1d1f] transition hover:-translate-y-0.5 hover:bg-[#f5f5f7]"
+                className="mt-5 inline-block rounded-full bg-[#ffffff] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#1d1d1f] transition hover:-translate-y-0.5 hover:bg-[#f5f5f7]"
               >
                 Redeem a code
               </Link>
@@ -139,7 +139,7 @@ export default async function AccountPage({
                 ) : (
                   <Link
                     href="/#pricing"
-                    className="mt-5 inline-block rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
+                    className="mt-5 inline-block rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
                   >
                     See plans
                   </Link>

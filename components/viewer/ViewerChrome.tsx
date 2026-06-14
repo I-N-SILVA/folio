@@ -43,7 +43,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
             <ChevronLeft size={20} />
           </button>
 
-          <span className="min-w-[80px] text-center text-sm font-extrabold tabular-nums tracking-[0.08em]">
+          <span className="min-w-[80px] text-center text-sm font-semibold tabular-nums tracking-[0.08em]">
             {currentPage + 1} / {totalPages}
           </span>
 

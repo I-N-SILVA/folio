@@ -38,7 +38,7 @@ export default function PressPage() {
         </Link>
 
         <header className="mt-6">
-          <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[var(--folio-brass)]">Press &amp; brand</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--folio-brass)]">Press &amp; brand</p>
           <h1 className="mt-3 font-display text-6xl font-semibold tracking-[-0.06em]">Riffle brand kit</h1>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--folio-muted)]">
             Everything you need to write about or feature Riffle — assets, colors, and boilerplate.
@@ -48,7 +48,7 @@ export default function PressPage() {
 
         {/* Logo lockup */}
         <section className="mt-12">
-          <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Logo</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Logo</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-4 rounded-[2rem] border border-[var(--folio-border)] bg-white p-8">
               <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-2xl font-semibold text-white">R</span>
@@ -63,7 +63,7 @@ export default function PressPage() {
 
         {/* Colors */}
         <section className="mt-12">
-          <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Color</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Color</h2>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {COLORS.map((c) => (
               <div key={c.name} className="overflow-hidden rounded-[1.25rem] border border-[var(--folio-border)] bg-white/50">
@@ -79,7 +79,7 @@ export default function PressPage() {
 
         {/* Assets */}
         <section className="mt-12">
-          <h2 className="text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Downloadable assets</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Downloadable assets</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {ASSETS.map((a) => (
               <a
@@ -103,7 +103,7 @@ export default function PressPage() {
             <dl className="mt-4 divide-y divide-[var(--folio-border)]">
               {FACTS.map(([k, v]) => (
                 <div key={k} className="grid grid-cols-[110px_1fr] gap-3 py-3">
-                  <dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--folio-muted)]">{k}</dt>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">{k}</dt>
                   <dd className="text-sm text-[var(--folio-ink)]">{v}</dd>
                 </div>
               ))}
@@ -112,9 +112,9 @@ export default function PressPage() {
           <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Boilerplate</h2>
             <p className="mt-4 text-[15px] leading-7 text-[var(--folio-muted)]">
-              Riffle turns static PDFs into immersive, interactive flipbooks with hotspots, analytics,
-              embeds, and brand control. Built for portfolios, catalogs, lookbooks, reports, and premium
-              stories that deserve more than a download link.
+              Riffle turns static PDFs into interactive editions with hotspots, analytics, embeds,
+              and brand control. Built for catalogs, lookbooks, portfolios, and reports that deserve
+              more than a download link.
             </p>
             <p className="mt-4 text-sm font-bold">Press: press@riffle.app</p>
           </div>
