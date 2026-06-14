@@ -13,6 +13,17 @@ const layoutStyles: Record<Page['layout'], string> = {
   blank: '',
 }
 
+/** Relative luminance of a hex color (0 = black, 1 = white). */
+function luminance(hex: string): number {
+  const m = hex.replace('#', '').match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i)
+  if (!m) return 1
+  const [r, g, b] = [m[1], m[2], m[3]].map((h) => {
+    const v = parseInt(h, 16) / 255
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
 interface PageRendererProps {
   page: Page
   bookId: string
@@ -35,9 +46,12 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
     const headingFont = theme?.headingFont || preset?.headingFont || 'inherit'
     const bodyFont = theme?.bodyFont || preset?.bodyFont || 'inherit'
     
-    // Determine text color based on background luminance (simple check)
-    const isDark = theme?.preset === 'carbon' || theme?.preset === 'slate'
-    const textColor = isDark ? '#ffffff' : '#111827'
+    // Determine text color from the actual page background luminance so any
+    // background — preset, per-page color, or image+overlay — stays legible.
+    const hasImage = Boolean(bg?.image)
+    const isDark = hasImage ? true : luminance(bgColor) < 0.5
+    const textColor = isDark ? '#ffffff' : '#1d1d1f'
+    const mutedColor = isDark ? 'rgba(255,255,255,0.66)' : 'rgba(0,0,0,0.55)'
 
     const backgroundStyle: React.CSSProperties = {
       backgroundColor: bgColor,
@@ -45,6 +59,7 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
       ['--primary' as any]: primaryColor,
       ['--background' as any]: bgColor,
       ['--text-color' as any]: textColor,
+      ['--muted-color' as any]: mutedColor,
       ['--heading-font' as any]: `"${headingFont}", sans-serif`,
       ['--body-font' as any]: `"${bodyFont}", sans-serif`,
       color: 'var(--text-color)',

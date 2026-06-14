@@ -210,7 +210,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
           {pages.map((page, idx) => (
             <div
               key={page.id}
-              className="relative bg-white group cursor-crosshair"
+              className="relative bg-white group cursor-pointer"
               style={{ width: dims.w, height: dims.h }}
               onClick={(e) => handlePageClick(e, idx)}
             >

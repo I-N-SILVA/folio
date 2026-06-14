@@ -82,7 +82,7 @@ export default async function BookPage({ params }: Props) {
   }
 
   return (
-    <main className="folio-grain flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#ffffff_0%,#f1e2ca_42%,#d9c4a5_100%)] p-4">
+    <main className="folio-grain flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#ffffff_0%,#f5f5f7_45%,#ececef_100%)] p-4">
       <ViewerChrome book={book} />
     </main>
   )

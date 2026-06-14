@@ -25,7 +25,7 @@ export function ButtonBlock({ block, bookId }: { block: ButtonBlock; bookId: str
       rel="noopener noreferrer"
       onClick={handleClick}
       className={twMerge(
-        'inline-block px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 min-h-[44px]',
+        'inline-flex items-center justify-center px-7 py-3 rounded-full text-sm font-semibold transition-all duration-200 min-h-[44px]',
         variantStyles[block.variant]
       )}
     >

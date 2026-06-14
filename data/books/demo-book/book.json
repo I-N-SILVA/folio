@@ -1,10 +1,10 @@
 {
   "id": "demo-book-id",
   "slug": "demo",
-  "title": "Welcome to Folio",
-  "description": "An interactive guide to everything Folio can do",
+  "title": "Riffle",
+  "description": "An interactive tour of everything Riffle can do",
   "owner_id": "demo",
-  "theme": { "preset": "ivory" },
+  "theme": { "preset": "custom", "primary": "#0066ff", "background": "#ffffff" },
   "settings": { "published": true, "unlisted": false },
   "pages": [
     {
@@ -13,11 +13,12 @@
       "page_number": 1,
       "type": "cover",
       "layout": "hero",
-      "background": { "color": "#F7F6F2" },
+      "background": { "color": "#fbfbfd" },
       "blocks": [
-        { "type": "text", "id": "b1-1", "variant": "title", "content": "Welcome to Folio", "align": "center" },
-        { "type": "text", "id": "b1-2", "variant": "caption", "content": "The interactive flipbook platform", "align": "center" },
-        { "type": "button", "id": "b1-3", "label": "Read the Guide →", "href": "#", "variant": "primary", "target": "_blank" }
+        { "type": "text", "id": "b1-1", "variant": "caption", "content": "INTERACTIVE PUBLISHING", "align": "center" },
+        { "type": "text", "id": "b1-2", "variant": "title", "content": "Riffle", "align": "center" },
+        { "type": "text", "id": "b1-3", "variant": "body", "content": "Flip through anything. This is a live edition — turn the pages.", "align": "center" },
+        { "type": "button", "id": "b1-4", "label": "Start reading →", "href": "#", "variant": "primary", "target": "_blank" }
       ],
       "hotspots": []
     },
@@ -27,13 +28,13 @@
       "page_number": 2,
       "type": "content",
       "layout": "text",
-      "background": { "color": "#FFFFFF" },
+      "background": { "color": "#ffffff" },
       "blocks": [
-        { "type": "text", "id": "b2-1", "variant": "heading", "content": "Beautiful Typography" },
-        { "type": "text", "id": "b2-2", "variant": "body", "content": "Folio gives you a full type system. Use it to create pages that feel like real publications — not slide decks." },
-        { "type": "text", "id": "b2-3", "variant": "quote", "content": "\"The best books feel alive. Folio makes interactive books that actually are.\"" },
+        { "type": "text", "id": "b2-1", "variant": "heading", "content": "Typography that reads like print" },
+        { "type": "text", "id": "b2-2", "variant": "body", "content": "A complete type system — titles, headings, body, quotes, captions, and stats — so every page feels composed, not assembled." },
+        { "type": "text", "id": "b2-3", "variant": "quote", "content": "\"The best documents feel considered. Riffle makes interactive ones that genuinely are.\"" },
         { "type": "divider", "id": "b2-4" },
-        { "type": "text", "id": "b2-5", "variant": "caption", "content": "Heading • Body • Quote • Caption • Stat — all built in." }
+        { "type": "text", "id": "b2-5", "variant": "caption", "content": "Title · Heading · Body · Quote · Caption · Stat" }
       ],
       "hotspots": []
     },
@@ -43,18 +44,18 @@
       "page_number": 3,
       "type": "content",
       "layout": "hero",
-      "background": { "color": "#F7F6F2" },
+      "background": { "color": "#f5f5f7" },
       "blocks": [
-        { "type": "text", "id": "b3-1", "variant": "heading", "content": "Rich Images", "align": "center" },
+        { "type": "text", "id": "b3-1", "variant": "heading", "content": "Imagery, edge to edge", "align": "center" },
         {
           "type": "image",
           "id": "b3-2",
-          "src": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800",
+          "src": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1000&q=80",
           "alt": "Open books on a library shelf",
-          "caption": "Click to expand in lightbox",
+          "caption": "Tap any image to open it full-screen",
           "lightbox": true
         },
-        { "type": "text", "id": "b3-3", "variant": "caption", "content": "Images support optional lightbox zoom.", "align": "center" }
+        { "type": "text", "id": "b3-3", "variant": "caption", "content": "Crisp images with optional lightbox zoom.", "align": "center" }
       ],
       "hotspots": []
     },
@@ -64,18 +65,18 @@
       "page_number": 4,
       "type": "content",
       "layout": "hero",
-      "background": { "color": "#1C1C2E" },
+      "background": { "color": "#1d1d1f" },
       "blocks": [
-        { "type": "text", "id": "b4-1", "variant": "heading", "content": "Video — Poster + Modal", "align": "center" },
+        { "type": "text", "id": "b4-1", "variant": "heading", "content": "Video, without the bloat", "align": "center" },
         {
           "type": "video",
           "id": "b4-2",
           "src": "https://www.w3schools.com/html/mov_bbb.mp4",
-          "poster": "https://images.unsplash.com/photo-1536240478700-b869ad10e128?w=800",
+          "poster": "https://images.unsplash.com/photo-1536240478700-b869ad10e128?w=1000&q=80",
           "autoplay": false,
           "muted": true
         },
-        { "type": "text", "id": "b4-3", "variant": "caption", "content": "Video never lives inside the page DOM. Click the poster to open a fullscreen modal.", "align": "center" }
+        { "type": "text", "id": "b4-3", "variant": "caption", "content": "Video stays out of the page DOM — tap the poster for a fullscreen player.", "align": "center" }
       ],
       "hotspots": []
     },
@@ -85,17 +86,17 @@
       "page_number": 5,
       "type": "content",
       "layout": "hero",
-      "background": { "color": "#FFFBF0" },
+      "background": { "color": "#ffffff" },
       "blocks": [
-        { "type": "text", "id": "b5-1", "variant": "heading", "content": "Audio Player", "align": "center" },
+        { "type": "text", "id": "b5-1", "variant": "heading", "content": "Audio, beautifully controlled", "align": "center" },
         {
           "type": "audio",
           "id": "b5-2",
           "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-          "title": "SoundHelix Song 1",
+          "title": "Ambient — Track 01",
           "waveform": false
         },
-        { "type": "text", "id": "b5-3", "variant": "body", "content": "Custom audio controls — no browser default UI. Tracks play events automatically.", "align": "center" }
+        { "type": "text", "id": "b5-3", "variant": "body", "content": "Custom controls, no default browser chrome. Every play is measured automatically.", "align": "center" }
       ],
       "hotspots": []
     },
@@ -106,22 +107,22 @@
       "type": "content",
       "layout": "blank",
       "background": {
-        "image": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800",
-        "overlay": "rgba(0,0,0,0.4)"
+        "image": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1000&q=80",
+        "overlay": "rgba(0,0,0,0.45)"
       },
       "blocks": [
-        { "type": "text", "id": "b6-1", "variant": "heading", "content": "Interactive Hotspots", "align": "center" }
+        { "type": "text", "id": "b6-1", "variant": "heading", "content": "Interactive hotspots", "align": "center" }
       ],
       "hotspots": [
         {
           "id": "hs-1",
           "x": 25,
           "y": 45,
-          "label": "Page Flip Engine",
+          "label": "Page turns",
           "icon": "BookOpen",
           "modal": {
-            "title": "react-pageflip",
-            "body": "Folio uses react-pageflip (a wrapper around StPageFlip) for the page-turn animation. It's wrapped in a ViewerEngine abstraction so the underlying library can be swapped without touching any other code.",
+            "title": "A real page-turn",
+            "body": "Riffle renders a fluid, tactile page-turn that feels like a printed object — not a scroll, not a slideshow.",
             "media": null
           }
         },
@@ -132,8 +133,8 @@
           "label": "Analytics",
           "icon": "BarChart2",
           "modal": {
-            "title": "Built-in Analytics",
-            "body": "Every interaction — page views, hotspot clicks, video plays, CTA clicks — is tracked automatically. No third-party scripts needed. Your data lives in your own Supabase database.",
+            "title": "Built-in analytics",
+            "body": "Opens, page views, dwell time, hotspot clicks, and completion are tracked automatically — captured into your own data layer.",
             "media": null
           }
         },
@@ -141,11 +142,11 @@
           "id": "hs-3",
           "x": 50,
           "y": 30,
-          "label": "Creator Studio",
+          "label": "Studio",
           "icon": "Pencil",
           "modal": {
-            "title": "Form-Based Editor",
-            "body": "Non-technical collaborators can build books using the form-based Creator Studio. No JSON, no code — just fill in the forms and hit publish.",
+            "title": "A studio, not a codebase",
+            "body": "Anyone on the team can compose pages with simple forms — add a hotspot, drop in media, and publish. No code required.",
             "media": null
           }
         }
@@ -157,13 +158,13 @@
       "page_number": 7,
       "type": "content",
       "layout": "hero",
-      "background": { "color": "#F7F6F2" },
+      "background": { "color": "#f5f5f7" },
       "blocks": [
-        { "type": "text", "id": "b7-1", "variant": "heading", "content": "Call-to-Action Buttons", "align": "center" },
-        { "type": "text", "id": "b7-2", "variant": "body", "content": "Three variants — each tracked automatically.", "align": "center" },
-        { "type": "button", "id": "b7-3", "label": "Primary Action", "href": "https://github.com", "variant": "primary", "target": "_blank" },
-        { "type": "button", "id": "b7-4", "label": "Secondary Action", "href": "https://github.com", "variant": "secondary", "target": "_blank" },
-        { "type": "button", "id": "b7-5", "label": "Ghost / Text Link", "href": "https://github.com", "variant": "ghost", "target": "_blank" }
+        { "type": "text", "id": "b7-1", "variant": "heading", "content": "Calls to action", "align": "center" },
+        { "type": "text", "id": "b7-2", "variant": "body", "content": "Three button styles — each click measured.", "align": "center" },
+        { "type": "button", "id": "b7-3", "label": "Primary action", "href": "https://github.com", "variant": "primary", "target": "_blank" },
+        { "type": "button", "id": "b7-4", "label": "Secondary action", "href": "https://github.com", "variant": "secondary", "target": "_blank" },
+        { "type": "button", "id": "b7-5", "label": "Text link", "href": "https://github.com", "variant": "ghost", "target": "_blank" }
       ],
       "hotspots": []
     },
@@ -173,15 +174,15 @@
       "page_number": 8,
       "type": "content",
       "layout": "hero",
-      "background": { "color": "#1C1C2E" },
+      "background": { "color": "#1d1d1f" },
       "blocks": [
-        { "type": "text", "id": "b8-1", "variant": "heading", "content": "Stats That Land", "align": "center" },
+        { "type": "text", "id": "b8-1", "variant": "heading", "content": "Numbers that land", "align": "center" },
         { "type": "text", "id": "b8-2", "variant": "stat", "content": "10×", "align": "center" },
-        { "type": "text", "id": "b8-3", "variant": "caption", "content": "More engaging than static PDFs", "align": "center" },
+        { "type": "text", "id": "b8-3", "variant": "caption", "content": "More engaging than a static PDF", "align": "center" },
         { "type": "text", "id": "b8-4", "variant": "stat", "content": "100%", "align": "center" },
-        { "type": "text", "id": "b8-5", "variant": "caption", "content": "Self-hosted — your data, your infra", "align": "center" },
-        { "type": "text", "id": "b8-6", "variant": "stat", "content": "5–8d", "align": "center" },
-        { "type": "text", "id": "b8-7", "variant": "caption", "content": "Time to ship MVP", "align": "center" }
+        { "type": "text", "id": "b8-5", "variant": "caption", "content": "Your data, in your own infrastructure", "align": "center" },
+        { "type": "text", "id": "b8-6", "variant": "stat", "content": "Minutes", "align": "center" },
+        { "type": "text", "id": "b8-7", "variant": "caption", "content": "From PDF to published edition", "align": "center" }
       ],
       "hotspots": []
     },
@@ -191,18 +192,18 @@
       "page_number": 9,
       "type": "content",
       "layout": "split",
-      "background": { "color": "#FFFFFF" },
+      "background": { "color": "#ffffff" },
       "blocks": [
         {
           "type": "image",
           "id": "b9-1",
-          "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600",
+          "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
           "alt": "Analytics dashboard on a laptop",
           "lightbox": false
         },
-        { "type": "text", "id": "b9-2", "variant": "heading", "content": "Analytics Built In" },
-        { "type": "text", "id": "b9-3", "variant": "body", "content": "Per-book dashboards show opens, page views, dwell time, hotspot clicks, and completion funnels. Export raw events as CSV." },
-        { "type": "button", "id": "b9-4", "label": "See the Analytics →", "href": "#", "variant": "primary", "target": "_blank" }
+        { "type": "text", "id": "b9-2", "variant": "heading", "content": "Analytics, built in" },
+        { "type": "text", "id": "b9-3", "variant": "body", "content": "Per-edition dashboards show opens, dwell time, hotspot clicks, and completion funnels. Export raw events as CSV anytime." },
+        { "type": "button", "id": "b9-4", "label": "See the analytics →", "href": "#", "variant": "primary", "target": "_blank" }
       ],
       "hotspots": []
     },
@@ -212,12 +213,12 @@
       "page_number": 10,
       "type": "back",
       "layout": "hero",
-      "background": { "color": "#01696F" },
+      "background": { "color": "#1d1d1f" },
       "blocks": [
-        { "type": "text", "id": "b10-1", "variant": "title", "content": "Folio", "align": "center" },
-        { "type": "text", "id": "b10-2", "variant": "body", "content": "Self-hosted. Fully yours. Built with Next.js + Supabase.", "align": "center" },
+        { "type": "text", "id": "b10-1", "variant": "title", "content": "Riffle", "align": "center" },
+        { "type": "text", "id": "b10-2", "variant": "body", "content": "Flip through anything. Publish on the web, embed anywhere, install as an app.", "align": "center" },
         { "type": "divider", "id": "b10-3" },
-        { "type": "button", "id": "b10-4", "label": "View on GitHub", "href": "https://github.com", "variant": "secondary", "target": "_blank" }
+        { "type": "button", "id": "b10-4", "label": "Start for free →", "href": "https://riffle.app", "variant": "primary", "target": "_blank" }
       ],
       "hotspots": []
     }

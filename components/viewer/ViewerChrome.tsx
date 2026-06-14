@@ -33,7 +33,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       />
 
       {!embed && (
-        <div className="flex items-center gap-3 rounded-full border border-white/50 bg-[#ffffff]/78 px-4 py-3 text-[var(--folio-ink)] shadow-[0_18px_60px_rgba(45,31,15,0.16)] backdrop-blur-xl sm:gap-6 sm:px-6">
+        <div className="flex items-center gap-3 rounded-full border border-[var(--folio-border)] bg-white/85 px-4 py-3 text-[var(--folio-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.10)] backdrop-blur-xl sm:gap-6 sm:px-6">
           <button
             onClick={() => engineRef.current?.flipPrev()}
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
@@ -79,9 +79,9 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
           href="https://riffle.app"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-4 right-4 z-[9000] rounded-full border border-white/50 bg-[#ffffff]/82 px-3 py-1.5 text-xs font-extrabold text-[var(--folio-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--folio-ink)]"
+          className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--folio-border)] bg-white/85 px-3 py-1.5 text-xs font-semibold text-[var(--folio-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--folio-ink)]"
         >
-          Made with <span className="font-display text-[var(--folio-teal)]">Riffle</span>
+          Made with <span className="font-display font-semibold text-[var(--folio-ink)]">Riffle</span>
         </a>
       )}
     </div>

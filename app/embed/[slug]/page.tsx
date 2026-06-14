@@ -26,7 +26,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
   if (!book) notFound()
 
   return (
-    <main className="w-full h-screen flex items-center justify-center overflow-hidden bg-gray-100">
+    <main className="w-full h-screen flex items-center justify-center overflow-hidden bg-[#f5f5f7]">
       <ViewerChrome book={book} embed />
     </main>
   )
