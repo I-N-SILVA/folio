@@ -19,6 +19,7 @@ const ASSETS = [
   { label: 'App icon (512×512)', href: '/icon' },
   { label: 'Apple touch icon (180×180)', href: '/apple-icon' },
   { label: 'Social share image (1200×630)', href: '/opengraph-image' },
+  { label: 'Demo loop (GIF)', href: '/riffle-demo.gif' },
   { label: 'Web app manifest', href: '/manifest.webmanifest' },
 ]
 
