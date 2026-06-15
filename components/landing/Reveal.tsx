@@ -1,59 +1,45 @@
 'use client'
 
-import { useEffect, useRef, useState, type ElementType, type ReactNode } from 'react'
+import { type ElementType, type ReactNode } from 'react'
+import { motion, useReducedMotion, type Variants } from 'framer-motion'
 
 type RevealProps = {
   children: ReactNode
   /** Stagger delay in milliseconds. */
   delay?: number
-  /** Render as a different element (defaults to a div). */
+  /** Render as a different motion element (defaults to a div). */
   as?: ElementType
   className?: string
 }
 
 /**
- * Fades + lifts its children into view the first time they cross the viewport.
- * Pairs with the `.folio-reveal` / `.is-visible` classes in globals.css and
- * degrades gracefully when IntersectionObserver or motion is unavailable.
+ * Fades + lifts its children into view the first time they cross the viewport,
+ * using a spring for a premium, organic settle. Honors reduced-motion.
  */
 export default function Reveal({ children, delay = 0, as, className = '' }: RevealProps) {
-  const Tag = (as || 'div') as ElementType
-  const ref = useRef<HTMLElement | null>(null)
-  const [visible, setVisible] = useState(false)
+  const reduce = useReducedMotion()
+  const MotionTag = (motion as any)[(as as string) || 'div'] as ElementType
 
-  useEffect(() => {
-    const node = ref.current
-    if (!node) return
-
-    if (typeof IntersectionObserver === 'undefined') {
-      setVisible(true)
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setVisible(true)
-            observer.disconnect()
-            break
-          }
-        }
-      },
-      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' }
-    )
-
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
+  const variants: Variants = {
+    hidden: { opacity: 0, y: reduce ? 0 : 26 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: reduce
+        ? { duration: 0.2 }
+        : { type: 'spring', stiffness: 120, damping: 20, mass: 0.6, delay: delay / 1000 },
+    },
+  }
 
   return (
-    <Tag
-      ref={ref}
-      className={`folio-reveal ${visible ? 'is-visible' : ''} ${className}`.trim()}
-      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+    <MotionTag
+      className={className}
+      variants={variants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.2, margin: '0px 0px -8% 0px' }}
     >
       {children}
-    </Tag>
+    </MotionTag>
   )
 }

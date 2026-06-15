@@ -2,7 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import {
   BarChart2,
   BookOpen,
@@ -15,25 +16,24 @@ import {
   Plus,
 } from 'lucide-react'
 import Reveal from '@/components/landing/Reveal'
+import { NumberTicker } from '@/components/landing/NumberTicker'
+import { MagneticButton } from '@/components/landing/MagneticButton'
 
 const BrowserPreview = dynamic(() => import('@/components/landing/BrowserPreview'), {
   ssr: false,
   loading: () => <div className="h-full w-full animate-pulse bg-[#f5f5f7]" />,
 })
 
-const FEATURES = [
-  { icon: BookOpen, title: 'Tactile reader', desc: 'A fluid page-turn that feels like a printed object — not a PDF viewer.' },
-  { icon: MousePointerClick, title: 'Interactive hotspots', desc: 'Layer products, video, and links directly onto the page.' },
-  { icon: BarChart2, title: 'Reader analytics', desc: 'Opens, dwell time, completion, and hotspot clicks — in your own data layer.' },
-  { icon: FileUp, title: 'PDF to experience', desc: 'Import an existing PDF and publish an interactive edition in minutes.' },
-  { icon: Code2, title: 'One-line embeds', desc: 'Drop a responsive edition into any site, store, or CMS.' },
-  { icon: Palette, title: 'Made to match', desc: 'Themes, custom domains, and no watermark on paid plans.' },
-]
-
 const STEPS = [
   ['01', 'Compose', 'Start from a PDF or build page-by-page with modular blocks.'],
   ['02', 'Enrich', 'Add hotspots, lead gates, themes, and metadata.'],
   ['03', 'Publish', 'Share a hosted reader, embed it anywhere, measure everything.'],
+]
+
+const STATS = [
+  { value: 10, suffix: '×', label: 'More engaging than a static PDF' },
+  { value: 3, suffix: ' min', label: 'From PDF to published edition' },
+  { value: 100, suffix: '%', label: 'Your data, your infrastructure' },
 ]
 
 const FAQS = [
@@ -82,7 +82,7 @@ const PLANS: {
   },
 ]
 
-const TRUST = ['ATELIER NORD', 'FIELD NOTES', 'COHERE STUDIO', 'MERIDIAN PRESS', 'STUDIO KOA', 'VERANDA']
+const TRUST = ['ATELIER NORD', 'FIELD NOTES', 'COHERE STUDIO', 'MERIDIAN PRESS', 'STUDIO KOA', 'VERANDA', 'OFFKIND', 'LUMEN & CO']
 
 function Mark({ className = '' }: { className?: string }) {
   return (
@@ -91,6 +91,124 @@ function Mark({ className = '' }: { className?: string }) {
     </span>
   )
 }
+
+/** Word-by-word blur-up reveal for the hero headline. */
+function HeadlineReveal({ text, className = '' }: { text: string; className?: string }) {
+  const reduce = useReducedMotion()
+  const words = text.split(' ')
+  return (
+    <h1 className={className}>
+      {words.map((w, i) => (
+        <motion.span
+          key={i}
+          className="inline-block"
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 18, filter: 'blur(10px)' }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={
+            reduce
+              ? { duration: 0.3 }
+              : { type: 'spring', stiffness: 130, damping: 18, delay: 0.15 + i * 0.13 }
+          }
+        >
+          {w}
+          {i < words.length - 1 ? ' ' : ''}
+        </motion.span>
+      ))}
+    </h1>
+  )
+}
+
+/** Browser mockup that straightens from a slight tilt as it scrolls in. */
+function ProductShot() {
+  const ref = useRef<HTMLDivElement>(null)
+  const reduce = useReducedMotion()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
+  const rotateX = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [12, 0])
+  const scale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [0.95, 1])
+  const opacity = useTransform(scrollYProgress, [0, 0.55], [0.35, 1])
+
+  return (
+    <div ref={ref} className="relative mx-auto mt-16 max-w-5xl" style={{ perspective: 1400 }}>
+      <motion.div
+        style={{ rotateX, scale, opacity, transformStyle: 'preserve-3d' }}
+        className="relative overflow-hidden rounded-[1.5rem] border border-[var(--folio-border)] bg-white shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
+      >
+        <div className="flex items-center gap-1.5 border-b border-[var(--folio-hairline)] bg-[#fbfbfd] px-4 py-3">
+          <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
+          <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
+          <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
+          <div className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-left text-xs text-[var(--folio-muted)] shadow-sm">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+            riffle.app/book/demo
+          </div>
+        </div>
+        <div className="aspect-[16/10] bg-[#f5f5f7]">
+          <BrowserPreview />
+        </div>
+        {/* Accent border beam */}
+        <span aria-hidden className="folio-beam" />
+      </motion.div>
+      {/* Soft floor reflection */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-10 left-1/2 -z-10 h-24 w-[78%] -translate-x-1/2 rounded-[50%] bg-black/15 blur-3xl"
+      />
+    </div>
+  )
+}
+
+/** Tiny animated bar chart for the analytics bento tile. */
+function MiniBars() {
+  const reduce = useReducedMotion()
+  const bars = [38, 62, 48, 80, 56, 95]
+  return (
+    <div className="flex h-16 items-end gap-1.5">
+      {bars.map((h, i) => (
+        <motion.span
+          key={i}
+          className="w-full rounded-sm bg-[var(--accent)]/85"
+          initial={{ height: reduce ? `${h}%` : '8%' }}
+          whileInView={{ height: `${h}%` }}
+          viewport={{ once: true, amount: 0.8 }}
+          transition={{ delay: i * 0.06, type: 'spring', stiffness: 120, damping: 16 }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/** Pulsing hotspot dots for the hotspot bento tile. */
+function MiniHotspots() {
+  const dots = [
+    { x: '22%', y: '34%' },
+    { x: '64%', y: '52%' },
+    { x: '44%', y: '74%' },
+  ]
+  return (
+    <div className="relative h-16 w-full rounded-lg bg-[var(--folio-subtle)]">
+      {dots.map((d, i) => (
+        <span key={i} className="folio-pulse absolute h-2.5 w-2.5 rounded-full bg-[var(--accent)]" style={{ left: d.x, top: d.y }} />
+      ))}
+    </div>
+  )
+}
+
+type Tile = {
+  icon: typeof BookOpen
+  title: string
+  desc: string
+  span: string
+  visual?: 'bars' | 'hotspots'
+}
+
+const TILES: Tile[] = [
+  { icon: BookOpen, title: 'Tactile reader', desc: 'A fluid page-turn that feels like a printed object — not a PDF viewer.', span: 'lg:col-span-2' },
+  { icon: MousePointerClick, title: 'Interactive hotspots', desc: 'Layer products, video, and links onto the page.', span: 'lg:col-span-1', visual: 'hotspots' },
+  { icon: BarChart2, title: 'Reader analytics', desc: 'Opens, dwell time, completion — in your own data layer.', span: 'lg:col-span-1', visual: 'bars' },
+  { icon: FileUp, title: 'PDF to experience', desc: 'Import a PDF and publish an interactive edition in minutes.', span: 'lg:col-span-1' },
+  { icon: Code2, title: 'One-line embeds', desc: 'Drop a responsive edition into any site, store, or CMS.', span: 'lg:col-span-1' },
+  { icon: Palette, title: 'Made to match', desc: 'Themes, custom domains, and no watermark on paid plans.', span: 'lg:col-span-2' },
+]
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
@@ -142,7 +260,6 @@ export default function HomePage() {
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden px-5 pb-16 pt-32 text-center sm:pt-40">
-          {/* Ambient depth */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px]"
@@ -152,64 +269,58 @@ export default function HomePage() {
             }}
           />
           <div className="mx-auto max-w-3xl">
-            <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--folio-muted)] backdrop-blur">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                Interactive publishing
-              </span>
-              <h1 className="mt-6 text-6xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-7xl lg:text-[5.5rem]">
-                Flip through anything.
-              </h1>
-              <p className="mx-auto mt-6 max-w-xl text-xl leading-8 text-[var(--folio-muted)]">
-                Riffle turns static PDFs into interactive editions — with hotspots, analytics, and
-                one-line embeds. Built for catalogs, lookbooks, portfolios, and reports.
-              </p>
-              <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link href="/login" className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white transition hover:bg-[var(--accent-hover)] sm:w-auto">
-                  Start for free
-                </Link>
-                <Link href="/book/demo" className="text-[15px] font-medium text-[var(--accent)] transition hover:underline">
-                  View the demo →
-                </Link>
-              </div>
-            </Reveal>
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--folio-muted)] backdrop-blur"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+              Interactive publishing
+            </motion.span>
+            <HeadlineReveal
+              text="Flip through anything."
+              className="font-display mt-6 text-6xl font-semibold leading-[1.0] tracking-[-0.02em] sm:text-7xl lg:text-[5.5rem]"
+            />
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="mx-auto mt-6 max-w-xl text-xl leading-8 text-[var(--folio-muted)]"
+            >
+              Riffle turns static PDFs into interactive editions — with hotspots, analytics, and
+              one-line embeds. Built for catalogs, lookbooks, portfolios, and reports.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65, duration: 0.6 }}
+              className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row"
+            >
+              <MagneticButton
+                href="/login"
+                className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(0,102,255,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
+              >
+                Start for free
+              </MagneticButton>
+              <Link href="/book/demo" className="text-[15px] font-medium text-[var(--accent)] transition hover:underline">
+                View the demo →
+              </Link>
+            </motion.div>
           </div>
 
-          {/* Product shot */}
-          <Reveal delay={120}>
-            <div className="relative mx-auto mt-16 max-w-5xl">
-              <div className="overflow-hidden rounded-[1.5rem] border border-[var(--folio-border)] bg-white shadow-[0_50px_140px_-30px_rgba(0,0,0,0.35)] ring-1 ring-black/[0.02]">
-                <div className="flex items-center gap-1.5 border-b border-[var(--folio-hairline)] bg-[#fbfbfd] px-4 py-3">
-                  <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
-                  <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
-                  <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
-                  <div className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-left text-xs text-[var(--folio-muted)] shadow-sm">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-                    riffle.app/book/demo
-                  </div>
-                </div>
-                <div className="aspect-[16/10] bg-[#f5f5f7]">
-                  <BrowserPreview />
-                </div>
-              </div>
-              {/* Soft floor reflection */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -bottom-10 left-1/2 -z-10 h-24 w-[78%] -translate-x-1/2 rounded-[50%] bg-black/15 blur-3xl"
-              />
-            </div>
-          </Reveal>
+          <ProductShot />
         </section>
 
-        {/* Trust */}
-        <section className="border-y border-[var(--folio-hairline)] bg-[var(--background-alt)] px-5 py-10">
-          <div className="mx-auto max-w-5xl">
-            <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">
-              Trusted by publishing teams
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-              {TRUST.map((name) => (
-                <span key={name} className="text-sm font-semibold tracking-[0.06em] text-[var(--folio-ink)]/35">
+        {/* Trust marquee */}
+        <section className="border-y border-[var(--folio-hairline)] bg-[var(--background-alt)] py-10">
+          <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">
+            Trusted by publishing teams
+          </p>
+          <div className="folio-marquee folio-marquee-mask">
+            <div className="folio-marquee-track gap-12 pr-12">
+              {[...TRUST, ...TRUST].map((name, i) => (
+                <span key={i} className="whitespace-nowrap text-sm font-semibold tracking-[0.08em] text-[var(--folio-ink)]/30 grayscale">
                   {name}
                 </span>
               ))}
@@ -217,24 +328,26 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Features */}
+        {/* Features — bento */}
         <section id="features" className="px-5 py-28">
           <div className="mx-auto max-w-6xl">
-            <Reveal className="mx-auto mb-16 max-w-2xl text-center">
-              <h2 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">Everything a page can be.</h2>
+            <Reveal className="mx-auto mb-14 max-w-2xl text-center">
+              <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Everything a page can be.</h2>
               <p className="mt-4 text-lg leading-8 text-[var(--folio-muted)]">
                 A studio, a reader, and the intelligence in between.
               </p>
             </Reveal>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, desc }, i) => (
-                <Reveal key={title} delay={(i % 3) * 80}>
-                  <div className="group h-full rounded-3xl border border-[var(--folio-border)] bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
+            <div className="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {TILES.map(({ icon: Icon, title, desc, span, visual }, i) => (
+                <Reveal key={title} delay={(i % 4) * 70} className={span}>
+                  <div className="group flex h-full flex-col rounded-3xl border border-[var(--folio-border)] bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
                     <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--folio-subtle)] text-[var(--folio-ink)] transition-colors duration-300 group-hover:bg-[var(--folio-ink)] group-hover:text-white">
                       <Icon size={20} strokeWidth={1.75} />
                     </div>
                     <h3 className="mt-5 text-lg font-semibold tracking-[-0.01em]">{title}</h3>
                     <p className="mt-2 text-[15px] leading-7 text-[var(--folio-muted)]">{desc}</p>
+                    {visual === 'bars' && <div className="mt-auto pt-6"><MiniBars /></div>}
+                    {visual === 'hotspots' && <div className="mt-auto pt-6"><MiniHotspots /></div>}
                   </div>
                 </Reveal>
               ))}
@@ -246,7 +359,7 @@ export default function HomePage() {
         <section className="bg-[var(--folio-ink)] px-5 py-28 text-white">
           <div className="mx-auto max-w-4xl text-center">
             <Reveal>
-              <h2 className="text-4xl font-semibold leading-[1.1] tracking-[-0.03em] sm:text-6xl">
+              <h2 className="font-display text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-6xl">
                 A download link is where good work goes to be forgotten.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">
@@ -260,69 +373,92 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* How it works */}
-        <section id="how" className="px-5 py-28">
-          <div className="mx-auto max-w-5xl">
-            <Reveal className="mb-16 max-w-2xl">
-              <h2 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">From flat file to living edition.</h2>
-            </Reveal>
-            <div className="grid gap-px overflow-hidden rounded-2xl border border-[var(--folio-border)] bg-[var(--folio-border)] sm:grid-cols-3">
-              {STEPS.map(([num, title, desc]) => (
-                <div key={num} className="bg-white p-8">
-                  <span className="text-sm font-semibold text-[var(--accent)]">{num}</span>
-                  <h3 className="mt-4 text-xl font-semibold tracking-[-0.01em]">{title}</h3>
-                  <p className="mt-2 text-[15px] leading-7 text-[var(--folio-muted)]">{desc}</p>
+        {/* Stats */}
+        <section className="px-5 py-24">
+          <div className="mx-auto grid max-w-4xl gap-10 text-center sm:grid-cols-3">
+            {STATS.map((s) => (
+              <Reveal key={s.label}>
+                <div className="font-display text-6xl font-semibold tracking-[-0.03em] text-[var(--folio-ink)]">
+                  <NumberTicker value={s.value} suffix={s.suffix} />
                 </div>
+                <p className="mx-auto mt-3 max-w-[12rem] text-[15px] leading-6 text-[var(--folio-muted)]">{s.label}</p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how" className="bg-[var(--background-alt)] px-5 py-28">
+          <div className="mx-auto max-w-5xl">
+            <Reveal className="mb-14 max-w-2xl">
+              <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">From flat file to living edition.</h2>
+            </Reveal>
+
+            {/* Animated flow conduit */}
+            <div className="relative mb-6 hidden h-[3px] overflow-hidden rounded-full bg-[var(--folio-border)] lg:block">
+              <div className="folio-flow-line absolute inset-0" />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              {STEPS.map(([num, title, desc], i) => (
+                <Reveal key={num} delay={i * 90}>
+                  <div className="h-full rounded-2xl border border-[var(--folio-border)] bg-white p-8">
+                    <span className="font-display text-sm font-semibold text-[var(--accent)]">{num}</span>
+                    <h3 className="mt-4 text-xl font-semibold tracking-[-0.01em]">{title}</h3>
+                    <p className="mt-2 text-[15px] leading-7 text-[var(--folio-muted)]">{desc}</p>
+                  </div>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
         {/* Pricing */}
-        <section id="pricing" className="bg-[var(--background-alt)] px-5 py-28">
+        <section id="pricing" className="px-5 py-28">
           <div className="mx-auto max-w-5xl">
-            <Reveal className="mb-16 text-center">
-              <h2 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">Simple, honest pricing.</h2>
+            <Reveal className="mb-14 text-center">
+              <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Simple, honest pricing.</h2>
               <p className="mt-4 text-lg text-[var(--folio-muted)]">Start free. Upgrade when it earns its keep.</p>
             </Reveal>
             <div className="grid items-stretch gap-5 lg:grid-cols-3">
               {PLANS.map(({ name, price, cadence, desc, cta, href, features, featured }) => (
-                <div
-                  key={name}
-                  className={`flex flex-col rounded-3xl border p-8 ${
-                    featured ? 'border-[var(--folio-ink)] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.1)]' : 'border-[var(--folio-border)] bg-white'
-                  }`}
-                >
-                  {featured && (
-                    <span className="mb-4 inline-block w-fit rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white">
-                      Most popular
-                    </span>
-                  )}
-                  <h3 className="text-lg font-semibold">{name}</h3>
-                  <div className="mt-3 flex items-end gap-1">
-                    <span className="text-5xl font-semibold tracking-[-0.04em]">{price}</span>
-                    {cadence && <span className="mb-1.5 text-sm text-[var(--folio-muted)]">{cadence}</span>}
-                  </div>
-                  <p className="mt-3 text-[15px] text-[var(--folio-muted)]">{desc}</p>
-                  <ul className="mt-7 flex-1 space-y-3">
-                    {features.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-[15px]">
-                        <Plus size={16} className="mt-1 shrink-0 text-[var(--accent)]" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href={href}
-                    className={`mt-8 rounded-full px-5 py-3 text-center text-[15px] font-semibold transition ${
-                      featured
-                        ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
-                        : 'bg-[var(--folio-subtle)] text-[var(--folio-ink)] hover:bg-[#ececef]'
+                <Reveal key={name}>
+                  <div
+                    className={`flex h-full flex-col rounded-3xl border p-8 ${
+                      featured ? 'border-[var(--folio-ink)] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.1)]' : 'border-[var(--folio-border)] bg-white'
                     }`}
                   >
-                    {cta}
-                  </Link>
-                </div>
+                    {featured && (
+                      <span className="mb-4 inline-block w-fit rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white">
+                        Most popular
+                      </span>
+                    )}
+                    <h3 className="text-lg font-semibold">{name}</h3>
+                    <div className="mt-3 flex items-end gap-1">
+                      <span className="font-display text-5xl font-semibold tracking-[-0.03em]">{price}</span>
+                      {cadence && <span className="mb-1.5 text-sm text-[var(--folio-muted)]">{cadence}</span>}
+                    </div>
+                    <p className="mt-3 text-[15px] text-[var(--folio-muted)]">{desc}</p>
+                    <ul className="mt-7 flex-1 space-y-3">
+                      {features.map((f) => (
+                        <li key={f} className="flex items-start gap-2.5 text-[15px]">
+                          <Plus size={16} className="mt-1 shrink-0 text-[var(--accent)]" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href={href}
+                      className={`mt-8 rounded-full px-5 py-3 text-center text-[15px] font-semibold transition ${
+                        featured
+                          ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
+                          : 'bg-[var(--folio-subtle)] text-[var(--folio-ink)] hover:bg-[#ececef]'
+                      }`}
+                    >
+                      {cta}
+                    </Link>
+                  </div>
+                </Reveal>
               ))}
             </div>
 
@@ -341,10 +477,10 @@ export default function HomePage() {
         </section>
 
         {/* FAQ */}
-        <section id="faq" className="px-5 py-28">
+        <section id="faq" className="bg-[var(--background-alt)] px-5 py-28">
           <div className="mx-auto max-w-3xl">
             <Reveal className="mb-12 text-center">
-              <h2 className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">Questions, answered.</h2>
+              <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Questions, answered.</h2>
             </Reveal>
             <div>
               {FAQS.map((item) => (
@@ -355,10 +491,10 @@ export default function HomePage() {
         </section>
 
         {/* CTA */}
-        <section className="px-5 pb-28">
-          <div className="mx-auto max-w-4xl rounded-[2rem] bg-[var(--folio-ink)] px-8 py-20 text-center text-white">
+        <section className="px-5 py-28">
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-[2rem] bg-[var(--folio-ink)] px-8 py-20 text-center text-white">
             <Reveal>
-              <h2 className="mx-auto max-w-2xl text-4xl font-semibold leading-[1.1] tracking-[-0.03em] sm:text-5xl">
+              <h2 className="font-display mx-auto max-w-2xl text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-5xl">
                 Your next publication deserves more.
               </h2>
               <p className="mx-auto mt-5 max-w-lg text-lg text-white/60">

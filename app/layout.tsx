@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from 'next'
+import { Geist, Fraunces } from 'next/font/google'
 import { Providers } from './providers'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 import { AppleSplashLinks } from '@/components/AppleSplashLinks'
 import './globals.css'
+
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' })
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  display: 'swap',
+})
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://riffle.app'
 
@@ -63,7 +71,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className={`h-full antialiased ${geist.variable} ${fraunces.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
         <AppleSplashLinks />
         <Providers>{children}</Providers>

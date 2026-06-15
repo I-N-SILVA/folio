@@ -42,21 +42,31 @@ monochrome. Maintain AA contrast on text.
 
 ## 4. Typography
 
-- **One typeface, system sans** (SF Pro on Apple devices): `--font-display` /
-  `--font-body` both use the `-apple-system, BlinkMacSystemFont, "SF Pro…"`
-  stack. Headings are the same family, heavier weight + tighter tracking.
-- **Headlines:** large, `font-semibold`, tracking `-0.03em` to `-0.04em`.
-- **Body:** 15–20px, `leading-7/8`, gray for secondary copy.
-- No serifs, no decorative fonts, no all-caps except small eyebrow labels.
+Two faces, loaded via `next/font` (see `app/layout.tsx`):
+
+- **Display — Fraunces** (`--font-display`): an editorial variable serif for
+  headlines, big numbers, and the price. Tracking `-0.02em`. This is the
+  ownable, premium voice — use it for impact, not body copy.
+- **UI / body — Geist** (`--font-body`): a clean modern grotesk for nav, cards,
+  buttons, and paragraphs. 15–20px, `leading-7/8`, gray for secondary copy.
+- Use `.font-display` (or `font-display`) to opt a heading into Fraunces.
+  Everything else inherits Geist.
+- All-caps only for small eyebrow/label text with wide tracking.
 
 ## 5. Surfaces & motion
 
 - **Radii:** soft and generous — cards `1.5–2rem`, buttons fully rounded.
-- **Elevation:** subtle, neutral shadows (e.g. `0 40px 120px rgba(0,0,0,0.12)`)
-  on the product shot; most surfaces use a hairline border instead.
+- **Elevation:** subtle, neutral shadows; most surfaces use a hairline border.
 - **No texture/grain** — the aesthetic is clean and flat.
-- **Motion:** restrained — `Reveal` fade-up on scroll, gentle hover states.
-  Always honor `prefers-reduced-motion`.
+- **Motion (framer-motion):** restrained and intentional. Building blocks:
+  - `Reveal` — spring fade-up on scroll (`whileInView`, once).
+  - Hero — word-by-word blur-up headline + magnetic primary CTA.
+  - Product shot — straightens from a slight tilt on scroll, with a single
+    accent **BorderBeam** tracing the frame.
+  - Accents — `NumberTicker` count-ups, animated bento visuals, a traveling
+    flow line in “how it works”.
+  - One signature move per surface — never stack effects. Always honor
+    `prefers-reduced-motion` (every primitive already does).
 
 ## 6. Voice & tone
 
