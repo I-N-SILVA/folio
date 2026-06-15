@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
   BarChart2,
@@ -237,11 +237,25 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function HomePage() {
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--folio-ink)]">
       <ScrollProgress />
       {/* Nav */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--folio-hairline)] bg-white/80 backdrop-blur-xl">
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'border-b border-[var(--folio-hairline)] bg-white/80 backdrop-blur-xl'
+            : 'border-b border-transparent bg-transparent'
+        }`}
+      >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-2" aria-label="Riffle home">
             <Mark className="h-7 w-7 text-sm" />
