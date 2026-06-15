@@ -21,10 +21,11 @@ export const metadata: Metadata = {
     'Riffle turns static PDFs into interactive editions with hotspots, analytics, embeds, and brand control. Built for catalogs, lookbooks, portfolios, and reports.',
   applicationName: 'Riffle',
   keywords: [
+    'interactive editions',
     'interactive publishing',
     'interactive PDF',
     'digital publishing',
-    'flipbook',
+    'living documents',
     'lookbook',
     'catalog',
     'portfolio',

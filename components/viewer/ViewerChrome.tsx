@@ -1,15 +1,18 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
+import { ForeEdge } from './ForeEdge'
 import type { Book } from '@/lib/book-schema'
 
 export function ViewerChrome({ book, embed = false }: { book: Book; embed?: boolean }) {
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
   const [fullscreen, setFullscreen] = useState(false)
+  const reduce = useReducedMotion()
 
   const totalPages = book.pages?.length ?? 0
 
@@ -25,12 +28,29 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <ViewerEngine
-        ref={engineRef}
-        book={book}
-        onFlip={setCurrentPage}
-        embed={embed}
-      />
+      {/* Cover reveal — the edition "opens" like a book on entry. */}
+      <motion.div
+        className="w-full"
+        style={{ transformPerspective: 1600, transformOrigin: 'left center' }}
+        initial={reduce ? { opacity: 0 } : { opacity: 0, rotateY: 14, scale: 0.97 }}
+        animate={reduce ? { opacity: 1 } : { opacity: 1, rotateY: 0, scale: 1 }}
+        transition={{ duration: reduce ? 0.3 : 1, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <ViewerEngine
+          ref={engineRef}
+          book={book}
+          onFlip={setCurrentPage}
+          embed={embed}
+        />
+      </motion.div>
+
+      {!embed && (
+        <ForeEdge
+          total={totalPages}
+          current={currentPage}
+          onSeek={(i) => engineRef.current?.goTo(i)}
+        />
+      )}
 
       {!embed && (
         <div className="flex items-center gap-3 rounded-full border border-[var(--folio-border)] bg-white/85 px-4 py-3 text-[var(--folio-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.10)] backdrop-blur-xl sm:gap-6 sm:px-6">

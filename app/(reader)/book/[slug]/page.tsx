@@ -81,8 +81,15 @@ export default async function BookPage({ params }: Props) {
     )
   }
 
+  // Ambient theming — the reader chrome takes a subtle tint from the cover.
+  const cover = book.pages?.[0]?.background?.color || book.theme?.background || '#f5f5f7'
+  const tint = /^#[0-9a-f]{6}$/i.test(cover) ? `${cover}38` : 'rgba(0,0,0,0.04)'
+
   return (
-    <main className="folio-grain flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,#ffffff_0%,#f5f5f7_45%,#ececef_100%)] p-4">
+    <main
+      className="folio-grain flex min-h-screen flex-col items-center justify-center p-4"
+      style={{ background: `radial-gradient(circle at 50% -8%, ${tint} 0%, #f5f5f7 55%, #ececef 100%)` }}
+    >
       <ViewerChrome book={book} />
     </main>
   )

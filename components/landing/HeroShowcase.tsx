@@ -58,7 +58,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
           transition={{ delay: 0.15 }}
           className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--folio-muted)]"
         >
-          Interactive publishing
+          Vol. 01 · Interactive publishing
         </motion.p>
         <motion.h3
           initial={{ opacity: 0, y: 14, filter: 'blur(8px)' }}

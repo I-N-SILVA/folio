@@ -15,7 +15,7 @@
       "layout": "hero",
       "background": { "color": "#fbfbfd" },
       "blocks": [
-        { "type": "text", "id": "b1-1", "variant": "caption", "content": "INTERACTIVE PUBLISHING", "align": "center" },
+        { "type": "text", "id": "b1-1", "variant": "caption", "content": "VOL. 01 · INTERACTIVE PUBLISHING", "align": "center" },
         { "type": "text", "id": "b1-2", "variant": "title", "content": "Riffle", "align": "center" },
         { "type": "text", "id": "b1-3", "variant": "body", "content": "Flip through anything. This is a live edition — turn the pages.", "align": "center" },
         { "type": "button", "id": "b1-4", "label": "Start reading →", "href": "#", "variant": "primary", "target": "_blank" }

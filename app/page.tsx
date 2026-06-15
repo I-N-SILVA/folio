@@ -92,8 +92,13 @@ const TRUST = ['ATELIER NORD', 'FIELD NOTES', 'COHERE STUDIO', 'MERIDIAN PRESS',
 
 function Mark({ className = '' }: { className?: string }) {
   return (
-    <span className={`grid place-items-center rounded-[0.6rem] bg-[var(--folio-ink)] font-semibold text-white ${className}`}>
-      R
+    <span className={`group relative inline-grid ${className}`}>
+      {/* Pages that riffle out of the mark on hover. */}
+      <span aria-hidden className="absolute inset-0 origin-bottom-left rounded-[0.6rem] bg-[var(--accent)]/25 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:-rotate-[14deg]" />
+      <span aria-hidden className="absolute inset-0 origin-bottom-left rounded-[0.6rem] bg-[var(--accent)]/50 transition-transform duration-300 ease-out group-hover:-rotate-[7deg]" />
+      <span className="relative grid h-full w-full place-items-center rounded-[0.6rem] bg-[var(--folio-ink)] font-semibold text-white">
+        R
+      </span>
     </span>
   )
 }
@@ -353,6 +358,7 @@ export default function HomePage() {
         <section id="features" className="px-5 py-28">
           <div className="mx-auto max-w-6xl">
             <Reveal className="mx-auto mb-14 max-w-2xl text-center">
+              <span className="mx-auto mb-5 block h-9 w-[3px] rounded-full bg-[var(--accent)]" />
               <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Everything a page can be.</h2>
               <p className="mt-4 text-lg leading-8 text-[var(--folio-muted)]">
                 A studio, a reader, and the intelligence in between.
@@ -429,6 +435,7 @@ export default function HomePage() {
         <section id="how" className="bg-[var(--background-alt)] px-5 py-28">
           <div className="mx-auto max-w-5xl">
             <Reveal className="mb-14 max-w-2xl">
+              <span className="mb-5 block h-9 w-[3px] rounded-full bg-[var(--accent)]" />
               <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">From flat file to living edition.</h2>
             </Reveal>
 

@@ -38,9 +38,8 @@ function frameCover(lp) {
   // Rendered fully-formed (no fade-in) so the GIF's poster frame looks finished.
   return `
     <rect width="${W}" height="${H}" fill="${PAPER}"/>
-    <circle cx="${W / 2 - 124}" cy="148" r="4" fill="${ACCENT}"/>
-    <text x="${W / 2 + 8}" y="153" font-family="${SANS}" font-size="13" letter-spacing="3.4"
-      fill="${MUTED}" text-anchor="middle" font-weight="700">INTERACTIVE PUBLISHING</text>
+    <text x="${W / 2}" y="153" font-family="${SANS}" font-size="13" letter-spacing="3.2"
+      fill="${MUTED}" text-anchor="middle" font-weight="700">VOL. 01 · INTERACTIVE PUBLISHING</text>
     <text x="${W / 2}" y="250" font-family="${SERIF}" font-size="78" fill="${INK}"
       text-anchor="middle" font-weight="600">Riffle</text>
     <text x="${W / 2}" y="292" font-family="${SANS}" font-size="20" fill="${MUTED}"
