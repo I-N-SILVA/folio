@@ -2,6 +2,8 @@ import { LibraryBig, Plus, Sparkles } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
 import { BookCard } from '@/components/studio/BookCard'
+import Reveal from '@/components/landing/Reveal'
+import { NumberTicker } from '@/components/landing/NumberTicker'
 import type { Book } from '@/lib/book-schema'
 
 type DashboardBook = Omit<Book, 'pages'> & { pages?: { id: string }[] }
@@ -46,15 +48,15 @@ export default async function DashboardPage() {
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <StatCard label="Books" value={books.length} />
-            <StatCard label="Published" value={publishedCount} />
-            <StatCard label="Pages" value={pageCount} />
+            <Reveal delay={0}><StatCard label="Books" value={books.length} /></Reveal>
+            <Reveal delay={70}><StatCard label="Published" value={publishedCount} /></Reveal>
+            <Reveal delay={140}><StatCard label="Pages" value={pageCount} /></Reveal>
           </div>
         </section>
 
         {books.length === 0 ? (
           <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">
-            <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(185,130,53,0.22)] blur-3xl" />
+            <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,102,255,0.16)] blur-3xl" />
             <div className="relative mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[2rem] border border-[var(--folio-border)] bg-white/70 shadow-lg">
               <Plus size={34} className="text-[var(--folio-brass)]" />
             </div>
@@ -71,8 +73,10 @@ export default async function DashboardPage() {
               Library
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {books.map((book) => (
-                <BookCard key={book.id} book={book} />
+              {books.map((book, i) => (
+                <Reveal key={book.id} delay={(i % 3) * 70}>
+                  <BookCard book={book} />
+                </Reveal>
               ))}
             </div>
           </section>
@@ -86,7 +90,9 @@ function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-3xl border border-[var(--folio-border)] bg-white/55 p-5 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">{label}</p>
-      <p className="mt-2 font-display text-4xl font-semibold tracking-[-0.06em]">{value}</p>
+      <p className="mt-2 font-display text-4xl font-semibold tracking-[-0.06em]">
+        <NumberTicker value={value} />
+      </p>
     </div>
   )
 }

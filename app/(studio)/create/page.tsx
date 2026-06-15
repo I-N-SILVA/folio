@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { Crown } from 'lucide-react'
 import { THEME_PRESETS } from '@/lib/book-schema'
 
@@ -71,7 +72,12 @@ export default function CreatePage() {
 
   return (
     <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
-      <div className="w-full max-w-lg rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/85 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+      <motion.div
+        initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+        className="w-full max-w-lg rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/85 p-8 shadow-[var(--folio-shadow)] backdrop-blur"
+      >
         {limitHit ? (
           <div className="text-center">
             <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff]">
@@ -189,7 +195,7 @@ export default function CreatePage() {
             )}
           </>
         )}
-      </div>
+      </motion.div>
     </main>
   )
 }

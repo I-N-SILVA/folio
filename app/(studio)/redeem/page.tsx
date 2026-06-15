@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { Gift, Loader2 } from 'lucide-react'
 
 export default function RedeemPage() {
@@ -39,7 +40,12 @@ export default function RedeemPage() {
 
   return (
     <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
-      <div className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+      <motion.div
+        initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+        className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur"
+      >
         <div className="mb-7">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff] shadow-lg">
             <Gift size={22} />
@@ -95,7 +101,7 @@ export default function RedeemPage() {
             </Link>
           </form>
         )}
-      </div>
+      </motion.div>
     </main>
   )
 }

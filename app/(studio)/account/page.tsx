@@ -7,6 +7,7 @@ import { formatQuota } from '@/lib/plans'
 import { isBillingEnabled } from '@/lib/stripe'
 import { UpgradeButton, ManageBillingButton } from '@/components/studio/BillingButtons'
 import { SignOutButton } from '@/components/studio/SignOutButton'
+import Reveal from '@/components/landing/Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,7 +70,7 @@ export default async function AccountPage({
           </div>
         )}
 
-        <section className="mb-6 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 p-7 shadow-[var(--folio-shadow)] backdrop-blur sm:p-9">
+        <Reveal as="section" className="mb-6 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 p-7 shadow-[var(--folio-shadow)] backdrop-blur sm:p-9">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
             <Crown size={13} />
             {plan.lifetime ? 'Lifetime plan' : 'Current plan'}
@@ -97,9 +98,9 @@ export default async function AccountPage({
               />
             </div>
           </div>
-        </section>
+        </Reveal>
 
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <Reveal as="div" delay={80} className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <section className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7 shadow-sm">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">What's included</h2>
             <dl className="mt-5 divide-y divide-[var(--folio-border)]">
@@ -158,7 +159,7 @@ export default async function AccountPage({
               </div>
             )}
           </aside>
-        </div>
+        </Reveal>
       </div>
     </main>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { createBrowserSupabase } from '@/lib/supabase'
 
 export default function LoginPage() {
@@ -38,7 +39,12 @@ export default function LoginPage() {
 
   return (
     <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
-      <div className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur">
+      <motion.div
+        initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+        className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur"
+      >
         <div className="mb-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--folio-teal)]">
             Creator Studio
@@ -78,13 +84,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-full bg-[var(--folio-teal)] py-3.5 font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(13,102,97,0.22)] transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:translate-y-0 disabled:opacity-50"
+              className="rounded-full bg-[var(--accent)] py-3.5 font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(0,102,255,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:translate-y-0 disabled:opacity-50"
             >
               {loading ? 'Sending…' : 'Send magic link'}
             </button>
           </form>
         )}
-      </div>
+      </motion.div>
     </main>
   )
 }
