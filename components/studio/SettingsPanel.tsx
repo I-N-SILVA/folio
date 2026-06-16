@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
+import * as Lucide from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import type {
   Block,
@@ -35,6 +36,40 @@ const inputCls =
 
 const selectCls =
   'bg-neutral-800 border border-neutral-700 rounded px-2 py-1.5 text-sm text-neutral-100 outline-none focus:border-neutral-500 w-full'
+
+// ─── Icon picker ──────────────────────────────────────────────────────────────
+
+const HOTSPOT_ICONS = [
+  'Info', 'Star', 'Zap', 'Sparkles', 'BookOpen', 'BarChart2', 'Play', 'Link',
+  'ShoppingBag', 'ShoppingCart', 'Tag', 'Gift', 'Heart', 'MapPin', 'Quote', 'Pencil',
+]
+
+function IconPicker({ value, onChange }: { value?: string; onChange: (name: string) => void }) {
+  return (
+    <div className="grid grid-cols-8 gap-1.5">
+      {HOTSPOT_ICONS.map((name) => {
+        const Ic = (Lucide as any)[name] ?? Lucide.Info
+        const active = value === name
+        return (
+          <button
+            type="button"
+            key={name}
+            title={name}
+            onClick={() => onChange(name)}
+            className={twMerge(
+              'flex aspect-square items-center justify-center rounded-md border transition-colors',
+              active
+                ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:text-neutral-200'
+            )}
+          >
+            <Ic size={16} />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 // ─── Text Block Form ──────────────────────────────────────────────────────────
 
@@ -304,7 +339,7 @@ function EmbedBlockForm({ block, pageId }: { block: EmbedBlock; pageId: string }
 
 function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: string }) {
   const { updateBlock } = useEditorStore()
-  const { register, watch } = useForm<Partial<DataBlock>>({
+  const { register, watch, getValues } = useForm<Partial<DataBlock>>({
     defaultValues: {
       label: block.label,
       source: block.source,
@@ -315,6 +350,31 @@ function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: string }) 
       align: block.align ?? 'left',
     },
   })
+
+  const [test, setTest] = useState<{ state: 'idle' | 'loading' | 'ok' | 'err'; value?: string; msg?: string }>({
+    state: 'idle',
+  })
+
+  async function runTest() {
+    const { source, path, prefix, suffix } = getValues()
+    if (!source || !path) {
+      setTest({ state: 'err', msg: 'Add a source and a path first.' })
+      return
+    }
+    setTest({ state: 'loading' })
+    try {
+      const res = await fetch(source, { cache: 'no-store' })
+      if (!res.ok) throw new Error(String(res.status))
+      const json = await res.json()
+      const v = path
+        .split('.')
+        .reduce<unknown>((acc, k) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[k] : undefined), json)
+      if (v == null) setTest({ state: 'err', msg: `Path "${path}" not found in the source.` })
+      else setTest({ state: 'ok', value: `${prefix ?? ''}${String(v)}${suffix ?? ''}` })
+    } catch {
+      setTest({ state: 'err', msg: 'Could not fetch or parse the source.' })
+    }
+  }
 
   useEffect(() => {
     const sub = watch((values) => {
@@ -356,6 +416,30 @@ function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: string }) 
           <option value="right">Right</option>
         </select>
       </Field>
+
+      <div className="space-y-2 border-t border-neutral-800 pt-3">
+        <button
+          type="button"
+          onClick={runTest}
+          disabled={test.state === 'loading'}
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-800 px-3 py-2 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700 disabled:opacity-50"
+        >
+          <Lucide.RefreshCw size={13} className={test.state === 'loading' ? 'animate-spin' : ''} />
+          {test.state === 'loading' ? 'Fetching…' : 'Test data source'}
+        </button>
+        {test.state === 'ok' && (
+          <div className="flex items-center gap-2 rounded-md border border-green-500/30 bg-green-500/10 px-2.5 py-2 text-xs text-green-300">
+            <Lucide.Check size={13} />
+            Resolved to <span className="font-semibold text-green-200">{test.value}</span>
+          </div>
+        )}
+        {test.state === 'err' && (
+          <div className="flex items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-2 text-xs text-red-300">
+            <Lucide.AlertCircle size={13} />
+            {test.msg}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -466,7 +550,7 @@ function HotspotSettingsForm({
   pageId: string
 }) {
   const { updateHotspot, removeHotspot } = useEditorStore()
-  const { register, watch } = useForm<{
+  const { register, watch, setValue } = useForm<{
     label: string
     icon: string
     modalTitle: string
@@ -542,9 +626,9 @@ function HotspotSettingsForm({
       </Field>
 
       <Field label="Icon">
-        <input {...register('icon')} className={inputCls} placeholder="e.g. Info, Star, Zap" />
+        <IconPicker value={watch('icon')} onChange={(name) => setValue('icon', name, { shouldDirty: true })} />
       </Field>
-      
+
       <Field label="Action">
         <select {...register('action')} className={selectCls}>
           <option value="modal">Show Modal</option>
