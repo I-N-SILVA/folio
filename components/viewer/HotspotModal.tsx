@@ -99,15 +99,23 @@ export function HotspotModal({ hotspot, bookId, pageNumber, onClose }: HotspotMo
             </div>
 
             {hotspot.action === 'checkout' && hotspot.stripeUrl && (
-              <a
-                href={hotspot.stripeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'checkout' })}
-                className="block w-full text-center bg-[#0066ff] text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
-              >
-                Buy Now
-              </a>
+              <div>
+                {hotspot.price && (
+                  <div className="mb-4 flex items-baseline gap-2">
+                    <span className="text-3xl font-semibold tracking-[-0.02em] text-gray-900">{hotspot.price}</span>
+                    <span className="text-sm text-gray-500">incl. taxes</span>
+                  </div>
+                )}
+                <a
+                  href={hotspot.stripeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'checkout' })}
+                  className="block w-full rounded-full bg-[#0066ff] px-4 py-3 text-center font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                >
+                  {hotspot.ctaLabel ?? 'Buy now'}
+                </a>
+              </div>
             )}
 
             {hotspot.action === 'link' && hotspot.linkUrl && (

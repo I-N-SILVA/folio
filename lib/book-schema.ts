@@ -57,6 +57,19 @@ export const EmbedBlockSchema = z.object({
   height: z.number(),
 })
 
+// Living editions — a value bound to a JSON source that updates after publish.
+export const DataBlockSchema = z.object({
+  type: z.literal('data'),
+  id: z.string(),
+  label: z.string(),
+  source: z.string(), // JSON endpoint (absolute URL or same-origin path)
+  path: z.string(), // dot-path into the JSON, e.g. "product.price"
+  prefix: z.string().optional(),
+  suffix: z.string().optional(),
+  fallback: z.string().optional(),
+  align: z.enum(['left', 'center', 'right']).optional(),
+})
+
 export const BlockSchema = z.discriminatedUnion('type', [
   TextBlockSchema,
   ImageBlockSchema,
@@ -65,6 +78,7 @@ export const BlockSchema = z.discriminatedUnion('type', [
   ButtonBlockSchema,
   DividerBlockSchema,
   EmbedBlockSchema,
+  DataBlockSchema,
 ])
 
 // ─── Hotspot Schema ────────────────────────────────────────────────────────────
@@ -90,6 +104,8 @@ export const HotspotSchema = z.object({
   action: z.enum(['modal', 'link', 'checkout']).default('modal'),
   linkUrl: z.string().url().optional(),
   stripeUrl: z.string().url().optional(),
+  price: z.string().optional(),
+  ctaLabel: z.string().optional(),
 })
 
 // ─── Page Schema ───────────────────────────────────────────────────────────────
@@ -190,6 +206,7 @@ export type AudioBlock = z.infer<typeof AudioBlockSchema>
 export type ButtonBlock = z.infer<typeof ButtonBlockSchema>
 export type DividerBlock = z.infer<typeof DividerBlockSchema>
 export type EmbedBlock = z.infer<typeof EmbedBlockSchema>
+export type DataBlock = z.infer<typeof DataBlockSchema>
 export type Block = z.infer<typeof BlockSchema>
 export type Hotspot = z.infer<typeof HotspotSchema>
 export type Page = z.infer<typeof PageSchema>

@@ -50,6 +50,11 @@ export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIco
       <span className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/90 shadow-lg hover:scale-110 transition-transform">
         <Icon size={16} className={isEcomAction ? 'text-[#0066ff]' : 'text-gray-800'} />
       </span>
+      {hotspot.action === 'checkout' && hotspot.price && (
+        <span className="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#0066ff] px-2 py-0.5 text-[10px] font-bold text-white shadow-md">
+          {hotspot.price}
+        </span>
+      )}
     </button>
   )
 }

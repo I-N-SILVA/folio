@@ -11,6 +11,7 @@ const AudioBlock = lazy(() => import('./AudioBlock').then((m) => ({ default: m.A
 const ButtonBlock = lazy(() => import('./ButtonBlock').then((m) => ({ default: m.ButtonBlock })))
 const DividerBlock = lazy(() => import('./DividerBlock').then((m) => ({ default: m.DividerBlock })))
 const EmbedBlock = lazy(() => import('./EmbedBlock').then((m) => ({ default: m.EmbedBlock })))
+const DataBlock = lazy(() => import('./DataBlock').then((m) => ({ default: m.DataBlock })))
 
 function BlockFallback() {
   return <div className="h-8 bg-current opacity-10 rounded animate-pulse" />
@@ -26,6 +27,7 @@ export function BlockRenderer({ block, bookId, pageId }: { block: Block; bookId:
       {block.type === 'button' && <ButtonBlock block={block} bookId={bookId} />}
       {block.type === 'divider' && <DividerBlock block={block} />}
       {block.type === 'embed' && <EmbedBlock block={block} />}
+      {block.type === 'data' && <DataBlock block={block} />}
     </Suspense>
   )
 }

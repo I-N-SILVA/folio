@@ -84,3 +84,20 @@ Two faces, loaded via `next/font` (see `app/layout.tsx`):
 | iOS launch images | `/apple-splash?w=…&h=…` |
 | Web app manifest | `/manifest.webmanifest` |
 | Brand / press page | `/press` |
+
+## 8. Signature & differentiators
+
+What makes Riffle ownable — lean on these, not generic "flipbook" language:
+
+- **Editions, not exports.** The category word. Frame publications as living
+  editions (Vol. 01, issue framing, spine motif), never "flipbooks."
+- **The riffle.** The fore-edge — the book's stacked page edges — is the
+  navigation: hover fans the pages, click/drag flies anywhere. The logo mark
+  riffles its pages on hover. The name is the interaction.
+- **Living editions.** `data` blocks bind to a JSON source and update after
+  publish — prices, stock, dates. (`components/blocks/DataBlock.tsx`,
+  `DataBlockSchema`.)
+- **Shoppable hotspots.** A hotspot can carry a price + checkout, turning any
+  page into a storefront. (`action: 'checkout'`, `price`, `ctaLabel`.)
+- **Reader moments.** Cover-reveal on open; ambient chrome tinted from the
+  cover color.

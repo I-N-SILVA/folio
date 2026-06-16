@@ -9,11 +9,11 @@ import {
   BookOpen,
   ChevronDown,
   Code2,
-  FileUp,
   Gift,
-  MousePointerClick,
   Palette,
   Plus,
+  RefreshCw,
+  ShoppingBag,
 } from 'lucide-react'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
@@ -43,6 +43,7 @@ const STATS = [
 ]
 
 const FAQS = [
+  { q: 'How is this different from a flipbook tool?', a: 'Riffle makes editions, not exports. Pages can be shoppable (checkout in place), bound to live data (prices, stock, dates that update after publish), and read with a tactile fore-edge you riffle to navigate. A PDF can’t do any of that.' },
   { q: 'Do readers need an account or app?', a: 'No. Every edition is a hosted link that opens instantly in any browser, and embeds anywhere with one line of code.' },
   { q: 'Can I import an existing PDF?', a: 'Yes. Drop in a PDF and Riffle turns each page into an interactive spread you can enrich with hotspots, links, and media.' },
   { q: 'Where does my analytics data live?', a: 'Reader intelligence — opens, dwell time, completion, hotspot clicks — is captured into your own Supabase project, so you own the data.' },
@@ -213,10 +214,10 @@ type Tile = {
 }
 
 const TILES: Tile[] = [
-  { icon: BookOpen, title: 'Tactile reader', desc: 'A fluid page-turn that feels like a printed object — not a PDF viewer.', span: 'lg:col-span-2' },
-  { icon: MousePointerClick, title: 'Interactive hotspots', desc: 'Layer products, video, and links onto the page.', span: 'lg:col-span-1', visual: 'hotspots' },
+  { icon: BookOpen, title: 'Tactile reader', desc: 'A fluid page-turn that feels like a printed object — riffle the fore-edge to fly anywhere.', span: 'lg:col-span-2' },
+  { icon: ShoppingBag, title: 'Shoppable hotspots', desc: 'Pin products onto the page — readers check out without leaving.', span: 'lg:col-span-1', visual: 'hotspots' },
   { icon: BarChart2, title: 'Reader analytics', desc: 'Opens, dwell time, completion — in your own data layer.', span: 'lg:col-span-1', visual: 'bars' },
-  { icon: FileUp, title: 'PDF to experience', desc: 'Import a PDF and publish an interactive edition in minutes.', span: 'lg:col-span-1' },
+  { icon: RefreshCw, title: 'Living editions', desc: 'Bind prices, stock, and dates. Publish once; it stays current.', span: 'lg:col-span-1' },
   { icon: Code2, title: 'One-line embeds', desc: 'Drop a responsive edition into any site, store, or CMS.', span: 'lg:col-span-1' },
   { icon: Palette, title: 'Made to match', desc: 'Themes, custom domains, and no watermark on paid plans.', span: 'lg:col-span-2' },
 ]
