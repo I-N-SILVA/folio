@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
@@ -19,8 +19,21 @@ function luminance(hex: string): number {
 /** A one-time "open the book" moment — the closed cover swings away on entry. */
 function CoverOpen({ book }: { book: Book }) {
   const reduce = useReducedMotion()
-  const [done, setDone] = useState(false)
-  if (reduce || done) return null
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    if (reduce) return
+    const key = `riffle:opened:${book.id}`
+    try {
+      if (sessionStorage.getItem(key)) return // already opened this session
+      sessionStorage.setItem(key, '1')
+    } catch {
+      // sessionStorage unavailable — still play once for this mount
+    }
+    setShow(true)
+  }, [book.id, reduce])
+
+  if (!show) return null
 
   const color = book.pages?.[0]?.background?.color || book.theme?.background || '#1d1d1f'
   const dark = /^#[0-9a-f]{6}$/i.test(color) ? luminance(color) < 0.5 : true
@@ -34,7 +47,7 @@ function CoverOpen({ book }: { book: Book }) {
         initial={{ rotateY: 0 }}
         animate={{ rotateY: -112 }}
         transition={{ delay: 0.2, duration: 1, ease: [0.7, 0, 0.25, 1] }}
-        onAnimationComplete={() => setDone(true)}
+        onAnimationComplete={() => setShow(false)}
       >
         <span className="absolute left-0 top-0 h-full w-2.5" style={{ background: 'rgba(0,0,0,0.18)' }} />
         <div className="text-center" style={{ color: fg }}>
@@ -72,7 +85,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
         className="w-full"
         initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: reduce ? 0 : 0.55, duration: reduce ? 0.3 : 0.7, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ delay: reduce ? 0 : 0.15, duration: reduce ? 0.3 : 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         <ViewerEngine
           ref={engineRef}

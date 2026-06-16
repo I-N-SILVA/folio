@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  FunnelChart, Funnel, LabelList, Cell
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from 'recharts'
 import { ArrowLeft, Download, BookOpen, Users, CheckCircle, Clock } from 'lucide-react'
+import Reveal from '@/components/landing/Reveal'
+import { NumberTicker } from '@/components/landing/NumberTicker'
 
 type DateRange = '7d' | '30d' | '90d' | 'all'
 
@@ -80,29 +81,29 @@ export function AnalyticsDashboard({ book }: { book: any }) {
   ]
 
   return (
-    <main className="min-h-screen bg-[#f5f5f7] p-6">
+    <main className="min-h-screen bg-[var(--background)] p-6 text-[var(--folio-ink)]">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-gray-500 hover:text-gray-800 transition-colors">
+            <Link href="/dashboard" className="text-[var(--folio-muted)] transition-colors hover:text-[var(--folio-ink)]">
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <h1 className="text-xl font-bold">{book.title}</h1>
-              <p className="text-sm text-gray-500">Analytics</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">Analytics</p>
+              <h1 className="font-display text-3xl font-semibold tracking-[-0.02em]">{book.title}</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Date range filter */}
-            <div className="flex rounded-lg border border-gray-200 overflow-hidden bg-white">
+            <div className="flex rounded-full border border-[var(--folio-border)] bg-white p-0.5">
               {ranges.map((r) => (
                 <button
                   key={r.value}
                   onClick={() => setRange(r.value)}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                    range === r.value ? 'bg-[#0066ff] text-white' : 'text-gray-600 hover:bg-gray-50'
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    range === r.value ? 'bg-[var(--accent)] text-white' : 'text-[var(--folio-muted)] hover:text-[var(--folio-ink)]'
                   }`}
                 >
                   {r.label}
@@ -112,7 +113,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
 
             <button
               onClick={downloadCSV}
-              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 bg-white hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-1.5 rounded-full border border-[var(--folio-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--folio-ink)] transition-colors hover:bg-black/5"
             >
               <Download size={14} />
               CSV
@@ -121,33 +122,25 @@ export function AnalyticsDashboard({ book }: { book: any }) {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-400">Loading analytics…</div>
+          <div className="flex items-center justify-center py-20 text-[var(--folio-muted)]">Loading analytics…</div>
         ) : !data ? (
-          <div className="text-center py-20 text-gray-500">Failed to load analytics.</div>
+          <div className="text-center py-20 text-[var(--folio-muted)]">Failed to load analytics.</div>
         ) : (
           <>
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
-                icon={<BookOpen size={18} className="text-[#0066ff]" />}
-                label="Total Opens"
-                value={data.summary.totalOpens.toLocaleString()}
-              />
-              <StatCard
-                icon={<Users size={18} className="text-[#0066ff]" />}
-                label="Unique Sessions"
-                value={data.summary.uniqueSessions.toLocaleString()}
-              />
-              <StatCard
-                icon={<CheckCircle size={18} className="text-[#0066ff]" />}
-                label="Completion Rate"
-                value={`${data.summary.completionRate}%`}
-              />
-              <StatCard
-                icon={<Clock size={18} className="text-[#0066ff]" />}
-                label="Avg Session"
-                value={formatDuration(data.summary.avgSessionMs)}
-              />
+              <StatCard icon={<BookOpen size={18} className="text-[var(--accent)]" />} label="Total Opens" delay={0}>
+                <NumberTicker value={data.summary.totalOpens} />
+              </StatCard>
+              <StatCard icon={<Users size={18} className="text-[var(--accent)]" />} label="Unique Sessions" delay={70}>
+                <NumberTicker value={data.summary.uniqueSessions} />
+              </StatCard>
+              <StatCard icon={<CheckCircle size={18} className="text-[var(--accent)]" />} label="Completion Rate" delay={140}>
+                <NumberTicker value={data.summary.completionRate} suffix="%" />
+              </StatCard>
+              <StatCard icon={<Clock size={18} className="text-[var(--accent)]" />} label="Avg Session" delay={210}>
+                {formatDuration(data.summary.avgSessionMs)}
+              </StatCard>
             </div>
 
             {/* Page View Heatmap */}
@@ -169,7 +162,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-                <p className="text-xs text-gray-400 text-center mt-1">Color: green = long dwell · red = quick skip</p>
+                <p className="text-xs text-[var(--folio-muted)] text-center mt-1">Color: green = long dwell · red = quick skip</p>
               </ChartCard>
             )}
 
@@ -192,7 +185,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
               <ChartCard title="Click Heatmap">
                 <div className="flex gap-4 items-start">
                   <div className="flex flex-col gap-2 w-24 shrink-0">
-                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Page</span>
+                    <span className="text-xs text-[var(--folio-muted)] font-medium uppercase tracking-wider">Page</span>
                     {Object.keys(data.heatmapData)
                       .map(Number)
                       .sort((a, b) => a - b)
@@ -201,14 +194,14 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                           key={p}
                           onClick={() => setHeatmapPage(p)}
                           className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${
-                            heatmapPage === p ? 'bg-[#0066ff] text-white' : 'hover:bg-gray-100 text-gray-700'
+                            heatmapPage === p ? 'bg-[#0066ff] text-white' : 'hover:bg-black/5 text-[var(--folio-ink)]'
                           }`}
                         >
                           Page {p}
                         </button>
                       ))}
                   </div>
-                  <div className="flex-1 bg-gray-100 rounded-xl overflow-hidden aspect-[1/1.41] relative shadow-inner max-w-sm mx-auto">
+                  <div className="flex-1 bg-[var(--folio-subtle)] rounded-xl overflow-hidden aspect-[1/1.41] relative shadow-inner max-w-sm mx-auto">
                     {/* Placeholder for the page background, eventually could load the actual page image */}
                     <div className="absolute inset-0 bg-white"></div>
                     {data.heatmapData[heatmapPage]?.map((pt, i) => (
@@ -219,7 +212,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                       />
                     ))}
                     {(!data.heatmapData[heatmapPage] || data.heatmapData[heatmapPage].length === 0) && (
-                      <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-400">
+                      <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--folio-muted)]">
                         No clicks recorded on this page
                       </div>
                     )}
@@ -234,15 +227,15 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                 <TableCard title="Top Hotspot Clicks">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-gray-400 text-xs border-b border-gray-100">
+                      <tr className="text-left text-[var(--folio-muted)] text-xs border-b border-[var(--folio-border)]">
                         <th className="pb-2 font-medium">Hotspot ID</th>
                         <th className="pb-2 font-medium text-right">Clicks</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.topHotspots.map((h) => (
-                        <tr key={h.id} className="border-b border-gray-50">
-                          <td className="py-2 font-mono text-xs text-gray-600 truncate max-w-[180px]">{h.id}</td>
+                        <tr key={h.id} className="border-b border-[var(--folio-hairline)]">
+                          <td className="py-2 font-mono text-xs text-[var(--folio-muted)] truncate max-w-[180px]">{h.id}</td>
                           <td className="py-2 text-right font-medium">{h.count}</td>
                         </tr>
                       ))}
@@ -256,7 +249,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                 <TableCard title="CTA Button Clicks">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-gray-400 text-xs border-b border-gray-100">
+                      <tr className="text-left text-[var(--folio-muted)] text-xs border-b border-[var(--folio-border)]">
                         <th className="pb-2 font-medium">Block / Page</th>
                         <th className="pb-2 font-medium text-right">Clicks</th>
                         <th className="pb-2 font-medium text-right">Unique</th>
@@ -264,13 +257,13 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                     </thead>
                     <tbody>
                       {data.ctaData.map((c) => (
-                        <tr key={c.id} className="border-b border-gray-50">
+                        <tr key={c.id} className="border-b border-[var(--folio-hairline)]">
                           <td className="py-2">
-                            <span className="font-mono text-xs text-gray-600 truncate">{c.id}</span>
-                            {c.page && <span className="text-xs text-gray-400 ml-1">p.{c.page}</span>}
+                            <span className="font-mono text-xs text-[var(--folio-muted)] truncate">{c.id}</span>
+                            {c.page && <span className="text-xs text-[var(--folio-muted)] ml-1">p.{c.page}</span>}
                           </td>
                           <td className="py-2 text-right font-medium">{c.clicks}</td>
-                          <td className="py-2 text-right text-gray-500">{c.uniqueClicks}</td>
+                          <td className="py-2 text-right text-[var(--folio-muted)]">{c.uniqueClicks}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -280,9 +273,9 @@ export function AnalyticsDashboard({ book }: { book: any }) {
             </div>
 
             {data.pageViewData.length === 0 && data.topHotspots.length === 0 && (
-              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-                <p className="text-gray-500">No analytics data yet for this period.</p>
-                <p className="text-sm text-gray-400 mt-1">Share your book to start collecting data.</p>
+              <div className="rounded-3xl border border-[var(--folio-border)] bg-white py-16 text-center">
+                <p className="text-[var(--folio-muted)]">No analytics data yet for this period.</p>
+                <p className="mt-1 text-sm text-[var(--folio-muted)]">Share your edition to start collecting data.</p>
               </div>
             )}
           </>
@@ -292,29 +285,48 @@ export function AnalyticsDashboard({ book }: { book: any }) {
   )
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function StatCard({
+  icon,
+  label,
+  children,
+  delay = 0,
+}: {
+  icon: React.ReactNode
+  label: string
+  children: React.ReactNode
+  delay?: number
+}) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-4">
-      <div className="flex items-center gap-2 mb-2">{icon}<span className="text-xs text-gray-500">{label}</span></div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-    </div>
+    <Reveal delay={delay}>
+      <div className="rounded-3xl border border-[var(--folio-border)] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(0,0,0,0.07)]">
+        <div className="mb-3 flex items-center gap-2">
+          {icon}
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--folio-muted)]">{label}</span>
+        </div>
+        <p className="font-display text-4xl font-semibold tracking-[-0.03em] text-[var(--folio-ink)]">{children}</p>
+      </div>
+    </Reveal>
   )
 }
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5">
-      <h2 className="text-sm font-semibold mb-4 text-gray-700">{title}</h2>
-      {children}
-    </div>
+    <Reveal>
+      <div className="rounded-3xl border border-[var(--folio-border)] bg-white p-6">
+        <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--folio-ink)]">{title}</h2>
+        {children}
+      </div>
+    </Reveal>
   )
 }
 
 function TableCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5">
-      <h2 className="text-sm font-semibold mb-4 text-gray-700">{title}</h2>
-      {children}
-    </div>
+    <Reveal>
+      <div className="h-full rounded-3xl border border-[var(--folio-border)] bg-white p-6">
+        <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--folio-ink)]">{title}</h2>
+        {children}
+      </div>
+    </Reveal>
   )
 }
