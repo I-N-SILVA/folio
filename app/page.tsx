@@ -89,8 +89,6 @@ const PLANS: {
   },
 ]
 
-const TRUST = ['ATELIER NORD', 'FIELD NOTES', 'COHERE STUDIO', 'MERIDIAN PRESS', 'STUDIO KOA', 'VERANDA', 'OFFKIND', 'LUMEN & CO']
-
 function Mark({ className = '' }: { className?: string }) {
   return (
     <span className={`group relative inline-grid ${className}`}>
@@ -339,22 +337,6 @@ export default function HomePage() {
           <ProductShot />
         </section>
 
-        {/* Trust marquee */}
-        <section className="border-y border-[var(--folio-hairline)] bg-[var(--background-alt)] py-10">
-          <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">
-            Trusted by publishing teams
-          </p>
-          <div className="folio-marquee folio-marquee-mask">
-            <div className="folio-marquee-track gap-12 pr-12">
-              {[...TRUST, ...TRUST].map((name, i) => (
-                <span key={i} className="whitespace-nowrap text-sm font-semibold tracking-[0.08em] text-[var(--folio-ink)]/30 grayscale">
-                  {name}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Features — bento */}
         <section id="features" className="px-5 py-28">
           <div className="mx-auto max-w-6xl">
@@ -413,23 +395,6 @@ export default function HomePage() {
               </Reveal>
             ))}
           </div>
-        </section>
-
-        {/* Pull quote */}
-        <section className="px-5 py-24">
-          <Reveal className="mx-auto max-w-4xl text-center">
-            <p className="font-display text-3xl font-medium leading-[1.3] tracking-[-0.01em] text-[var(--folio-ink)] sm:text-4xl">
-              “We replaced a flat PDF lookbook with a Riffle edition and wholesale reorders jumped.
-              <span className="text-[var(--folio-muted)]"> Buyers actually finish it now.”</span>
-            </p>
-            <div className="mt-7 flex items-center justify-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--folio-ink)] text-sm font-semibold text-white">AN</span>
-              <div className="text-left">
-                <p className="text-sm font-semibold">Atelier Nord</p>
-                <p className="text-sm text-[var(--folio-muted)]">Creative Director</p>
-              </div>
-            </div>
-          </Reveal>
         </section>
 
         {/* How it works */}
