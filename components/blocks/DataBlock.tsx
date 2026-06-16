@@ -20,19 +20,23 @@ export function DataBlock({ block }: { block: DataBlockType }) {
 
   useEffect(() => {
     let active = true
-    fetch(block.source, { cache: 'no-store' })
-      .then((r) => r.json())
-      .then((json) => {
-        if (!active) return
-        const v = getPath(json, block.path)
-        if (v != null) {
-          setValue(String(v))
-          setLive(true)
-        }
-      })
-      .catch(() => {})
+    // Debounced so live-editing the source/path in the studio doesn't spam fetches.
+    const t = setTimeout(() => {
+      fetch(block.source, { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((json) => {
+          if (!active) return
+          const v = getPath(json, block.path)
+          if (v != null) {
+            setValue(String(v))
+            setLive(true)
+          }
+        })
+        .catch(() => {})
+    }, 350)
     return () => {
       active = false
+      clearTimeout(t)
     }
   }, [block.source, block.path])
 

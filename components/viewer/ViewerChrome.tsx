@@ -8,6 +8,44 @@ import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
 import type { Book } from '@/lib/book-schema'
 
+/** Relative luminance of a hex color (1 = white). */
+function luminance(hex: string): number {
+  const m = hex.replace('#', '').match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i)
+  if (!m) return 1
+  const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h, 16) / 255)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/** A one-time "open the book" moment — the closed cover swings away on entry. */
+function CoverOpen({ book }: { book: Book }) {
+  const reduce = useReducedMotion()
+  const [done, setDone] = useState(false)
+  if (reduce || done) return null
+
+  const color = book.pages?.[0]?.background?.color || book.theme?.background || '#1d1d1f'
+  const dark = /^#[0-9a-f]{6}$/i.test(color) ? luminance(color) < 0.5 : true
+  const fg = dark ? '#ffffff' : '#1d1d1f'
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[9500]" style={{ perspective: 2200 }}>
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center origin-left"
+        style={{ background: color, transformStyle: 'preserve-3d', backfaceVisibility: 'hidden', boxShadow: '0 0 120px rgba(0,0,0,0.45)' }}
+        initial={{ rotateY: 0 }}
+        animate={{ rotateY: -112 }}
+        transition={{ delay: 0.2, duration: 1, ease: [0.7, 0, 0.25, 1] }}
+        onAnimationComplete={() => setDone(true)}
+      >
+        <span className="absolute left-0 top-0 h-full w-2.5" style={{ background: 'rgba(0,0,0,0.18)' }} />
+        <div className="text-center" style={{ color: fg }}>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Vol. 01</p>
+          <p className="font-display mt-3 text-5xl font-semibold tracking-[-0.02em] sm:text-6xl">{book.title}</p>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 export function ViewerChrome({ book, embed = false }: { book: Book; embed?: boolean }) {
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
@@ -28,13 +66,13 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      {/* Cover reveal — the edition "opens" like a book on entry. */}
+      {!embed && <CoverOpen book={book} />}
+      {/* Book settles in as the cover lifts away. */}
       <motion.div
         className="w-full"
-        style={{ transformPerspective: 1600, transformOrigin: 'left center' }}
-        initial={reduce ? { opacity: 0 } : { opacity: 0, rotateY: 14, scale: 0.97 }}
-        animate={reduce ? { opacity: 1 } : { opacity: 1, rotateY: 0, scale: 1 }}
-        transition={{ duration: reduce ? 0.3 : 1, ease: [0.22, 1, 0.36, 1] }}
+        initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: reduce ? 0 : 0.55, duration: reduce ? 0.3 : 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
         <ViewerEngine
           ref={engineRef}

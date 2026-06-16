@@ -89,6 +89,16 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
           />
         )}
 
+        {/* Printed-page depth — a soft gutter + curl shadow on the binding edges */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{
+            boxShadow:
+              'inset 18px 0 34px -24px rgba(0,0,0,0.45), inset -18px 0 34px -24px rgba(0,0,0,0.22)',
+          }}
+        />
+
         {/* Blocks */}
         <div className={twMerge("relative z-10 w-full", page.layout !== 'split' && "flex flex-col gap-4")}>
           {page.blocks.map((block) => {
