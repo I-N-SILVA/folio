@@ -14,6 +14,7 @@ import type {
   AudioBlock,
   ButtonBlock,
   EmbedBlock,
+  DataBlock,
 } from '@/lib/book-schema'
 
 // ─── Shared form field primitives ────────────────────────────────────────────
@@ -299,6 +300,66 @@ function EmbedBlockForm({ block, pageId }: { block: EmbedBlock; pageId: string }
   )
 }
 
+// ─── Data Block Form (living editions) ────────────────────────────────────────
+
+function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: string }) {
+  const { updateBlock } = useEditorStore()
+  const { register, watch } = useForm<Partial<DataBlock>>({
+    defaultValues: {
+      label: block.label,
+      source: block.source,
+      path: block.path,
+      prefix: block.prefix ?? '',
+      suffix: block.suffix ?? '',
+      fallback: block.fallback ?? '',
+      align: block.align ?? 'left',
+    },
+  })
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      updateBlock(pageId, block.id, values as Partial<Block>)
+    })
+    return () => sub.unsubscribe()
+  }, [watch, pageId, block.id, updateBlock])
+
+  return (
+    <div className="space-y-3">
+      <p className="rounded-md bg-[#0066ff]/10 px-2.5 py-2 text-[11px] leading-4 text-[#9dc0ff]">
+        Binds to a JSON source and updates after publish. Change the source data
+        and every live edition reflects it — no re-export.
+      </p>
+      <Field label="Label">
+        <input {...register('label')} className={inputCls} placeholder="e.g. Live price" />
+      </Field>
+      <Field label="Data source (URL or path)">
+        <input {...register('source')} className={inputCls} placeholder="/demo-live.json or https://…" />
+      </Field>
+      <Field label="JSON path">
+        <input {...register('path')} className={inputCls} placeholder="e.g. product.price" />
+      </Field>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Prefix">
+          <input {...register('prefix')} className={inputCls} placeholder="$" />
+        </Field>
+        <Field label="Suffix">
+          <input {...register('suffix')} className={inputCls} placeholder=" / mo" />
+        </Field>
+      </div>
+      <Field label="Fallback (if unavailable)">
+        <input {...register('fallback')} className={inputCls} placeholder="—" />
+      </Field>
+      <Field label="Align">
+        <select {...register('align')} className={selectCls}>
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+        </select>
+      </Field>
+    </div>
+  )
+}
+
 // ─── Block Settings Form ──────────────────────────────────────────────────────
 
 function BlockSettingsForm({ block, pageId }: { block: Block; pageId: string }) {
@@ -327,6 +388,7 @@ function BlockSettingsForm({ block, pageId }: { block: Block; pageId: string }) 
         <p className="text-xs text-neutral-500">No settings for divider block.</p>
       )}
       {block.type === 'embed' && <EmbedBlockForm block={block} pageId={pageId} />}
+      {block.type === 'data' && <DataBlockForm block={block} pageId={pageId} />}
     </div>
   )
 }
@@ -412,6 +474,8 @@ function HotspotSettingsForm({
     action: Hotspot['action']
     linkUrl: string
     stripeUrl: string
+    price: string
+    ctaLabel: string
   }>({
     defaultValues: {
       label: hotspot.label,
@@ -421,6 +485,8 @@ function HotspotSettingsForm({
       action: hotspot.action || 'modal',
       linkUrl: hotspot.linkUrl || '',
       stripeUrl: hotspot.stripeUrl || '',
+      price: hotspot.price || '',
+      ctaLabel: hotspot.ctaLabel || '',
     },
   })
 
@@ -432,6 +498,8 @@ function HotspotSettingsForm({
         action: values.action,
         linkUrl: values.linkUrl,
         stripeUrl: values.stripeUrl,
+        price: values.price || undefined,
+        ctaLabel: values.ctaLabel || undefined,
         modal: {
           ...hotspot.modal,
           title: values.modalTitle ?? hotspot.modal.title,
@@ -492,9 +560,19 @@ function HotspotSettingsForm({
       )}
 
       {action === 'checkout' && (
-        <Field label="Stripe Payment Link URL">
-          <input {...register('stripeUrl')} className={inputCls} placeholder="https://buy.stripe.com/..." />
-        </Field>
+        <>
+          <Field label="Stripe Payment Link URL">
+            <input {...register('stripeUrl')} className={inputCls} placeholder="https://buy.stripe.com/..." />
+          </Field>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Price">
+              <input {...register('price')} className={inputCls} placeholder="$48" />
+            </Field>
+            <Field label="Button label">
+              <input {...register('ctaLabel')} className={inputCls} placeholder="Add to cart" />
+            </Field>
+          </div>
+        </>
       )}
 
       <Field label="Modal Title">

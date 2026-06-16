@@ -286,6 +286,7 @@ export function PageListSidebar() {
                   <Box size={14} className="opacity-50" />
                   <span className="capitalize">{b.type} block</span>
                   {b.type === 'text' && <span className="text-[10px] text-neutral-500 truncate max-w-[100px] ml-auto">{(b as any).content}</span>}
+                  {b.type === 'data' && <span className="text-[10px] text-neutral-500 truncate max-w-[100px] ml-auto">{(b as any).label}</span>}
                 </button>
               ))}
 

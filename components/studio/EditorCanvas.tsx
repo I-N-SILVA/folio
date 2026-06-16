@@ -14,6 +14,7 @@ import {
   Code2,
   X,
   GripVertical,
+  RefreshCw,
 } from 'lucide-react'
 import {
   DndContext,
@@ -124,6 +125,12 @@ const BLOCK_TYPES: {
     label: 'Embed',
     icon: <Code2 size={20} />,
     defaults: { html: '<div>Paste embed HTML here</div>', height: 300 },
+  },
+  {
+    type: 'data',
+    label: 'Live data',
+    icon: <RefreshCw size={20} />,
+    defaults: { label: 'Live price', source: '/demo-live.json', path: 'product.price', prefix: '$', align: 'left' },
   },
 ]
 
