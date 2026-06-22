@@ -852,7 +852,7 @@ export function SettingsPanel() {
           onClick={() => setTab('selection')}
           className={twMerge(
             'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
-            tab === 'selection' ? 'text-white border-b-2 border-primary bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
+            tab === 'selection' ? 'text-white border-b-2 border-[#0066ff] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
           Selection
@@ -861,10 +861,10 @@ export function SettingsPanel() {
           onClick={() => setTab('book')}
           className={twMerge(
             'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
-            tab === 'book' ? 'text-white border-b-2 border-primary bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
+            tab === 'book' ? 'text-white border-b-2 border-[#0066ff] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
-          Book Settings
+          Edition
         </button>
       </div>
 

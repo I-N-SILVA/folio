@@ -198,7 +198,7 @@ export function EditorClient({ book }: Props) {
         ? { ...s.book, settings: { ...s.book.settings, published: next } }
         : s.book,
     }))
-    toast.success(next ? 'Book published — it\'s live!' : 'Book unpublished')
+    toast.success(next ? 'Edition published — it\'s live!' : 'Edition unpublished')
   }
 
   const isPublished = storeBook?.settings.published ?? false
@@ -206,16 +206,23 @@ export function EditorClient({ book }: Props) {
   return (
     <div className="flex flex-col h-screen bg-neutral-950 text-neutral-100 overflow-hidden">
       {/* Top toolbar */}
-      <header className="flex items-center gap-3 px-4 h-12 border-b border-neutral-800 shrink-0">
+      <header className="flex items-center gap-3 px-4 h-13 border-b border-neutral-800 shrink-0 py-2">
         <Link
           href="/dashboard"
-          className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-100 transition-colors text-sm"
+          aria-label="Riffle dashboard"
+          className="grid h-7 w-7 place-items-center rounded-md bg-[#0066ff] text-xs font-bold text-white transition hover:brightness-110"
         >
-          <ArrowLeft size={15} />
+          R
+        </Link>
+        <Link
+          href="/dashboard"
+          className="hidden sm:flex items-center gap-1 text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-medium"
+        >
+          <ArrowLeft size={13} />
           <span>Dashboard</span>
         </Link>
 
-        <div className="w-px h-5 bg-neutral-700 mx-1" />
+        <div className="w-px h-5 bg-neutral-800 mx-1" />
 
         {/* Editable title */}
         {titleEditing ? (
@@ -257,7 +264,7 @@ export function EditorClient({ book }: Props) {
         {/* Preview button */}
         <button
           onClick={() => setShowPreview(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors bg-neutral-700 hover:bg-neutral-600 text-neutral-200"
+          className="flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700"
           title="Preview (⌘P)"
         >
           <Eye size={13} />
@@ -268,10 +275,10 @@ export function EditorClient({ book }: Props) {
         <button
           onClick={handlePublishToggle}
           className={twMerge(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors',
+            'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
             isPublished
-              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-              : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-200'
+              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+              : 'border border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
           )}
         >
           {isPublished ? <Globe size={13} /> : <EyeOff size={13} />}

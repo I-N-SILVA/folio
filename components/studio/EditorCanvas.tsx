@@ -360,7 +360,7 @@ export function EditorCanvas() {
       <div className="px-4 py-3 border-t border-neutral-800 shrink-0 flex justify-center">
         <button
           onClick={() => setShowBlockPicker(true)}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium transition-colors border border-neutral-700"
+          className="flex items-center gap-1.5 rounded-full bg-[#0066ff] px-5 py-2 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(0,102,255,0.35)] transition-colors hover:bg-[#0a5be0]"
         >
           <Plus size={14} />
           Add Block
