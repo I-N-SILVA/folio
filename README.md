@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Folio
 
-## Getting Started
+Turn a PDF or a blank page into an interactive, trackable flipbook you can publish and share. Folio pairs a drag-and-drop editor with a polished public reader, lead-gating, living "data" blocks, AI-assisted import, and per-book analytics.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) + **React 19** — see `AGENTS.md`: this Next.js has breaking changes, read `node_modules/next/dist/docs/` before writing framework code.
+- **Supabase** — Postgres, auth, storage, and row-level security (`supabase/migrations/`).
+- **Stripe** (Pro subscription) + **AppSumo** (lifetime deal) billing.
+- **Google Gemini** — hotspot detection and SEO metadata on PDF import.
+- **Tailwind CSS v4**, **Zustand** (editor store), **Zod** (end-to-end schemas), **TanStack Query**.
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+cp .env.example .env.local   # fill in Supabase / Stripe / AppSumo / Gemini keys
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Apply the database schema by running the SQL in `supabase/migrations/` (in order) against your Supabase project.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm start` | Serve the production build |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint (Next core-web-vitals + TypeScript) |
+| `npm run format` | Prettier write (`format:check` to verify only) |
+| `npm test` | Vitest unit tests (`test:watch` for watch mode) |
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/                     App Router routes, grouped by surface
+  (reader)/              Public book viewer (SSG/ISR)
+  (studio)/              Authenticated dashboard + editor + account
+  (analytics)/           Per-book analytics dashboard
+  api/                   Route handlers (books, upload, billing, webhooks, events…)
+components/              UI by domain: viewer/, studio/, blocks/, landing/
+lib/                     Schemas, editor store, integrations, entitlements
+supabase/migrations/     Database schema + row-level security policies
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Authorization** is enforced by Supabase RLS. API routes use the user-scoped
+  client (`createServerSupabase`) so RLS applies; the service-role client
+  (`supabaseAdmin`) is reserved for operations RLS can't express — webhooks,
+  license redemption, profile/plan mutations, and storage writes.
+- **Plans & entitlements** live in `lib/plans.ts` (single source of truth) and
+  are enforced via `lib/entitlements.ts`.
+- **Uploads** are size- and type-limited in `lib/uploads.ts`; abuse-prone
+  endpoints are throttled via `lib/rate-limit.ts`.
 
-## Deploy on Vercel
+## CI
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.github/workflows/ci.yml` runs typecheck, lint, tests, and a production build
+on every pull request.

@@ -23,6 +23,9 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const isOwner = await getOwner(id, user.id)
+  if (!isOwner) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const { data, error } = await supabase
     .from('pages')
     .select('*')

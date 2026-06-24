@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase'
 import { subDays } from 'date-fns'
 
 type DateRange = '7d' | '30d' | '90d' | 'all'
@@ -20,8 +19,9 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Verify ownership
-  const { data: book } = await supabaseAdmin
+  // Verify ownership. The user-scoped client + RLS (owner_all) guarantees this
+  // only returns a row the caller actually owns — no service-role bypass.
+  const { data: book } = await supabase
     .from('books')
     .select('id')
     .eq('slug', slug)
@@ -33,7 +33,7 @@ export async function GET(
   const range = (request.nextUrl.searchParams.get('range') ?? '30d') as DateRange
   const startDate = getStartDate(range)
 
-  let query = supabaseAdmin
+  let query = supabase
     .from('events')
     .select('*')
     .eq('book_id', book.id)

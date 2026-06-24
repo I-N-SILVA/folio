@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase'
 import { checkBookQuota } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 
@@ -57,18 +56,10 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Check slug uniqueness
-  const { data: existing } = await supabaseAdmin
-    .from('books')
-    .select('id')
-    .eq('slug', parsed.data.slug)
-    .single()
-
-  if (existing) {
-    return NextResponse.json({ error: 'Slug already taken' }, { status: 409 })
-  }
-
-  const { data, error } = await supabaseAdmin
+  // Insert under the user's own RLS context (owner_all policy permits it). Slug
+  // uniqueness is enforced authoritatively by the DB constraint, which also
+  // closes the check-then-insert race a separate SELECT would leave open.
+  const { data, error } = await supabase
     .from('books')
     .insert({
       title: parsed.data.title,
@@ -81,6 +72,12 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // 23505 = unique_violation on the slug.
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'Slug already taken' }, { status: 409 })
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
   return NextResponse.json(data, { status: 201 })
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
+import { rateLimit, clientIp } from '@/lib/rate-limit'
 
 const EventBodySchema = z.object({
   bookId: z.string(),
@@ -26,6 +27,16 @@ const EventBodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Analytics is unauthenticated by design (public readers). Throttle per IP
+    // so a single client cannot flood the events table.
+    const limit = rateLimit(`events:${clientIp(request)}`, 240, 60_000)
+    if (!limit.ok) {
+      return new NextResponse(null, {
+        status: 429,
+        headers: { 'Retry-After': String(limit.retryAfter) },
+      })
+    }
+
     const body = await request.json()
     const parsed = EventBodySchema.safeParse(body)
 
