@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { redeemLicense } from '@/lib/appsumo'
 import { getPlan } from '@/lib/plans'
+import { rateLimit } from '@/lib/rate-limit'
 
 const RedeemSchema = z.object({
   code: z.string().min(3).max(200),
@@ -12,6 +13,15 @@ export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Cap redemption attempts so license codes can't be brute-forced.
+  const limit = rateLimit(`redeem:${user.id}`, 10, 60_000)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please wait a minute and try again.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } }
+    )
+  }
 
   const parsed = RedeemSchema.safeParse(await request.json())
   if (!parsed.success) {

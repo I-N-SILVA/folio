@@ -3,6 +3,8 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 import { detectHotspots, analyzeBookSEO } from '@/lib/ai'
+import { rateLimit } from '@/lib/rate-limit'
+import { MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
 
 const MAX_PAGES = 50
 
@@ -16,6 +18,15 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // PDF import runs AI + storage work — keep it cheap to abuse.
+  const limit = rateLimit(`pdf-import:${user.id}`, 10, 60_000)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many imports. Please wait a moment and try again.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } }
+    )
   }
 
   // ── Parse multipart form ────────────────────────────────────────────────────
@@ -41,6 +52,13 @@ export async function POST(request: NextRequest) {
 
   if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
     return NextResponse.json({ error: 'File must be a PDF' }, { status: 400 })
+  }
+
+  if (file.size > MAX_PDF_BYTES) {
+    return NextResponse.json(
+      { error: `PDF too large. Maximum size is ${humanBytes(MAX_PDF_BYTES)}.` },
+      { status: 413 }
+    )
   }
 
   if (!/^[a-z0-9-]+$/.test(slug)) {
@@ -173,6 +191,13 @@ export async function POST(request: NextRequest) {
     await supabaseAdmin.storage
       .from('folio-assets')
       .remove([pdfPath])
+    // 23505 = unique_violation — the slug was taken between our check and insert.
+    if (bookError.code === '23505') {
+      return NextResponse.json(
+        { error: 'That slug is already taken. Choose a different one.' },
+        { status: 409 }
+      )
+    }
     return NextResponse.json(
       { error: `Failed to create book: ${bookError.message}` },
       { status: 500 }

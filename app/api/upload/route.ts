@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { rateLimit } from '@/lib/rate-limit'
+import { MAX_ASSET_BYTES, isAllowedAssetType, humanBytes } from '@/lib/uploads'
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  // Throttle per user: uploads are expensive (storage + bandwidth).
+  const limit = rateLimit(`upload:${user.id}`, 60, 60_000)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'Too many uploads. Please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } }
+    )
+  }
 
   const formData = await request.formData()
   const file = formData.get('file') as File | null
@@ -13,6 +24,20 @@ export async function POST(request: NextRequest) {
 
   if (!file || !bookId) {
     return NextResponse.json({ error: 'file and bookId required' }, { status: 400 })
+  }
+
+  if (file.size > MAX_ASSET_BYTES) {
+    return NextResponse.json(
+      { error: `File too large. Maximum size is ${humanBytes(MAX_ASSET_BYTES)}.` },
+      { status: 413 }
+    )
+  }
+
+  if (!isAllowedAssetType(file.type)) {
+    return NextResponse.json(
+      { error: 'Unsupported file type. Upload an image, video, or audio file.' },
+      { status: 415 }
+    )
   }
 
   // Verify ownership
