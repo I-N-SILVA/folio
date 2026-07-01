@@ -209,10 +209,10 @@ export function EditorClient({ book }: Props) {
       <header className="flex items-center gap-3 px-4 h-13 border-b border-neutral-800 shrink-0 py-2">
         <Link
           href="/dashboard"
-          aria-label="Riffle dashboard"
+          aria-label="KLICKO dashboard"
           className="grid h-7 w-7 place-items-center rounded-md bg-[#0066ff] text-xs font-bold text-white transition hover:brightness-110"
         >
-          R
+          K
         </Link>
         <Link
           href="/dashboard"

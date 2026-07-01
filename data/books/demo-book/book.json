@@ -1,8 +1,8 @@
 {
   "id": "demo-book-id",
   "slug": "demo",
-  "title": "Riffle",
-  "description": "An interactive tour of everything Riffle can do",
+  "title": "KLICKO",
+  "description": "An interactive tour of everything KLICKO can do",
   "owner_id": "demo",
   "theme": { "preset": "custom", "primary": "#0066ff", "background": "#ffffff", "headingFont": "Georgia" },
   "settings": { "published": true, "unlisted": false },
@@ -16,7 +16,7 @@
       "background": { "color": "#fbfbfd" },
       "blocks": [
         { "type": "text", "id": "b1-1", "variant": "caption", "content": "VOL. 01 · INTERACTIVE PUBLISHING", "align": "center" },
-        { "type": "text", "id": "b1-2", "variant": "title", "content": "Riffle", "align": "center" },
+        { "type": "text", "id": "b1-2", "variant": "title", "content": "KLICKO", "align": "center" },
         { "type": "text", "id": "b1-3", "variant": "body", "content": "Flip through anything. This is a live edition — turn the pages.", "align": "center" },
         { "type": "button", "id": "b1-4", "label": "Start reading →", "href": "#", "variant": "primary", "target": "_blank" }
       ],
@@ -32,7 +32,7 @@
       "blocks": [
         { "type": "text", "id": "b2-1", "variant": "heading", "content": "Typography that reads like print" },
         { "type": "text", "id": "b2-2", "variant": "body", "content": "A complete type system — titles, headings, body, quotes, captions, and stats — so every page feels composed, not assembled." },
-        { "type": "text", "id": "b2-3", "variant": "quote", "content": "\"The best documents feel considered. Riffle makes interactive ones that genuinely are.\"" },
+        { "type": "text", "id": "b2-3", "variant": "quote", "content": "\"The best documents feel considered. KLICKO makes interactive ones that genuinely are.\"" },
         { "type": "divider", "id": "b2-4" },
         { "type": "text", "id": "b2-5", "variant": "caption", "content": "Title · Heading · Body · Quote · Caption · Stat" }
       ],
@@ -140,7 +140,7 @@
           "icon": "BookOpen",
           "modal": {
             "title": "A real page-turn",
-            "body": "Riffle renders a fluid, tactile page-turn that feels like a printed object — not a scroll, not a slideshow.",
+            "body": "KLICKO renders a fluid, tactile page-turn that feels like a printed object — not a scroll, not a slideshow.",
             "media": null
           }
         },
@@ -233,10 +233,10 @@
       "layout": "hero",
       "background": { "color": "#1d1d1f" },
       "blocks": [
-        { "type": "text", "id": "b10-1", "variant": "title", "content": "Riffle", "align": "center" },
+        { "type": "text", "id": "b10-1", "variant": "title", "content": "KLICKO", "align": "center" },
         { "type": "text", "id": "b10-2", "variant": "body", "content": "Flip through anything. Publish on the web, embed anywhere, install as an app.", "align": "center" },
         { "type": "divider", "id": "b10-3" },
-        { "type": "button", "id": "b10-4", "label": "Start for free →", "href": "https://riffle.app", "variant": "primary", "target": "_blank" }
+        { "type": "button", "id": "b10-4", "label": "Start for free →", "href": "https://klicko.app", "variant": "primary", "target": "_blank" }
       ],
       "hotspots": []
     }

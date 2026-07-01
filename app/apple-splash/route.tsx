@@ -41,7 +41,7 @@ export async function GET(request: Request) {
             letterSpacing: '-0.04em',
           }}
         >
-          R
+          K
         </div>
         <div
           style={{
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
             letterSpacing: '-0.03em',
           }}
         >
-          Riffle
+          KLICKO
         </div>
       </div>
     ),

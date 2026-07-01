@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const seo = book.settings?.seo
   const title = seo?.title || book.title
-  const description = seo?.description || book.description || `Read "${book.title}" on Riffle`
+  const description = seo?.description || book.description || `Read "${book.title}" on KLICKO`
 
   // Use the dynamic OG image generator route
   const ogImageUrl = `/book/${slug}/opengraph-image`

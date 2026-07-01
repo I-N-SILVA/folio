@@ -43,12 +43,12 @@ const STATS = [
 ]
 
 const FAQS = [
-  { q: 'How is this different from a flipbook tool?', a: 'Riffle makes editions, not exports. Pages can be shoppable (checkout in place), bound to live data (prices, stock, dates that update after publish), and read with a tactile fore-edge you riffle to navigate. A PDF can’t do any of that.' },
+  { q: 'How is this different from a flipbook tool?', a: 'KLICKO makes editions, not exports. Pages can be shoppable (checkout in place), bound to live data (prices, stock, dates that update after publish), and read with a tactile fore-edge you browse to navigate. A PDF can’t do any of that.' },
   { q: 'Do readers need an account or app?', a: 'No. Every edition is a hosted link that opens instantly in any browser, and embeds anywhere with one line of code.' },
-  { q: 'Can I import an existing PDF?', a: 'Yes. Drop in a PDF and Riffle turns each page into an interactive spread you can enrich with hotspots, links, and media.' },
+  { q: 'Can I import an existing PDF?', a: 'Yes. Drop in a PDF and KLICKO turns each page into an interactive spread you can enrich with hotspots, links, and media.' },
   { q: 'Where does my analytics data live?', a: 'Reader intelligence — opens, dwell time, completion, hotspot clicks — is captured into your own Supabase project, so you own the data.' },
-  { q: 'Is Riffle installable as an app?', a: 'Yes. Riffle is a progressive web app you can install on iOS and Android, and it works offline.' },
-  { q: 'Can I use my own brand and domain?', a: 'Pro and lifetime plans let you ship on a custom domain with your own theme and no Riffle watermark.' },
+  { q: 'Is Riffle installable as an app?', a: 'Yes. KLICKO is a progressive web app you can install on iOS and Android, and it works offline.' },
+  { q: 'Can I use my own brand and domain?', a: 'Pro and lifetime plans let you ship on a custom domain with your own theme and no KLICKO watermark.' },
 ]
 
 const PLANS: {
@@ -67,7 +67,7 @@ const PLANS: {
     desc: 'Publish your first interactive edition.',
     cta: 'Start free',
     href: '/login',
-    features: ['1 publication', '7-day analytics', 'Riffle watermark'],
+    features: ['1 publication', '7-day analytics', 'KLICKO watermark'],
   },
   {
     name: 'Pro',
@@ -92,11 +92,11 @@ const PLANS: {
 function Mark({ className = '' }: { className?: string }) {
   return (
     <span className={`group relative inline-grid ${className}`}>
-      {/* Pages that riffle out of the mark on hover. */}
+      {/* Pages that fan out of the mark on hover. */}
       <span aria-hidden className="absolute inset-0 origin-bottom-left rounded-[0.6rem] bg-[var(--accent)]/25 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:-rotate-[14deg]" />
       <span aria-hidden className="absolute inset-0 origin-bottom-left rounded-[0.6rem] bg-[var(--accent)]/50 transition-transform duration-300 ease-out group-hover:-rotate-[7deg]" />
-      <span className="relative grid h-full w-full place-items-center rounded-[0.6rem] bg-[var(--folio-ink)] font-semibold text-white">
-        R
+      <span className="relative grid h-full w-full place-items-center rounded-[0.6rem] bg-[var(--folio-ink)] font-semibold text-white overflow-hidden p-0.5">
+        <img src="/logo.png" alt="K" className="h-full w-full object-contain" />
       </span>
     </span>
   )
@@ -149,7 +149,7 @@ function ProductShot() {
           <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
           <div className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-left text-xs text-[var(--folio-muted)] shadow-sm">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-            riffle.app/book/demo
+            klicko.app/book/demo
           </div>
         </div>
         <div className="aspect-[16/10] bg-[#f5f5f7]">
@@ -261,9 +261,9 @@ export default function HomePage() {
         }`}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-2" aria-label="Riffle home">
+          <Link href="/" className="flex items-center gap-2" aria-label="KLICKO home">
             <Mark className="h-7 w-7 text-sm" />
-            <span className="text-lg font-semibold tracking-[-0.02em]">Riffle</span>
+            <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
           </Link>
           <nav className="hidden items-center gap-8 text-[13px] font-medium text-[var(--folio-muted)] md:flex">
             <Link href="#features" className="transition hover:text-[var(--folio-ink)]">Features</Link>
@@ -313,7 +313,7 @@ export default function HomePage() {
               transition={{ delay: 0.5, duration: 0.6 }}
               className="mx-auto mt-6 max-w-xl text-xl leading-8 text-[var(--folio-muted)]"
             >
-              Riffle turns static PDFs into interactive editions — with hotspots, analytics, and
+              KLICKO turns static PDFs into interactive editions — with hotspots, analytics, and
               one-line embeds. Built for catalogs, lookbooks, portfolios, and reports.
             </motion.p>
             <motion.div
@@ -373,7 +373,7 @@ export default function HomePage() {
                 A download link is where good work goes to be forgotten.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">
-                Riffle gives your publication a reason to be opened, explored, and finished — and
+                KLICKO gives your publication a reason to be opened, explored, and finished — and
                 shows you exactly what held attention.
               </p>
               <Link href="/login" className="mt-9 inline-block rounded-full bg-white px-7 py-3.5 text-[15px] font-semibold text-[var(--folio-ink)] transition hover:bg-white/90">
@@ -531,7 +531,7 @@ export default function HomePage() {
             <div>
               <div className="flex items-center gap-2">
                 <Mark className="h-7 w-7 text-sm" />
-                <span className="text-lg font-semibold tracking-[-0.02em]">Riffle</span>
+                <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
               </div>
               <p className="mt-3 max-w-xs text-sm text-[var(--folio-muted)]">
                 Interactive publishing — with craft, context, and control.
@@ -547,7 +547,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="mt-10 border-t border-[var(--folio-hairline)] pt-6 text-sm text-[var(--folio-muted)]">
-            © {new Date().getFullYear()} Riffle. All rights reserved.
+            © {new Date().getFullYear()} KLICKO. All rights reserved.
           </div>
         </div>
       </footer>

@@ -18,7 +18,7 @@ const FEATURE_ROWS: { key: string; label: string }[] = [
   { key: 'leadGating', label: 'Lead gating' },
   { key: 'customDomain', label: 'Custom domain' },
   { key: 'csvExport', label: 'CSV export' },
-  { key: 'whiteLabel', label: 'White-label (no Riffle branding)' },
+  { key: 'whiteLabel', label: 'White-label (no KLICKO branding)' },
   { key: 'watermark', label: 'Reader watermark' },
 ]
 

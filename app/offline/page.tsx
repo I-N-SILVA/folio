@@ -12,7 +12,7 @@ export default function OfflinePage() {
         </div>
         <h1 className="font-display text-3xl font-semibold tracking-[-0.04em]">You're offline</h1>
         <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">
-          Riffle needs a connection to load this page. Reconnect and try again — your work is saved.
+          KLICKO needs a connection to load this page. Reconnect and try again — your work is saved.
         </p>
         <Link
           href="/dashboard"

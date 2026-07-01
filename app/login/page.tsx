@@ -49,7 +49,7 @@ export default function LoginPage() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--folio-teal)]">
             Creator Studio
           </p>
-          <h1 className="font-display text-5xl font-semibold tracking-[-0.07em]">Riffle</h1>
+          <h1 className="font-display text-5xl font-semibold tracking-[-0.07em]">KLICKO</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">
             Sign in with a magic link to compose, publish, and measure your digital shelf.
           </p>

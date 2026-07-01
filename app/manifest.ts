@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Riffle — Interactive publishing',
-    short_name: 'Riffle',
+    name: 'KLICKO — Interactive publishing',
+    short_name: 'KLICKO',
     description:
       'Turn static PDFs into interactive editions with hotspots, analytics, and one-line embeds.',
     start_url: '/dashboard',
@@ -22,7 +22,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: 'Open Studio',
         short_name: 'Studio',
-        description: 'Jump straight into the Riffle editor dashboard.',
+        description: 'Jump straight into the KLICKO editor dashboard.',
         url: '/dashboard',
       },
       {

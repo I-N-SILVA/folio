@@ -208,7 +208,7 @@ export function CreateFolioModal({ onClose }: Props) {
     return shell(
       <>
         <div className="flex items-center justify-between border-b border-[var(--folio-border)] p-6">
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Name your Riffle</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Name your KLICKO</h2>
           <button onClick={onClose} className="rounded-full p-2 text-[var(--folio-muted)] transition-colors hover:bg-black/5">
             <X size={20} />
           </button>
@@ -240,7 +240,7 @@ export function CreateFolioModal({ onClose }: Props) {
               disabled={loading || !newTitle.trim()}
               className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Creating…' : 'Create Riffle'}
+              {loading ? 'Creating…' : 'Create KLICKO'}
             </button>
           </div>
         </form>
@@ -253,7 +253,7 @@ export function CreateFolioModal({ onClose }: Props) {
     <>
       <div className="flex items-center justify-between border-b border-[var(--folio-border)] p-6">
         <div>
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Create New Riffle</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Create New KLICKO</h2>
           {quota && (
             <p className="mt-1 text-xs font-semibold text-[var(--folio-muted)]">
               {quota.used} / {quota.limit ?? '∞'} books used · {quota.planName}

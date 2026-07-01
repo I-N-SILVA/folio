@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Press & Brand Kit',
-  description: 'Riffle brand assets, colors, boilerplate, and press resources.',
+  description: 'KLICKO brand assets, colors, boilerplate, and press resources.',
 }
 
 const COLORS = [
@@ -35,14 +35,14 @@ export default function PressPage() {
     <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-16 text-[var(--folio-ink)] sm:px-8">
       <div className="mx-auto max-w-4xl">
         <Link href="/" className="text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
-          ← Back to Riffle
+          ← Back to KLICKO
         </Link>
 
         <header className="mt-6">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--folio-brass)]">Press &amp; brand</p>
-          <h1 className="mt-3 font-display text-6xl font-semibold tracking-[-0.06em]">Riffle brand kit</h1>
+          <h1 className="mt-3 font-display text-6xl font-semibold tracking-[-0.06em]">KLICKO brand kit</h1>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--folio-muted)]">
-            Everything you need to write about or feature Riffle — assets, colors, and boilerplate.
+            Everything you need to write about or feature KLICKO — assets, colors, and boilerplate.
             For full guidelines, see BRAND.md in the repository.
           </p>
         </header>
@@ -52,12 +52,12 @@ export default function PressPage() {
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Logo</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-4 rounded-[2rem] border border-[var(--folio-border)] bg-white p-8">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-2xl font-semibold text-white">R</span>
-              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">Riffle</span>
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-2xl font-semibold text-white">K</span>
+              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">KLICKO</span>
             </div>
             <div className="flex items-center gap-4 rounded-[2rem] border border-white/10 bg-[var(--folio-ink)] p-8 text-white">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl font-semibold text-[#1d1d1f]">R</span>
-              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">Riffle</span>
+              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl font-semibold text-[#1d1d1f]">K</span>
+              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">KLICKO</span>
             </div>
           </div>
         </section>
@@ -113,11 +113,11 @@ export default function PressPage() {
           <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Boilerplate</h2>
             <p className="mt-4 text-[15px] leading-7 text-[var(--folio-muted)]">
-              Riffle turns static PDFs into interactive editions with hotspots, analytics, embeds,
+              KLICKO turns static PDFs into interactive editions with hotspots, analytics, embeds,
               and brand control. Built for catalogs, lookbooks, portfolios, and reports that deserve
               more than a download link.
             </p>
-            <p className="mt-4 text-sm font-bold">Press: press@riffle.app</p>
+            <p className="mt-4 text-sm font-bold">Press: press@klicko.app</p>
           </div>
         </section>
       </div>

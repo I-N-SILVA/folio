@@ -12,14 +12,14 @@ const fraunces = Fraunces({
   display: 'swap',
 })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://riffle.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klicko.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: 'Riffle — Flip through anything', template: '%s | Riffle' },
+  title: { default: 'KLICKO — Flip through anything', template: '%s | KLICKO' },
   description:
-    'Riffle turns static PDFs into interactive editions with hotspots, analytics, embeds, and brand control. Built for catalogs, lookbooks, portfolios, and reports.',
-  applicationName: 'Riffle',
+    'KLICKO turns static PDFs into interactive editions with hotspots, analytics, embeds, and brand control. Built for catalogs, lookbooks, portfolios, and reports.',
+  applicationName: 'KLICKO',
   keywords: [
     'interactive editions',
     'interactive publishing',
@@ -31,29 +31,29 @@ export const metadata: Metadata = {
     'portfolio',
     'embeddable reader',
   ],
-  authors: [{ name: 'Riffle' }],
-  creator: 'Riffle',
-  publisher: 'Riffle',
+  authors: [{ name: 'KLICKO' }],
+  creator: 'KLICKO',
+  publisher: 'KLICKO',
   alternates: { canonical: '/' },
   manifest: '/manifest.webmanifest',
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    siteName: 'Riffle',
-    title: 'Riffle — Flip through anything',
+    siteName: 'KLICKO',
+    title: 'KLICKO — Flip through anything',
     description:
       'Turn static PDFs into interactive editions with hotspots, analytics, and one-line embeds.',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Riffle — Flip through anything',
+    title: 'KLICKO — Flip through anything',
     description:
       'Turn static PDFs into interactive editions with hotspots, analytics, and one-line embeds.',
   },
   appleWebApp: {
     capable: true,
-    title: 'Riffle',
+    title: 'KLICKO',
     statusBarStyle: 'default',
   },
   formatDetection: { telephone: false },

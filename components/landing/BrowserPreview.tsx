@@ -5,7 +5,7 @@ export default function BrowserPreview() {
     <iframe
       src="/embed/demo"
       className="w-full h-full border-0"
-      title="Riffle demo preview"
+      title="KLICKO demo preview"
       loading="lazy"
     />
   )

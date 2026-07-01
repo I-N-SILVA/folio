@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 
-export const alt = 'Riffle — Flip through anything'
+export const alt = 'KLICKO — Flip through anything'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -34,9 +34,9 @@ export default function OgImage() {
               fontWeight: 600,
             }}
           >
-            R
+            K
           </div>
-          <div style={{ fontSize: 34, fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.02em' }}>Riffle</div>
+          <div style={{ fontSize: 34, fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.02em' }}>KLICKO</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -50,7 +50,7 @@ export default function OgImage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ height: 10, width: 10, borderRadius: 999, background: '#0066ff' }} />
-          <div style={{ fontSize: 24, color: '#6e6e73' }}>riffle.app</div>
+          <div style={{ fontSize: 24, color: '#6e6e73' }}>klicko.app</div>
         </div>
       </div>
     ),

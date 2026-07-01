@@ -3,14 +3,14 @@ import { LegalShell, LegalSection } from '@/components/legal/LegalShell'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How Riffle collects, uses, and protects your data.',
+  description: 'How KLICKO collects, uses, and protects your data.',
 }
 
 export default function PrivacyPage() {
   return (
     <LegalShell title="Privacy Policy" updated="June 12, 2026">
       <p className="text-[15px] leading-7 text-[var(--folio-muted)]">
-        This Privacy Policy explains how Riffle (&ldquo;Riffle,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;)
+        This Privacy Policy explains how KLICKO (&ldquo;KLICKO,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;)
         collects, uses, and shares information when you use our website, studio, and reader
         (collectively, the &ldquo;Service&rdquo;). This is a template and should be reviewed by counsel
         before launch.
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
 
       <LegalSection heading="Contact">
         <p>
-          Questions about this policy? Email <strong>privacy@riffle.app</strong>.
+          Questions about this policy? Email <strong>privacy@klicko.app</strong>.
         </p>
       </LegalSection>
     </LegalShell>

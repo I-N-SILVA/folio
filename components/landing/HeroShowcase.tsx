@@ -66,7 +66,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
           transition={{ delay: 0.25, type: 'spring', stiffness: 120, damping: 18 }}
           className="font-display mt-3 text-6xl font-semibold tracking-[-0.02em] text-[var(--folio-ink)]"
         >
-          Riffle
+          KLICKO
         </motion.h3>
         <motion.p
           initial={{ opacity: 0 }}

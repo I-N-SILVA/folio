@@ -23,7 +23,7 @@ function CoverOpen({ book }: { book: Book }) {
 
   useEffect(() => {
     if (reduce) return
-    const key = `riffle:opened:${book.id}`
+    const key = `klicko:opened:${book.id}`
     try {
       if (sessionStorage.getItem(key)) return // already opened this session
       sessionStorage.setItem(key, '1')
@@ -147,12 +147,12 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       {/* Branding */}
       {!book.settings?.whitelabel && (
         <a
-          href="https://riffle.app"
+          href="https://klicko.app"
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--folio-border)] bg-white/85 px-3 py-1.5 text-xs font-semibold text-[var(--folio-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--folio-ink)]"
         >
-          Made with <span className="font-display font-semibold text-[var(--folio-ink)]">Riffle</span>
+          Made with <span className="font-display font-semibold text-[var(--folio-ink)]">KLICKO</span>
         </a>
       )}
     </div>
