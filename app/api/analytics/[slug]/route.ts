@@ -131,6 +131,18 @@ export async function GET(
     }
   })
 
+  // Gate Unlock (Lead Generation)
+  const leadData: Array<{ email: string; timestamp: string; page: number }> = []
+  events.filter((e) => e.event_type === 'gate_unlock').forEach((e) => {
+    if (e.payload?.email) {
+      leadData.push({
+        email: e.payload.email as string,
+        timestamp: e.created_at,
+        page: e.page_number ?? 3,
+      })
+    }
+  })
+
   return NextResponse.json({
     summary: { totalOpens, uniqueSessions, completionRate, avgSessionMs },
     pageViewData,
@@ -138,6 +150,7 @@ export async function GET(
     topHotspots,
     ctaData,
     heatmapData,
+    leadData,
     raw: events,
   })
 }

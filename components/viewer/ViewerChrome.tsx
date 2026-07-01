@@ -104,7 +104,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       )}
 
       {!embed && (
-        <div className="flex items-center gap-3 rounded-full border border-[var(--folio-border)] bg-white/85 px-4 py-3 text-[var(--folio-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.10)] backdrop-blur-xl sm:gap-6 sm:px-6">
+        <div className="flex items-center gap-3 rounded-full border border-[var(--folio-border)] bg-white/60 px-4 py-3 text-[var(--folio-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl sm:gap-6 sm:px-6">
           <button
             onClick={() => engineRef.current?.flipPrev()}
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
@@ -147,12 +147,12 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       {/* Branding */}
       {!book.settings?.whitelabel && (
         <a
-          href="https://klicko.app"
+          href="https://klicko.app?via=watermark"
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--folio-border)] bg-white/85 px-3 py-1.5 text-xs font-semibold text-[var(--folio-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--folio-ink)]"
         >
-          Made with <span className="font-display font-semibold text-[var(--folio-ink)]">KLICKO</span>
+          Powered by <span className="font-display font-semibold text-[var(--folio-ink)]">KLICKO</span>
         </a>
       )}
     </div>

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { X, FileText, Layout, Image as ImageIcon, Loader2, Crown } from 'lucide-react'
 import { toast } from 'sonner'
-import { ImportPDFModal } from './ImportPDFModal'
+import dynamic from 'next/dynamic'
+const ImportPDFModal = dynamic(() => import('./ImportPDFModal').then(m => m.ImportPDFModal), { ssr: false })
 import { createBrowserSupabase } from '@/lib/supabase'
 
 interface Props {

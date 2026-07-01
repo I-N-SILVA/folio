@@ -1,9 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { m, LazyMotion, domAnimation, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion'
 import {
   BarChart2,
   BookOpen,
@@ -27,7 +28,7 @@ const HeroShowcase = dynamic(() => import('@/components/landing/HeroShowcase'), 
 function ScrollProgress() {
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 })
-  return <motion.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-[var(--accent)]" />
+  return <m.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-[var(--accent)]" />
 }
 
 const STEPS = [
@@ -47,7 +48,7 @@ const FAQS = [
   { q: 'Do readers need an account or app?', a: 'No. Every edition is a hosted link that opens instantly in any browser, and embeds anywhere with one line of code.' },
   { q: 'Can I import an existing PDF?', a: 'Yes. Drop in a PDF and KLICKO turns each page into an interactive spread you can enrich with hotspots, links, and media.' },
   { q: 'Where does my analytics data live?', a: 'Reader intelligence — opens, dwell time, completion, hotspot clicks — is captured into your own Supabase project, so you own the data.' },
-  { q: 'Is Riffle installable as an app?', a: 'Yes. KLICKO is a progressive web app you can install on iOS and Android, and it works offline.' },
+  { q: 'Is KLICKO installable as an app?', a: 'Yes. KLICKO is a progressive web app you can install on iOS and Android, and it works offline.' },
   { q: 'Can I use my own brand and domain?', a: 'Pro and lifetime plans let you ship on a custom domain with your own theme and no KLICKO watermark.' },
 ]
 
@@ -91,14 +92,7 @@ const PLANS: {
 
 function Mark({ className = '' }: { className?: string }) {
   return (
-    <span className={`group relative inline-grid ${className}`}>
-      {/* Pages that fan out of the mark on hover. */}
-      <span aria-hidden className="absolute inset-0 origin-bottom-left rounded-[0.6rem] bg-[var(--accent)]/25 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:-rotate-[14deg]" />
-      <span aria-hidden className="absolute inset-0 origin-bottom-left rounded-[0.6rem] bg-[var(--accent)]/50 transition-transform duration-300 ease-out group-hover:-rotate-[7deg]" />
-      <span className="relative grid h-full w-full place-items-center rounded-[0.6rem] bg-[var(--folio-ink)] font-semibold text-white overflow-hidden p-0.5">
-        <img src="/logo.png" alt="K" className="h-full w-full object-contain" />
-      </span>
-    </span>
+    <Image src="/logo.png" alt="KLICKO Logo" width={120} height={32} priority className={`object-contain ${className}`} />
   )
 }
 
@@ -109,7 +103,7 @@ function HeadlineReveal({ text, className = '' }: { text: string; className?: st
   return (
     <h1 className={className}>
       {words.map((w, i) => (
-        <motion.span
+        <m.span
           key={i}
           className="inline-block"
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: 18, filter: 'blur(10px)' }}
@@ -122,7 +116,7 @@ function HeadlineReveal({ text, className = '' }: { text: string; className?: st
         >
           {w}
           {i < words.length - 1 ? ' ' : ''}
-        </motion.span>
+        </m.span>
       ))}
     </h1>
   )
@@ -139,7 +133,7 @@ function ProductShot() {
 
   return (
     <div ref={ref} className="relative mx-auto mt-16 max-w-5xl" style={{ perspective: 1400 }}>
-      <motion.div
+      <m.div
         style={{ rotateX, scale, opacity, transformStyle: 'preserve-3d' }}
         className="relative overflow-hidden rounded-[1.5rem] border border-[var(--folio-border)] bg-white shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
       >
@@ -157,7 +151,7 @@ function ProductShot() {
         </div>
         {/* Accent border beam */}
         <span aria-hidden className="folio-beam" />
-      </motion.div>
+      </m.div>
       {/* Soft floor reflection */}
       <div
         aria-hidden
@@ -174,7 +168,7 @@ function MiniBars() {
   return (
     <div className="flex h-16 items-end gap-1.5">
       {bars.map((h, i) => (
-        <motion.span
+        <m.span
           key={i}
           className="w-full rounded-sm bg-[var(--accent)]/85"
           initial={{ height: reduce ? `${h}%` : '8%' }}
@@ -250,19 +244,20 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--folio-ink)]">
-      <ScrollProgress />
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-[var(--background)] text-[var(--folio-ink)]">
+        <ScrollProgress />
       {/* Nav */}
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'border-b border-[var(--folio-hairline)] bg-white/80 backdrop-blur-xl'
+            ? 'border-b border-[var(--folio-hairline)] bg-white/60 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
             : 'border-b border-transparent bg-transparent'
         }`}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-2" aria-label="KLICKO home">
-            <Mark className="h-7 w-7 text-sm" />
+            <Mark className="h-8 w-auto" />
             <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
           </Link>
           <nav className="hidden items-center gap-8 text-[13px] font-medium text-[var(--folio-muted)] md:flex">
@@ -272,10 +267,10 @@ export default function HomePage() {
             <Link href="/book/demo" className="transition hover:text-[var(--folio-ink)]">Demo</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="hidden rounded-full px-4 py-1.5 text-[13px] font-medium text-[var(--folio-ink)] transition hover:bg-black/5 sm:block">
+            <Link href="/login" className="hidden rounded-full px-4 py-1.5 text-[13px] font-medium text-[var(--folio-ink)] transition hover:bg-black/5 active:scale-[0.97] sm:block">
               Sign in
             </Link>
-            <Link href="/login" className="rounded-full bg-[var(--accent)] px-4 py-1.5 text-[13px] font-semibold text-white transition hover:bg-[var(--accent-hover)]">
+            <Link href="/login" className="rounded-full bg-[var(--accent)] px-4 py-1.5 text-[13px] font-semibold text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.97]">
               Get started
             </Link>
           </div>
@@ -285,16 +280,20 @@ export default function HomePage() {
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden px-5 pb-16 pt-32 text-center sm:pt-40">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px]"
-            style={{
-              background:
-                'radial-gradient(120% 70% at 50% -10%, rgba(0,102,255,0.07) 0%, rgba(0,102,255,0.02) 35%, transparent 70%)',
-            }}
-          />
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <m.div
+              className="absolute left-[20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[var(--accent)]/15 blur-[100px]"
+              animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
+              transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <m.div
+              className="absolute right-[20%] top-[20%] h-[400px] w-[400px] rounded-full bg-[#00d0ff]/15 blur-[100px]"
+              animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
+              transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
           <div className="mx-auto max-w-3xl">
-            <motion.span
+            <m.span
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -302,12 +301,12 @@ export default function HomePage() {
             >
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
               Interactive publishing
-            </motion.span>
+            </m.span>
             <HeadlineReveal
               text="Flip through anything."
               className="font-display mt-6 text-6xl font-semibold leading-[1.0] tracking-[-0.02em] sm:text-7xl lg:text-[5.5rem]"
             />
-            <motion.p
+            <m.p
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.6 }}
@@ -315,8 +314,8 @@ export default function HomePage() {
             >
               KLICKO turns static PDFs into interactive editions — with hotspots, analytics, and
               one-line embeds. Built for catalogs, lookbooks, portfolios, and reports.
-            </motion.p>
-            <motion.div
+            </m.p>
+            <m.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65, duration: 0.6 }}
@@ -331,7 +330,7 @@ export default function HomePage() {
               <Link href="/book/demo" className="text-[15px] font-medium text-[var(--accent)] transition hover:underline">
                 View the demo →
               </Link>
-            </motion.div>
+            </m.div>
           </div>
 
           <ProductShot />
@@ -530,7 +529,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <Mark className="h-7 w-7 text-sm" />
+                <Mark className="h-8 w-auto" />
                 <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
               </div>
               <p className="mt-3 max-w-xs text-sm text-[var(--folio-muted)]">
@@ -552,5 +551,6 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
+    </LazyMotion>
   )
 }

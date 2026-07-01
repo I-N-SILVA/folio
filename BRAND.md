@@ -1,13 +1,13 @@
-# Riffle — Brand Guidelines
+# KLICKO — Brand Guidelines
 
-Riffle should feel like Apple-grade software: clean, confident, and effortless.
+KLICKO should feel like Apple-grade software: clean, confident, and effortless.
 Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 
 ---
 
 ## 1. Essence
 
-- **Name:** Riffle — to flip quickly through the pages of a book.
+- **Name:** KLICKO — to flip quickly through the pages of a book.
 - **One-liner:** Flip through anything.
 - **Promise:** Turn static PDFs into interactive editions people actually finish.
 - **Personality:** Minimal · precise · modern · calm · confident.
@@ -15,7 +15,7 @@ Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 
 ## 2. Logo
 
-- **Wordmark:** "Riffle" in the display sans, tight tracking (`-0.02em`).
+- **Wordmark:** "KLICKO" in the display sans, tight tracking (`-0.02em`).
 - **Monogram:** a single **R** in white on a near-black (`#1d1d1f`) rounded
   square. Generated at `/icon` and `/apple-icon`.
 - **Clear space:** keep at least the height of the "R" around the mark.
@@ -87,7 +87,7 @@ Two faces, loaded via `next/font` (see `app/layout.tsx`):
 
 ## 8. Signature & differentiators
 
-What makes Riffle ownable — lean on these, not generic "flipbook" language:
+What makes KLICKO ownable — lean on these, not generic "flipbook" language:
 
 - **Editions, not exports.** The category word. Frame publications as living
   editions (Vol. 01, issue framing, spine motif), never "flipbooks."

@@ -1,4 +1,4 @@
-import { LibraryBig, Plus, Sparkles } from 'lucide-react'
+import { LibraryBig, Plus, Sparkles, BookOpen } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
 import { BookCard } from '@/components/studio/BookCard'
@@ -57,10 +57,10 @@ export default async function DashboardPage() {
         {books.length === 0 ? (
           <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">
             <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,102,255,0.16)] blur-3xl" />
-            <div className="relative mx-auto mb-6 grid h-24 w-24 place-items-center rounded-[2rem] border border-[var(--folio-border)] bg-white/70 shadow-lg">
-              <Plus size={34} className="text-[var(--folio-brass)]" />
+            <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--folio-border)] bg-white shadow-sm">
+              <BookOpen size={48} className="text-[var(--folio-muted)] opacity-60" strokeWidth={1.5} />
             </div>
-            <h2 className="font-display text-4xl font-semibold tracking-[-0.06em]">Your shelf is waiting.</h2>
+            <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">Create your first edition.</h2>
             <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--folio-muted)]">
               Create interactive portfolios, catalogs, magazines, and reports that feel crafted on every device.
             </p>

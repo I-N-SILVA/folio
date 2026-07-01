@@ -40,4 +40,4 @@ jobs:
           # secrets; these placeholders just let the build resolve.
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-          NEXT_PUBLIC_SITE_URL: https://riffle.app
+          NEXT_PUBLIC_SITE_URL: https://klicko.app

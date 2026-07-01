@@ -23,6 +23,7 @@ interface AnalyticsData {
   topHotspots: Array<{ id: string; count: number }>
   ctaData: Array<{ id: string; href?: string; page?: number; clicks: number; uniqueClicks: number }>
   heatmapData: Record<number, Array<{ x: number; y: number }>>
+  leadData: Array<{ email: string; timestamp: string; page: number }>
   raw: any[]
 }
 
@@ -268,6 +269,32 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                       ))}
                     </tbody>
                   </table>
+                </TableCard>
+              )}
+
+              {/* Captured Leads */}
+              {data.leadData && data.leadData.length > 0 && (
+                <TableCard title="Captured Leads (Gate Unlocks)">
+                  <div className="max-h-64 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-white">
+                        <tr className="text-left text-[var(--folio-muted)] text-xs border-b border-[var(--folio-border)]">
+                          <th className="pb-2 font-medium">Email</th>
+                          <th className="pb-2 font-medium text-right">Captured On</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.leadData.map((lead, idx) => (
+                          <tr key={idx} className="border-b border-[var(--folio-hairline)]">
+                            <td className="py-2 font-medium">{lead.email}</td>
+                            <td className="py-2 text-right text-xs text-[var(--folio-muted)]">
+                              {new Date(lead.timestamp).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </TableCard>
               )}
             </div>

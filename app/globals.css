@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  /* Riffle — monochrome + single accent (Apple-esque) */
-  --background: #ffffff;
-  --background-alt: #fbfbfd;
-  --foreground: #1d1d1f;
-  --folio-ink: #1d1d1f;
-  --folio-muted: #6e6e73;
+  /* KLICKO — Editorial High Fashion (Premium) */
+  --background: #fcfcfc;
+  --background-alt: #f4f4f5;
+  --foreground: #0a0a0b;
+  --folio-ink: #0a0a0b;
+  --folio-muted: #52525b;
   --folio-paper: #ffffff;
-  --folio-vellum: #f5f5f7;
-  --folio-subtle: #f5f5f7;
-  /* Accent is reserved for primary actions + links only */
-  --accent: #0066ff;
-  --accent-hover: #0a5be0;
+  --folio-vellum: #f4f4f5;
+  --folio-subtle: #f4f4f5;
+  /* Accent: Electric Crimson */
+  --accent: #e11d48;
+  --accent-hover: #be123c;
   --folio-brass: var(--accent);
   --folio-teal: var(--accent);
-  --folio-oxblood: #1d1d1f;
-  --folio-border: #d2d2d7;
+  --folio-oxblood: #0a0a0b;
+  --folio-border: #e4e4e7;
   --folio-hairline: rgba(0, 0, 0, 0.08);
   --folio-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
-  /* Editorial serif for headlines; modern grotesk for UI/body. */
-  --font-display: var(--font-fraunces), "Iowan Old Style", Palatino, Georgia, serif;
-  --font-body: var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-ui: var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Editorial serif for headlines; geometric grotesk for UI/body. */
+  --font-display: var(--font-display), "Newsreader", "Iowan Old Style", Palatino, Georgia, serif;
+  --font-body: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ui: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @theme inline {
@@ -65,7 +65,7 @@ section[id] {
   letter-spacing: -0.02em;
 }
 
-/* Grain texture intentionally neutralized — the Riffle aesthetic is clean. */
+/* Grain texture intentionally neutralized — the KLICKO aesthetic is clean. */
 .folio-grain {
   position: relative;
   isolation: isolate;

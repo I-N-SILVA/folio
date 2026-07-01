@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Fraunces } from 'next/font/google'
+import { DM_Sans, Newsreader } from 'next/font/google'
 import { Providers } from './providers'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 import { AppleSplashLinks } from '@/components/AppleSplashLinks'
 import './globals.css'
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' })
-const fraunces = Fraunces({
+const bodyFont = DM_Sans({ subsets: ['latin'], variable: '--font-body', display: 'swap' })
+const displayFont = Newsreader({
   subsets: ['latin'],
-  variable: '--font-fraunces',
+  variable: '--font-display',
   display: 'swap',
 })
 
@@ -72,7 +72,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`h-full antialiased ${geist.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`h-full antialiased ${bodyFont.variable} ${displayFont.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
         <AppleSplashLinks />
         <Providers>{children}</Providers>

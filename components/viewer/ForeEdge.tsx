@@ -14,7 +14,7 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 /**
  * The fore-edge: the stacked page edges of the book, rendered as a vertical
  * scrubber. Hovering fans the pages out (a "riffle"); click or drag to fly
- * to any page. The signature Riffle interaction.
+ * to any page. The signature KLICKO interaction.
  */
 export function ForeEdge({ total, current, onSeek }: Props) {
   const reduce = useReducedMotion()
@@ -57,7 +57,7 @@ export function ForeEdge({ total, current, onSeek }: Props) {
           dragging.current = false
           setHover(null)
         }}
-        aria-label="Riffle through pages"
+        aria-label="KLICKO through pages"
         role="slider"
         aria-valuemin={1}
         aria-valuemax={total}
