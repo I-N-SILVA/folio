@@ -32,8 +32,9 @@ The cheapest "app" is the one users add to their home screen. Polish it first.
       `components/ServiceWorkerRegistrar.tsx`): network-first navigations with an
       `/offline` fallback, cache-first for hashed assets, stale-while-revalidate
       for the rest. API / auth / embed requests are bypassed.
-- [ ] **Install prompt UX** — listen for `beforeinstallprompt`, stash the event,
-      and surface a tasteful "Install KLICKO" button in the dashboard header.
+- [x] **Install prompt UX** — `components/InstallPrompt.tsx` listens for
+      `beforeinstallprompt` and surfaces an "Install app" button in the
+      dashboard header.
 - [ ] **iOS standalone polish** — `viewport-fit=cover` (done) + safe-area-inset
       padding on the reader chrome so it looks right on notched devices.
 - [x] **Splash screens** for iOS standalone — generated on the fly at exact
@@ -73,7 +74,8 @@ Capacitor for iOS**, because it reuses the exact same web build.
   cost, deferred.
 
 **Store assets checklist (both):**
-- [ ] App icon set (1024² master — reuse the `F` mark gradient).
+- [ ] App icon set (1024² master — white KLICKO mark on violet, upscaled from
+      `public/brand/icon-512.png`'s source).
 - [ ] Screenshots per device class (use the reader + studio on real content).
 - [ ] Preview video (15–30s: PDF in → interactive folio out → analytics).
 - [ ] Title, subtitle, keywords, description, privacy policy URL, support URL.
@@ -86,10 +88,12 @@ Capacitor for iOS**, because it reuses the exact same web build.
 - [ ] **Performance:** lazy-load the reader, preconnect to Supabase, ship
       `next/font` for the display/body faces instead of system-font fallbacks so
       the brand is consistent on every device.
-- [ ] **Analytics + funnels:** instrument landing CTAs (`Create a folio`,
-      `View demo`), signup, first-publish. Tools: Vercel Analytics + PostHog.
-- [ ] **SEO:** `sitemap.ts` (done) + per-book OG images (done) + JSON-LD
-      `SoftwareApplication` schema on the landing page.
+- [x] **Analytics + funnels:** Vercel Analytics wired in the root layout;
+      custom events on hero/pricing/demo CTAs, magic-link signup, and first
+      publish (`cta_click`, `demo_open`, `signup_magic_link_sent`,
+      `edition_published`). Add PostHog later if we need session replays.
+- [x] **SEO:** `sitemap.ts` (incl. all demo editions) + per-book OG images +
+      JSON-LD `SoftwareApplication` schema on the landing page.
 - [ ] **Social proof:** replace placeholder testimonials/logos with real design
       partners before launch day.
 - [ ] **Legal:** real Privacy Policy + Terms (required for both app stores).
@@ -132,7 +136,7 @@ rate (PWA + stores), and reader completion on shared folios.
 | Concern | File |
 | --- | --- |
 | PWA manifest | `app/manifest.ts` → `/manifest.webmanifest` |
-| App icons | `app/icon.tsx`, `app/apple-icon.tsx` |
+| App icons | `app/icon.png`, `app/apple-icon.png`, `public/brand/*` |
 | Social share image | `app/opengraph-image.tsx` |
 | SEO sitemap | `app/sitemap.ts` |
 | Theme color / Apple meta / OG / Twitter | `app/layout.tsx` |

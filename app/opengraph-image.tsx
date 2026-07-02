@@ -27,7 +27,6 @@ export default async function OgImage() {
           fontFamily: 'Fraunces',
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoSrc} alt="" width={196} height={54} style={{ objectFit: 'contain' }} />
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>

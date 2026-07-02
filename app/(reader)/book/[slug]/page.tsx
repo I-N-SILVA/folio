@@ -3,15 +3,16 @@ import { Metadata } from 'next'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { ViewerChrome } from '@/components/viewer/ViewerChrome'
 import type { Book } from '@/lib/book-schema'
-import demoBook from '@/data/books/demo-book/book.json'
+import { getDemoBook } from '@/data/books'
 
 interface Props {
   params: Promise<{ slug: string }>
 }
 
 async function getBook(slug: string): Promise<Book | null> {
-  // Serve demo book without Supabase
-  if (slug === 'demo') return demoBook as unknown as Book
+  // Serve bundled demo editions without Supabase
+  const demo = getDemoBook(slug)
+  if (demo) return demo
 
   const supabase = await createServerSupabase()
   const { data: book } = await supabase

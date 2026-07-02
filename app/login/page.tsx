@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { track } from '@vercel/analytics'
 import { createBrowserSupabase } from '@/lib/supabase'
 
 export default function LoginPage() {
@@ -34,6 +35,7 @@ export default function LoginPage() {
       setError(error.message)
     } else {
       setSent(true)
+      track('signup_magic_link_sent')
     }
     setLoading(false)
   }

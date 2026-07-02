@@ -1,12 +1,13 @@
 import { LibraryBig, Plus, Sparkles, BookOpen } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
+import { OnboardingChecklist } from '@/components/studio/OnboardingChecklist'
 import { BookCard } from '@/components/studio/BookCard'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
 import type { Book } from '@/lib/book-schema'
 
-type DashboardBook = Omit<Book, 'pages'> & { pages?: { id: string }[] }
+type DashboardBook = Omit<Book, 'pages'> & { pages?: { id: string; hotspots?: unknown[] }[] }
 
 async function getBooks(): Promise<DashboardBook[]> {
   const supabase = await createServerSupabase()
@@ -15,7 +16,7 @@ async function getBooks(): Promise<DashboardBook[]> {
 
   const { data } = await supabase
     .from('books')
-    .select('*, pages(id)')
+    .select('*, pages(id, hotspots)')
     .eq('owner_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -26,6 +27,9 @@ export default async function DashboardPage() {
   const books = await getBooks()
   const publishedCount = books.filter((book) => book.settings?.published).length
   const pageCount = books.reduce((total, book) => total + (book.pages?.length ?? 0), 0)
+  const hasHotspot = books.some((book) =>
+    book.pages?.some((page) => (page.hotspots?.length ?? 0) > 0)
+  )
 
   return (
     <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--folio-ink)] sm:px-8">
@@ -53,6 +57,13 @@ export default async function DashboardPage() {
             <Reveal delay={140}><StatCard label="Pages" value={pageCount} /></Reveal>
           </div>
         </section>
+
+        <OnboardingChecklist
+          hasBook={books.length > 0}
+          hasHotspot={hasHotspot}
+          hasPublished={publishedCount > 0}
+          firstBookId={books[books.length - 1]?.id}
+        />
 
         {books.length === 0 ? (
           <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">

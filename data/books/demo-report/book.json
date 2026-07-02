@@ -1,0 +1,123 @@
+{
+  "id": "demo-report-id",
+  "slug": "demo-report",
+  "title": "The Attention Report 2026",
+  "description": "An annual report as a living edition — stats, live data, and sources one tap away.",
+  "owner_id": "demo",
+  "theme": { "preset": "slate", "background": "#1c1c2e", "primary": "#7c6ef8", "headingFont": "Sora" },
+  "settings": { "published": true, "unlisted": false },
+  "pages": [
+    {
+      "id": "rp-page-1",
+      "book_id": "demo-report-id",
+      "page_number": 1,
+      "type": "cover",
+      "layout": "hero",
+      "background": { "color": "#1c1c2e" },
+      "blocks": [
+        { "type": "text", "id": "rp1-1", "variant": "caption", "content": "ANNUAL REPORT · 2026", "align": "center" },
+        { "type": "text", "id": "rp1-2", "variant": "title", "content": "The Attention Report", "align": "center" },
+        { "type": "text", "id": "rp1-3", "variant": "body", "content": "What 40 million reading sessions say about how documents get read — and abandoned.", "align": "center" }
+      ],
+      "hotspots": []
+    },
+    {
+      "id": "rp-page-2",
+      "book_id": "demo-report-id",
+      "page_number": 2,
+      "type": "content",
+      "layout": "text",
+      "background": { "color": "#ffffff" },
+      "blocks": [
+        { "type": "text", "id": "rp2-1", "variant": "heading", "content": "Executive summary" },
+        { "type": "text", "id": "rp2-2", "variant": "body", "content": "Attachments are where attention goes to die. Across the sessions we studied, the median PDF was abandoned before the reader reached page three — and the sender never knew." },
+        { "type": "text", "id": "rp2-3", "variant": "body", "content": "Interactive editions inverted the pattern: when a document behaves like a product — tactile pages, media in place, sources one tap away — readers stay, and every interaction is measurable." },
+        { "type": "divider", "id": "rp2-4" },
+        { "type": "text", "id": "rp2-5", "variant": "caption", "content": "Methodology, sample, and definitions — tap any figure in this report for its source." }
+      ],
+      "hotspots": []
+    },
+    {
+      "id": "rp-page-3",
+      "book_id": "demo-report-id",
+      "page_number": 3,
+      "type": "content",
+      "layout": "hero",
+      "background": { "color": "#1c1c2e" },
+      "blocks": [
+        { "type": "text", "id": "rp3-1", "variant": "heading", "content": "The headline numbers", "align": "center" },
+        { "type": "text", "id": "rp3-2", "variant": "stat", "content": "81%", "align": "center" },
+        { "type": "text", "id": "rp3-3", "variant": "caption", "content": "Of static PDFs are never read past page two", "align": "center" },
+        { "type": "text", "id": "rp3-4", "variant": "stat", "content": "4:37", "align": "center" },
+        { "type": "text", "id": "rp3-5", "variant": "caption", "content": "Median time-in-edition for interactive documents", "align": "center" },
+        { "type": "text", "id": "rp3-6", "variant": "stat", "content": "10×", "align": "center" },
+        { "type": "text", "id": "rp3-7", "variant": "caption", "content": "More engagement per page than the same content as a PDF", "align": "center" }
+      ],
+      "hotspots": [
+        {
+          "id": "rp-hs-method",
+          "x": 88,
+          "y": 12,
+          "label": "Methodology",
+          "icon": "Info",
+          "modal": {
+            "title": "How we measured",
+            "body": "Aggregated, anonymized reader events — opens, page views, dwell time, completion — across editions published between Jan 2025 and Jan 2026. No personal data; all figures are medians unless noted."
+          }
+        }
+      ]
+    },
+    {
+      "id": "rp-page-4",
+      "book_id": "demo-report-id",
+      "page_number": 4,
+      "type": "content",
+      "layout": "split",
+      "background": { "color": "#ffffff" },
+      "blocks": [
+        {
+          "type": "image",
+          "id": "rp4-1",
+          "src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1000&q=80",
+          "alt": "Engagement dashboard with charts",
+          "lightbox": true
+        },
+        { "type": "text", "id": "rp4-2", "variant": "heading", "content": "Engagement by format" },
+        { "type": "text", "id": "rp4-3", "variant": "body", "content": "Completion rates climbed wherever friction fell: hosted links beat attachments, in-place media beat external links, and a tactile page-turn beat infinite scroll." },
+        { "type": "text", "id": "rp4-4", "variant": "caption", "content": "Tap the chart to zoom. Every open of this report is measured the same way." }
+      ],
+      "hotspots": []
+    },
+    {
+      "id": "rp-page-5",
+      "book_id": "demo-report-id",
+      "page_number": 5,
+      "type": "content",
+      "layout": "text",
+      "background": { "color": "#ffffff" },
+      "blocks": [
+        { "type": "text", "id": "rp5-1", "variant": "heading", "content": "This report is alive" },
+        { "type": "text", "id": "rp5-2", "variant": "body", "content": "The figures below are bound to a data source. When the source changes, every published copy of this report updates — nothing is re-exported, no stale copies circulate." },
+        { "type": "data", "id": "rp5-3", "label": "Dataset last refreshed", "source": "/demo-live.json", "path": "product.updated", "fallback": "recently" },
+        { "type": "divider", "id": "rp5-4" },
+        { "type": "text", "id": "rp5-5", "variant": "quote", "content": "\"The report you emailed in January is still correct in June. That has never been true of a PDF.\"" }
+      ],
+      "hotspots": []
+    },
+    {
+      "id": "rp-page-6",
+      "book_id": "demo-report-id",
+      "page_number": 6,
+      "type": "back",
+      "layout": "hero",
+      "background": { "color": "#1c1c2e" },
+      "blocks": [
+        { "type": "text", "id": "rp6-1", "variant": "title", "content": "Read. Measured. Alive.", "align": "center" },
+        { "type": "text", "id": "rp6-2", "variant": "body", "content": "Publish your next report as an edition — and know exactly who read what.", "align": "center" },
+        { "type": "divider", "id": "rp6-3" },
+        { "type": "button", "id": "rp6-4", "label": "Make one like this →", "href": "https://klicko.app", "variant": "primary", "target": "_blank" }
+      ],
+      "hotspots": []
+    }
+  ]
+}

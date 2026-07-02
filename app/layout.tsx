@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Fraunces } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import { Providers } from './providers'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 import { AppleSplashLinks } from '@/components/AppleSplashLinks'
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col font-sans">
         <AppleSplashLinks />
         <Providers>{children}</Providers>
+        <Analytics />
         <ServiceWorkerRegistrar />
       </body>
     </html>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
 import { ArrowLeft, Globe, EyeOff, Loader2, Check, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { track } from '@vercel/analytics'
 import { useEditorStore } from '@/lib/editor-store'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { PageListSidebar } from '@/components/studio/PageListSidebar'
@@ -199,6 +200,7 @@ export function EditorClient({ book }: Props) {
         : s.book,
     }))
     toast.success(next ? 'Edition published — it\'s live!' : 'Edition unpublished')
+    if (next) track('edition_published')
   }
 
   const isPublished = storeBook?.settings.published ?? false
