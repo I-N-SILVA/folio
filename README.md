@@ -1,6 +1,6 @@
-# Folio
+# KLICKO
 
-Turn a PDF or a blank page into an interactive, trackable flipbook you can publish and share. Folio pairs a drag-and-drop editor with a polished public reader, lead-gating, living "data" blocks, AI-assisted import, and per-book analytics.
+Turn a PDF or a blank page into an interactive, trackable edition you can publish and share. KLICKO pairs a drag-and-drop editor with a polished public reader, lead-gating, living "data" blocks, AI-assisted import, and per-book analytics.
 
 ## Stack
 

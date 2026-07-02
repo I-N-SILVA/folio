@@ -92,7 +92,7 @@ const PLANS: {
 
 function Mark({ className = '' }: { className?: string }) {
   return (
-    <Image src="/logo.png" alt="KLICKO Logo" width={120} height={32} priority className={`object-contain ${className}`} />
+    <Image src="/brand/klicko-logo.png" alt="KLICKO" width={116} height={32} priority className={`object-contain ${className}`} />
   )
 }
 
@@ -256,9 +256,8 @@ export default function HomePage() {
         }`}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-2" aria-label="KLICKO home">
-            <Mark className="h-8 w-auto" />
-            <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
+          <Link href="/" className="flex items-center" aria-label="KLICKO home">
+            <Mark className="h-7 w-auto" />
           </Link>
           <nav className="hidden items-center gap-8 text-[13px] font-medium text-[var(--folio-muted)] md:flex">
             <Link href="#features" className="transition hover:text-[var(--folio-ink)]">Features</Link>
@@ -323,7 +322,7 @@ export default function HomePage() {
             >
               <MagneticButton
                 href="/login"
-                className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(0,102,255,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
+                className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(60,35,132,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
               >
                 Start for free
               </MagneticButton>
@@ -528,9 +527,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <Mark className="h-8 w-auto" />
-                <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
+              <div className="flex items-center">
+                <Mark className="h-7 w-auto" />
               </div>
               <p className="mt-3 max-w-xs text-sm text-[var(--folio-muted)]">
                 Interactive publishing — with craft, context, and control.

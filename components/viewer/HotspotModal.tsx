@@ -111,7 +111,7 @@ export function HotspotModal({ hotspot, bookId, pageNumber, onClose }: HotspotMo
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'checkout' })}
-                  className="block w-full rounded-full bg-[#0066ff] px-4 py-3 text-center font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                  className="block w-full rounded-full bg-[var(--accent)] px-4 py-3 text-center font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
                 >
                   {hotspot.ctaLabel ?? 'Buy now'}
                 </a>

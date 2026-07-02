@@ -1,4 +1,6 @@
 import { ImageResponse } from 'next/og'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 
 export const dynamic = 'force-static'
 
@@ -10,6 +12,11 @@ export async function GET(request: Request) {
   const w = Math.min(Math.max(parseInt(searchParams.get('w') || '1170', 10) || 1170, 320), 4096)
   const h = Math.min(Math.max(parseInt(searchParams.get('h') || '2532', 10) || 2532, 320), 4096)
   const mark = Math.round(Math.min(w, h) * 0.22)
+
+  const markPng = await readFile(join(process.cwd(), 'public/brand/klicko-mark.png'))
+  const markSrc = `data:image/png;base64,${markPng.toString('base64')}`
+  // klicko-mark.png is 512x621 (taller than wide)
+  const markW = Math.round(mark * (512 / 621))
 
   return new ImageResponse(
     (
@@ -23,32 +30,17 @@ export async function GET(request: Request) {
           justifyContent: 'center',
           gap: Math.round(mark * 0.3),
           background: '#ffffff',
-          fontFamily: 'Helvetica, Arial, sans-serif',
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={markSrc} alt="" width={markW} height={mark} style={{ objectFit: 'contain' }} />
         <div
           style={{
-            width: mark,
-            height: mark,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: Math.round(mark * 0.24),
-            background: '#1d1d1f',
-            color: '#ffffff',
-            fontSize: Math.round(mark * 0.6),
-            fontWeight: 600,
-            letterSpacing: '-0.04em',
-          }}
-        >
-          K
-        </div>
-        <div
-          style={{
-            color: '#1d1d1f',
+            color: '#141a3a',
             fontSize: Math.round(mark * 0.18),
             fontWeight: 600,
             letterSpacing: '-0.03em',
+            fontFamily: 'Helvetica, Arial, sans-serif',
           }}
         >
           KLICKO

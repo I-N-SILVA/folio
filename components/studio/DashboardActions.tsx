@@ -21,7 +21,7 @@ export function DashboardActions() {
         </Link>
         <button
           onClick={() => setCreateOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_16px_34px_rgba(0,102,255,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
+          className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_16px_34px_rgba(60,35,132,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
         >
           <Plus size={16} />
           Create New

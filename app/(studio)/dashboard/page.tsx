@@ -56,7 +56,7 @@ export default async function DashboardPage() {
 
         {books.length === 0 ? (
           <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">
-            <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(0,102,255,0.16)] blur-3xl" />
+            <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(60,35,132,0.16)] blur-3xl" />
             <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--folio-border)] bg-white shadow-sm">
               <BookOpen size={48} className="text-[var(--folio-muted)] opacity-60" strokeWidth={1.5} />
             </div>

@@ -385,7 +385,7 @@ function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: string }) 
 
   return (
     <div className="space-y-3">
-      <p className="rounded-md bg-[#0066ff]/10 px-2.5 py-2 text-[11px] leading-4 text-[#9dc0ff]">
+      <p className="rounded-md bg-[var(--accent-vivid)]/10 px-2.5 py-2 text-[11px] leading-4 text-[#c7b8ff]">
         Binds to a JSON source and updates after publish. Change the source data
         and every live edition reflects it — no re-export.
       </p>
@@ -852,7 +852,7 @@ export function SettingsPanel() {
           onClick={() => setTab('selection')}
           className={twMerge(
             'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
-            tab === 'selection' ? 'text-white border-b-2 border-[#0066ff] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
+            tab === 'selection' ? 'text-white border-b-2 border-[var(--accent-vivid)] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
           Selection
@@ -861,7 +861,7 @@ export function SettingsPanel() {
           onClick={() => setTab('book')}
           className={twMerge(
             'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
-            tab === 'book' ? 'text-white border-b-2 border-[#0066ff] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
+            tab === 'book' ? 'text-white border-b-2 border-[var(--accent-vivid)] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
           Edition

@@ -175,7 +175,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                     <XAxis dataKey="page" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
                     <Tooltip formatter={(val: any) => [`${val}%`, '% Sessions']} />
-                    <Bar dataKey="pct" fill="#0066ff" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="pct" fill="var(--accent)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -195,7 +195,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                           key={p}
                           onClick={() => setHeatmapPage(p)}
                           className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${
-                            heatmapPage === p ? 'bg-[#0066ff] text-white' : 'hover:bg-black/5 text-[var(--folio-ink)]'
+                            heatmapPage === p ? 'bg-[var(--accent)] text-white' : 'hover:bg-black/5 text-[var(--folio-ink)]'
                           }`}
                         >
                           Page {p}

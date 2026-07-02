@@ -210,9 +210,10 @@ export function EditorClient({ book }: Props) {
         <Link
           href="/dashboard"
           aria-label="KLICKO dashboard"
-          className="grid h-7 w-7 place-items-center rounded-md bg-[#0066ff] text-xs font-bold text-white transition hover:brightness-110"
+          className="grid h-7 w-7 place-items-center overflow-hidden rounded-md transition hover:brightness-110"
         >
-          K
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/icon-192.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
         </Link>
         <Link
           href="/dashboard"

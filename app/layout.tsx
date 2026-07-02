@@ -1,15 +1,19 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, Newsreader } from 'next/font/google'
+import { DM_Sans, Fraunces } from 'next/font/google'
 import { Providers } from './providers'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 import { AppleSplashLinks } from '@/components/AppleSplashLinks'
 import './globals.css'
 
 const bodyFont = DM_Sans({ subsets: ['latin'], variable: '--font-body', display: 'swap' })
-const displayFont = Newsreader({
+// Fraunces at high optical size, soft terminals, wonky alternates on — the
+// ownable display voice. The axes ship in the variable font; tune via CSS
+// (font-variation-settings in globals.css).
+const displayFont = Fraunces({
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',
+  axes: ['SOFT', 'WONK', 'opsz'],
 })
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klicko.app'
@@ -62,7 +66,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#1d1d1f' },
+    { media: '(prefers-color-scheme: dark)', color: '#141a3a' },
   ],
   colorScheme: 'light',
   width: 'device-width',
