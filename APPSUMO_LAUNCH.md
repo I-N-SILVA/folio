@@ -95,9 +95,11 @@ constant time. **Fails closed in production** if no key is set.
 
 - [ ] Empty/limit states: when a Free or LTD user hits their book cap, the
       create flow shows the upgrade message from the `plan_limit` response.
-- [ ] Seed 3–5 stunning demo folios (catalog, lookbook, report, portfolio) so
-      reviewers see the "wow" in 30 seconds.
-- [ ] Onboarding: first-run checklist (import a PDF → add a hotspot → publish).
+- [x] Seed demo folios — four bundled editions (product tour, shoppable
+      lookbook, living report, portfolio) served without Supabase from
+      `data/books/` and featured on the landing page.
+- [x] Onboarding: first-run checklist (create → add a hotspot → publish) on
+      the dashboard (`components/studio/OnboardingChecklist.tsx`).
 - [ ] Support: help docs + a shared inbox; AppSumo reviewers reward fast replies.
 - [ ] Legal: Privacy Policy + Terms live (required).
 - [ ] Performance/PWA pass (see `LAUNCH.md`): Lighthouse ≥ 90, installable.

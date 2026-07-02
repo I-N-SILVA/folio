@@ -1,0 +1,157 @@
+{
+  "id": "demo-lookbook-id",
+  "slug": "demo-lookbook",
+  "title": "Ondine — Summer Editions",
+  "description": "A shoppable homeware lookbook. Tap the pins to buy without leaving the page.",
+  "owner_id": "demo",
+  "theme": { "preset": "cream", "background": "#fffbf0", "primary": "#c84b31", "headingFont": "Lora" },
+  "settings": { "published": true, "unlisted": false },
+  "pages": [
+    {
+      "id": "lb-page-1",
+      "book_id": "demo-lookbook-id",
+      "page_number": 1,
+      "type": "cover",
+      "layout": "hero",
+      "background": { "color": "#fffbf0" },
+      "blocks": [
+        { "type": "text", "id": "lb1-1", "variant": "caption", "content": "SUMMER 2026 · LOOKBOOK", "align": "center" },
+        { "type": "text", "id": "lb1-2", "variant": "title", "content": "Ondine", "align": "center" },
+        { "type": "text", "id": "lb1-3", "variant": "body", "content": "Twenty-four pieces for slow mornings. Every pin on these pages is shoppable — tap one.", "align": "center" }
+      ],
+      "hotspots": []
+    },
+    {
+      "id": "lb-page-2",
+      "book_id": "demo-lookbook-id",
+      "page_number": 2,
+      "type": "content",
+      "layout": "split",
+      "background": { "color": "#ffffff" },
+      "blocks": [
+        {
+          "type": "image",
+          "id": "lb2-1",
+          "src": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1000&q=80",
+          "alt": "Green velvet sofa in a sunlit living room",
+          "lightbox": true
+        },
+        { "type": "text", "id": "lb2-2", "variant": "heading", "content": "The linen edit" },
+        { "type": "text", "id": "lb2-3", "variant": "body", "content": "Stonewashed in small batches, woven in Portugal. The pieces soften with every wash and keep their shape for years." },
+        { "type": "data", "id": "lb2-4", "label": "Live availability", "source": "/demo-live.json", "path": "product.stock", "fallback": "In stock" },
+        { "type": "text", "id": "lb2-5", "variant": "caption", "content": "Stock above is live data — it updates after publish, no re-export." }
+      ],
+      "hotspots": [
+        {
+          "id": "lb-hs-throw",
+          "x": 30,
+          "y": 42,
+          "label": "Shop the linen throw",
+          "icon": "ShoppingBag",
+          "modal": {
+            "title": "Linen Throw — Sand",
+            "body": "Stonewashed linen, 130 × 180 cm. Checkout happens right here — readers never leave the page."
+          },
+          "action": "checkout",
+          "stripeUrl": "https://buy.stripe.com/test_demo",
+          "price": "$48",
+          "ctaLabel": "Add to cart"
+        }
+      ]
+    },
+    {
+      "id": "lb-page-3",
+      "book_id": "demo-lookbook-id",
+      "page_number": 3,
+      "type": "content",
+      "layout": "blank",
+      "background": {
+        "image": "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1000&q=80",
+        "overlay": "rgba(30,20,10,0.35)"
+      },
+      "blocks": [
+        { "type": "text", "id": "lb3-1", "variant": "heading", "content": "Compose the room", "align": "center" }
+      ],
+      "hotspots": [
+        {
+          "id": "lb-hs-lamp",
+          "x": 62,
+          "y": 32,
+          "label": "Arc floor lamp",
+          "icon": "ShoppingBag",
+          "modal": {
+            "title": "Arc Lamp — Charcoal",
+            "body": "Powder-coated steel with a weighted marble base. Warm-dim LED, made to lean over a reading chair."
+          },
+          "action": "checkout",
+          "stripeUrl": "https://buy.stripe.com/test_demo",
+          "price": "$320",
+          "ctaLabel": "Add to cart"
+        },
+        {
+          "id": "lb-hs-chair",
+          "x": 24,
+          "y": 68,
+          "label": "Club chair",
+          "icon": "ShoppingBag",
+          "modal": {
+            "title": "Ada Chair — Cloud",
+            "body": "A low, generous shell on solid oak legs. The bouclé cover zips off and machine-washes."
+          },
+          "action": "checkout",
+          "stripeUrl": "https://buy.stripe.com/test_demo",
+          "price": "$780",
+          "ctaLabel": "Add to cart"
+        }
+      ]
+    },
+    {
+      "id": "lb-page-4",
+      "book_id": "demo-lookbook-id",
+      "page_number": 4,
+      "type": "content",
+      "layout": "hero",
+      "background": { "color": "#141a3a" },
+      "blocks": [
+        { "type": "text", "id": "lb4-1", "variant": "heading", "content": "The season in numbers", "align": "center" },
+        { "type": "text", "id": "lb4-2", "variant": "stat", "content": "24", "align": "center" },
+        { "type": "text", "id": "lb4-3", "variant": "caption", "content": "Pieces in the summer collection", "align": "center" },
+        { "type": "text", "id": "lb4-4", "variant": "stat", "content": "3", "align": "center" },
+        { "type": "text", "id": "lb4-5", "variant": "caption", "content": "Colorways — sand, sage, and slate", "align": "center" },
+        { "type": "text", "id": "lb4-6", "variant": "stat", "content": "100%", "align": "center" },
+        { "type": "text", "id": "lb4-7", "variant": "caption", "content": "Natural fibers, traceable to the mill", "align": "center" }
+      ],
+      "hotspots": []
+    },
+    {
+      "id": "lb-page-5",
+      "book_id": "demo-lookbook-id",
+      "page_number": 5,
+      "type": "content",
+      "layout": "text",
+      "background": { "color": "#fffbf0" },
+      "blocks": [
+        { "type": "text", "id": "lb5-1", "variant": "quote", "content": "\"We photograph everything in real homes, in real light. The lookbook should feel like a Sunday, not a showroom.\"" },
+        { "type": "text", "id": "lb5-2", "variant": "caption", "content": "— Ines Duarte, founder" },
+        { "type": "divider", "id": "lb5-3" },
+        { "type": "text", "id": "lb5-4", "variant": "body", "content": "Every Ondine piece ships flat-packed in recycled paper, carbon-neutral to your door. Returns are free for 60 days — though almost nothing comes back." }
+      ],
+      "hotspots": []
+    },
+    {
+      "id": "lb-page-6",
+      "book_id": "demo-lookbook-id",
+      "page_number": 6,
+      "type": "back",
+      "layout": "hero",
+      "background": { "color": "#141a3a" },
+      "blocks": [
+        { "type": "text", "id": "lb6-1", "variant": "title", "content": "Ondine", "align": "center" },
+        { "type": "text", "id": "lb6-2", "variant": "body", "content": "The full collection is online — and this edition told us exactly which pieces you lingered on.", "align": "center" },
+        { "type": "divider", "id": "lb6-3" },
+        { "type": "button", "id": "lb6-4", "label": "Shop the collection →", "href": "https://klicko.app", "variant": "primary", "target": "_blank" }
+      ],
+      "hotspots": []
+    }
+  ]
+}

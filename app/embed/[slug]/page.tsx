@@ -2,10 +2,11 @@ import { notFound } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { ViewerChrome } from '@/components/viewer/ViewerChrome'
 import type { Book } from '@/lib/book-schema'
-import demoBook from '@/data/books/demo-book/book.json'
+import { getDemoBook } from '@/data/books'
 
 async function getBook(slug: string): Promise<Book | null> {
-  if (slug === 'demo') return demoBook as unknown as Book
+  const demo = getDemoBook(slug)
+  if (demo) return demo
 
   const supabase = await createServerSupabase()
   const { data: book } = await supabase

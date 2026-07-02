@@ -140,7 +140,7 @@ export default async function AccountPage({
                 ) : (
                   <Link
                     href="/#pricing"
-                    className="mt-5 inline-block rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
+                    className="mt-5 inline-block rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
                   >
                     See plans
                   </Link>

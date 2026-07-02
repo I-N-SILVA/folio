@@ -12,10 +12,11 @@ type Props = {
   className?: string
   /** How far the button drifts toward the cursor, in px. */
   strength?: number
+  onClick?: () => void
 }
 
 /** A primary CTA that subtly leans toward the cursor. */
-export function MagneticButton({ href, children, className = '', strength = 6 }: Props) {
+export function MagneticButton({ href, children, className = '', strength = 6, onClick }: Props) {
   const ref = useRef<HTMLAnchorElement>(null)
   const reduce = useReducedMotion()
   const x = useSpring(useMotionValue(0), { stiffness: 200, damping: 15 })
@@ -43,6 +44,7 @@ export function MagneticButton({ href, children, className = '', strength = 6 }:
       style={{ x, y }}
       onMouseMove={onMove}
       onMouseLeave={reset}
+      onClick={onClick}
       whileTap={{ scale: 0.97 }}
     >
       {children}

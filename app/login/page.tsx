@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { track } from '@vercel/analytics'
 import { createBrowserSupabase } from '@/lib/supabase'
 
 export default function LoginPage() {
@@ -33,6 +35,7 @@ export default function LoginPage() {
       setError(error.message)
     } else {
       setSent(true)
+      track('signup_magic_link_sent')
     }
     setLoading(false)
   }
@@ -49,7 +52,10 @@ export default function LoginPage() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--folio-teal)]">
             Creator Studio
           </p>
-          <h1 className="font-display text-5xl font-semibold tracking-[-0.07em]">KLICKO</h1>
+          <h1>
+            <span className="sr-only">KLICKO</span>
+            <Image src="/brand/klicko-logo.png" alt="" width={181} height={50} priority className="h-[50px] w-auto object-contain" />
+          </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">
             Sign in with a magic link to compose, publish, and measure your digital shelf.
           </p>
@@ -84,7 +90,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-full bg-[var(--accent)] py-3.5 font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(0,102,255,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:translate-y-0 disabled:opacity-50"
+              className="rounded-full bg-[var(--accent)] py-3.5 font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(60,35,132,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:translate-y-0 disabled:opacity-50"
             >
               {loading ? 'Sending…' : 'Send magic link'}
             </button>

@@ -62,7 +62,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
 
   return (
     <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
-      <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(0,102,255,0.10)] blur-2xl transition group-hover:bg-[rgba(0,102,255,0.18)]" />
+      <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(60,35,132,0.10)] blur-2xl transition group-hover:bg-[rgba(60,35,132,0.18)]" />
       <div className="flex items-start justify-between mb-3 gap-2">
         {isEditing ? (
           <div className="flex-1 flex items-center gap-1">

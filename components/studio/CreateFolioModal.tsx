@@ -186,7 +186,7 @@ export function CreateFolioModal({ onClose }: Props) {
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/#pricing"
-            className="rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#0a5be0]"
+            className="rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
           >
             See plans
           </Link>
@@ -239,7 +239,7 @@ export function CreateFolioModal({ onClose }: Props) {
             <button
               type="submit"
               disabled={loading || !newTitle.trim()}
-              className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#0a5be0] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create KLICKO'}
             </button>

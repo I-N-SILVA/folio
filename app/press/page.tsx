@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -8,16 +9,19 @@ export const metadata: Metadata = {
 
 const COLORS = [
   { name: 'White', hex: '#ffffff' },
-  { name: 'Ink', hex: '#1d1d1f' },
-  { name: 'Accent', hex: '#0066ff' },
-  { name: 'Gray', hex: '#6e6e73' },
-  { name: 'Subtle', hex: '#f5f5f7' },
-  { name: 'Hairline', hex: '#d2d2d7' },
+  { name: 'Ink', hex: '#141a3a' },
+  { name: 'Violet', hex: '#3c2384' },
+  { name: 'Gray', hex: '#575d78' },
+  { name: 'Subtle', hex: '#f4f4f7' },
+  { name: 'Hairline', hex: '#e3e4ea' },
 ]
 
 const ASSETS = [
-  { label: 'App icon (512×512)', href: '/icon' },
-  { label: 'Apple touch icon (180×180)', href: '/apple-icon' },
+  { label: 'Logo lockup (PNG, transparent)', href: '/brand/klicko-logo.png' },
+  { label: 'Logo lockup — white (PNG, transparent)', href: '/brand/klicko-logo-white.png' },
+  { label: 'Mark only (PNG, transparent)', href: '/brand/klicko-mark.png' },
+  { label: 'App icon (512×512)', href: '/brand/icon-512.png' },
+  { label: 'Apple touch icon (180×180)', href: '/brand/apple-icon-180.png' },
   { label: 'Social share image (1200×630)', href: '/opengraph-image' },
   { label: 'Demo loop (GIF)', href: '/klicko-demo.gif' },
   { label: 'Web app manifest', href: '/manifest.webmanifest' },
@@ -51,13 +55,11 @@ export default function PressPage() {
         <section className="mt-12">
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--folio-muted)]">Logo</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-4 rounded-[2rem] border border-[var(--folio-border)] bg-white p-8">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-2xl font-semibold text-white">K</span>
-              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">KLICKO</span>
+            <div className="flex items-center justify-center rounded-[2rem] border border-[var(--folio-border)] bg-white p-8">
+              <Image src="/brand/klicko-logo.png" alt="KLICKO logo on white" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
-            <div className="flex items-center gap-4 rounded-[2rem] border border-white/10 bg-[var(--folio-ink)] p-8 text-white">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl font-semibold text-[#1d1d1f]">K</span>
-              <span className="font-display text-4xl font-semibold tracking-[-0.04em]">KLICKO</span>
+            <div className="flex items-center justify-center rounded-[2rem] border border-white/10 bg-[var(--folio-ink)] p-8">
+              <Image src="/brand/klicko-logo-white.png" alt="KLICKO logo on ink" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
           </div>
         </section>

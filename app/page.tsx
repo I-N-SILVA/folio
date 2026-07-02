@@ -16,6 +16,7 @@ import {
   RefreshCw,
   ShoppingBag,
 } from 'lucide-react'
+import { track } from '@vercel/analytics'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
 import { MagneticButton } from '@/components/landing/MagneticButton'
@@ -90,9 +91,57 @@ const PLANS: {
   },
 ]
 
+// Schema.org markup so search results show KLICKO as an application with
+// pricing. Rendered into the SSR HTML below.
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'KLICKO',
+  applicationCategory: 'DesignApplication',
+  operatingSystem: 'Web',
+  url: 'https://klicko.app',
+  description:
+    'Turn static PDFs into interactive editions with hotspots, analytics, embeds, and brand control.',
+  offers: [
+    { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
+    { '@type': 'Offer', name: 'Pro', price: '19', priceCurrency: 'USD' },
+    { '@type': 'Offer', name: 'Lifetime', price: '199', priceCurrency: 'USD' },
+  ],
+}
+
+const EXAMPLES = [
+  {
+    slug: 'demo-lookbook',
+    tag: 'Commerce',
+    eyebrow: 'Summer 2026 · Lookbook',
+    title: 'Ondine',
+    desc: 'A shoppable lookbook — live stock and checkout without leaving the page.',
+    bg: '#fffbf0',
+    ink: '#141a3a',
+  },
+  {
+    slug: 'demo-report',
+    tag: 'Business',
+    eyebrow: 'Annual report · 2026',
+    title: 'The Attention Report',
+    desc: 'A living report — figures bound to data that updates after publish.',
+    bg: '#1c1c2e',
+    ink: '#ffffff',
+  },
+  {
+    slug: 'demo-portfolio',
+    tag: 'Creative',
+    eyebrow: 'Portfolio · 2024–2026',
+    title: 'Mara Ito',
+    desc: 'A portfolio whose case studies carry role and results one tap away.',
+    bg: '#111111',
+    ink: '#ffffff',
+  },
+]
+
 function Mark({ className = '' }: { className?: string }) {
   return (
-    <Image src="/logo.png" alt="KLICKO Logo" width={120} height={32} priority className={`object-contain ${className}`} />
+    <Image src="/brand/klicko-logo.png" alt="KLICKO" width={116} height={32} priority className={`object-contain ${className}`} />
   )
 }
 
@@ -246,6 +295,10 @@ export default function HomePage() {
   return (
     <LazyMotion features={domAnimation}>
       <div className="min-h-screen bg-[var(--background)] text-[var(--folio-ink)]">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
         <ScrollProgress />
       {/* Nav */}
       <header
@@ -256,9 +309,8 @@ export default function HomePage() {
         }`}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-2" aria-label="KLICKO home">
-            <Mark className="h-8 w-auto" />
-            <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
+          <Link href="/" className="flex items-center" aria-label="KLICKO home">
+            <Mark className="h-7 w-auto" />
           </Link>
           <nav className="hidden items-center gap-8 text-[13px] font-medium text-[var(--folio-muted)] md:flex">
             <Link href="#features" className="transition hover:text-[var(--folio-ink)]">Features</Link>
@@ -323,11 +375,16 @@ export default function HomePage() {
             >
               <MagneticButton
                 href="/login"
-                className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(0,102,255,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
+                onClick={() => track('cta_click', { cta: 'start_free', location: 'hero' })}
+                className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(60,35,132,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
               >
                 Start for free
               </MagneticButton>
-              <Link href="/book/demo" className="text-[15px] font-medium text-[var(--accent)] transition hover:underline">
+              <Link
+                href="/book/demo"
+                onClick={() => track('cta_click', { cta: 'view_demo', location: 'hero' })}
+                className="text-[15px] font-medium text-[var(--accent)] transition hover:underline"
+              >
                 View the demo →
               </Link>
             </m.div>
@@ -423,6 +480,45 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Examples — real editions to flip through */}
+        <section id="examples" className="px-5 py-28">
+          <div className="mx-auto max-w-5xl">
+            <Reveal className="mb-14 max-w-2xl">
+              <span className="mb-5 block h-9 w-[3px] rounded-full bg-[var(--accent)]" />
+              <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Don&apos;t take our word for it. Flip one.</h2>
+              <p className="mt-4 text-[15px] leading-7 text-[var(--folio-muted)]">
+                Three live editions — a shoppable lookbook, a living report, and a portfolio. No signup, no app.
+              </p>
+            </Reveal>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {EXAMPLES.map((ex, i) => (
+                <Reveal key={ex.slug} delay={i * 90}>
+                  <Link
+                    href={`/book/${ex.slug}`}
+                    onClick={() => track('demo_open', { edition: ex.slug, location: 'examples' })}
+                    className="group block h-full overflow-hidden rounded-2xl border border-[var(--folio-border)] bg-white transition hover:-translate-y-1 hover:shadow-[var(--folio-shadow)]"
+                  >
+                    <div
+                      className="flex aspect-[4/3] flex-col items-center justify-center gap-2 px-6 text-center"
+                      style={{ background: ex.bg, color: ex.ink }}
+                    >
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.24em] opacity-70">{ex.eyebrow}</span>
+                      <span className="font-display text-2xl font-semibold leading-tight tracking-[-0.02em]">{ex.title}</span>
+                    </div>
+                    <div className="p-6">
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">{ex.tag}</span>
+                      <p className="mt-2 text-[15px] leading-7 text-[var(--folio-muted)]">{ex.desc}</p>
+                      <span className="mt-3 inline-block text-sm font-semibold text-[var(--folio-ink)] transition group-hover:translate-x-1">
+                        Flip through →
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Pricing */}
         <section id="pricing" className="px-5 py-28">
           <div className="mx-auto max-w-5xl">
@@ -459,6 +555,7 @@ export default function HomePage() {
                     </ul>
                     <Link
                       href={href}
+                      onClick={() => track('cta_click', { cta: name.toLowerCase(), location: 'pricing' })}
                       className={`mt-8 rounded-full px-5 py-3 text-center text-[15px] font-semibold transition ${
                         featured
                           ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
@@ -528,9 +625,8 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="flex items-center gap-2">
-                <Mark className="h-8 w-auto" />
-                <span className="text-lg font-semibold tracking-[-0.02em]">KLICKO</span>
+              <div className="flex items-center">
+                <Mark className="h-7 w-auto" />
               </div>
               <p className="mt-3 max-w-xs text-sm text-[var(--folio-muted)]">
                 Interactive publishing — with craft, context, and control.

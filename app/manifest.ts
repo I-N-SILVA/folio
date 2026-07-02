@@ -11,12 +11,13 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     orientation: 'portrait-primary',
     background_color: '#ffffff',
-    theme_color: '#ffffff',
+    theme_color: '#3c2384',
     categories: ['productivity', 'business', 'books'],
     icons: [
-      { src: '/icon', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/icon', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-      { src: '/apple-icon', sizes: '180x180', type: 'image/png' },
+      { src: '/brand/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/brand/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: '/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/brand/apple-icon-180.png', sizes: '180x180', type: 'image/png' },
     ],
     shortcuts: [
       {

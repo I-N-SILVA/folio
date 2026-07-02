@@ -200,7 +200,7 @@ export function PageListSidebar() {
           onClick={() => setActiveTab('pages')}
           className={twMerge(
             'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'pages' ? 'bg-[#0066ff]/15 text-white ring-1 ring-inset ring-[#0066ff]/30' : 'text-neutral-500 hover:text-neutral-300'
+            activeTab === 'pages' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
           <Layers size={13} />
@@ -210,7 +210,7 @@ export function PageListSidebar() {
           onClick={() => setActiveTab('layers')}
           className={twMerge(
             'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'layers' ? 'bg-[#0066ff]/15 text-white ring-1 ring-inset ring-[#0066ff]/30' : 'text-neutral-500 hover:text-neutral-300'
+            activeTab === 'layers' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
           <GripVertical size={13} />
@@ -220,7 +220,7 @@ export function PageListSidebar() {
           onClick={() => setActiveTab('library')}
           className={twMerge(
             'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'library' ? 'bg-[#0066ff]/15 text-white ring-1 ring-inset ring-[#0066ff]/30' : 'text-neutral-500 hover:text-neutral-300'
+            activeTab === 'library' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
           <Box size={13} />
@@ -230,7 +230,7 @@ export function PageListSidebar() {
           onClick={() => setActiveTab('templates')}
           className={twMerge(
             'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'templates' ? 'bg-[#0066ff]/15 text-white ring-1 ring-inset ring-[#0066ff]/30' : 'text-neutral-500 hover:text-neutral-300'
+            activeTab === 'templates' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
           <LayoutIcon size={13} />

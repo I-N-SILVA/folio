@@ -15,42 +15,54 @@ Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 
 ## 2. Logo
 
-- **Wordmark:** "KLICKO" in the display sans, tight tracking (`-0.02em`).
-- **Monogram:** a single **R** in white on a near-black (`#1d1d1f`) rounded
-  square. Generated at `/icon` and `/apple-icon`.
-- **Clear space:** keep at least the height of the "R" around the mark.
-- **Don'ts:** don't recolor the mark, add gradients or shadows, stretch it, or
-  place it on busy imagery without a solid scrim.
+- **Lockup:** the violet cursor-page mark + lowercase "klicko" wordmark in
+  ink navy, with a play triangle inside the final "o".
+  Files: `public/brand/klicko-logo.png` (on light) and
+  `public/brand/klicko-logo-white.png` (on dark).
+- **Mark:** the violet mark alone (`public/brand/klicko-mark.png`). Use it
+  when space is tight (favicons, avatars, app icons).
+- **App icon:** white mark on KLICKO Violet (`public/brand/icon-512.png`,
+  `icon-192.png`, `apple-icon-180.png`; also `app/icon.png` /
+  `app/apple-icon.png` for the favicon + touch icon).
+- **Clear space:** keep at least the height of the mark's circular counter
+  around the lockup.
+- **Don'ts:** don't recolor the lockup (white-on-dark and icon-white are the
+  only sanctioned variants), add gradients or shadows, stretch it, or place it
+  on busy imagery without a solid scrim.
 
 ## 3. Color
 
-Monochrome base + a single accent. Source of truth: `app/globals.css` (`:root`).
+The palette is drawn from the logo itself: ink navy for text, one violet
+accent. Source of truth: `app/globals.css` (`:root`).
 
 | Token | Hex | Use |
 | ----- | --- | --- |
 | White | `#ffffff` | Primary background |
-| Off-white | `#fbfbfd` | Alternating section background |
-| Ink (`--folio-ink`) | `#1d1d1f` | Text, dark sections, monogram |
-| Gray (`--folio-muted`) | `#6e6e73` | Secondary text |
-| Subtle | `#f5f5f7` | Fills, chips, secondary buttons |
-| Hairline (`--folio-border`) | `#d2d2d7` | Borders / separators |
-| **Accent** (`--accent`) | `#0066ff` | Primary actions + links **only** |
-| Accent hover | `#0a5be0` | Hover state for accent |
+| Off-white | `#fcfcfd` | Page background |
+| Ink (`--folio-ink`) | `#141a3a` | Text, dark sections (the wordmark navy) |
+| Gray (`--folio-muted`) | `#575d78` | Secondary text |
+| Subtle | `#f4f4f7` | Fills, chips, secondary buttons |
+| Hairline (`--folio-border`) | `#e3e4ea` | Borders / separators |
+| **KLICKO Violet** (`--accent`) | `#3c2384` | Primary actions + links **only** (the mark's color) |
+| Accent hover | `#2e1a66` | Hover state for accent |
 
 Rule: the accent is reserved for primary CTAs and links. Everything else is
-monochrome. Maintain AA contrast on text.
+ink-on-white. Maintain AA contrast on text.
 
 ## 4. Typography
 
 Two faces, loaded via `next/font` (see `app/layout.tsx`):
 
 - **Display — Fraunces** (`--font-display`): an editorial variable serif for
-  headlines, big numbers, and the price. Tracking `-0.02em`. This is the
-  ownable, premium voice — use it for impact, not body copy.
-- **UI / body — Geist** (`--font-body`): a clean modern grotesk for nav, cards,
-  buttons, and paragraphs. 15–20px, `leading-7/8`, gray for secondary copy.
+  headlines, big numbers, and the price. Tracking `-0.02em`, tuned via
+  `font-variation-settings` to high optical size (`opsz 144`), soft terminals
+  (`SOFT 40`), and wonky alternates (`WONK 1`) — this tuning is what makes the
+  voice ownable. Use it for impact, not body copy.
+- **UI / body — DM Sans** (`--font-body`): a clean geometric grotesk for nav,
+  cards, buttons, and paragraphs. 15–20px, `leading-7/8`, gray for secondary
+  copy.
 - Use `.font-display` (or `font-display`) to opt a heading into Fraunces.
-  Everything else inherits Geist.
+  Everything else inherits DM Sans.
 - All-caps only for small eyebrow/label text with wide tracking.
 
 ## 5. Surfaces & motion
@@ -78,8 +90,10 @@ Two faces, loaded via `next/font` (see `app/layout.tsx`):
 
 | Asset | Route |
 | ----- | ----- |
-| App icon (512²) | `/icon` |
-| Apple touch icon (180²) | `/apple-icon` |
+| Logo lockup (transparent PNG) | `/brand/klicko-logo.png` (white: `/brand/klicko-logo-white.png`) |
+| Mark only (transparent PNG) | `/brand/klicko-mark.png` |
+| App icon (512² / 192²) | `/brand/icon-512.png`, `/brand/icon-192.png` |
+| Apple touch icon (180²) | `/brand/apple-icon-180.png` |
 | Social share image (1200×630) | `/opengraph-image` |
 | iOS launch images | `/apple-splash?w=…&h=…` |
 | Web app manifest | `/manifest.webmanifest` |
@@ -92,8 +106,8 @@ What makes KLICKO ownable — lean on these, not generic "flipbook" language:
 - **Editions, not exports.** The category word. Frame publications as living
   editions (Vol. 01, issue framing, spine motif), never "flipbooks."
 - **The riffle.** The fore-edge — the book's stacked page edges — is the
-  navigation: hover fans the pages, click/drag flies anywhere. The logo mark
-  riffles its pages on hover. The name is the interaction.
+  navigation: hover fans the pages, click/drag flies anywhere. It's the
+  signature interaction behind the name: the click that flips.
 - **Living editions.** `data` blocks bind to a JSON source and update after
   publish — prices, stock, dates. (`components/blocks/DataBlock.tsx`,
   `DataBlockSchema`.)
