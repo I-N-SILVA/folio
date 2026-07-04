@@ -29,11 +29,14 @@ interface PageRendererProps {
   bookId: string
   theme?: Theme
   className?: string
+  /** Hide the binding-gutter shadow — there's no facing page to bind against
+   *  in single-page/mobile-portrait mode, so the inset shadow looks wrong. */
+  hideGutter?: boolean
   renderBlockWrapper?: (block: import('@/lib/book-schema').Block, children: React.ReactNode) => React.ReactNode
 }
 
 export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
-  ({ page, bookId, theme, className, renderBlockWrapper }, ref) => {
+  ({ page, bookId, theme, className, hideGutter, renderBlockWrapper }, ref) => {
     const bg = page.background
 
     // Resolve theme colors
@@ -90,14 +93,16 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
         )}
 
         {/* Printed-page depth — a soft gutter + curl shadow on the binding edges */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-[1]"
-          style={{
-            boxShadow:
-              'inset 18px 0 34px -24px rgba(0,0,0,0.45), inset -18px 0 34px -24px rgba(0,0,0,0.22)',
-          }}
-        />
+        {!hideGutter && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-[1]"
+            style={{
+              boxShadow:
+                'inset 18px 0 34px -24px rgba(0,0,0,0.45), inset -18px 0 34px -24px rgba(0,0,0,0.22)',
+            }}
+          />
+        )}
 
         {/* Blocks */}
         <div className={twMerge("relative z-10 w-full", page.layout !== 'split' && "flex flex-col gap-4")}>

@@ -1,4 +1,4 @@
-/* Folio service worker — conservative offline support.
+/* Qlico service worker — conservative offline support.
  *
  * Strategy:
  *   - Navigations (HTML): network-first, fall back to the cached /offline page.
@@ -6,7 +6,7 @@
  *   - Other same-origin GETs (icons, images): stale-while-revalidate.
  *   - Never touch non-GET, cross-origin, API, auth, or embed requests.
  */
-const VERSION = 'folio-v1'
+const VERSION = 'qlico-v1'
 const STATIC_CACHE = `${VERSION}-static`
 const RUNTIME_CACHE = `${VERSION}-runtime`
 const OFFLINE_URL = '/offline'

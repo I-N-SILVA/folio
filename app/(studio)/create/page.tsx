@@ -19,11 +19,11 @@ function slugify(s: string) {
 }
 
 const inputCls =
-  'w-full rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--folio-teal)] focus:ring-2 focus:ring-[var(--folio-teal)]/20'
+  'w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20'
 const primaryBtn =
-  'rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50'
+  'rounded-full bg-[var(--qlico-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50'
 const ghostBtn =
-  'rounded-full border border-[var(--folio-border)] bg-white/60 px-5 py-3 text-sm font-bold text-[var(--folio-ink)] transition hover:bg-white'
+  'rounded-full border border-[var(--qlico-border)] bg-white/60 px-5 py-3 text-sm font-bold text-[var(--qlico-ink)] transition hover:bg-white'
 
 export default function CreatePage() {
   const router = useRouter()
@@ -71,27 +71,27 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
+    <main className="qlico-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--qlico-ink)]">
       <motion.div
         initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-full max-w-lg rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/85 p-8 shadow-[var(--folio-shadow)] backdrop-blur"
+        className="w-full max-w-lg rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/85 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
       >
         {limitHit ? (
           <div className="text-center">
-            <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff]">
+            <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--qlico-ink)] text-[#ffffff]">
               <Crown size={26} />
             </div>
             <h2 className="font-display text-3xl font-semibold tracking-[-0.04em]">You've reached your book limit</h2>
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[var(--folio-muted)]">
-              Upgrade your plan to publish more interactive folios, or redeem a lifetime-deal code.
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[var(--qlico-muted)]">
+              Upgrade your plan to publish more interactive editions, or redeem a lifetime-deal code.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link href="/#pricing" className={primaryBtn}>See plans</Link>
               <Link href="/redeem" className={ghostBtn}>Redeem a code</Link>
             </div>
-            <Link href="/dashboard" className="mt-5 inline-block text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
+            <Link href="/dashboard" className="mt-5 inline-block text-sm font-bold text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]">
               Back to studio
             </Link>
           </div>
@@ -101,7 +101,7 @@ export default function CreatePage() {
               {([1, 2, 3] as const).map((s) => (
                 <div
                   key={s}
-                  className={`h-1.5 flex-1 rounded-full transition-colors ${s <= step ? 'bg-[var(--folio-teal)]' : 'bg-black/8'}`}
+                  className={`h-1.5 flex-1 rounded-full transition-colors ${s <= step ? 'bg-[var(--qlico-teal)]' : 'bg-black/8'}`}
                 />
               ))}
             </div>
@@ -110,23 +110,23 @@ export default function CreatePage() {
               <div className="flex flex-col gap-5">
                 <div>
                   <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Book details</h2>
-                  <p className="mt-1 text-sm text-[var(--folio-muted)]">Give your book a title and a URL slug.</p>
+                  <p className="mt-1 text-sm text-[var(--qlico-muted)]">Give your book a title and a URL slug.</p>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Title *</label>
+                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--qlico-muted)]">Title *</label>
                   <input type="text" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="My Interactive Book" className={inputCls} />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--folio-muted)]">Description</label>
+                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--qlico-muted)]">Description</label>
                   <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's this book about?" rows={3} className={`${inputCls} resize-none`} />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--folio-muted)]">URL slug *</label>
-                  <div className="flex items-center overflow-hidden rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 focus-within:border-[var(--folio-teal)] focus-within:ring-2 focus-within:ring-[var(--folio-teal)]/20">
-                    <span className="border-r border-[var(--folio-border)] bg-black/[0.03] px-3 py-3 text-sm text-[var(--folio-muted)]">/book/</span>
+                  <label className="mb-1.5 block text-sm font-semibold uppercase tracking-[0.12em] text-[var(--qlico-muted)]">URL slug *</label>
+                  <div className="flex items-center overflow-hidden rounded-[1.1rem] border border-[var(--qlico-border)] bg-white/70 focus-within:border-[var(--qlico-teal)] focus-within:ring-2 focus-within:ring-[var(--qlico-teal)]/20">
+                    <span className="border-r border-[var(--qlico-border)] bg-black/[0.03] px-3 py-3 text-sm text-[var(--qlico-muted)]">/book/</span>
                     <input type="text" value={slug} onChange={(e) => { setSlug(e.target.value); setSlugEdited(true) }} placeholder="my-book" className="flex-1 bg-transparent px-3 py-3 text-sm outline-none" />
                   </div>
                 </div>
@@ -141,7 +141,7 @@ export default function CreatePage() {
               <div className="flex flex-col gap-5">
                 <div>
                   <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Pick a theme</h2>
-                  <p className="mt-1 text-sm text-[var(--folio-muted)]">Sets your book's colors and typography.</p>
+                  <p className="mt-1 text-sm text-[var(--qlico-muted)]">Sets your book's colors and typography.</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3">
@@ -150,13 +150,13 @@ export default function CreatePage() {
                       key={key}
                       onClick={() => setTheme(key)}
                       className={`flex items-center gap-4 rounded-[1.25rem] border-2 p-4 text-left transition-all ${
-                        theme === key ? 'border-[var(--folio-teal)] bg-white/70' : 'border-[var(--folio-border)] hover:border-[var(--folio-muted)]/40'
+                        theme === key ? 'border-[var(--qlico-teal)] bg-white/70' : 'border-[var(--qlico-border)] hover:border-[var(--qlico-muted)]/40'
                       }`}
                     >
                       <div className="h-10 w-10 flex-shrink-0 rounded-lg" style={{ backgroundColor: preset.background, border: '1px solid rgba(0,0,0,0.1)' }} />
                       <div>
                         <p className="text-sm font-bold">{preset.label}</p>
-                        <p className="text-xs text-[var(--folio-muted)]">{preset.headingFont} · {preset.bodyFont}</p>
+                        <p className="text-xs text-[var(--qlico-muted)]">{preset.headingFont} · {preset.bodyFont}</p>
                       </div>
                       <div className="ml-auto h-4 w-4 flex-shrink-0 rounded-full" style={{ backgroundColor: preset.primary }} />
                     </button>
@@ -174,13 +174,13 @@ export default function CreatePage() {
               <div className="flex flex-col gap-5">
                 <div>
                   <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Ready to create</h2>
-                  <p className="mt-1 text-sm text-[var(--folio-muted)]">Review your settings before creating.</p>
+                  <p className="mt-1 text-sm text-[var(--qlico-muted)]">Review your settings before creating.</p>
                 </div>
 
-                <div className="space-y-2 rounded-[1.25rem] border border-[var(--folio-border)] bg-white/55 p-4 text-sm">
-                  <div className="flex justify-between"><span className="text-[var(--folio-muted)]">Title</span><span className="font-semibold">{title}</span></div>
-                  <div className="flex justify-between"><span className="text-[var(--folio-muted)]">Slug</span><span className="rounded bg-black/[0.06] px-2 py-0.5 font-mono text-xs">/book/{slug}</span></div>
-                  <div className="flex justify-between"><span className="text-[var(--folio-muted)]">Theme</span><span className="font-semibold">{THEME_PRESETS[theme].label}</span></div>
+                <div className="space-y-2 rounded-[1.25rem] border border-[var(--qlico-border)] bg-white/55 p-4 text-sm">
+                  <div className="flex justify-between"><span className="text-[var(--qlico-muted)]">Title</span><span className="font-semibold">{title}</span></div>
+                  <div className="flex justify-between"><span className="text-[var(--qlico-muted)]">Slug</span><span className="rounded bg-black/[0.06] px-2 py-0.5 font-mono text-xs">/book/{slug}</span></div>
+                  <div className="flex justify-between"><span className="text-[var(--qlico-muted)]">Theme</span><span className="font-semibold">{THEME_PRESETS[theme].label}</span></div>
                 </div>
 
                 {error && <p className="text-sm font-semibold text-red-600">{error}</p>}

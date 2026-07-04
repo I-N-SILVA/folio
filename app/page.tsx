@@ -45,12 +45,12 @@ const STATS = [
 ]
 
 const FAQS = [
-  { q: 'How is this different from a flipbook tool?', a: 'KLICKO makes editions, not exports. Pages can be shoppable (checkout in place), bound to live data (prices, stock, dates that update after publish), and read with a tactile fore-edge you browse to navigate. A PDF can’t do any of that.' },
+  { q: 'How is this different from a flipbook tool?', a: 'QLICO makes editions, not exports. Pages can be shoppable (checkout in place), bound to live data (prices, stock, dates that update after publish), and read with a tactile fore-edge you browse to navigate. A PDF can’t do any of that.' },
   { q: 'Do readers need an account or app?', a: 'No. Every edition is a hosted link that opens instantly in any browser, and embeds anywhere with one line of code.' },
-  { q: 'Can I import an existing PDF?', a: 'Yes. Drop in a PDF and KLICKO turns each page into an interactive spread you can enrich with hotspots, links, and media.' },
+  { q: 'Can I import an existing PDF?', a: 'Yes. Drop in a PDF and QLICO turns each page into an interactive spread you can enrich with hotspots, links, and media.' },
   { q: 'Where does my analytics data live?', a: 'Reader intelligence — opens, dwell time, completion, hotspot clicks — is captured into your own Supabase project, so you own the data.' },
-  { q: 'Is KLICKO installable as an app?', a: 'Yes. KLICKO is a progressive web app you can install on iOS and Android, and it works offline.' },
-  { q: 'Can I use my own brand and domain?', a: 'Pro and lifetime plans let you ship on a custom domain with your own theme and no KLICKO watermark.' },
+  { q: 'Is QLICO installable as an app?', a: 'Yes. QLICO is a progressive web app you can install on iOS and Android, and it works offline.' },
+  { q: 'Can I use my own brand and domain?', a: 'Pro and lifetime plans let you ship on a custom domain with your own theme and no QLICO watermark.' },
 ]
 
 const PLANS: {
@@ -69,7 +69,7 @@ const PLANS: {
     desc: 'Publish your first interactive edition.',
     cta: 'Start free',
     href: '/login',
-    features: ['1 publication', '7-day analytics', 'KLICKO watermark'],
+    features: ['1 publication', '7-day analytics', 'QLICO watermark'],
   },
   {
     name: 'Pro',
@@ -91,15 +91,15 @@ const PLANS: {
   },
 ]
 
-// Schema.org markup so search results show KLICKO as an application with
+// Schema.org markup so search results show QLICO as an application with
 // pricing. Rendered into the SSR HTML below.
 const JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'KLICKO',
+  name: 'QLICO',
   applicationCategory: 'DesignApplication',
   operatingSystem: 'Web',
-  url: 'https://klicko.app',
+  url: 'https://qlico.app',
   description:
     'Turn static PDFs into interactive editions with hotspots, analytics, embeds, and brand control.',
   offers: [
@@ -141,7 +141,7 @@ const EXAMPLES = [
 
 function Mark({ className = '' }: { className?: string }) {
   return (
-    <Image src="/brand/klicko-logo.png" alt="KLICKO" width={116} height={32} priority className={`object-contain ${className}`} />
+    <Image src="/brand/qlico-logo.png" alt="QLICO" width={116} height={32} priority className={`object-contain ${className}`} />
   )
 }
 
@@ -184,22 +184,31 @@ function ProductShot() {
     <div ref={ref} className="relative mx-auto mt-16 max-w-5xl" style={{ perspective: 1400 }}>
       <m.div
         style={{ rotateX, scale, opacity, transformStyle: 'preserve-3d' }}
-        className="relative overflow-hidden rounded-[1.5rem] border border-[var(--folio-border)] bg-white shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
+        className="relative overflow-hidden rounded-[1.5rem] border border-[var(--qlico-border)] bg-white shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
       >
-        <div className="flex items-center gap-1.5 border-b border-[var(--folio-hairline)] bg-[#fbfbfd] px-4 py-3">
+        <div className="flex items-center gap-1.5 border-b border-[var(--qlico-hairline)] bg-[#fbfbfd] px-4 py-3">
           <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
           <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
           <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
-          <div className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-left text-xs text-[var(--folio-muted)] shadow-sm">
+          <a
+            href="/book/demo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-left text-xs text-[var(--qlico-muted)] shadow-sm transition-colors hover:text-[var(--qlico-ink)]"
+          >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-            klicko.app/book/demo
-          </div>
+            qlico.app/book/demo
+          </a>
         </div>
-        <div className="aspect-[16/10] bg-[#f5f5f7]">
+        <a href="/book/demo" target="_blank" rel="noopener noreferrer" className="group relative block aspect-[16/10] bg-[#f5f5f7]">
           <HeroShowcase />
-        </div>
+          {/* Click-through affordance — this is a preview reel; the real, riffle-powered book is one click away. */}
+          <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-gradient-to-t from-black/70 to-transparent py-4 text-xs font-semibold text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            Open the live edition →
+          </span>
+        </a>
         {/* Accent border beam */}
-        <span aria-hidden className="folio-beam" />
+        <span aria-hidden className="qlico-beam" />
       </m.div>
       {/* Soft floor reflection */}
       <div
@@ -238,9 +247,9 @@ function MiniHotspots() {
     { x: '44%', y: '74%' },
   ]
   return (
-    <div className="relative h-16 w-full rounded-lg bg-[var(--folio-subtle)]">
+    <div className="relative h-16 w-full rounded-lg bg-[var(--qlico-subtle)]">
       {dots.map((d, i) => (
-        <span key={i} className="folio-pulse absolute h-2.5 w-2.5 rounded-full bg-[var(--accent)]" style={{ left: d.x, top: d.y }} />
+        <span key={i} className="qlico-pulse absolute h-2.5 w-2.5 rounded-full bg-[var(--accent)]" style={{ left: d.x, top: d.y }} />
       ))}
     </div>
   )
@@ -266,7 +275,7 @@ const TILES: Tile[] = [
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border-b border-[var(--folio-border)]">
+    <div className="border-b border-[var(--qlico-border)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -274,10 +283,10 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         className="flex w-full items-center justify-between gap-4 py-6 text-left"
       >
         <span className="text-lg font-medium tracking-[-0.01em]">{q}</span>
-        <ChevronDown size={20} className={`shrink-0 text-[var(--folio-muted)] transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={20} className={`shrink-0 text-[var(--qlico-muted)] transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
       <div className={`grid transition-all duration-300 ease-out ${open ? 'grid-rows-[1fr] pb-6 opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-        <p className="overflow-hidden text-[15px] leading-7 text-[var(--folio-muted)]">{a}</p>
+        <p className="overflow-hidden text-[15px] leading-7 text-[var(--qlico-muted)]">{a}</p>
       </div>
     </div>
   )
@@ -294,7 +303,7 @@ export default function HomePage() {
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="min-h-screen bg-[var(--background)] text-[var(--folio-ink)]">
+      <div className="min-h-screen bg-[var(--background)] text-[var(--qlico-ink)]">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
@@ -304,22 +313,22 @@ export default function HomePage() {
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'border-b border-[var(--folio-hairline)] bg-white/60 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
+            ? 'border-b border-[var(--qlico-hairline)] bg-white/60 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
             : 'border-b border-transparent bg-transparent'
         }`}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center" aria-label="KLICKO home">
+          <Link href="/" className="flex items-center" aria-label="QLICO home">
             <Mark className="h-7 w-auto" />
           </Link>
-          <nav className="hidden items-center gap-8 text-[13px] font-medium text-[var(--folio-muted)] md:flex">
-            <Link href="#features" className="transition hover:text-[var(--folio-ink)]">Features</Link>
-            <Link href="#how" className="transition hover:text-[var(--folio-ink)]">How it works</Link>
-            <Link href="#pricing" className="transition hover:text-[var(--folio-ink)]">Pricing</Link>
-            <Link href="/book/demo" className="transition hover:text-[var(--folio-ink)]">Demo</Link>
+          <nav className="hidden items-center gap-8 text-[13px] font-medium text-[var(--qlico-muted)] md:flex">
+            <Link href="#features" className="transition hover:text-[var(--qlico-ink)]">Features</Link>
+            <Link href="#how" className="transition hover:text-[var(--qlico-ink)]">How it works</Link>
+            <Link href="#pricing" className="transition hover:text-[var(--qlico-ink)]">Pricing</Link>
+            <Link href="/book/demo" className="transition hover:text-[var(--qlico-ink)]">Demo</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="hidden rounded-full px-4 py-1.5 text-[13px] font-medium text-[var(--folio-ink)] transition hover:bg-black/5 active:scale-[0.97] sm:block">
+            <Link href="/login" className="hidden rounded-full px-4 py-1.5 text-[13px] font-medium text-[var(--qlico-ink)] transition hover:bg-black/5 active:scale-[0.97] sm:block">
               Sign in
             </Link>
             <Link href="/login" className="rounded-full bg-[var(--accent)] px-4 py-1.5 text-[13px] font-semibold text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.97]">
@@ -349,7 +358,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--folio-muted)] backdrop-blur"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--qlico-muted)] backdrop-blur"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
               Interactive publishing
@@ -362,9 +371,9 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.6 }}
-              className="mx-auto mt-6 max-w-xl text-xl leading-8 text-[var(--folio-muted)]"
+              className="mx-auto mt-6 max-w-xl text-xl leading-8 text-[var(--qlico-muted)]"
             >
-              KLICKO turns static PDFs into interactive editions — with hotspots, analytics, and
+              QLICO turns static PDFs into interactive editions — with hotspots, analytics, and
               one-line embeds. Built for catalogs, lookbooks, portfolios, and reports.
             </m.p>
             <m.div
@@ -399,19 +408,19 @@ export default function HomePage() {
             <Reveal className="mx-auto mb-14 max-w-2xl text-center">
               <span className="mx-auto mb-5 block h-9 w-[3px] rounded-full bg-[var(--accent)]" />
               <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Everything a page can be.</h2>
-              <p className="mt-4 text-lg leading-8 text-[var(--folio-muted)]">
+              <p className="mt-4 text-lg leading-8 text-[var(--qlico-muted)]">
                 A studio, a reader, and the intelligence in between.
               </p>
             </Reveal>
             <div className="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {TILES.map(({ icon: Icon, title, desc, span, visual }, i) => (
                 <Reveal key={title} delay={(i % 4) * 70} className={span}>
-                  <div className="group flex h-full flex-col rounded-3xl border border-[var(--folio-border)] bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
-                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--folio-subtle)] text-[var(--folio-ink)] transition-colors duration-300 group-hover:bg-[var(--folio-ink)] group-hover:text-white">
+                  <div className="group flex h-full flex-col rounded-3xl border border-[var(--qlico-border)] bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--qlico-subtle)] text-[var(--qlico-ink)] transition-colors duration-300 group-hover:bg-[var(--qlico-ink)] group-hover:text-white">
                       <Icon size={20} strokeWidth={1.75} />
                     </div>
                     <h3 className="mt-5 text-lg font-semibold tracking-[-0.01em]">{title}</h3>
-                    <p className="mt-2 text-[15px] leading-7 text-[var(--folio-muted)]">{desc}</p>
+                    <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{desc}</p>
                     {visual === 'bars' && <div className="mt-auto pt-6"><MiniBars /></div>}
                     {visual === 'hotspots' && <div className="mt-auto pt-6"><MiniHotspots /></div>}
                   </div>
@@ -422,17 +431,17 @@ export default function HomePage() {
         </section>
 
         {/* Statement (dark) */}
-        <section className="bg-[var(--folio-ink)] px-5 py-28 text-white">
+        <section className="bg-[var(--qlico-ink)] px-5 py-28 text-white">
           <div className="mx-auto max-w-4xl text-center">
             <Reveal>
               <h2 className="font-display text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-6xl">
                 A download link is where good work goes to be forgotten.
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">
-                KLICKO gives your publication a reason to be opened, explored, and finished — and
+                QLICO gives your publication a reason to be opened, explored, and finished — and
                 shows you exactly what held attention.
               </p>
-              <Link href="/login" className="mt-9 inline-block rounded-full bg-white px-7 py-3.5 text-[15px] font-semibold text-[var(--folio-ink)] transition hover:bg-white/90">
+              <Link href="/login" className="mt-9 inline-block rounded-full bg-white px-7 py-3.5 text-[15px] font-semibold text-[var(--qlico-ink)] transition hover:bg-white/90">
                 Create your first edition
               </Link>
             </Reveal>
@@ -444,10 +453,10 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-4xl gap-10 text-center sm:grid-cols-3">
             {STATS.map((s) => (
               <Reveal key={s.label}>
-                <div className="font-display text-6xl font-semibold tracking-[-0.03em] text-[var(--folio-ink)]">
+                <div className="font-display text-6xl font-semibold tracking-[-0.03em] text-[var(--qlico-ink)]">
                   <NumberTicker value={s.value} suffix={s.suffix} />
                 </div>
-                <p className="mx-auto mt-3 max-w-[12rem] text-[15px] leading-6 text-[var(--folio-muted)]">{s.label}</p>
+                <p className="mx-auto mt-3 max-w-[12rem] text-[15px] leading-6 text-[var(--qlico-muted)]">{s.label}</p>
               </Reveal>
             ))}
           </div>
@@ -462,17 +471,17 @@ export default function HomePage() {
             </Reveal>
 
             {/* Animated flow conduit */}
-            <div className="relative mb-6 hidden h-[3px] overflow-hidden rounded-full bg-[var(--folio-border)] lg:block">
-              <div className="folio-flow-line absolute inset-0" />
+            <div className="relative mb-6 hidden h-[3px] overflow-hidden rounded-full bg-[var(--qlico-border)] lg:block">
+              <div className="qlico-flow-line absolute inset-0" />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
               {STEPS.map(([num, title, desc], i) => (
                 <Reveal key={num} delay={i * 90}>
-                  <div className="h-full rounded-2xl border border-[var(--folio-border)] bg-white p-8">
+                  <div className="h-full rounded-2xl border border-[var(--qlico-border)] bg-white p-8">
                     <span className="font-display text-sm font-semibold text-[var(--accent)]">{num}</span>
                     <h3 className="mt-4 text-xl font-semibold tracking-[-0.01em]">{title}</h3>
-                    <p className="mt-2 text-[15px] leading-7 text-[var(--folio-muted)]">{desc}</p>
+                    <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{desc}</p>
                   </div>
                 </Reveal>
               ))}
@@ -486,7 +495,7 @@ export default function HomePage() {
             <Reveal className="mb-14 max-w-2xl">
               <span className="mb-5 block h-9 w-[3px] rounded-full bg-[var(--accent)]" />
               <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Don&apos;t take our word for it. Flip one.</h2>
-              <p className="mt-4 text-[15px] leading-7 text-[var(--folio-muted)]">
+              <p className="mt-4 text-[15px] leading-7 text-[var(--qlico-muted)]">
                 Three live editions — a shoppable lookbook, a living report, and a portfolio. No signup, no app.
               </p>
             </Reveal>
@@ -496,7 +505,7 @@ export default function HomePage() {
                   <Link
                     href={`/book/${ex.slug}`}
                     onClick={() => track('demo_open', { edition: ex.slug, location: 'examples' })}
-                    className="group block h-full overflow-hidden rounded-2xl border border-[var(--folio-border)] bg-white transition hover:-translate-y-1 hover:shadow-[var(--folio-shadow)]"
+                    className="group block h-full overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-white transition hover:-translate-y-1 hover:shadow-[var(--qlico-shadow)]"
                   >
                     <div
                       className="flex aspect-[4/3] flex-col items-center justify-center gap-2 px-6 text-center"
@@ -507,8 +516,8 @@ export default function HomePage() {
                     </div>
                     <div className="p-6">
                       <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">{ex.tag}</span>
-                      <p className="mt-2 text-[15px] leading-7 text-[var(--folio-muted)]">{ex.desc}</p>
-                      <span className="mt-3 inline-block text-sm font-semibold text-[var(--folio-ink)] transition group-hover:translate-x-1">
+                      <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{ex.desc}</p>
+                      <span className="mt-3 inline-block text-sm font-semibold text-[var(--qlico-ink)] transition group-hover:translate-x-1">
                         Flip through →
                       </span>
                     </div>
@@ -524,14 +533,14 @@ export default function HomePage() {
           <div className="mx-auto max-w-5xl">
             <Reveal className="mb-14 text-center">
               <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Simple, honest pricing.</h2>
-              <p className="mt-4 text-lg text-[var(--folio-muted)]">Start free. Upgrade when it earns its keep.</p>
+              <p className="mt-4 text-lg text-[var(--qlico-muted)]">Start free. Upgrade when it earns its keep.</p>
             </Reveal>
             <div className="grid items-stretch gap-5 lg:grid-cols-3">
               {PLANS.map(({ name, price, cadence, desc, cta, href, features, featured }) => (
                 <Reveal key={name}>
                   <div
                     className={`flex h-full flex-col rounded-3xl border p-8 ${
-                      featured ? 'border-[var(--folio-ink)] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.1)]' : 'border-[var(--folio-border)] bg-white'
+                      featured ? 'border-[var(--qlico-ink)] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.1)]' : 'border-[var(--qlico-border)] bg-white'
                     }`}
                   >
                     {featured && (
@@ -542,9 +551,9 @@ export default function HomePage() {
                     <h3 className="text-lg font-semibold">{name}</h3>
                     <div className="mt-3 flex items-end gap-1">
                       <span className="font-display text-5xl font-semibold tracking-[-0.03em]">{price}</span>
-                      {cadence && <span className="mb-1.5 text-sm text-[var(--folio-muted)]">{cadence}</span>}
+                      {cadence && <span className="mb-1.5 text-sm text-[var(--qlico-muted)]">{cadence}</span>}
                     </div>
-                    <p className="mt-3 text-[15px] text-[var(--folio-muted)]">{desc}</p>
+                    <p className="mt-3 text-[15px] text-[var(--qlico-muted)]">{desc}</p>
                     <ul className="mt-7 flex-1 space-y-3">
                       {features.map((f) => (
                         <li key={f} className="flex items-start gap-2.5 text-[15px]">
@@ -559,7 +568,7 @@ export default function HomePage() {
                       className={`mt-8 rounded-full px-5 py-3 text-center text-[15px] font-semibold transition ${
                         featured
                           ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
-                          : 'bg-[var(--folio-subtle)] text-[var(--folio-ink)] hover:bg-[#ececef]'
+                          : 'bg-[var(--qlico-subtle)] text-[var(--qlico-ink)] hover:bg-[#ececef]'
                       }`}
                     >
                       {cta}
@@ -570,7 +579,7 @@ export default function HomePage() {
             </div>
 
             <Reveal className="mt-6">
-              <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-[var(--folio-border)] bg-white px-7 py-5 text-center sm:flex-row sm:text-left">
+              <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-[var(--qlico-border)] bg-white px-7 py-5 text-center sm:flex-row sm:text-left">
                 <div className="flex items-center gap-3">
                   <Gift size={20} className="text-[var(--accent)]" />
                   <p className="text-[15px] font-medium">Got a lifetime deal code? Redeem it to unlock your tier.</p>
@@ -599,7 +608,7 @@ export default function HomePage() {
 
         {/* CTA */}
         <section className="px-5 py-28">
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-[2rem] bg-[var(--folio-ink)] px-8 py-20 text-center text-white">
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-[2rem] bg-[var(--qlico-ink)] px-8 py-20 text-center text-white">
             <Reveal>
               <h2 className="font-display mx-auto max-w-2xl text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-5xl">
                 Your next publication deserves more.
@@ -608,7 +617,7 @@ export default function HomePage() {
                 Build it once. Ship it on the web, embedded, and installed as an app.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link href="/login" className="w-full rounded-full bg-white px-7 py-3.5 text-[15px] font-semibold text-[var(--folio-ink)] transition hover:bg-white/90 sm:w-auto">
+                <Link href="/login" className="w-full rounded-full bg-white px-7 py-3.5 text-[15px] font-semibold text-[var(--qlico-ink)] transition hover:bg-white/90 sm:w-auto">
                   Start for free
                 </Link>
                 <Link href="/book/demo" className="text-[15px] font-medium text-white/80 transition hover:text-white">
@@ -621,28 +630,28 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--folio-hairline)] px-5 py-12">
+      <footer className="border-t border-[var(--qlico-hairline)] px-5 py-12">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center">
                 <Mark className="h-7 w-auto" />
               </div>
-              <p className="mt-3 max-w-xs text-sm text-[var(--folio-muted)]">
+              <p className="mt-3 max-w-xs text-sm text-[var(--qlico-muted)]">
                 Interactive publishing — with craft, context, and control.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-x-14 gap-y-2.5 text-sm sm:grid-cols-3">
-              <Link href="#features" className="text-[var(--folio-muted)] transition hover:text-[var(--folio-ink)]">Features</Link>
-              <Link href="#pricing" className="text-[var(--folio-muted)] transition hover:text-[var(--folio-ink)]">Pricing</Link>
-              <Link href="/book/demo" className="text-[var(--folio-muted)] transition hover:text-[var(--folio-ink)]">Demo</Link>
-              <Link href="/press" className="text-[var(--folio-muted)] transition hover:text-[var(--folio-ink)]">Press</Link>
-              <Link href="/privacy" className="text-[var(--folio-muted)] transition hover:text-[var(--folio-ink)]">Privacy</Link>
-              <Link href="/terms" className="text-[var(--folio-muted)] transition hover:text-[var(--folio-ink)]">Terms</Link>
+              <Link href="#features" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Features</Link>
+              <Link href="#pricing" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Pricing</Link>
+              <Link href="/book/demo" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Demo</Link>
+              <Link href="/press" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Press</Link>
+              <Link href="/privacy" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Privacy</Link>
+              <Link href="/terms" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Terms</Link>
             </div>
           </div>
-          <div className="mt-10 border-t border-[var(--folio-hairline)] pt-6 text-sm text-[var(--folio-muted)]">
-            © {new Date().getFullYear()} KLICKO. All rights reserved.
+          <div className="mt-10 border-t border-[var(--qlico-hairline)] pt-6 text-sm text-[var(--qlico-muted)]">
+            © {new Date().getFullYear()} QLICO. All rights reserved.
           </div>
         </div>
       </footer>

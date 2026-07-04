@@ -41,22 +41,22 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
+    <main className="qlico-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--qlico-ink)]">
       <motion.div
         initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur"
+        className="w-full max-w-md rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/80 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
       >
         <div className="mb-8">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--folio-teal)]">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--qlico-teal)]">
             Creator Studio
           </p>
           <h1>
-            <span className="sr-only">KLICKO</span>
-            <Image src="/brand/klicko-logo.png" alt="" width={181} height={50} priority className="h-[50px] w-auto object-contain" />
+            <span className="sr-only">QLICO</span>
+            <Image src="/brand/qlico-logo.png" alt="" width={181} height={50} priority className="h-[50px] w-auto object-contain" />
           </h1>
-          <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">
+          <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
             Sign in with a magic link to compose, publish, and measure your digital shelf.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function LoginPage() {
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
+              <label htmlFor="email" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
                 Email address
               </label>
               <input
@@ -81,7 +81,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full rounded-2xl border border-[var(--folio-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--folio-teal)] focus:ring-4 focus:ring-[var(--folio-teal)]/10"
+                className="w-full rounded-2xl border border-[var(--qlico-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-4 focus:ring-[var(--qlico-teal)]/10"
               />
             </div>
 

@@ -14,7 +14,7 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 /**
  * The fore-edge: the stacked page edges of the book, rendered as a vertical
  * scrubber. Hovering fans the pages out (a "riffle"); click or drag to fly
- * to any page. The signature KLICKO interaction.
+ * to any page. The signature QLICO interaction.
  */
 export function ForeEdge({ total, current, onSeek }: Props) {
   const reduce = useReducedMotion()
@@ -57,7 +57,7 @@ export function ForeEdge({ total, current, onSeek }: Props) {
           dragging.current = false
           setHover(null)
         }}
-        aria-label="KLICKO through pages"
+        aria-label="QLICO through pages"
         role="slider"
         aria-valuemin={1}
         aria-valuemax={total}
@@ -73,7 +73,7 @@ export function ForeEdge({ total, current, onSeek }: Props) {
               key={i}
               style={{ width }}
               className={`h-[2px] rounded-full transition-[width,background-color] duration-150 ease-out ${
-                isActive ? 'bg-[var(--accent)]' : hover === i ? 'bg-[var(--folio-ink)]/70' : 'bg-[var(--folio-ink)]/25'
+                isActive ? 'bg-[var(--accent)]' : hover === i ? 'bg-[var(--qlico-ink)]/70' : 'bg-[var(--qlico-ink)]/25'
               }`}
             />
           )
@@ -82,7 +82,7 @@ export function ForeEdge({ total, current, onSeek }: Props) {
         {/* Page number bubble that follows the cursor */}
         {hover !== null && (
           <span
-            className="absolute right-full mr-2 rounded-full bg-[var(--folio-ink)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-white shadow-md"
+            className="absolute right-full mr-2 rounded-full bg-[var(--qlico-ink)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-white shadow-md"
             style={{ top: `${(hover / (total - 1)) * 100}%`, transform: 'translateY(-50%)' }}
           >
             {hover + 1}

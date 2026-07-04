@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
+import { toast } from 'sonner'
 import * as Lucide from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import type {
@@ -59,7 +60,7 @@ function IconPicker({ value, onChange }: { value?: string; onChange: (name: stri
             className={twMerge(
               'flex aspect-square items-center justify-center rounded-md border transition-colors',
               active
-                ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/20 text-[var(--accent-vivid)]'
                 : 'border-neutral-700 bg-neutral-800 text-neutral-400 hover:text-neutral-200'
             )}
           >
@@ -166,6 +167,7 @@ function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: string }
       updateBlock(pageId, block.id, { src: publicUrl } as Partial<Block>)
     } catch (err) {
       console.error('Image upload failed:', err)
+      toast.error('Image upload failed — check the file and try again')
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
@@ -202,7 +204,7 @@ function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: string }
       </Field>
       <Field label="Lightbox">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('lightbox')} className="accent-blue-500" />
+          <input type="checkbox" {...register('lightbox')} className="accent-[var(--accent-vivid)]" />
           <span className="text-sm text-neutral-300">Enable lightbox</span>
         </label>
       </Field>
@@ -678,7 +680,7 @@ function HotspotSettingsForm({
 // ─── Book Settings Form ───────────────────────────────────────────────────────
 
 function BookSettingsForm({ book }: { book: any }) {
-  const { updateSettings, updatePage, setBook } = useEditorStore()
+  const { updateSettings, updateTheme } = useEditorStore()
   const { register, watch } = useForm({
     defaultValues: {
       password: book.settings?.password ?? '',
@@ -712,22 +714,16 @@ function BookSettingsForm({ book }: { book: any }) {
         },
       })
       
-      // Update book theme globally via a direct store set if needed, or we can just patch it here
-      const state = useEditorStore.getState()
-      if (state.book) {
-        state.setBook({
-          ...state.book,
-          theme: {
-            ...state.book.theme,
-            preset: values.themePreset as any,
-            headingFont: values.headingFont || undefined,
-            bodyFont: values.bodyFont || undefined,
-          }
-        })
-      }
+      // Update book theme via the dedicated action so the edit is tracked
+      // as dirty/undoable instead of being silently marked "saved".
+      updateTheme({
+        preset: values.themePreset as any,
+        headingFont: values.headingFont || undefined,
+        bodyFont: values.bodyFont || undefined,
+      })
     })
     return () => sub.unsubscribe()
-  }, [watch, updateSettings])
+  }, [watch, updateSettings, updateTheme])
 
   return (
     <div className="space-y-6">
@@ -767,18 +763,18 @@ function BookSettingsForm({ book }: { book: any }) {
         </Field>
 
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('burn_after_reading')} className="accent-blue-500" />
+          <input type="checkbox" {...register('burn_after_reading')} className="accent-[var(--accent-vivid)]" />
           <span className="text-sm text-neutral-300">Burn after reading (View once)</span>
         </label>
 
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('unlisted')} className="accent-blue-500" />
+          <input type="checkbox" {...register('unlisted')} className="accent-[var(--accent-vivid)]" />
           <span className="text-sm text-neutral-300">Unlisted (Hide from search)</span>
         </label>
 
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('whitelabel')} className="accent-blue-500" />
-          <span className="text-sm text-neutral-300">Remove "Made with KLICKO" branding</span>
+          <input type="checkbox" {...register('whitelabel')} className="accent-[var(--accent-vivid)]" />
+          <span className="text-sm text-neutral-300">Remove "Made with QLICO" branding</span>
         </label>
       </div>
 
@@ -788,7 +784,7 @@ function BookSettingsForm({ book }: { book: any }) {
         </span>
 
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('gatingEnabled')} className="accent-blue-500" />
+          <input type="checkbox" {...register('gatingEnabled')} className="accent-[var(--accent-vivid)]" />
           <span className="text-sm text-neutral-300">Enable Email Gating</span>
         </label>
 
@@ -870,13 +866,13 @@ export function SettingsPanel() {
 
       <div className="flex-1 overflow-y-auto p-3">
         {tab === 'book' ? (
-          <BookSettingsForm book={book} />
+          <BookSettingsForm key={book.id} book={book} />
         ) : selectedBlock ? (
-          <BlockSettingsForm block={selectedBlock} pageId={currentPage.id} />
+          <BlockSettingsForm key={selectedBlock.id} block={selectedBlock} pageId={currentPage.id} />
         ) : selectedHotspot ? (
-          <HotspotSettingsForm hotspot={selectedHotspot} pageId={currentPage.id} />
+          <HotspotSettingsForm key={selectedHotspot.id} hotspot={selectedHotspot} pageId={currentPage.id} />
         ) : (
-          <PageSettingsForm page={currentPage} />
+          <PageSettingsForm key={currentPage.id} page={currentPage} />
         )}
       </div>
     </div>

@@ -3,14 +3,14 @@ import { LegalShell, LegalSection } from '@/components/legal/LegalShell'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How KLICKO collects, uses, and protects your data.',
+  description: 'How QLICO collects, uses, and protects your data.',
 }
 
 export default function PrivacyPage() {
   return (
     <LegalShell title="Privacy Policy" updated="June 12, 2026">
-      <p className="text-[15px] leading-7 text-[var(--folio-muted)]">
-        This Privacy Policy explains how KLICKO (&ldquo;KLICKO,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;)
+      <p className="text-[15px] leading-7 text-[var(--qlico-muted)]">
+        This Privacy Policy explains how QLICO (&ldquo;QLICO,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;)
         collects, uses, and shares information when you use our website, studio, and reader
         (collectively, the &ldquo;Service&rdquo;). This is a template and should be reviewed by counsel
         before launch.
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           can host and display them.
         </p>
         <p>
-          <strong>Reader analytics.</strong> When someone views a published folio, we record anonymous
+          <strong>Reader analytics.</strong> When someone views a published edition, we record anonymous
           engagement events (opens, page views, dwell time, hotspot clicks). These are tied to a random
           session identifier, not to a named individual.
         </p>
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
 
       <LegalSection heading="Contact">
         <p>
-          Questions about this policy? Email <strong>privacy@klicko.app</strong>.
+          Questions about this policy? Email <strong>privacy@qlico.app</strong>.
         </p>
       </LegalSection>
     </LegalShell>

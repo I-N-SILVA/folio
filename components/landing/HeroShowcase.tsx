@@ -56,7 +56,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--folio-muted)]"
+          className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--qlico-muted)]"
         >
           Vol. 01 · Interactive publishing
         </motion.p>
@@ -64,15 +64,15 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
           initial={{ opacity: 0, y: 14, filter: 'blur(8px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           transition={{ delay: 0.25, type: 'spring', stiffness: 120, damping: 18 }}
-          className="font-display mt-3 text-6xl font-semibold tracking-[-0.02em] text-[var(--folio-ink)]"
+          className="font-display mt-3 text-6xl font-semibold tracking-[-0.02em] text-[var(--qlico-ink)]"
         >
-          KLICKO
+          QLICO
         </motion.h3>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-3 text-lg text-[var(--folio-muted)]"
+          className="mt-3 text-lg text-[var(--qlico-muted)]"
         >
           Flip through anything.
         </motion.p>
@@ -96,7 +96,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 110, damping: 18 }}
-            className="font-display text-4xl font-semibold leading-tight tracking-[-0.02em] text-[var(--folio-ink)]"
+            className="font-display text-4xl font-semibold leading-tight tracking-[-0.02em] text-[var(--qlico-ink)]"
           >
             Typography that reads like print
           </motion.h3>
@@ -104,7 +104,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-[15px] leading-7 text-[var(--folio-muted)]"
+            className="text-[15px] leading-7 text-[var(--qlico-muted)]"
           >
             A full type system — titles, headings, quotes, and captions — so every page feels composed.
           </motion.p>
@@ -112,7 +112,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.55 }}
-            className="border-l-2 border-[var(--accent)] pl-4 font-display text-lg italic text-[var(--folio-ink)]"
+            className="border-l-2 border-[var(--accent)] pl-4 font-display text-lg italic text-[var(--qlico-ink)]"
           >
             “The best documents feel considered.”
           </motion.div>
@@ -146,7 +146,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             { x: '24%', y: '40%' },
             { x: '70%', y: '58%' },
           ].map((d, i) => (
-            <span key={i} className="folio-pulse absolute h-3 w-3 rounded-full bg-[var(--accent)]" style={{ left: d.x, top: d.y }} />
+            <span key={i} className="qlico-pulse absolute h-3 w-3 rounded-full bg-[var(--accent)]" style={{ left: d.x, top: d.y }} />
           ))}
           {/* callout card */}
           <motion.div
@@ -155,8 +155,8 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             transition={{ delay: 0.7, type: 'spring', stiffness: 130, damping: 16 }}
             className="absolute bottom-8 left-8 max-w-[15rem] rounded-2xl bg-white/95 p-4 text-left shadow-xl backdrop-blur"
           >
-            <p className="text-sm font-semibold text-[var(--folio-ink)]">Built-in analytics</p>
-            <p className="mt-1 text-xs leading-5 text-[var(--folio-muted)]">Opens, dwell time, and hotspot clicks — in your own data layer.</p>
+            <p className="text-sm font-semibold text-[var(--qlico-ink)]">Built-in analytics</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--qlico-muted)]">Opens, dwell time, and hotspot clicks — in your own data layer.</p>
           </motion.div>
         </div>
       </div>
@@ -165,7 +165,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
 
   // analytics
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-6 bg-[var(--folio-ink)] px-10 text-white">
+    <div className="flex h-full w-full flex-col justify-center gap-6 bg-[var(--qlico-ink)] px-10 text-white">
       <div className="flex items-end justify-between">
         <h3 className="font-display text-4xl font-semibold tracking-[-0.02em]">Numbers that land</h3>
         <div className="font-display text-5xl font-semibold text-[var(--accent)]">
@@ -225,7 +225,7 @@ export default function HeroShowcase() {
           <span
             key={s}
             className={`h-1 rounded-full transition-all duration-300 ${
-              i === index ? 'w-6 bg-[var(--folio-ink)]/70' : 'w-1.5 bg-[var(--folio-ink)]/25'
+              i === index ? 'w-6 bg-[var(--qlico-ink)]/70' : 'w-1.5 bg-[var(--qlico-ink)]/25'
             }`}
           />
         ))}

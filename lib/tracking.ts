@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import type { EventType } from './book-schema'
 
-const SESSION_KEY = 'folio_session_id'
+const SESSION_KEY = 'qlico_session_id'
 
 function getSessionId(): string {
   if (typeof window === 'undefined') return ''
@@ -24,6 +24,9 @@ export async function trackEvent(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookId, sessionId, eventType, payload }),
+      // Keep the request alive past page unload — critical for the
+      // pagehide/visibilitychange dwell-time flush in ViewerEngine.
+      keepalive: true,
     })
   } catch {
     // Analytics should never break the reader

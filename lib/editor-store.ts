@@ -11,6 +11,10 @@ interface EditorStore {
   isSaving: boolean
   past: Book[]
   future: Book[]
+  /** Which field is being edited + when, so rapid keystrokes coalesce into
+   *  one undo step instead of one per keystroke. */
+  lastEditKey: string | null
+  lastEditAt: number
 
   setBook: (book: Book) => void
   setCurrentPageIndex: (idx: number) => void
@@ -34,10 +38,16 @@ interface EditorStore {
   reorderPages: (fromIndex: number, toIndex: number) => void
   setPageBlocks: (pageId: string, blocks: Block[]) => void
   updateSettings: (updates: Partial<Book['settings']>) => void
+  updateTheme: (updates: Partial<Book['theme']>) => void
 
   undo: () => void
   redo: () => void
 }
+
+// How long a run of edits to the same field coalesces into a single undo
+// step. Long enough to absorb a burst of keystrokes, short enough that
+// pausing to think starts a fresh step.
+const HISTORY_COALESCE_MS = 800
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
   // ... rest of state
@@ -50,6 +60,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   isSaving: false,
   past: [],
   future: [],
+  lastEditKey: null,
+  lastEditAt: 0,
 
   setBook: (book) => set({ book, isDirty: false }),
   setCurrentPageIndex: (idx) => set({ currentPageIndex: idx, selectedBlockId: null, selectedHotspotId: null }),
@@ -60,8 +72,14 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   updateSettings: (updates) => set((state) => {
     if (!state.book) return state
+    const key = 'settings'
+    const now = Date.now()
+    const snapshot = state.lastEditKey !== key || now - state.lastEditAt > HISTORY_COALESCE_MS
     return {
       isDirty: true,
+      lastEditKey: key,
+      lastEditAt: now,
+      ...(snapshot ? { past: [...state.past, state.book], future: [] } : {}),
       book: {
         ...state.book,
         settings: { ...state.book.settings, ...updates } as any,
@@ -69,10 +87,33 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   }),
 
-  updatePage: (pageId, updates) => set((state) => {
-    if (!state.book?.pages) return state
+  updateTheme: (updates) => set((state) => {
+    if (!state.book) return state
+    const key = 'theme'
+    const now = Date.now()
+    const snapshot = state.lastEditKey !== key || now - state.lastEditAt > HISTORY_COALESCE_MS
     return {
       isDirty: true,
+      lastEditKey: key,
+      lastEditAt: now,
+      ...(snapshot ? { past: [...state.past, state.book], future: [] } : {}),
+      book: {
+        ...state.book,
+        theme: { ...state.book.theme, ...updates } as any,
+      },
+    }
+  }),
+
+  updatePage: (pageId, updates) => set((state) => {
+    if (!state.book?.pages) return state
+    const key = `page:${pageId}`
+    const now = Date.now()
+    const snapshot = state.lastEditKey !== key || now - state.lastEditAt > HISTORY_COALESCE_MS
+    return {
+      isDirty: true,
+      lastEditKey: key,
+      lastEditAt: now,
+      ...(snapshot ? { past: [...state.past, state.book], future: [] } : {}),
       book: {
         ...state.book,
         pages: state.book.pages.map((p) => p.id === pageId ? { ...p, ...updates } : p),
@@ -82,8 +123,14 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   updateBlock: (pageId, blockId, updates) => set((state) => {
     if (!state.book?.pages) return state
+    const key = `block:${blockId}`
+    const now = Date.now()
+    const snapshot = state.lastEditKey !== key || now - state.lastEditAt > HISTORY_COALESCE_MS
     return {
       isDirty: true,
+      lastEditKey: key,
+      lastEditAt: now,
+      ...(snapshot ? { past: [...state.past, state.book], future: [] } : {}),
       book: {
         ...state.book,
         pages: state.book.pages.map((p) =>
@@ -165,8 +212,14 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   updateHotspot: (pageId, hotspotId, updates) => set((state) => {
     if (!state.book?.pages) return state
+    const key = `hotspot:${hotspotId}`
+    const now = Date.now()
+    const snapshot = state.lastEditKey !== key || now - state.lastEditAt > HISTORY_COALESCE_MS
     return {
       isDirty: true,
+      lastEditKey: key,
+      lastEditAt: now,
+      ...(snapshot ? { past: [...state.past, state.book], future: [] } : {}),
       book: {
         ...state.book,
         pages: state.book.pages.map((p) =>
@@ -267,7 +320,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       book: previous,
       past: newPast,
       future: [state.book, ...state.future],
-      isDirty: true
+      isDirty: true,
+      lastEditKey: null,
     }
   }),
 
@@ -279,7 +333,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       book: next,
       past: [...state.past, state.book],
       future: newFuture,
-      isDirty: true
+      isDirty: true,
+      lastEditKey: null,
     }
   }),
 }))

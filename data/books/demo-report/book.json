@@ -115,7 +115,7 @@
         { "type": "text", "id": "rp6-1", "variant": "title", "content": "Read. Measured. Alive.", "align": "center" },
         { "type": "text", "id": "rp6-2", "variant": "body", "content": "Publish your next report as an edition — and know exactly who read what.", "align": "center" },
         { "type": "divider", "id": "rp6-3" },
-        { "type": "button", "id": "rp6-4", "label": "Make one like this →", "href": "https://klicko.app", "variant": "primary", "target": "_blank" }
+        { "type": "button", "id": "rp6-4", "label": "Make one like this →", "href": "https://qlico.app", "variant": "primary", "target": "_blank" }
       ],
       "hotspots": []
     }

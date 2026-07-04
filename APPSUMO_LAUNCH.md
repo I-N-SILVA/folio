@@ -1,6 +1,6 @@
-# KLICKO — AppSumo Launch & Go-To-Market Plan
+# QLICO — AppSumo Launch & Go-To-Market Plan
 
-A complete plan to launch KLICKO as a premium SaaS on **AppSumo** (lifetime-deal
+A complete plan to launch QLICO as a premium SaaS on **AppSumo** (lifetime-deal
 marketplace), covering the deal structure, the technical integration already
 wired into this repo, the listing assets, pricing math, and the week-by-week
 go-to-market motion.
@@ -17,7 +17,7 @@ go-to-market motion.
 - A built-in audience of ~1M+ buyers actively looking for tools.
 - A burst of revenue + reviews + backlinks in a short window.
 - Lifetime deals (LTDs) are a one-time payment, so we don't need Stripe live to
-  launch — we need a **license + entitlements** system, which KLICKO now has.
+  launch — we need a **license + entitlements** system, which QLICO now has.
 
 Trade-off: LTD buyers are demanding and churn-proof (they paid once, forever).
 Tier the deal so support cost stays sane and there's an upsell path.
@@ -36,12 +36,12 @@ via `APPSUMO_TIER_TO_PLAN`.
 | **3** | ~$239 | Unlimited | 365 days | ✓ | ✓ | Agencies, power users |
 
 All tiers include: interactive reader, hotspots, PDF import, lead gating, CSV
-export, no KLICKO watermark. Stack-friendly (AppSumo buyers can stack codes to
+export, no QLICO watermark. Stack-friendly (AppSumo buyers can stack codes to
 move up tiers — handled by the `enhance`/`reduce` webhook actions).
 
 **Pricing math:** AppSumo takes ~70% of LTD revenue and another cut on the
 platform. Price so that even after the split each sale covers ~18–24 months of
-that user's marginal infra cost. KLICKO's per-user cost is low (Supabase rows +
+that user's marginal infra cost. QLICO's per-user cost is low (Supabase rows +
 storage + edge), which makes LTD viable.
 
 ---
@@ -95,7 +95,7 @@ constant time. **Fails closed in production** if no key is set.
 
 - [ ] Empty/limit states: when a Free or LTD user hits their book cap, the
       create flow shows the upgrade message from the `plan_limit` response.
-- [x] Seed demo folios — four bundled editions (product tour, shoppable
+- [x] Seed demo editions — four bundled editions (product tour, shoppable
       lookbook, living report, portfolio) served without Supabase from
       `data/books/` and featured on the landing page.
 - [x] Onboarding: first-run checklist (create → add a hotspot → publish) on
@@ -110,7 +110,7 @@ constant time. **Fails closed in production** if no key is set.
 
 - [ ] **Title + one-liner:** "Turn any PDF into an interactive flipbook readers
       actually finish."
-- [ ] **Hero GIF/video (≤ 60s):** PDF in → interactive folio → hotspot click →
+- [ ] **Hero GIF/video (≤ 60s):** PDF in → interactive edition → hotspot click →
       analytics dashboard.
 - [ ] 5–7 screenshots: reader, editor, hotspots, analytics, embed, account.
 - [ ] Feature list mapped to tiers (use the table above).

@@ -1,8 +1,8 @@
 {
   "id": "demo-book-id",
   "slug": "demo",
-  "title": "KLICKO",
-  "description": "An interactive tour of everything KLICKO can do",
+  "title": "QLICO",
+  "description": "An interactive tour of everything QLICO can do",
   "owner_id": "demo",
   "theme": {
     "preset": "custom",
@@ -36,7 +36,7 @@
           "type": "text",
           "id": "b1-2",
           "variant": "title",
-          "content": "KLICKO",
+          "content": "QLICO",
           "align": "center"
         },
         {
@@ -50,7 +50,7 @@
           "type": "button",
           "id": "b1-4",
           "label": "Start reading →",
-          "href": "https://klicko.app",
+          "href": "https://qlico.app",
           "variant": "primary",
           "target": "_blank"
         }
@@ -83,7 +83,7 @@
           "type": "text",
           "id": "b2-3",
           "variant": "quote",
-          "content": "\"The best documents feel considered. KLICKO makes interactive ones that genuinely are.\""
+          "content": "\"The best documents feel considered. QLICO makes interactive ones that genuinely are.\""
         },
         {
           "type": "divider",
@@ -255,7 +255,7 @@
           "icon": "BookOpen",
           "modal": {
             "title": "A real page-turn",
-            "body": "KLICKO renders a fluid, tactile page-turn that feels like a printed object — not a scroll, not a slideshow."
+            "body": "QLICO renders a fluid, tactile page-turn that feels like a printed object — not a scroll, not a slideshow."
           }
         },
         {
@@ -310,7 +310,7 @@
           "type": "button",
           "id": "b7-3",
           "label": "Primary action",
-          "href": "https://github.com",
+          "href": "https://qlico.app",
           "variant": "primary",
           "target": "_blank"
         },
@@ -318,7 +318,7 @@
           "type": "button",
           "id": "b7-4",
           "label": "Secondary action",
-          "href": "https://github.com",
+          "href": "https://qlico.app",
           "variant": "secondary",
           "target": "_blank"
         },
@@ -326,7 +326,7 @@
           "type": "button",
           "id": "b7-5",
           "label": "Text link",
-          "href": "https://github.com",
+          "href": "https://qlico.app",
           "variant": "ghost",
           "target": "_blank"
         }
@@ -428,7 +428,7 @@
           "type": "button",
           "id": "b9-4",
           "label": "See the analytics →",
-          "href": "https://klicko.app",
+          "href": "https://qlico.app",
           "variant": "primary",
           "target": "_blank"
         }
@@ -449,7 +449,7 @@
           "type": "text",
           "id": "b10-1",
           "variant": "title",
-          "content": "KLICKO",
+          "content": "QLICO",
           "align": "center"
         },
         {
@@ -467,7 +467,7 @@
           "type": "button",
           "id": "b10-4",
           "label": "Start for free →",
-          "href": "https://klicko.app",
+          "href": "https://qlico.app",
           "variant": "primary",
           "target": "_blank"
         }

@@ -61,14 +61,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   }
 
   return (
-    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
+    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
       <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(60,35,132,0.10)] blur-2xl transition group-hover:bg-[rgba(60,35,132,0.18)]" />
       <div className="flex items-start justify-between mb-3 gap-2">
         {isEditing ? (
           <div className="flex-1 flex items-center gap-1">
             <input
               autoFocus
-              className="flex-1 border-b-2 border-[var(--folio-teal)] bg-transparent py-0.5 text-sm font-semibold text-[var(--folio-ink)] outline-none"
+              className="flex-1 border-b-2 border-[var(--qlico-teal)] bg-transparent py-0.5 text-sm font-semibold text-[var(--qlico-ink)] outline-none"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => {
@@ -79,12 +79,12 @@ export function BookCard({ book: initialBook }: BookCardProps) {
             <button onClick={handleRename} className="rounded p-1 text-green-700 hover:bg-green-50">
               <Check size={14} />
             </button>
-            <button onClick={() => setIsEditing(false)} className="rounded p-1 text-[var(--folio-muted)] hover:bg-black/5">
+            <button onClick={() => setIsEditing(false)} className="rounded p-1 text-[var(--qlico-muted)] hover:bg-black/5">
               <X size={14} />
             </button>
           </div>
         ) : (
-          <h2 className="font-display flex-1 truncate text-2xl font-semibold tracking-[-0.05em] text-[var(--folio-ink)]" title={book.title}>
+          <h2 className="font-display flex-1 truncate text-2xl font-semibold tracking-[-0.05em] text-[var(--qlico-ink)]" title={book.title}>
             {book.title}
           </h2>
         )}
@@ -92,7 +92,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         {!isEditing && (
           <span
             className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
-              published ? 'bg-[#dcebd7] text-[#3d6c38]' : 'bg-black/5 text-[var(--folio-muted)]'
+              published ? 'bg-[#dcebd7] text-[#3d6c38]' : 'bg-black/5 text-[var(--qlico-muted)]'
             }`}
           >
             {published ? 'Published' : 'Draft'}
@@ -100,14 +100,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         )}
       </div>
 
-      <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
+      <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
         {new Date(displayDate).toLocaleDateString()} / {book.pages?.length || 0} pages
       </p>
 
       <div className="flex items-center gap-2 mt-auto">
         <Link
           href={`/editor/${book.id}`}
-          className="flex-1 rounded-full bg-[var(--folio-ink)] py-2.5 text-center text-sm font-semibold text-[#ffffff] transition-all hover:-translate-y-0.5 hover:bg-[var(--folio-teal)]"
+          className="flex-1 rounded-full bg-[var(--qlico-ink)] py-2.5 text-center text-sm font-semibold text-[#ffffff] transition-all hover:-translate-y-0.5 hover:bg-[var(--qlico-teal)]"
         >
           Edit
         </Link>
@@ -116,7 +116,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
           <Link
             href={`/book/${book.slug}`}
             target="_blank"
-            className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-[var(--folio-teal)]/10 hover:text-[var(--folio-teal)]"
+            className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--qlico-teal)]/10 hover:text-[var(--qlico-teal)]"
             aria-label="View live"
           >
             <ExternalLink size={18} />
@@ -125,17 +125,17 @@ export function BookCard({ book: initialBook }: BookCardProps) {
 
         <Link
           href={`/analytics/${book.slug}`}
-          className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-[var(--folio-teal)]/10 hover:text-[var(--folio-teal)]"
+          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--qlico-teal)]/10 hover:text-[var(--qlico-teal)]"
           aria-label="Analytics"
         >
           <BarChart2 size={18} />
         </Link>
 
-        <div className="mx-1 h-4 w-px bg-[var(--folio-border)]" />
+        <div className="mx-1 h-4 w-px bg-[var(--qlico-border)]" />
 
         <button
           onClick={() => setIsEditing(true)}
-          className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-blue-50 hover:text-blue-700"
+          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-blue-50 hover:text-blue-700"
           aria-label="Rename"
         >
           <Edit2 size={16} />
@@ -144,7 +144,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         <button
           disabled={isDeleting}
           onClick={handleDelete}
-          className="rounded-full p-2.5 text-[var(--folio-muted)] transition-colors hover:bg-red-50 hover:text-red-700"
+          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-red-50 hover:text-red-700"
           aria-label="Delete"
         >
           <Trash2 size={16} />

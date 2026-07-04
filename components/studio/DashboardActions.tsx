@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, UserCircle } from 'lucide-react'
-import { CreateFolioModal } from './CreateFolioModal'
+import { CreateBookModal } from './CreateBookModal'
 import { SignOutButton } from './SignOutButton'
 import { InstallPrompt } from '@/components/InstallPrompt'
 
@@ -16,7 +16,7 @@ export function DashboardActions() {
         <InstallPrompt className="hidden sm:flex" />
         <Link
           href="/account"
-          className="flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-ink)] transition hover:-translate-y-0.5 hover:bg-white"
+          className="flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-white"
         >
           <UserCircle size={16} />
           Account
@@ -31,7 +31,7 @@ export function DashboardActions() {
         <SignOutButton className="px-4 py-3" />
       </div>
 
-      {createOpen && <CreateFolioModal onClose={() => setCreateOpen(false)} />}
+      {createOpen && <CreateBookModal onClose={() => setCreateOpen(false)} />}
     </>
   )
 }
