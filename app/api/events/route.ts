@@ -47,22 +47,31 @@ export async function POST(request: NextRequest) {
     const { bookId, sessionId, eventType, pageNumber, payload } = parsed.data
 
     // Verify book exists (basic sanity check)
-    const { count } = await supabaseAdmin
+    const { count, error: lookupError } = await supabaseAdmin
       .from('books')
       .select('*', { count: 'exact', head: true })
       .eq('id', bookId)
-    
+
+    if (lookupError) {
+      return NextResponse.json({ error: 'Invalid book id' }, { status: 400 })
+    }
+
     if (count === 0) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 })
     }
 
-    await supabaseAdmin.from('events').insert({
+    const { error: insertError } = await supabaseAdmin.from('events').insert({
       book_id: bookId,
       session_id: sessionId,
       event_type: eventType,
       page_number: pageNumber ?? null,
       payload: payload ?? {},
     })
+
+    if (insertError) {
+      console.error('events insert failed', insertError)
+      return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    }
 
     return new NextResponse(null, { status: 204 })
   } catch {

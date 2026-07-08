@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { DEMO_BOOKS } from '@/data/books'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klicko.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()

@@ -1,5 +1,5 @@
-// Generates a branded, looping demo GIF for KLICKO using sharp.
-// Run: node scripts/build-demo-gif.mjs  → public/klicko-demo.gif
+// Generates a branded, looping demo GIF for QLICO using sharp.
+// Run: node scripts/build-demo-gif.mjs  → public/qlico-demo.gif
 import sharp from 'sharp'
 import { mkdir } from 'node:fs/promises'
 
@@ -41,7 +41,7 @@ function frameCover(lp) {
     <text x="${W / 2}" y="153" font-family="${SANS}" font-size="13" letter-spacing="3.2"
       fill="${MUTED}" text-anchor="middle" font-weight="700">VOL. 01 · INTERACTIVE PUBLISHING</text>
     <text x="${W / 2}" y="250" font-family="${SERIF}" font-size="78" fill="${INK}"
-      text-anchor="middle" font-weight="600">KLICKO</text>
+      text-anchor="middle" font-weight="600">QLICO</text>
     <text x="${W / 2}" y="292" font-family="${SANS}" font-size="20" fill="${MUTED}"
       text-anchor="middle">Flip through anything.</text>
     <rect x="${W / 2 - 92}" y="332" width="184" height="46" rx="23" fill="${ACCENT}"/>
@@ -107,7 +107,7 @@ function frameCta(lp) {
         font-weight="700">Start for free →</text>
     </g>
     <text x="${W / 2}" y="${384 + rise(0.4)}" font-family="${SANS}" font-size="14" fill="rgba(255,255,255,0.5)"
-      text-anchor="middle" opacity="${op(0.4)}">klicko.app</text>`
+      text-anchor="middle" opacity="${op(0.4)}">qlico.app</text>`
 }
 
 function svgFor(i) {
@@ -137,8 +137,8 @@ async function main() {
   }
   await sharp(frames, { join: { across: 1, animated: true } })
     .gif({ loop: 0, delay: Array(N).fill(DELAY) })
-    .toFile('public/klicko-demo.gif')
-  console.log(`✓ public/klicko-demo.gif  (${N} frames, ${W}×${H})`)
+    .toFile('public/qlico-demo.gif')
+  console.log(`✓ public/qlico-demo.gif  (${N} frames, ${W}×${H})`)
 }
 
 main().catch((e) => {

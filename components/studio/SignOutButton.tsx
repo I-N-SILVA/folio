@@ -23,7 +23,7 @@ export function SignOutButton({ className = '' }: { className?: string }) {
     <button
       onClick={handleSignOut}
       disabled={loading}
-      className={`inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-4 py-2 text-sm font-bold text-[var(--folio-ink)] transition hover:bg-white disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-4 py-2 text-sm font-bold text-[var(--qlico-ink)] transition hover:bg-white disabled:opacity-50 ${className}`}
     >
       {loading ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
       Sign out

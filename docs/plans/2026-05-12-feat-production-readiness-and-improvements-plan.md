@@ -1,10 +1,10 @@
 ---
-title: Folio — Production Readiness + Improvements
+title: Qlico — Production Readiness + Improvements
 type: feat
 date: 2026-05-12
 ---
 
-# Folio — Production Readiness + Improvements
+# Qlico — Production Readiness + Improvements
 
 ## Overview
 

@@ -1,4 +1,4 @@
-# KLICKO — Marketing Copy Kit
+# QLICO — Marketing Copy Kit
 
 Ready-to-use, on-brand copy for launch. Pair with `LAUNCH.md` (Product Hunt /
 app stores) and `APPSUMO_LAUNCH.md` (lifetime-deal GTM). Voice: see `BRAND.md`.
@@ -24,9 +24,9 @@ app stores) and `APPSUMO_LAUNCH.md` (lifetime-deal GTM). Voice: see `BRAND.md`.
 
 ## 3. Elevator pitches
 
-- **One sentence:** KLICKO turns static PDFs into immersive, interactive
+- **One sentence:** QLICO turns static PDFs into immersive, interactive
   flipbooks with hotspots, analytics, and one-line embeds.
-- **One paragraph:** KLICKO is a studio and reader for premium digital
+- **One paragraph:** QLICO is a studio and reader for premium digital
   publications. Import a PDF or build page-by-page, layer in hotspots and lead
   gates, publish a hosted reader or embed it anywhere, and watch real engagement
   — opens, dwell time, completion, hotspot clicks — flow into your own data
@@ -47,10 +47,10 @@ app stores) and `APPSUMO_LAUNCH.md` (lifetime-deal GTM). Voice: see `BRAND.md`.
 **Tagline:** Turn any PDF into an interactive flipbook readers actually finish.
 
 **First comment (maker):**
-> Hey Hunters 👋 We built KLICKO because a beautiful PDF still dies as a download
+> Hey Hunters 👋 We built QLICO because a beautiful PDF still dies as a download
 > link — no interactivity, no brand, no idea if anyone read it.
 >
-> With KLICKO you import a PDF (or build page-by-page), add hotspots and lead
+> With QLICO you import a PDF (or build page-by-page), add hotspots and lead
 > gates, then publish a tactile, hosted reader you can embed anywhere. The part
 > we're proudest of: reader analytics — dwell time, completion, and which
 > hotspot got the click — flowing into your own data layer.
@@ -63,11 +63,11 @@ app stores) and `APPSUMO_LAUNCH.md` (lifetime-deal GTM). Voice: see `BRAND.md`.
 **X / LinkedIn thread opener:**
 > Your lookbook is a 24MB PDF nobody finishes.
 > So we rebuilt the format.
-> KLICKO turns any PDF into an interactive flipbook — hotspots, analytics, and a
+> QLICO turns any PDF into an interactive flipbook — hotspots, analytics, and a
 > one-line embed. Readers actually get to the last page. 🧵
 
 **Short post:**
-> New: KLICKO. Import a PDF → get a tactile, interactive, embeddable flipbook with
+> New: QLICO. Import a PDF → get a tactile, interactive, embeddable flipbook with
 > real reader analytics. Publish in ~2 minutes. Free to start.
 
 ## 7. Cold / launch email
@@ -76,31 +76,31 @@ app stores) and `APPSUMO_LAUNCH.md` (lifetime-deal GTM). Voice: see `BRAND.md`.
 >
 > Hi {{first_name}},
 >
-> Static PDFs look great and then vanish into a downloads folder. KLICKO turns the
+> Static PDFs look great and then vanish into a downloads folder. QLICO turns the
 > same file into an interactive flipbook — clickable hotspots, your branding, and
 > analytics that show which pages held attention.
 >
 > Import a PDF and publish a hosted, embeddable reader in minutes. Free to start,
 > with a lifetime deal for early adopters.
 >
-> — The KLICKO team
+> — The QLICO team
 
 ## 8. AppSumo blurb
 
-> **KLICKO — interactive flipbooks with soul.** Turn any PDF into a tactile,
+> **QLICO — interactive flipbooks with soul.** Turn any PDF into a tactile,
 > branded, embeddable reader with hotspots and real engagement analytics. Lifetime
 > access from Tier 1. Perfect for catalogs, lookbooks, portfolios, and reports.
 
 ## 9. Meta description (SEO)
 
-> KLICKO turns static PDFs into immersive, interactive flipbooks with hotspots,
+> QLICO turns static PDFs into immersive, interactive flipbooks with hotspots,
 > analytics, embeds, and brand control. Publish portfolios, catalogs, lookbooks,
 > and reports your readers actually finish.
 
 ## 10. Launch checklist
 
 - [ ] Replace placeholder testimonials/logos with real design partners.
-- [ ] Record the 30–60s hero demo (PDF in → folio → hotspot → analytics).
+- [ ] Record the 30–60s hero demo (PDF in → edition → hotspot → analytics).
 - [ ] Confirm `/press`, `/privacy`, `/terms`, and OG image render in prod.
 - [ ] Warm up the email list + socials one week out.
 - [ ] Schedule the Product Hunt + AppSumo go-live (see the launch docs).

@@ -39,19 +39,19 @@ export default function RedeemPage() {
   }
 
   return (
-    <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--folio-ink)]">
+    <main className="qlico-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--qlico-ink)]">
       <motion.div
         initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-full max-w-md rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 shadow-[var(--folio-shadow)] backdrop-blur"
+        className="w-full max-w-md rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/80 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
       >
         <div className="mb-7">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff] shadow-lg">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--qlico-ink)] text-[#ffffff] shadow-lg">
             <Gift size={22} />
           </span>
           <h1 className="mt-5 font-display text-4xl font-semibold tracking-[-0.05em]">Redeem your deal</h1>
-          <p className="mt-3 text-sm leading-6 text-[var(--folio-muted)]">
+          <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
             Paste the license code from your AppSumo purchase to unlock your lifetime tier.
           </p>
         </div>
@@ -66,7 +66,7 @@ export default function RedeemPage() {
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="code" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
+              <label htmlFor="code" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
                 License code
               </label>
               <input
@@ -77,7 +77,7 @@ export default function RedeemPage() {
                 placeholder="e.g. AS-XXXX-XXXX-XXXX"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 px-4 py-3 font-mono text-sm tracking-wide outline-none transition focus:border-[var(--folio-teal)] focus:ring-2 focus:ring-[var(--folio-teal)]/20"
+                className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-white/70 px-4 py-3 font-mono text-sm tracking-wide outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
               />
             </div>
 
@@ -90,13 +90,13 @@ export default function RedeemPage() {
             <button
               type="submit"
               disabled={loading || !code.trim()}
-              className="flex items-center justify-center gap-2 rounded-full bg-[var(--folio-teal)] px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-full bg-[var(--qlico-teal)] px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
               {loading ? 'Redeeming…' : 'Redeem code'}
             </button>
 
-            <Link href="/account" className="text-center text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
+            <Link href="/account" className="text-center text-sm font-bold text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]">
               Back to account
             </Link>
           </form>

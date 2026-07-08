@@ -82,12 +82,12 @@ export function AnalyticsDashboard({ book }: { book: any }) {
   ]
 
   return (
-    <main className="min-h-screen bg-[var(--background)] p-6 text-[var(--folio-ink)]">
+    <main className="min-h-screen bg-[var(--background)] p-6 text-[var(--qlico-ink)]">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-[var(--folio-muted)] transition-colors hover:text-[var(--folio-ink)]">
+            <Link href="/dashboard" className="text-[var(--qlico-muted)] transition-colors hover:text-[var(--qlico-ink)]">
               <ArrowLeft size={20} />
             </Link>
             <div>
@@ -98,13 +98,13 @@ export function AnalyticsDashboard({ book }: { book: any }) {
 
           <div className="flex items-center gap-3">
             {/* Date range filter */}
-            <div className="flex rounded-full border border-[var(--folio-border)] bg-white p-0.5">
+            <div className="flex rounded-full border border-[var(--qlico-border)] bg-white p-0.5">
               {ranges.map((r) => (
                 <button
                   key={r.value}
                   onClick={() => setRange(r.value)}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    range === r.value ? 'bg-[var(--accent)] text-white' : 'text-[var(--folio-muted)] hover:text-[var(--folio-ink)]'
+                    range === r.value ? 'bg-[var(--accent)] text-white' : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
                   }`}
                 >
                   {r.label}
@@ -114,7 +114,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
 
             <button
               onClick={downloadCSV}
-              className="flex items-center gap-1.5 rounded-full border border-[var(--folio-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--folio-ink)] transition-colors hover:bg-black/5"
+              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--qlico-ink)] transition-colors hover:bg-black/5"
             >
               <Download size={14} />
               CSV
@@ -123,9 +123,9 @@ export function AnalyticsDashboard({ book }: { book: any }) {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-[var(--folio-muted)]">Loading analytics…</div>
+          <div className="flex items-center justify-center py-20 text-[var(--qlico-muted)]">Loading analytics…</div>
         ) : !data ? (
-          <div className="text-center py-20 text-[var(--folio-muted)]">Failed to load analytics.</div>
+          <div className="text-center py-20 text-[var(--qlico-muted)]">Failed to load analytics.</div>
         ) : (
           <>
             {/* Summary Cards */}
@@ -163,7 +163,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-                <p className="text-xs text-[var(--folio-muted)] text-center mt-1">Color: green = long dwell · red = quick skip</p>
+                <p className="text-xs text-[var(--qlico-muted)] text-center mt-1">Color: green = long dwell · red = quick skip</p>
               </ChartCard>
             )}
 
@@ -186,7 +186,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
               <ChartCard title="Click Heatmap">
                 <div className="flex gap-4 items-start">
                   <div className="flex flex-col gap-2 w-24 shrink-0">
-                    <span className="text-xs text-[var(--folio-muted)] font-medium uppercase tracking-wider">Page</span>
+                    <span className="text-xs text-[var(--qlico-muted)] font-medium uppercase tracking-wider">Page</span>
                     {Object.keys(data.heatmapData)
                       .map(Number)
                       .sort((a, b) => a - b)
@@ -195,14 +195,14 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                           key={p}
                           onClick={() => setHeatmapPage(p)}
                           className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${
-                            heatmapPage === p ? 'bg-[var(--accent)] text-white' : 'hover:bg-black/5 text-[var(--folio-ink)]'
+                            heatmapPage === p ? 'bg-[var(--accent)] text-white' : 'hover:bg-black/5 text-[var(--qlico-ink)]'
                           }`}
                         >
                           Page {p}
                         </button>
                       ))}
                   </div>
-                  <div className="flex-1 bg-[var(--folio-subtle)] rounded-xl overflow-hidden aspect-[1/1.41] relative shadow-inner max-w-sm mx-auto">
+                  <div className="flex-1 bg-[var(--qlico-subtle)] rounded-xl overflow-hidden aspect-[1/1.41] relative shadow-inner max-w-sm mx-auto">
                     {/* Placeholder for the page background, eventually could load the actual page image */}
                     <div className="absolute inset-0 bg-white"></div>
                     {data.heatmapData[heatmapPage]?.map((pt, i) => (
@@ -213,7 +213,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                       />
                     ))}
                     {(!data.heatmapData[heatmapPage] || data.heatmapData[heatmapPage].length === 0) && (
-                      <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--folio-muted)]">
+                      <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--qlico-muted)]">
                         No clicks recorded on this page
                       </div>
                     )}
@@ -228,15 +228,15 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                 <TableCard title="Top Hotspot Clicks">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-[var(--folio-muted)] text-xs border-b border-[var(--folio-border)]">
+                      <tr className="text-left text-[var(--qlico-muted)] text-xs border-b border-[var(--qlico-border)]">
                         <th className="pb-2 font-medium">Hotspot ID</th>
                         <th className="pb-2 font-medium text-right">Clicks</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.topHotspots.map((h) => (
-                        <tr key={h.id} className="border-b border-[var(--folio-hairline)]">
-                          <td className="py-2 font-mono text-xs text-[var(--folio-muted)] truncate max-w-[180px]">{h.id}</td>
+                        <tr key={h.id} className="border-b border-[var(--qlico-hairline)]">
+                          <td className="py-2 font-mono text-xs text-[var(--qlico-muted)] truncate max-w-[180px]">{h.id}</td>
                           <td className="py-2 text-right font-medium">{h.count}</td>
                         </tr>
                       ))}
@@ -250,7 +250,7 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                 <TableCard title="CTA Button Clicks">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-left text-[var(--folio-muted)] text-xs border-b border-[var(--folio-border)]">
+                      <tr className="text-left text-[var(--qlico-muted)] text-xs border-b border-[var(--qlico-border)]">
                         <th className="pb-2 font-medium">Block / Page</th>
                         <th className="pb-2 font-medium text-right">Clicks</th>
                         <th className="pb-2 font-medium text-right">Unique</th>
@@ -258,13 +258,13 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                     </thead>
                     <tbody>
                       {data.ctaData.map((c) => (
-                        <tr key={c.id} className="border-b border-[var(--folio-hairline)]">
+                        <tr key={c.id} className="border-b border-[var(--qlico-hairline)]">
                           <td className="py-2">
-                            <span className="font-mono text-xs text-[var(--folio-muted)] truncate">{c.id}</span>
-                            {c.page && <span className="text-xs text-[var(--folio-muted)] ml-1">p.{c.page}</span>}
+                            <span className="font-mono text-xs text-[var(--qlico-muted)] truncate">{c.id}</span>
+                            {c.page && <span className="text-xs text-[var(--qlico-muted)] ml-1">p.{c.page}</span>}
                           </td>
                           <td className="py-2 text-right font-medium">{c.clicks}</td>
-                          <td className="py-2 text-right text-[var(--folio-muted)]">{c.uniqueClicks}</td>
+                          <td className="py-2 text-right text-[var(--qlico-muted)]">{c.uniqueClicks}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -278,16 +278,16 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                   <div className="max-h-64 overflow-y-auto">
                     <table className="w-full text-sm">
                       <thead className="sticky top-0 bg-white">
-                        <tr className="text-left text-[var(--folio-muted)] text-xs border-b border-[var(--folio-border)]">
+                        <tr className="text-left text-[var(--qlico-muted)] text-xs border-b border-[var(--qlico-border)]">
                           <th className="pb-2 font-medium">Email</th>
                           <th className="pb-2 font-medium text-right">Captured On</th>
                         </tr>
                       </thead>
                       <tbody>
                         {data.leadData.map((lead, idx) => (
-                          <tr key={idx} className="border-b border-[var(--folio-hairline)]">
+                          <tr key={idx} className="border-b border-[var(--qlico-hairline)]">
                             <td className="py-2 font-medium">{lead.email}</td>
-                            <td className="py-2 text-right text-xs text-[var(--folio-muted)]">
+                            <td className="py-2 text-right text-xs text-[var(--qlico-muted)]">
                               {new Date(lead.timestamp).toLocaleDateString()}
                             </td>
                           </tr>
@@ -300,9 +300,9 @@ export function AnalyticsDashboard({ book }: { book: any }) {
             </div>
 
             {data.pageViewData.length === 0 && data.topHotspots.length === 0 && (
-              <div className="rounded-3xl border border-[var(--folio-border)] bg-white py-16 text-center">
-                <p className="text-[var(--folio-muted)]">No analytics data yet for this period.</p>
-                <p className="mt-1 text-sm text-[var(--folio-muted)]">Share your edition to start collecting data.</p>
+              <div className="rounded-3xl border border-[var(--qlico-border)] bg-white py-16 text-center">
+                <p className="text-[var(--qlico-muted)]">No analytics data yet for this period.</p>
+                <p className="mt-1 text-sm text-[var(--qlico-muted)]">Share your edition to start collecting data.</p>
               </div>
             )}
           </>
@@ -325,12 +325,12 @@ function StatCard({
 }) {
   return (
     <Reveal delay={delay}>
-      <div className="rounded-3xl border border-[var(--folio-border)] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(0,0,0,0.07)]">
+      <div className="rounded-3xl border border-[var(--qlico-border)] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(0,0,0,0.07)]">
         <div className="mb-3 flex items-center gap-2">
           {icon}
-          <span className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--folio-muted)]">{label}</span>
+          <span className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--qlico-muted)]">{label}</span>
         </div>
-        <p className="font-display text-4xl font-semibold tracking-[-0.03em] text-[var(--folio-ink)]">{children}</p>
+        <p className="font-display text-4xl font-semibold tracking-[-0.03em] text-[var(--qlico-ink)]">{children}</p>
       </div>
     </Reveal>
   )
@@ -339,8 +339,8 @@ function StatCard({
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Reveal>
-      <div className="rounded-3xl border border-[var(--folio-border)] bg-white p-6">
-        <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--folio-ink)]">{title}</h2>
+      <div className="rounded-3xl border border-[var(--qlico-border)] bg-white p-6">
+        <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h2>
         {children}
       </div>
     </Reveal>
@@ -350,8 +350,8 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 function TableCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Reveal>
-      <div className="h-full rounded-3xl border border-[var(--folio-border)] bg-white p-6">
-        <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--folio-ink)]">{title}</h2>
+      <div className="h-full rounded-3xl border border-[var(--qlico-border)] bg-white p-6">
+        <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h2>
         {children}
       </div>
     </Reveal>

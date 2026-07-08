@@ -35,6 +35,10 @@ interface Dims {
 }
 
 const PAGE_RATIO = 1.41 // A4
+// Cap how wide a single page can render, even in a wide container — keeps
+// the spread at a comfortable "book on a table" size instead of zooming in
+// to fill the whole viewport.
+const MAX_PAGE_WIDTH = 460
 
 export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
   ({ book, onFlip, embed = false }, ref) => {
@@ -42,11 +46,18 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
     const bookRef = useRef<any>(null)
     const [dims, setDims] = useState<Dims>({ w: 600, h: 848 })
     const [isMobile, setIsMobile] = useState(false)
+    // react-pageflip locks in portrait vs. landscape mode at mount time —
+    // it doesn't react to a later `usePortrait` prop change. Don't mount it
+    // until the first real container measurement lands, or it can init in
+    // the wrong orientation (a two-page spread crammed into a phone width).
+    const [measured, setMeasured] = useState(false)
     const [ready, setReady] = useState(false)
     const [currentPage, setCurrentPage] = useState(0)
     const [modalOpen, setModalOpen] = useState(false)
     const [isUnlocked, setIsUnlocked] = useState(false)
     const pageFlipTimes = useRef<Record<number, number>>({})
+    const openedAt = useRef<number>(0)
+    const completed = useRef(false)
 
     const pages = book.pages ?? []
     const gating = book.settings?.gating
@@ -81,11 +92,9 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
         const cw = entry.contentRect.width
         const mobile = cw < 768
         setIsMobile(mobile)
-        setDims(
-          mobile
-            ? { w: cw, h: cw * PAGE_RATIO }
-            : { w: cw / 2, h: (cw / 2) * PAGE_RATIO }
-        )
+        const pageWidth = mobile ? cw : Math.min(cw / 2, MAX_PAGE_WIDTH)
+        setDims({ w: pageWidth, h: pageWidth * PAGE_RATIO })
+        setMeasured(true)
       })
       obs.observe(container)
       return () => obs.disconnect()
@@ -125,8 +134,12 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       })
     }, [currentPage, pages])
 
-    // Track book_open on mount
+    // Track book_open on mount, and seed the dwell clock for the opening
+    // page so its view time isn't lost (handleFlip only records dwell for
+    // pages it has *left*, so page 0 needs a timestamp before any flip).
     useEffect(() => {
+      openedAt.current = Date.now()
+      pageFlipTimes.current[0] = openedAt.current
       trackEvent(book.id, 'book_open', {
         referrer: typeof document !== 'undefined' ? document.referrer : '',
         device_type: typeof window !== 'undefined' && window.innerWidth < 768 ? 'mobile' : 'desktop',
@@ -156,9 +169,12 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
           method: 'click',
         })
 
-        // book_complete on last page
-        if (page === pages.length - 1) {
-          trackEvent(book.id, 'book_complete', { session_duration_ms: 0 })
+        // book_complete on reaching the last page (once per session)
+        if (page === pages.length - 1 && !completed.current) {
+          completed.current = true
+          trackEvent(book.id, 'book_complete', {
+            session_duration_ms: now - openedAt.current,
+          })
         }
 
         setCurrentPage(page)
@@ -166,6 +182,36 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       },
       [book.id, currentPage, pages.length, onFlip]
     )
+
+    // Flush dwell time for whichever page is on screen when the reader
+    // navigates away or closes the tab — otherwise the last page viewed
+    // in a session never gets a page_view/dwell_ms recorded.
+    const currentPageRef = useRef(0)
+    useEffect(() => {
+      currentPageRef.current = currentPage
+    }, [currentPage])
+
+    useEffect(() => {
+      function flush() {
+        const page = currentPageRef.current
+        const startedAt = pageFlipTimes.current[page]
+        if (!startedAt) return
+        trackEvent(book.id, 'page_view', {
+          page_number: page + 1,
+          dwell_ms: Date.now() - startedAt,
+        })
+      }
+      function onVisibilityChange() {
+        if (document.visibilityState === 'hidden') flush()
+      }
+      document.addEventListener('visibilitychange', onVisibilityChange)
+      window.addEventListener('pagehide', flush)
+      return () => {
+        document.removeEventListener('visibilitychange', onVisibilityChange)
+        window.removeEventListener('pagehide', flush)
+        flush()
+      }
+    }, [book.id])
 
     useImperativeHandle(ref, () => ({
       flipNext: () => bookRef.current?.pageFlip()?.flipNext(),
@@ -178,8 +224,12 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
     if (pages.length === 0) return null
 
     return (
-      <div ref={containerRef} className="w-full flex justify-center">
+      <div ref={containerRef} className="w-full flex justify-center" style={{ minHeight: measured ? undefined : dims.h }}>
+        {measured && (
         <HTMLFlipBook
+          // Force a clean remount if the container crosses the mobile
+          // breakpoint — the library won't reorient a live instance.
+          key={isMobile ? 'portrait' : 'landscape'}
           ref={bookRef}
           width={dims.w}
           height={dims.h}
@@ -214,7 +264,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
               style={{ width: dims.w, height: dims.h }}
               onClick={(e) => handlePageClick(e, idx)}
             >
-              <PageRenderer page={page} bookId={book.id} theme={book.theme} />
+              <PageRenderer page={page} bookId={book.id} theme={book.theme} hideGutter={isMobile} />
               <HotspotLayer
                 hotspots={page.hotspots}
                 bookId={book.id}
@@ -233,6 +283,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
             </div>
           ))}
         </HTMLFlipBook>
+        )}
       </div>
     )
   }

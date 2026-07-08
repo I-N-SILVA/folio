@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  /* KLICKO — palette drawn from the logo: violet mark + ink-navy wordmark. */
+  /* QLICO — palette drawn from the logo: violet mark + ink-navy wordmark. */
   --background: #fcfcfd;
   --background-alt: #f4f4f7;
   --foreground: #141a3a;
-  --folio-ink: #141a3a;
-  --folio-muted: #575d78;
-  --folio-paper: #ffffff;
-  --folio-vellum: #f4f4f7;
-  --folio-subtle: #f4f4f7;
-  /* Accent: KLICKO Violet (the mark's exact color) */
+  --qlico-ink: #141a3a;
+  --qlico-muted: #575d78;
+  --qlico-paper: #ffffff;
+  --qlico-vellum: #f4f4f7;
+  --qlico-subtle: #f4f4f7;
+  /* Accent: QLICO Violet (the mark's exact color) */
   --accent: #3c2384;
   --accent-hover: #2e1a66;
   /* Brighter violet for dark chrome (editor) where the deep mark violet
      lacks contrast. Same hue family, higher luminance. */
   --accent-vivid: #7c5cff;
   --accent-vivid-hover: #6a4cf0;
-  --folio-brass: var(--accent);
-  --folio-teal: var(--accent);
-  --folio-oxblood: #141a3a;
-  --folio-border: #e3e4ea;
-  --folio-hairline: rgba(20, 26, 58, 0.09);
-  --folio-shadow: 0 18px 50px rgba(20, 26, 58, 0.08);
+  --qlico-brass: var(--accent);
+  --qlico-teal: var(--accent);
+  --qlico-oxblood: #141a3a;
+  --qlico-border: #e3e4ea;
+  --qlico-hairline: rgba(20, 26, 58, 0.09);
+  --qlico-shadow: 0 18px 50px rgba(20, 26, 58, 0.08);
   /* Editorial serif for headlines; geometric grotesk for UI/body. */
   --font-display: var(--font-display), "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
   --font-body: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -61,7 +61,7 @@ section[id] {
 
 ::selection {
   background: rgba(60, 35, 132, 0.14);
-  color: var(--folio-ink);
+  color: var(--qlico-ink);
 }
 
 .font-display {
@@ -75,13 +75,13 @@ section[id] {
     "WONK" 1;
 }
 
-/* Grain texture intentionally neutralized — the KLICKO aesthetic is clean. */
-.folio-grain {
+/* Grain texture intentionally neutralized — the QLICO aesthetic is clean. */
+.qlico-grain {
   position: relative;
   isolation: isolate;
 }
 
-@keyframes folio-rise {
+@keyframes qlico-rise {
   from {
     opacity: 0;
     transform: translateY(18px);
@@ -93,12 +93,12 @@ section[id] {
   }
 }
 
-.animate-folio-rise {
-  animation: folio-rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.animate-qlico-rise {
+  animation: qlico-rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* Scroll reveal — toggled by IntersectionObserver via the Reveal component */
-.folio-reveal {
+.qlico-reveal {
   opacity: 0;
   transform: translateY(26px);
   transition:
@@ -107,13 +107,13 @@ section[id] {
   will-change: opacity, transform;
 }
 
-.folio-reveal.is-visible {
+.qlico-reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
 /* Marquee for the trust / logo strip */
-@keyframes folio-marquee {
+@keyframes qlico-marquee {
   from {
     transform: translateX(0);
   }
@@ -122,17 +122,17 @@ section[id] {
   }
 }
 
-.folio-marquee-track {
+.qlico-marquee-track {
   display: flex;
   width: max-content;
-  animation: folio-marquee 38s linear infinite;
+  animation: qlico-marquee 38s linear infinite;
 }
 
-.folio-marquee:hover .folio-marquee-track {
+.qlico-marquee:hover .qlico-marquee-track {
   animation-play-state: paused;
 }
 
-.folio-marquee-mask {
+.qlico-marquee-mask {
   -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
   mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
 }
@@ -144,13 +144,13 @@ section[id] {
   initial-value: 0deg;
 }
 
-@keyframes folio-beam-spin {
+@keyframes qlico-beam-spin {
   to {
     --beam-angle: 360deg;
   }
 }
 
-.folio-beam {
+.qlico-beam {
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -172,11 +172,11 @@ section[id] {
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation: folio-beam-spin 6s linear infinite;
+  animation: qlico-beam-spin 6s linear infinite;
 }
 
 /* Animated step connector — accent pulse traveling the line. */
-@keyframes folio-beam-travel {
+@keyframes qlico-beam-travel {
   from {
     background-position: -40% 0;
   }
@@ -185,7 +185,7 @@ section[id] {
   }
 }
 
-.folio-flow-line {
+.qlico-flow-line {
   background-image: linear-gradient(
     90deg,
     transparent 0%,
@@ -194,11 +194,11 @@ section[id] {
   );
   background-size: 40% 100%;
   background-repeat: no-repeat;
-  animation: folio-beam-travel 3.2s linear infinite;
+  animation: qlico-beam-travel 3.2s linear infinite;
 }
 
 /* Soft pulse for live hotspot dots. */
-@keyframes folio-pulse {
+@keyframes qlico-pulse {
   0%, 100% {
     transform: scale(1);
     opacity: 0.55;
@@ -209,13 +209,13 @@ section[id] {
   }
 }
 
-.folio-pulse::after {
+.qlico-pulse::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 9999px;
   background: var(--accent);
-  animation: folio-pulse 2.4s ease-out infinite;
+  animation: qlico-pulse 2.4s ease-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

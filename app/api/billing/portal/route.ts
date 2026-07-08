@@ -5,7 +5,7 @@ import { getStripe } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klicko.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app'
 
 export async function POST() {
   const stripe = getStripe()

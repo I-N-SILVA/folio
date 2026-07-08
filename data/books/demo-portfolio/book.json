@@ -109,7 +109,7 @@
         },
         { "type": "text", "id": "pf4-2", "variant": "heading", "content": "Atlas — product design" },
         { "type": "text", "id": "pf4-3", "variant": "body", "content": "A field-operations app redesigned around one insight: crews work with gloves on. Bigger targets, fewer taps, offline-first." },
-        { "type": "button", "id": "pf4-4", "label": "Read the case study", "href": "https://klicko.app", "variant": "ghost", "target": "_blank" }
+        { "type": "button", "id": "pf4-4", "label": "Read the case study", "href": "https://qlico.app", "variant": "ghost", "target": "_blank" }
       ],
       "hotspots": []
     },
@@ -155,7 +155,7 @@
         { "type": "text", "id": "pf7-1", "variant": "title", "content": "Let's work.", "align": "center" },
         { "type": "text", "id": "pf7-2", "variant": "body", "content": "Booking projects for next quarter — brand, product, or both.", "align": "center" },
         { "type": "divider", "id": "pf7-3" },
-        { "type": "button", "id": "pf7-4", "label": "Book an intro call →", "href": "https://klicko.app", "variant": "primary", "target": "_blank" }
+        { "type": "button", "id": "pf7-4", "label": "Book an intro call →", "href": "https://qlico.app", "variant": "primary", "target": "_blank" }
       ],
       "hotspots": []
     }

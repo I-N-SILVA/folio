@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'KLICKO — Interactive publishing',
-    short_name: 'KLICKO',
+    name: 'QLICO — Interactive publishing',
+    short_name: 'QLICO',
     description:
       'Turn static PDFs into interactive editions with hotspots, analytics, and one-line embeds.',
     start_url: '/dashboard',
@@ -23,11 +23,11 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: 'Open Studio',
         short_name: 'Studio',
-        description: 'Jump straight into the KLICKO editor dashboard.',
+        description: 'Jump straight into the QLICO editor dashboard.',
         url: '/dashboard',
       },
       {
-        name: 'Create a folio',
+        name: 'Create an edition',
         short_name: 'Create',
         description: 'Start a new interactive publication.',
         url: '/create',

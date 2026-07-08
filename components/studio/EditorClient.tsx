@@ -10,7 +10,7 @@ import { useEditorStore } from '@/lib/editor-store'
 import { createBrowserSupabase } from '@/lib/supabase'
 import { PageListSidebar } from '@/components/studio/PageListSidebar'
 import { EditorCanvas } from '@/components/studio/EditorCanvas'
-import { SettingsPanel } from '@/components/studio/SettingsPanel'
+import { SettingsPanel } from '@/components/studio/settings'
 import { PreviewModal } from '@/components/studio/PreviewModal'
 import { PageManagerModal } from '@/components/studio/PageManagerModal'
 import { Grid } from 'lucide-react'
@@ -41,6 +41,7 @@ export function EditorClient({ book }: Props) {
   }, [isDirty])
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveInFlight = useRef(false)
   const supabase = createBrowserSupabase()
 
   // Initialize store on mount
@@ -50,9 +51,12 @@ export function EditorClient({ book }: Props) {
 
   // Autosave: debounced 2s after any dirty change
   const save = useCallback(async () => {
+    if (saveInFlight.current) return // a save is already in flight — the trailing edit will schedule its own
     const current = useEditorStore.getState()
     if (!current.book || !current.isDirty) return
 
+    const bookAtSaveStart = current.book
+    saveInFlight.current = true
     setIsSaving(true)
     setSaveStatus('saving')
 
@@ -61,17 +65,17 @@ export function EditorClient({ book }: Props) {
       await supabase
         .from('books')
         .update({
-          theme: current.book.theme,
-          settings: current.book.settings,
-          title: current.book.title,
-          description: current.book.description ?? null,
+          theme: bookAtSaveStart.theme,
+          settings: bookAtSaveStart.settings,
+          title: bookAtSaveStart.title,
+          description: bookAtSaveStart.description ?? null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', current.book.id)
+        .eq('id', bookAtSaveStart.id)
 
       // Upsert all pages
-      if (current.book.pages && current.book.pages.length > 0) {
-        const pagesPayload = current.book.pages.map((p) => ({
+      if (bookAtSaveStart.pages && bookAtSaveStart.pages.length > 0) {
+        const pagesPayload = bookAtSaveStart.pages.map((p) => ({
           id: p.id,
           book_id: p.book_id,
           page_number: p.page_number,
@@ -87,13 +91,19 @@ export function EditorClient({ book }: Props) {
           .upsert(pagesPayload, { onConflict: 'id' })
       }
 
-      useEditorStore.setState({ isDirty: false })
+      // Only clear isDirty if nothing changed while this save was in
+      // flight — otherwise a newer, unsaved edit gets incorrectly marked
+      // as saved and the next autosave never fires for it.
+      if (useEditorStore.getState().book === bookAtSaveStart) {
+        useEditorStore.setState({ isDirty: false })
+      }
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
     } catch (err) {
       toast.error('Save failed — check your connection')
       setSaveStatus('idle')
     } finally {
+      saveInFlight.current = false
       setIsSaving(false)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -166,11 +176,14 @@ export function EditorClient({ book }: Props) {
         const tag = (e.target as HTMLElement)?.tagName
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
 
-        const { selectedBlockId, book } = useEditorStore.getState()
+        const { selectedBlockId, selectedHotspotId, book } = useEditorStore.getState()
         const currentPage = book?.pages?.[useEditorStore.getState().currentPageIndex]
         if (selectedBlockId && currentPage) {
           e.preventDefault()
           useEditorStore.getState().removeBlock(currentPage.id, selectedBlockId)
+        } else if (selectedHotspotId && currentPage) {
+          e.preventDefault()
+          useEditorStore.getState().removeHotspot(currentPage.id, selectedHotspotId)
         }
       }
     }
@@ -211,7 +224,7 @@ export function EditorClient({ book }: Props) {
       <header className="flex items-center gap-3 px-4 h-13 border-b border-neutral-800 shrink-0 py-2">
         <Link
           href="/dashboard"
-          aria-label="KLICKO dashboard"
+          aria-label="QLICO dashboard"
           className="grid h-7 w-7 place-items-center overflow-hidden rounded-md transition hover:brightness-110"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}

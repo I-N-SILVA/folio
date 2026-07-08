@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const seo = book.settings?.seo
   const title = seo?.title || book.title
-  const description = seo?.description || book.description || `Read "${book.title}" on KLICKO`
+  const description = seo?.description || book.description || `Read "${book.title}" on QLICO`
 
   // Use the dynamic OG image generator route
   const ogImageUrl = `/book/${slug}/opengraph-image`
@@ -73,10 +73,10 @@ export default async function BookPage({ params }: Props) {
 
   if (!book.settings.published && slug !== 'demo') {
     return (
-      <main className="folio-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-8 text-[var(--folio-ink)]">
-        <div className="max-w-md rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/80 p-8 text-center shadow-[var(--folio-shadow)]">
+      <main className="qlico-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-8 text-[var(--qlico-ink)]">
+        <div className="max-w-md rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/80 p-8 text-center shadow-[var(--qlico-shadow)]">
           <h1 className="font-display mb-3 text-4xl font-semibold tracking-[-0.06em]">Still in the bindery.</h1>
-          <p className="text-[var(--folio-muted)]">Check back later. The creator is still working on it.</p>
+          <p className="text-[var(--qlico-muted)]">Check back later. The creator is still working on it.</p>
         </div>
       </main>
     )
@@ -88,7 +88,7 @@ export default async function BookPage({ params }: Props) {
 
   return (
     <main
-      className="folio-grain flex min-h-screen flex-col items-center justify-center p-4"
+      className="qlico-grain flex min-h-screen flex-col items-center justify-center p-6 sm:p-12 lg:p-16"
       style={{ background: `radial-gradient(circle at 50% -8%, ${tint} 0%, #f5f5f7 55%, #ececef 100%)` }}
     >
       <ViewerChrome book={book} />

@@ -32,19 +32,19 @@ export default async function DashboardPage() {
   )
 
   return (
-    <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--folio-ink)] sm:px-8">
+    <main className="qlico-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--qlico-ink)] sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/76 p-6 shadow-[var(--folio-shadow)] backdrop-blur sm:p-8">
+        <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/76 p-6 shadow-[var(--qlico-shadow)] backdrop-blur sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--qlico-teal)]">
                 <Sparkles size={13} />
                 Creator Studio
               </div>
               <h1 className="font-display text-5xl font-semibold leading-none tracking-[-0.06em] sm:text-6xl">
                 Your digital shelf
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--folio-muted)] sm:text-base">
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--qlico-muted)] sm:text-base">
                 Compose, publish, and measure interactive publications from one calm workspace.
               </p>
             </div>
@@ -66,20 +66,20 @@ export default async function DashboardPage() {
         />
 
         {books.length === 0 ? (
-          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">
+          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">
             <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(60,35,132,0.16)] blur-3xl" />
-            <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--folio-border)] bg-white shadow-sm">
-              <BookOpen size={48} className="text-[var(--folio-muted)] opacity-60" strokeWidth={1.5} />
+            <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--qlico-border)] bg-white shadow-sm">
+              <BookOpen size={48} className="text-[var(--qlico-muted)] opacity-60" strokeWidth={1.5} />
             </div>
             <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">Create your first edition.</h2>
-            <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--folio-muted)]">
+            <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--qlico-muted)]">
               Create interactive portfolios, catalogs, magazines, and reports that feel crafted on every device.
             </p>
             <DashboardActions />
           </section>
         ) : (
           <section>
-            <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">
+            <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--qlico-muted)]">
               <LibraryBig size={16} />
               Library
             </div>
@@ -99,8 +99,8 @@ export default async function DashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-3xl border border-[var(--folio-border)] bg-white/55 p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--folio-muted)]">{label}</p>
+    <div className="rounded-3xl border border-[var(--qlico-border)] bg-white/55 p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--qlico-muted)]">{label}</p>
       <p className="mt-2 font-display text-4xl font-semibold tracking-[-0.06em]">
         <NumberTicker value={value} />
       </p>

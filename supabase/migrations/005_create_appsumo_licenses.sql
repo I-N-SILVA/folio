@@ -1,5 +1,5 @@
 -- AppSumo lifetime-deal licenses. A license is created by the AppSumo webhook
--- at purchase time and later linked to a Folio user when they redeem it.
+-- at purchase time and later linked to a Qlico user when they redeem it.
 CREATE TABLE IF NOT EXISTS public.appsumo_licenses (
   license_key       text PRIMARY KEY,
   prev_license_key  text,

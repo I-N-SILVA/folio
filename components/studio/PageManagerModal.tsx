@@ -41,7 +41,7 @@ function SortableGridPage({ page, bookId, index, isSelected, onSelect }: { page:
       onClick={onSelect}
       className={twMerge(
         'group relative flex flex-col items-center gap-2 p-2 rounded-xl cursor-pointer border-2 transition-all bg-neutral-900',
-        isSelected ? 'border-blue-500' : 'border-transparent hover:border-neutral-700',
+        isSelected ? 'border-[var(--accent-vivid)]' : 'border-transparent hover:border-neutral-700',
         isDragging && 'opacity-50 z-50 shadow-2xl scale-105'
       )}
     >

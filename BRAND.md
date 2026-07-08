@@ -1,13 +1,13 @@
-# KLICKO — Brand Guidelines
+# QLICO — Brand Guidelines
 
-KLICKO should feel like Apple-grade software: clean, confident, and effortless.
+QLICO should feel like Apple-grade software: clean, confident, and effortless.
 Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 
 ---
 
 ## 1. Essence
 
-- **Name:** KLICKO — to flip quickly through the pages of a book.
+- **Name:** QLICO — to flip quickly through the pages of a book.
 - **One-liner:** Flip through anything.
 - **Promise:** Turn static PDFs into interactive editions people actually finish.
 - **Personality:** Minimal · precise · modern · calm · confident.
@@ -15,13 +15,13 @@ Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 
 ## 2. Logo
 
-- **Lockup:** the violet cursor-page mark + lowercase "klicko" wordmark in
+- **Lockup:** the violet cursor-page mark + lowercase "qlico" wordmark in
   ink navy, with a play triangle inside the final "o".
-  Files: `public/brand/klicko-logo.png` (on light) and
-  `public/brand/klicko-logo-white.png` (on dark).
-- **Mark:** the violet mark alone (`public/brand/klicko-mark.png`). Use it
+  Files: `public/brand/qlico-logo.png` (on light) and
+  `public/brand/qlico-logo-white.png` (on dark).
+- **Mark:** the violet mark alone (`public/brand/qlico-mark.png`). Use it
   when space is tight (favicons, avatars, app icons).
-- **App icon:** white mark on KLICKO Violet (`public/brand/icon-512.png`,
+- **App icon:** white mark on QLICO Violet (`public/brand/icon-512.png`,
   `icon-192.png`, `apple-icon-180.png`; also `app/icon.png` /
   `app/apple-icon.png` for the favicon + touch icon).
 - **Clear space:** keep at least the height of the mark's circular counter
@@ -39,11 +39,11 @@ accent. Source of truth: `app/globals.css` (`:root`).
 | ----- | --- | --- |
 | White | `#ffffff` | Primary background |
 | Off-white | `#fcfcfd` | Page background |
-| Ink (`--folio-ink`) | `#141a3a` | Text, dark sections (the wordmark navy) |
-| Gray (`--folio-muted`) | `#575d78` | Secondary text |
+| Ink (`--qlico-ink`) | `#141a3a` | Text, dark sections (the wordmark navy) |
+| Gray (`--qlico-muted`) | `#575d78` | Secondary text |
 | Subtle | `#f4f4f7` | Fills, chips, secondary buttons |
-| Hairline (`--folio-border`) | `#e3e4ea` | Borders / separators |
-| **KLICKO Violet** (`--accent`) | `#3c2384` | Primary actions + links **only** (the mark's color) |
+| Hairline (`--qlico-border`) | `#e3e4ea` | Borders / separators |
+| **QLICO Violet** (`--accent`) | `#3c2384` | Primary actions + links **only** (the mark's color) |
 | Accent hover | `#2e1a66` | Hover state for accent |
 
 Rule: the accent is reserved for primary CTAs and links. Everything else is
@@ -90,8 +90,8 @@ Two faces, loaded via `next/font` (see `app/layout.tsx`):
 
 | Asset | Route |
 | ----- | ----- |
-| Logo lockup (transparent PNG) | `/brand/klicko-logo.png` (white: `/brand/klicko-logo-white.png`) |
-| Mark only (transparent PNG) | `/brand/klicko-mark.png` |
+| Logo lockup (transparent PNG) | `/brand/qlico-logo.png` (white: `/brand/qlico-logo-white.png`) |
+| Mark only (transparent PNG) | `/brand/qlico-mark.png` |
 | App icon (512² / 192²) | `/brand/icon-512.png`, `/brand/icon-192.png` |
 | Apple touch icon (180²) | `/brand/apple-icon-180.png` |
 | Social share image (1200×630) | `/opengraph-image` |
@@ -101,7 +101,7 @@ Two faces, loaded via `next/font` (see `app/layout.tsx`):
 
 ## 8. Signature & differentiators
 
-What makes KLICKO ownable — lean on these, not generic "flipbook" language:
+What makes QLICO ownable — lean on these, not generic "flipbook" language:
 
 - **Editions, not exports.** The category word. Frame publications as living
   editions (Vol. 01, issue framing, spine motif), never "flipbooks."

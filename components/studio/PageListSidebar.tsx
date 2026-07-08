@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Wand2 } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
+  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
@@ -13,6 +15,7 @@ import {
 } from '@dnd-kit/core'
 import {
   SortableContext,
+  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
@@ -56,7 +59,7 @@ const BLOCK_LIBRARY: {
     type: 'button',
     label: 'Button',
     icon: <Box size={16} />,
-    defaults: { label: 'Explore More', href: 'https://klicko.app', variant: 'primary' },
+    defaults: { label: 'Explore More', href: 'https://qlico.app', variant: 'primary' },
   },
   {
     type: 'divider',
@@ -174,7 +177,8 @@ export function PageListSidebar() {
   const [activeTab, setActiveTab] = useState<'pages' | 'layers' | 'library' | 'templates'>('pages')
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   if (!book?.pages) return null
@@ -280,7 +284,7 @@ export function PageListSidebar() {
                   onClick={() => selectBlock(b.id)}
                   className={twMerge(
                     "flex items-center gap-2 w-full p-2 text-left text-xs rounded transition-colors",
-                    selectedBlockId === b.id ? "bg-blue-500/20 text-blue-400" : "hover:bg-neutral-800 text-neutral-300"
+                    selectedBlockId === b.id ? "bg-[var(--accent-vivid)]/20 text-[var(--accent-vivid)]" : "hover:bg-neutral-800 text-neutral-300"
                   )}
                 >
                   <Box size={14} className="opacity-50" />
@@ -298,7 +302,7 @@ export function PageListSidebar() {
                   onClick={() => selectHotspot(h.id)}
                   className={twMerge(
                     "flex items-center gap-2 w-full p-2 text-left text-xs rounded transition-colors",
-                    selectedHotspotId === h.id ? "bg-blue-500/20 text-blue-400" : "hover:bg-neutral-800 text-neutral-300"
+                    selectedHotspotId === h.id ? "bg-[var(--accent-vivid)]/20 text-[var(--accent-vivid)]" : "hover:bg-neutral-800 text-neutral-300"
                   )}
                 >
                   <Wand2 size={14} className="opacity-50" />
@@ -350,15 +354,17 @@ export function PageListSidebar() {
                   key={tpl.id}
                   onClick={() => {
                     if (!currentPage) return
+                    const hadContent = currentPage.blocks.length > 0
                     const newBlocks = tpl.blocks.map(b => ({ ...b, id: crypto.randomUUID() })) as Block[]
                     setPageBlocks(currentPage.id, newBlocks)
                     updatePage(currentPage.id, { layout: tpl.layout })
+                    if (hadContent) toast('Page content replaced — ⌘Z to undo')
                   }}
-                  className="flex flex-col p-4 rounded-xl bg-neutral-800/50 border border-neutral-700 hover:border-blue-500/50 hover:bg-neutral-800 text-left transition-all group"
+                  className="flex flex-col p-4 rounded-xl bg-neutral-800/50 border border-neutral-700 hover:border-[var(--accent-vivid)]/50 hover:bg-neutral-800 text-left transition-all group"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-xs font-bold text-neutral-200">{tpl.label}</div>
-                    <Wand2 size={12} className="text-neutral-600 group-hover:text-blue-400 transition-colors" />
+                    <Wand2 size={12} className="text-neutral-600 group-hover:text-[var(--accent-vivid)] transition-colors" />
                   </div>
                   <div className="text-[10px] text-neutral-500 leading-relaxed line-clamp-2 mb-3">
                     {tpl.description}

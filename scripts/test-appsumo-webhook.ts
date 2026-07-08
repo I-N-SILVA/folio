@@ -13,7 +13,7 @@ async function sendWebhook(action: string, tier: number, licenseKey: string, pre
     action,
     license_key: licenseKey,
     tier,
-    plan_id: `klicko_tier_${tier}`,
+    plan_id: `qlico_tier_${tier}`,
     activation_email: 'tester@example.com',
     invoice_item_uuid: crypto.randomUUID(),
     ...(prevLicenseKey ? { prev_license_key: prevLicenseKey } : {}),
@@ -55,9 +55,9 @@ async function run() {
     process.exit(1)
   }
 
-  const licenseKey = `klicko-test-${crypto.randomUUID().slice(0, 8)}`
+  const licenseKey = `qlico-test-${crypto.randomUUID().slice(0, 8)}`
   const prevLicenseKey = (action === 'enhance' || action === 'reduce') 
-    ? 'klicko-test-prev-123' 
+    ? 'qlico-test-prev-123' 
     : undefined
 
   await sendWebhook(action, tier, licenseKey, prevLicenseKey)

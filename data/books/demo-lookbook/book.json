@@ -149,7 +149,7 @@
         { "type": "text", "id": "lb6-1", "variant": "title", "content": "Ondine", "align": "center" },
         { "type": "text", "id": "lb6-2", "variant": "body", "content": "The full collection is online — and this edition told us exactly which pieces you lingered on.", "align": "center" },
         { "type": "divider", "id": "lb6-3" },
-        { "type": "button", "id": "lb6-4", "label": "Shop the collection →", "href": "https://klicko.app", "variant": "primary", "target": "_blank" }
+        { "type": "button", "id": "lb6-4", "label": "Shop the collection →", "href": "https://qlico.app", "variant": "primary", "target": "_blank" }
       ],
       "hotspots": []
     }

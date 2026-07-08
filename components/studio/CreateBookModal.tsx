@@ -19,7 +19,7 @@ function isLimitError(message: string) {
   return /BOOK_LIMIT_REACHED|plan_limit|plan's limit/i.test(message)
 }
 
-export function CreateFolioModal({ onClose }: Props) {
+export function CreateBookModal({ onClose }: Props) {
   const [step, setStep] = useState<'choice' | 'pdf' | 'images' | 'name-blank'>('choice')
   const [newTitle, setNewTitle] = useState('')
   const [loading, setLoading] = useState(false)
@@ -96,7 +96,7 @@ export function CreateFolioModal({ onClose }: Props) {
       router.push(`/editor/${book.id}`)
     } catch (err: any) {
       if (guardLimit(err)) return
-      toast.error(err.message || 'Failed to create folio')
+      toast.error(err.message || 'Failed to create edition')
       setLoading(false)
     }
   }
@@ -162,7 +162,7 @@ export function CreateFolioModal({ onClose }: Props) {
 
   const shell = (children: React.ReactNode, maxW = 'max-w-xl') => (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1d1d1f]/55 p-4 backdrop-blur-sm">
-      <div className={`w-full ${maxW} overflow-hidden rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff] shadow-[0_40px_120px_rgba(27,23,18,0.35)]`}>
+      <div className={`w-full ${maxW} overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff] shadow-[0_40px_120px_rgba(27,23,18,0.35)]`}>
         {children}
       </div>
     </div>
@@ -172,32 +172,32 @@ export function CreateFolioModal({ onClose }: Props) {
   if (limitHit) {
     return shell(
       <div className="p-8 text-center">
-        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#ffffff]">
+        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--qlico-ink)] text-[#ffffff]">
           <Crown size={26} />
         </div>
-        <h2 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">
+        <h2 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">
           You've reached your book limit
         </h2>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[var(--folio-muted)]">
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[var(--qlico-muted)]">
           {quota?.planName ? `Your ${quota.planName} plan` : 'Your plan'} includes{' '}
           {quota?.limit ?? 'a limited number of'} book{quota?.limit === 1 ? '' : 's'}. Upgrade to
-          publish more interactive folios.
+          publish more interactive editions.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/#pricing"
-            className="rounded-full bg-[var(--folio-teal)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
+            className="rounded-full bg-[var(--qlico-teal)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
           >
             See plans
           </Link>
           <Link
             href="/redeem"
-            className="rounded-full border border-[var(--folio-border)] bg-white/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-ink)] transition hover:-translate-y-0.5 hover:bg-white"
+            className="rounded-full border border-[var(--qlico-border)] bg-white/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-white"
           >
             Redeem a code
           </Link>
         </div>
-        <button onClick={onClose} className="mt-5 text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
+        <button onClick={onClose} className="mt-5 text-sm font-bold text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]">
           Close
         </button>
       </div>,
@@ -208,15 +208,15 @@ export function CreateFolioModal({ onClose }: Props) {
   if (step === 'name-blank') {
     return shell(
       <>
-        <div className="flex items-center justify-between border-b border-[var(--folio-border)] p-6">
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Name your KLICKO</h2>
-          <button onClick={onClose} className="rounded-full p-2 text-[var(--folio-muted)] transition-colors hover:bg-black/5">
+        <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">Name your QLICO</h2>
+          <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-black/5">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleCreateBlank} className="p-8">
-          <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--folio-muted)]">
+          <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
             Book title
           </label>
           <input
@@ -225,23 +225,23 @@ export function CreateFolioModal({ onClose }: Props) {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="e.g. Q3 Investor Update"
-            className="w-full rounded-[1.1rem] border border-[var(--folio-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--folio-teal)] focus:ring-2 focus:ring-[var(--folio-teal)]/20"
+            className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
           />
 
           <div className="flex gap-3 pt-6">
             <button
               type="button"
               onClick={() => setStep('choice')}
-              className="flex-1 rounded-full border border-[var(--folio-border)] bg-white/60 px-4 py-3 text-sm font-bold text-[var(--folio-ink)] transition hover:bg-white"
+              className="flex-1 rounded-full border border-[var(--qlico-border)] bg-white/60 px-4 py-3 text-sm font-bold text-[var(--qlico-ink)] transition hover:bg-white"
             >
               Back
             </button>
             <button
               type="submit"
               disabled={loading || !newTitle.trim()}
-              className="flex-[2] rounded-full bg-[var(--folio-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-[2] rounded-full bg-[var(--qlico-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Creating…' : 'Create KLICKO'}
+              {loading ? 'Creating…' : 'Create QLICO'}
             </button>
           </div>
         </form>
@@ -252,16 +252,16 @@ export function CreateFolioModal({ onClose }: Props) {
 
   return shell(
     <>
-      <div className="flex items-center justify-between border-b border-[var(--folio-border)] p-6">
+      <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
         <div>
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--folio-ink)]">Create New KLICKO</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">Create New QLICO</h2>
           {quota && (
-            <p className="mt-1 text-xs font-semibold text-[var(--folio-muted)]">
+            <p className="mt-1 text-xs font-semibold text-[var(--qlico-muted)]">
               {quota.used} / {quota.limit ?? '∞'} books used · {quota.planName}
             </p>
           )}
         </div>
-        <button onClick={onClose} className="rounded-full p-2 text-[var(--folio-muted)] transition-colors hover:bg-black/5">
+        <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-black/5">
           <X size={20} />
         </button>
       </div>
@@ -277,14 +277,14 @@ export function CreateFolioModal({ onClose }: Props) {
               key={key}
               disabled={loading}
               onClick={onClick}
-              className="group flex flex-col items-center gap-4 rounded-[1.5rem] border border-[var(--folio-border)] bg-white/55 p-6 text-center transition-all hover:-translate-y-1 hover:border-[var(--folio-teal)] hover:bg-white disabled:opacity-50"
+              className="group flex flex-col items-center gap-4 rounded-[1.5rem] border border-[var(--qlico-border)] bg-white/55 p-6 text-center transition-all hover:-translate-y-1 hover:border-[var(--qlico-teal)] hover:bg-white disabled:opacity-50"
             >
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--folio-ink)] text-[#f5f5f7] transition-colors group-hover:bg-[var(--folio-teal)]">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--qlico-ink)] text-[#f5f5f7] transition-colors group-hover:bg-[var(--qlico-teal)]">
                 <Icon size={26} />
               </div>
               <div>
-                <h3 className="font-display text-lg font-semibold tracking-[-0.03em] text-[var(--folio-ink)]">{title}</h3>
-                <p className="mt-1 text-xs text-[var(--folio-muted)]">{desc}</p>
+                <h3 className="font-display text-lg font-semibold tracking-[-0.03em] text-[var(--qlico-ink)]">{title}</h3>
+                <p className="mt-1 text-xs text-[var(--qlico-muted)]">{desc}</p>
               </div>
             </button>
           ))}
@@ -293,14 +293,14 @@ export function CreateFolioModal({ onClose }: Props) {
         <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={handleBulkImageUpload} className="hidden" />
 
         {loading && (
-          <div className="mt-8 flex animate-pulse items-center justify-center gap-3 text-sm font-semibold text-[var(--folio-teal)]">
+          <div className="mt-8 flex animate-pulse items-center justify-center gap-3 text-sm font-semibold text-[var(--qlico-teal)]">
             <Loader2 className="animate-spin" size={18} />
-            Initializing your folio…
+            Initializing your edition…
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-center border-t border-[var(--folio-border)] bg-white/40 p-5 text-xs text-[var(--folio-muted)]">
+      <div className="flex items-center justify-center border-t border-[var(--qlico-border)] bg-white/40 p-5 text-xs text-[var(--qlico-muted)]">
         Tip: PDFs are best for books, Images are best for portfolios.
       </div>
     </>

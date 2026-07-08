@@ -13,9 +13,9 @@ export async function GET(request: Request) {
   const h = Math.min(Math.max(parseInt(searchParams.get('h') || '2532', 10) || 2532, 320), 4096)
   const mark = Math.round(Math.min(w, h) * 0.22)
 
-  const markPng = await readFile(join(process.cwd(), 'public/brand/klicko-mark.png'))
+  const markPng = await readFile(join(process.cwd(), 'public/brand/qlico-mark.png'))
   const markSrc = `data:image/png;base64,${markPng.toString('base64')}`
-  // klicko-mark.png is 512x621 (taller than wide)
+  // qlico-mark.png is 512x621 (taller than wide)
   const markW = Math.round(mark * (512 / 621))
 
   return new ImageResponse(
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
             fontFamily: 'Helvetica, Arial, sans-serif',
           }}
         >
-          KLICKO
+          QLICO
         </div>
       </div>
     ),

@@ -18,7 +18,7 @@ const FEATURE_ROWS: { key: string; label: string }[] = [
   { key: 'leadGating', label: 'Lead gating' },
   { key: 'customDomain', label: 'Custom domain' },
   { key: 'csvExport', label: 'CSV export' },
-  { key: 'whiteLabel', label: 'White-label (no KLICKO branding)' },
+  { key: 'whiteLabel', label: 'White-label (no QLICO branding)' },
   { key: 'watermark', label: 'Reader watermark' },
 ]
 
@@ -41,10 +41,10 @@ export default async function AccountPage({
     if (key === 'maxBooks') return formatQuota(e.maxBooks)
     if (key === 'analyticsDays') return `${e.analyticsDays} days`
     if (key === 'watermark') {
-      return e.watermark ? <Minus size={16} className="text-[var(--folio-muted)]" /> : <Check size={16} className="text-[var(--folio-teal)]" />
+      return e.watermark ? <Minus size={16} className="text-[var(--qlico-muted)]" /> : <Check size={16} className="text-[var(--qlico-teal)]" />
     }
     const on = (e as Record<string, unknown>)[key]
-    return on ? <Check size={16} className="text-[var(--folio-teal)]" /> : <Minus size={16} className="text-[var(--folio-muted)]" />
+    return on ? <Check size={16} className="text-[var(--qlico-teal)]" /> : <Minus size={16} className="text-[var(--qlico-muted)]" />
   }
 
   const quotaPct = Number.isFinite(e.maxBooks) ? Math.min(100, Math.round((used / e.maxBooks) * 100)) : 0
@@ -52,10 +52,10 @@ export default async function AccountPage({
   const isProSubscriber = plan.id === 'pro'
 
   return (
-    <main className="folio-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--folio-ink)] sm:px-8">
+    <main className="qlico-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--qlico-ink)] sm:px-8">
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm font-bold text-[var(--folio-muted)] hover:text-[var(--folio-ink)]">
+          <Link href="/dashboard" className="text-sm font-bold text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]">
             ← Back to studio
           </Link>
           <SignOutButton />
@@ -70,13 +70,13 @@ export default async function AccountPage({
           </div>
         )}
 
-        <Reveal as="section" className="mb-6 overflow-hidden rounded-[2.25rem] border border-[var(--folio-border)] bg-[#ffffff]/78 p-7 shadow-[var(--folio-shadow)] backdrop-blur sm:p-9">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--folio-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--folio-teal)]">
+        <Reveal as="section" className="mb-6 overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/78 p-7 shadow-[var(--qlico-shadow)] backdrop-blur sm:p-9">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--qlico-teal)]">
             <Crown size={13} />
             {plan.lifetime ? 'Lifetime plan' : 'Current plan'}
           </div>
           <h1 className="font-display text-5xl font-semibold leading-none tracking-[-0.06em]">{plan.name}</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--folio-muted)]">{plan.tagline}</p>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--qlico-muted)]">{plan.tagline}</p>
 
           {profile.status !== 'active' && (
             <p className="mt-4 inline-block rounded-full bg-[#fbe4e1] px-4 py-1.5 text-xs font-bold text-[#8a2b26]">
@@ -87,13 +87,13 @@ export default async function AccountPage({
           <div className="mt-7 max-w-md">
             <div className="flex items-center justify-between text-sm font-bold">
               <span>Books used</span>
-              <span className="text-[var(--folio-muted)]">
+              <span className="text-[var(--qlico-muted)]">
                 {used} / {formatQuota(e.maxBooks)}
               </span>
             </div>
             <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-black/8">
               <div
-                className="h-full rounded-full bg-[var(--folio-teal)] transition-all"
+                className="h-full rounded-full bg-[var(--qlico-teal)] transition-all"
                 style={{ width: `${Number.isFinite(e.maxBooks) ? quotaPct : 12}%` }}
               />
             </div>
@@ -101,12 +101,12 @@ export default async function AccountPage({
         </Reveal>
 
         <Reveal as="div" delay={80} className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <section className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7 shadow-sm">
+          <section className="rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/72 p-7 shadow-sm">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">What's included</h2>
-            <dl className="mt-5 divide-y divide-[var(--folio-border)]">
+            <dl className="mt-5 divide-y divide-[var(--qlico-border)]">
               {FEATURE_ROWS.map(({ key, label }) => (
                 <div key={key} className="flex items-center justify-between py-3">
-                  <dt className="text-sm font-semibold text-[var(--folio-ink)]">{label}</dt>
+                  <dt className="text-sm font-semibold text-[var(--qlico-ink)]">{label}</dt>
                   <dd className="text-sm font-bold">{renderValue(key)}</dd>
                 </div>
               ))}
@@ -114,7 +114,7 @@ export default async function AccountPage({
           </section>
 
           <aside className="flex flex-col gap-5">
-            <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[var(--folio-ink)] p-7 text-[#ffffff] shadow-sm">
+            <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-ink)] p-7 text-[#ffffff] shadow-sm">
               <Gift size={22} className="text-[#ffffff]" />
               <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Have an AppSumo code?</h2>
               <p className="mt-2 text-sm leading-6 text-[#a1a1a6]">
@@ -129,10 +129,10 @@ export default async function AccountPage({
             </div>
 
             {!plan.lifetime && plan.id === 'free' && (
-              <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7 shadow-sm">
-                <Sparkles size={20} className="text-[var(--folio-brass)]" />
+              <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/72 p-7 shadow-sm">
+                <Sparkles size={20} className="text-[var(--qlico-brass)]" />
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Go Pro</h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--folio-muted)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--qlico-muted)]">
                   Unlimited books, custom domains, and 90-day analytics — $19/mo.
                 </p>
                 {billingOn ? (
@@ -140,7 +140,7 @@ export default async function AccountPage({
                 ) : (
                   <Link
                     href="/#pricing"
-                    className="mt-5 inline-block rounded-full bg-[var(--folio-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
+                    className="mt-5 inline-block rounded-full bg-[var(--qlico-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
                   >
                     See plans
                   </Link>
@@ -149,10 +149,10 @@ export default async function AccountPage({
             )}
 
             {billingOn && isProSubscriber && (
-              <div className="rounded-[2rem] border border-[var(--folio-border)] bg-[#ffffff]/72 p-7 shadow-sm">
-                <Sparkles size={20} className="text-[var(--folio-brass)]" />
+              <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/72 p-7 shadow-sm">
+                <Sparkles size={20} className="text-[var(--qlico-brass)]" />
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Billing</h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--folio-muted)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--qlico-muted)]">
                   Update your card, view invoices, or cancel anytime.
                 </p>
                 <ManageBillingButton className="mt-5" />

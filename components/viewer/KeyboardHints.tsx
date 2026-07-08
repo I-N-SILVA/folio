@@ -28,7 +28,7 @@ export function KeyboardHints() {
       {/* Hint trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white text-sm font-medium flex items-center justify-center backdrop-blur-sm transition-colors z-40"
+        className="fixed bottom-4 left-4 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white text-sm font-medium flex items-center justify-center backdrop-blur-sm transition-colors z-40"
         aria-label="Keyboard shortcuts"
         title="Keyboard shortcuts (?)"
       >

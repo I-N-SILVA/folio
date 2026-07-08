@@ -17,14 +17,14 @@ const displayFont = Fraunces({
   axes: ['SOFT', 'WONK', 'opsz'],
 })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klicko.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: 'KLICKO — Flip through anything', template: '%s | KLICKO' },
+  title: { default: 'QLICO — Flip through anything', template: '%s | QLICO' },
   description:
-    'KLICKO turns static PDFs into interactive editions with hotspots, analytics, embeds, and brand control. Built for catalogs, lookbooks, portfolios, and reports.',
-  applicationName: 'KLICKO',
+    'QLICO turns static PDFs into interactive editions with hotspots, analytics, embeds, and brand control. Built for catalogs, lookbooks, portfolios, and reports.',
+  applicationName: 'QLICO',
   keywords: [
     'interactive editions',
     'interactive publishing',
@@ -36,29 +36,29 @@ export const metadata: Metadata = {
     'portfolio',
     'embeddable reader',
   ],
-  authors: [{ name: 'KLICKO' }],
-  creator: 'KLICKO',
-  publisher: 'KLICKO',
+  authors: [{ name: 'QLICO' }],
+  creator: 'QLICO',
+  publisher: 'QLICO',
   alternates: { canonical: '/' },
   manifest: '/manifest.webmanifest',
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    siteName: 'KLICKO',
-    title: 'KLICKO — Flip through anything',
+    siteName: 'QLICO',
+    title: 'QLICO — Flip through anything',
     description:
       'Turn static PDFs into interactive editions with hotspots, analytics, and one-line embeds.',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'KLICKO — Flip through anything',
+    title: 'QLICO — Flip through anything',
     description:
       'Turn static PDFs into interactive editions with hotspots, analytics, and one-line embeds.',
   },
   appleWebApp: {
     capable: true,
-    title: 'KLICKO',
+    title: 'QLICO',
     statusBarStyle: 'default',
   },
   formatDetection: { telephone: false },

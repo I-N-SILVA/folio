@@ -1,6 +1,6 @@
-# KLICKO — Premium Launch & App Store Plan
+# QLICO — Premium Launch & App Store Plan
 
-This is the playbook for taking KLICKO from a polished web app to a premium,
+This is the playbook for taking QLICO from a polished web app to a premium,
 installable product across the web, iOS, and Android — plus the marketing motion
 to launch it loudly.
 
@@ -8,7 +8,7 @@ to launch it loudly.
 
 ## 0. Where we are
 
-KLICKO already ships as a Next.js 16 web app with:
+QLICO already ships as a Next.js 16 web app with:
 
 - A premium marketing landing page (`app/page.tsx`) — hero, trust marquee,
   features, use cases, workflow, testimonials, pricing, FAQ, and a final CTA band.
@@ -74,10 +74,10 @@ Capacitor for iOS**, because it reuses the exact same web build.
   cost, deferred.
 
 **Store assets checklist (both):**
-- [ ] App icon set (1024² master — white KLICKO mark on violet, upscaled from
+- [ ] App icon set (1024² master — white QLICO mark on violet, upscaled from
       `public/brand/icon-512.png`'s source).
 - [ ] Screenshots per device class (use the reader + studio on real content).
-- [ ] Preview video (15–30s: PDF in → interactive folio out → analytics).
+- [ ] Preview video (15–30s: PDF in → interactive edition out → analytics).
 - [ ] Title, subtitle, keywords, description, privacy policy URL, support URL.
 - [ ] Data-safety / privacy nutrition labels (we collect reader analytics — disclose).
 
@@ -105,10 +105,10 @@ Capacitor for iOS**, because it reuses the exact same web build.
 
 | Day | Move |
 | --- | --- |
-| T-14 | Recruit 5–10 design partners; collect real quotes + sample folios. |
+| T-14 | Recruit 5–10 design partners; collect real quotes + sample editions. |
 | T-7  | Warm up: teaser posts, build-in-public thread, waitlist emails. |
 | T-1  | Final QA pass on web + TestFlight/internal-test builds. |
-| **T-0** | **Product Hunt launch** (Tue–Thu, 12:01am PT). Hero GIF of a PDF becoming an interactive folio. |
+| **T-0** | **Product Hunt launch** (Tue–Thu, 12:01am PT). Hero GIF of a PDF becoming an interactive edition. |
 | T-0  | Cross-post: X/LinkedIn thread, relevant subreddits, Indie Hackers, designer Slacks/Discords. |
 | T-0  | Email the waitlist with the "now installable" hook. |
 | T+1..7 | Reply to every comment; ship 1–2 small fixes publicly; collect testimonials. |
@@ -117,14 +117,14 @@ Capacitor for iOS**, because it reuses the exact same web build.
 actually finish — on the web, embedded, and installed as an app."*
 
 **Launch metrics to watch:** signups, first-publish rate, demo views, install
-rate (PWA + stores), and reader completion on shared folios.
+rate (PWA + stores), and reader completion on shared editions.
 
 ---
 
 ## 5. Backlog / nice-to-haves
 
-- Web Share Target API so users can "share to KLICKO" a PDF from other apps.
-- Push notifications for "your folio hit 1,000 reads".
+- Web Share Target API so users can "share to QLICO" a PDF from other apps.
+- Push notifications for "your edition hit 1,000 reads".
 - Template gallery (catalog / lookbook / report starters) to shorten time-to-wow.
 - Custom-domain onboarding wizard for Pro.
 - AI cover + hotspot suggestions on import.

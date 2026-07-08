@@ -19,6 +19,7 @@ import {
 import {
   DndContext,
   closestCenter,
+  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
@@ -26,6 +27,7 @@ import {
 } from '@dnd-kit/core'
 import {
   SortableContext,
+  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
   horizontalListSortingStrategy,
@@ -52,20 +54,28 @@ function SortableBlock({ id, isSelected, onClick, children }: { id: string; isSe
       onClick={onClick}
       className={twMerge(
         'relative group/block transition-all outline-none rounded-lg',
-        isSelected ? 'ring-2 ring-inset ring-blue-500' : 'hover:ring-1 hover:ring-inset hover:ring-neutral-400',
-        isDragging && 'opacity-50 z-50 ring-2 ring-blue-500 shadow-xl',
+        isSelected ? 'ring-2 ring-inset ring-[var(--accent-vivid)]' : 'hover:ring-1 hover:ring-inset hover:ring-neutral-400',
+        isDragging && 'opacity-50 z-50 ring-2 ring-[var(--accent-vivid)] shadow-xl',
         !isSelected && 'cursor-pointer'
       )}
     >
-      {isSelected && (
-        <div 
-          {...listeners}
-          {...attributes}
-          className="absolute -left-3 top-1/2 -translate-y-1/2 -translate-x-full w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-400 text-white flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg z-50 transition-transform hover:scale-110"
-        >
-          <GripVertical size={16} />
-        </div>
-      )}
+      {/* Drag handle — inside the block bounds so it survives the page
+          frame's overflow-hidden even near the left edge; visible on hover
+          so reordering is discoverable before a block is selected. */}
+      <div
+        {...listeners}
+        {...attributes}
+        tabIndex={0}
+        aria-label="Drag to reorder block"
+        className={twMerge(
+          'absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-vivid)] text-white shadow-lg transition-all cursor-grab active:cursor-grabbing hover:bg-[var(--accent-vivid-hover)] hover:scale-110 z-50',
+          isSelected
+            ? 'opacity-100'
+            : 'opacity-0 group-hover/block:opacity-100 focus-visible:opacity-100'
+        )}
+      >
+        <GripVertical size={14} />
+      </div>
       <div className={twMerge(isSelected ? 'pointer-events-auto' : 'pointer-events-none')}>
         {children}
       </div>
@@ -220,7 +230,8 @@ export function EditorCanvas() {
   )
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -330,7 +341,7 @@ export function EditorCanvas() {
                   }}
                   className={twMerge(
                     "w-5 h-5 rounded-full border-2 border-white shadow-md cursor-pointer -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform",
-                    selectedHotspotId === hotspot.id ? "bg-blue-500 ring-2 ring-white" : "bg-amber-400"
+                    selectedHotspotId === hotspot.id ? "bg-[var(--accent-vivid)] ring-2 ring-white" : "bg-amber-400"
                   )}
                   title={hotspot.label}
                 />
