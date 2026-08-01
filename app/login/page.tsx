@@ -11,9 +11,10 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resent, setResent] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault()
     setLoading(true)
     setError('')
 
@@ -62,11 +63,49 @@ export default function LoginPage() {
         </div>
 
         {sent ? (
-          <div className="rounded-[1.5rem] border border-green-200 bg-green-50 p-6">
-            <h2 className="mb-1 font-semibold text-green-800">Check your email</h2>
-            <p className="text-sm text-green-700">
-              We sent a magic link to <strong>{email}</strong>. Click it to sign in.
-            </p>
+          <div>
+            <div className="rounded-[1.5rem] border border-green-200 bg-green-50 p-6">
+              <h2 className="mb-1 font-semibold text-green-800">Check your email</h2>
+              <p className="text-sm text-green-700">
+                We sent a magic link to <strong>{email}</strong>. Click it to sign in.
+              </p>
+              <p className="mt-3 text-xs leading-5 text-green-700/80">
+                It can take a minute to arrive. Check your spam folder if it doesn&apos;t.
+              </p>
+            </div>
+
+            {/* A typo'd address used to be a dead end — the only way out was a
+                page reload. */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setSent(false)
+                  setResent(false)
+                  setError('')
+                }}
+                className="font-semibold text-[var(--accent)] underline underline-offset-4 hover:text-[var(--accent-hover)]"
+              >
+                Use a different email
+              </button>
+              <button
+                type="button"
+                disabled={loading || resent}
+                onClick={async () => {
+                  await handleSubmit()
+                  setResent(true)
+                }}
+                className="font-semibold text-[var(--qlico-muted)] underline underline-offset-4 transition hover:text-[var(--qlico-ink)] disabled:no-underline disabled:opacity-60"
+              >
+                {loading ? 'Sending…' : resent ? 'Link resent' : 'Resend link'}
+              </button>
+            </div>
+
+            {error && (
+              <p className="mt-3 text-sm text-red-600" role="alert">
+                {error}
+              </p>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -85,7 +124,11 @@ export default function LoginPage() {
               />
             </div>
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && (
+              <p className="text-sm text-red-600" role="alert">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"

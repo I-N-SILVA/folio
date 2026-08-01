@@ -13,6 +13,7 @@ import { EditorCanvas } from '@/components/studio/EditorCanvas'
 import { SettingsPanel } from '@/components/studio/settings'
 import { PreviewModal } from '@/components/studio/PreviewModal'
 import { PageManagerModal } from '@/components/studio/PageManagerModal'
+import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { Grid } from 'lucide-react'
 import type { Book } from '@/lib/book-schema'
 
@@ -21,8 +22,9 @@ interface Props {
 }
 
 export function EditorClient({ book }: Props) {
-  const { book: storeBook, isDirty, isSaving, setBook, setIsSaving, updatePage } = useEditorStore()
+  const { book: storeBook, isDirty, setBook, setIsSaving } = useEditorStore()
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [titleEditing, setTitleEditing] = useState(false)
   const [titleValue, setTitleValue] = useState(book.title)
   const [showPreview, setShowPreview] = useState(false)
@@ -98,8 +100,9 @@ export function EditorClient({ book }: Props) {
         useEditorStore.setState({ isDirty: false })
       }
       setSaveStatus('saved')
+      setLastSavedAt(new Date())
       setTimeout(() => setSaveStatus('idle'), 2000)
-    } catch (err) {
+    } catch {
       toast.error('Save failed — check your connection')
       setSaveStatus('idle')
     } finally {
@@ -261,21 +264,38 @@ export function EditorClient({ book }: Props) {
 
         <div className="flex-1" />
 
-        {/* Save indicator */}
-        <div className="flex items-center gap-1.5 text-xs text-neutral-500 w-20 justify-end">
-          {saveStatus === 'saving' && (
+        {/* Save indicator. Always says something — an empty slot next to a
+            live document reads as "did my work save?" */}
+        <div
+          className="flex items-center gap-1.5 whitespace-nowrap text-xs text-neutral-400"
+          aria-live="polite"
+        >
+          {saveStatus === 'saving' ? (
             <>
               <Loader2 size={12} className="animate-spin" />
               <span>Saving…</span>
             </>
-          )}
-          {saveStatus === 'saved' && (
+          ) : saveStatus === 'saved' ? (
             <>
               <Check size={12} className="text-emerald-400" />
               <span className="text-emerald-400">Saved</span>
             </>
+          ) : (
+            <span className="hidden sm:inline">
+              {isDirty ? 'Unsaved changes' : <SavedAgo at={lastSavedAt} />}
+            </span>
           )}
         </div>
+
+        {/* Visual page manager */}
+        <button
+          onClick={() => setShowPageManager(true)}
+          className="hidden items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700 sm:flex"
+          title="Arrange pages"
+        >
+          <Grid size={13} />
+          Pages
+        </button>
 
         {/* Preview button */}
         <button
@@ -284,7 +304,7 @@ export function EditorClient({ book }: Props) {
           title="Preview (⌘P)"
         >
           <Eye size={13} />
-          Preview
+          <span className="hidden sm:inline">Preview</span>
         </button>
 
         {/* Publish toggle */}
@@ -306,7 +326,7 @@ export function EditorClient({ book }: Props) {
           <Link
             href={`/book/${storeBook.slug}`}
             target="_blank"
-            className="text-xs text-neutral-400 hover:text-neutral-100 transition-colors underline underline-offset-2"
+            className="hidden whitespace-nowrap text-xs text-neutral-400 underline underline-offset-2 transition-colors hover:text-neutral-100 sm:inline"
           >
             View Live
           </Link>
@@ -328,31 +348,27 @@ export function EditorClient({ book }: Props) {
         </aside>
       </div>
 
+      {/* Small screens get the side panels back as bottom sheets. */}
+      <MobileEditorDock />
+
       {/* Status Bar */}
-      <div className="h-8 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between px-4 shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-neutral-400">
-            <div className={twMerge(
-              "w-1.5 h-1.5 rounded-full",
-              isDirty ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
-            )} />
-            {isDirty ? 'UNSAVED CHANGES' : 'ALL CHANGES SAVED'}
-          </div>
-          <div className="h-3 w-px bg-neutral-800" />
-          <div className="flex items-center gap-2 text-[10px] text-neutral-500 uppercase tracking-wider">
-            <span className="font-bold text-neutral-400">Studio</span>
-            <span>v1.2.4</span>
-          </div>
+      <div className="hidden h-8 shrink-0 items-center justify-between border-t border-neutral-800 bg-neutral-900 px-4 lg:flex">
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-neutral-300">
+          <div className={twMerge(
+            "w-1.5 h-1.5 rounded-full",
+            isDirty ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+          )} />
+          {isDirty ? 'UNSAVED CHANGES' : 'ALL CHANGES SAVED'}
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-[9px] font-medium text-neutral-500 uppercase tracking-tighter">
-            <kbd className="px-1 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400">⌘Z</kbd> Undo
-            <span className="mx-1 opacity-30">|</span>
-            <kbd className="px-1 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400">⇧⌘Z</kbd> Redo
-            <span className="mx-1 opacity-30">|</span>
-            <kbd className="px-1 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400">⌘S</kbd> Save
-          </div>
+        {/* neutral-400 rather than neutral-500: at 9–10px on neutral-900 the
+            old value sat under the 4.5:1 contrast floor. */}
+        <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-tight text-neutral-400">
+          <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 py-0.5 text-neutral-300">⌘Z</kbd> Undo
+          <span className="mx-1 opacity-40">|</span>
+          <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 py-0.5 text-neutral-300">⇧⌘Z</kbd> Redo
+          <span className="mx-1 opacity-40">|</span>
+          <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 py-0.5 text-neutral-300">⌘S</kbd> Save
         </div>
       </div>
 
@@ -362,5 +378,23 @@ export function EditorClient({ book }: Props) {
       {/* Page Manager Modal */}
       {showPageManager && <PageManagerModal onClose={() => setShowPageManager(false)} />}
     </div>
+  )
+}
+
+/**
+ * "Saved" flashing for two seconds and then vanishing leaves the question
+ * people actually have mid-session unanswered: when did this last save? An
+ * absolute clock time beats a relative one here — it needs no ticking timer
+ * to stay true, and it stays readable after a long idle.
+ */
+function SavedAgo({ at }: { at: Date | null }) {
+  if (at === null) return null
+  return (
+    <>
+      Saved{' '}
+      <time dateTime={at.toISOString()}>
+        {at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+      </time>
+    </>
   )
 }

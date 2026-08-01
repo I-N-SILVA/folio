@@ -75,6 +75,33 @@ section[id] {
     "WONK" 1;
 }
 
+/* The dark studio panels reference this class; without it they fell back to
+   the default light scrollbar, a bright stripe against near-black chrome. */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3f3f46;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #52525b;
+}
+
 /* Grain texture intentionally neutralized — the QLICO aesthetic is clean. */
 .qlico-grain {
   position: relative;

@@ -171,7 +171,12 @@ function SortablePageItem({
   )
 }
 
-export function PageListSidebar() {
+interface PageListSidebarProps {
+  /** Lets the mobile sheet dismiss itself once a page is chosen. */
+  onPageSelected?: () => void
+}
+
+export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
   const { book, currentPageIndex, setCurrentPageIndex, addPage, removePage, reorderPages, addBlock, setPageBlocks, updatePage, selectBlock, selectHotspot, selectedBlockId, selectedHotspotId } =
     useEditorStore()
   const [activeTab, setActiveTab] = useState<'pages' | 'layers' | 'library' | 'templates'>('pages')
@@ -203,7 +208,7 @@ export function PageListSidebar() {
         <button
           onClick={() => setActiveTab('pages')}
           className={twMerge(
-            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
             activeTab === 'pages' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
@@ -213,7 +218,7 @@ export function PageListSidebar() {
         <button
           onClick={() => setActiveTab('layers')}
           className={twMerge(
-            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
             activeTab === 'layers' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
@@ -223,7 +228,7 @@ export function PageListSidebar() {
         <button
           onClick={() => setActiveTab('library')}
           className={twMerge(
-            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
             activeTab === 'library' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
@@ -233,7 +238,7 @@ export function PageListSidebar() {
         <button
           onClick={() => setActiveTab('templates')}
           className={twMerge(
-            'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
+            'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
             activeTab === 'templates' ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30' : 'text-neutral-500 hover:text-neutral-300'
           )}
         >
@@ -262,7 +267,10 @@ export function PageListSidebar() {
                     bookId={book.id}
                     isSelected={currentPageIndex === index}
                     isOnly={pages.length === 1}
-                    onSelect={() => setCurrentPageIndex(index)}
+                    onSelect={() => {
+                      setCurrentPageIndex(index)
+                      onPageSelected?.()
+                    }}
                     onDelete={() => removePage(page.id)}
                   />
                 ))}

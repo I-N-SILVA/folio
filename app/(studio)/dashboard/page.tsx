@@ -1,8 +1,8 @@
-import { LibraryBig, Plus, Sparkles, BookOpen } from 'lucide-react'
+import { Sparkles, BookOpen } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
 import { OnboardingChecklist } from '@/components/studio/OnboardingChecklist'
-import { BookCard } from '@/components/studio/BookCard'
+import { LibraryBrowser } from '@/components/studio/LibraryBrowser'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
 import type { Book } from '@/lib/book-schema'
@@ -78,19 +78,7 @@ export default async function DashboardPage() {
             <DashboardActions />
           </section>
         ) : (
-          <section>
-            <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--qlico-muted)]">
-              <LibraryBig size={16} />
-              Library
-            </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {books.map((book, i) => (
-                <Reveal key={book.id} delay={(i % 3) * 70}>
-                  <BookCard book={book} />
-                </Reveal>
-              ))}
-            </div>
-          </section>
+          <LibraryBrowser books={books} />
         )}
       </div>
     </main>

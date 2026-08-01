@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BarChart2, ExternalLink, Trash2, Edit2, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/Modal'
 import type { Book } from '@/lib/book-schema'
 
 interface BookCardProps {
@@ -14,6 +15,7 @@ interface BookCardProps {
 export function BookCard({ book: initialBook }: BookCardProps) {
   const [book, setBook] = useState(initialBook)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [newTitle, setNewTitle] = useState(book.title)
   const router = useRouter()
@@ -22,12 +24,11 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   const displayDate = book.updated_at || book.created_at || new Date().toISOString()
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${book.title}"?`)) return
-
     setIsDeleting(true)
     try {
       const res = await fetch(`/api/books/${book.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete book')
+      setConfirmDelete(false)
       toast.success('Book deleted')
       router.refresh()
     } catch (err: any) {
@@ -143,13 +144,31 @@ export function BookCard({ book: initialBook }: BookCardProps) {
 
         <button
           disabled={isDeleting}
-          onClick={handleDelete}
+          onClick={() => setConfirmDelete(true)}
           className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-red-50 hover:text-red-700"
-          aria-label="Delete"
+          aria-label={`Delete ${book.title}`}
         >
           <Trash2 size={16} />
         </button>
       </div>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete this edition?"
+          body={
+            <>
+              <strong className="font-semibold text-[var(--qlico-ink)]">{book.title}</strong> and
+              all of its pages, hotspots, and analytics will be permanently removed. This can&apos;t
+              be undone.
+            </>
+          }
+          confirmLabel="Delete edition"
+          destructive
+          busy={isDeleting}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
     </article>
   )
 }

@@ -1,12 +1,22 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
 import type { Book } from '@/lib/book-schema'
+
+function subscribeToFullscreen(onChange: () => void) {
+  document.addEventListener('fullscreenchange', onChange)
+  return () => document.removeEventListener('fullscreenchange', onChange)
+}
+
+/** Capability checks never change after load, but still need a subscriber. */
+function subscribeToNothing() {
+  return () => {}
+}
 
 /** Relative luminance of a hex color (1 = white). */
 function luminance(hex: string): number {
@@ -62,18 +72,39 @@ function CoverOpen({ book }: { book: Book }) {
 export function ViewerChrome({ book, embed = false }: { book: Book; embed?: boolean }) {
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
-  const [fullscreen, setFullscreen] = useState(false)
   const reduce = useReducedMotion()
 
   const totalPages = book.pages?.length ?? 0
 
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
-      setFullscreen(true)
-    } else {
-      document.exitFullscreen()
-      setFullscreen(false)
+  // The button used to track its own state, so leaving fullscreen any other
+  // way — Escape, F11, the OS chrome — left the icon showing "exit" while the
+  // page was already windowed. The browser is the only source of truth, so
+  // subscribe to it rather than mirroring it into React state.
+  const fullscreen = useSyncExternalStore(
+    subscribeToFullscreen,
+    () => Boolean(document.fullscreenElement),
+    () => false
+  )
+
+  // iOS Safari has no Element.requestFullscreen — don't offer a button that
+  // can't do anything there.
+  const canFullscreen = useSyncExternalStore(
+    subscribeToNothing,
+    () => typeof document.documentElement.requestFullscreen === 'function',
+    () => false
+  )
+
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen()
+      } else {
+        await document.exitFullscreen()
+      }
+    } catch {
+      // Rejected requests (permissions policy, no user gesture) fire no
+      // `fullscreenchange`, so there's nothing to re-sync — the subscribed
+      // value already reflects reality.
     }
   }
 
@@ -128,13 +159,16 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
             <ChevronRight size={20} />
           </button>
 
-          <button
-            onClick={toggleFullscreen}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10"
-            aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-          >
-            {fullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-          </button>
+          {canFullscreen && (
+            <button
+              onClick={toggleFullscreen}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10"
+              aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              aria-pressed={fullscreen}
+            >
+              {fullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+            </button>
+          )}
         </div>
       )}
 

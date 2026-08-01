@@ -35,6 +35,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
+import { Modal } from '@/components/ui/Modal'
 import type { Block } from '@/lib/book-schema'
 
 // ─── Sortable Block Wrapper ───────────────────────────────────────────────────
@@ -151,31 +152,35 @@ interface BlockPickerModalProps {
 
 function BlockPickerModal({ onPick, onClose }: BlockPickerModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div
-        className="bg-neutral-900 border border-neutral-700 rounded-xl p-4 w-80 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-semibold text-neutral-200">Add Block</span>
-          <button onClick={onClose} className="text-neutral-500 hover:text-neutral-300">
-            <X size={16} />
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {BLOCK_TYPES.map(({ type, label, icon, defaults }) => (
-            <button
-              key={type}
-              onClick={() => onPick(type, defaults)}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors"
-            >
-              {icon}
-              <span className="text-xs">{label}</span>
-            </button>
-          ))}
-        </div>
+    <Modal
+      onClose={onClose}
+      title="Add block"
+      hideCloseButton
+      className="w-80 max-w-[calc(100vw-2rem)] border border-neutral-700 bg-neutral-900 p-4"
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-sm font-semibold text-neutral-200">Add Block</span>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="text-neutral-400 hover:text-neutral-100"
+        >
+          <X size={16} />
+        </button>
       </div>
-    </div>
+      <div className="grid grid-cols-3 gap-2">
+        {BLOCK_TYPES.map(({ type, label, icon, defaults }) => (
+          <button
+            key={label}
+            onClick={() => onPick(type, defaults)}
+            className="flex flex-col items-center gap-1.5 rounded-lg bg-neutral-800 p-3 text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white"
+          >
+            {icon}
+            <span className="text-xs">{label}</span>
+          </button>
+        ))}
+      </div>
+    </Modal>
   )
 }
 
