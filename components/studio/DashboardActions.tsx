@@ -1,26 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, UserCircle } from 'lucide-react'
-import { SignOutButton } from './SignOutButton'
+import { Plus } from 'lucide-react'
 import { InstallPrompt } from '@/components/InstallPrompt'
 
 /**
- * Rendered in both the header and the empty state, so it holds no dialog
- * state of its own — the create flow is owned by CreateBookLauncher and
- * opened by navigating to `?new=1`.
+ * Just the primary action now — account and sign-out moved into StudioNav,
+ * where they're reachable from every studio surface rather than only here.
+ * Rendered in both the page header and the empty state, so it holds no dialog
+ * state of its own: the create flow is owned by CreateBookLauncher and opened
+ * by navigating to `?new=1`.
  */
 export function DashboardActions() {
   return (
     <div className="flex items-center gap-2">
       <InstallPrompt className="hidden sm:flex" />
-      <Link
-        href="/account"
-        className="flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-white"
-      >
-        <UserCircle size={16} />
-        Account
-      </Link>
       <Link
         href="/dashboard?new=1"
         scroll={false}
@@ -29,7 +23,6 @@ export function DashboardActions() {
         <Plus size={16} />
         Create New
       </Link>
-      <SignOutButton className="px-4 py-3" />
     </div>
   )
 }

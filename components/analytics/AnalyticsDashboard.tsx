@@ -84,6 +84,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [heatmapPage, setHeatmapPage] = useState<number>(1)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const labels = useMemo(() => buildLabelMaps(book), [book])
   const pageByNumber = useMemo(
@@ -96,8 +97,8 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
     fetch(`/api/analytics/${book.slug}?range=${range}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [book.slug, range])
+      .catch(() => { setData(null); setLoading(false) })
+  }, [book.slug, range, reloadKey])
 
   function download(filename: string, headers: string[], rows: string[][]) {
     const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\n')
@@ -185,9 +186,20 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-[var(--qlico-muted)]">Loading analytics…</div>
+          <AnalyticsSkeleton />
         ) : !data ? (
-          <div className="text-center py-20 text-[var(--qlico-muted)]">Failed to load analytics.</div>
+          <div className="rounded-3xl border border-[var(--qlico-border)] bg-white py-16 text-center">
+            <p className="font-semibold text-[var(--qlico-ink)]">Couldn&apos;t load analytics</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--qlico-muted)]">
+              The request didn&apos;t come back. Check your connection and try again.
+            </p>
+            <button
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="mt-5 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+            >
+              Retry
+            </button>
+          </div>
         ) : (
           <>
             {/* Summary Cards */}
@@ -208,7 +220,15 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
 
             {/* Page View Heatmap */}
             {data.pageViewData.length > 0 && (
-              <ChartCard title="Page Views">
+              <ChartCard
+                title="Page Views"
+                summary={`Views per page. ${data.pageViewData
+                  .map(
+                    (d) =>
+                      `Page ${d.page}: ${d.views} view${d.views === 1 ? '' : 's'}, average dwell ${formatDuration(d.avgDwellMs)}.`
+                  )
+                  .join(' ')}`}
+              >
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={data.pageViewData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <XAxis dataKey="page" tick={{ fontSize: 11 }} label={{ value: 'Page', position: 'insideBottom', offset: -2, fontSize: 11 }} />
@@ -231,7 +251,12 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
 
             {/* Completion Funnel */}
             {data.funnelData.length > 0 && (
-              <ChartCard title="Session Completion Funnel">
+              <ChartCard
+                title="Session Completion Funnel"
+                summary={`Share of sessions reaching each page. ${data.funnelData
+                  .map((d) => `Page ${d.page}: ${d.pct}%.`)
+                  .join(' ')}`}
+              >
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={data.funnelData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <XAxis dataKey="page" tick={{ fontSize: 11 }} />
@@ -419,6 +444,33 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
   )
 }
 
+/**
+ * Switching date range dropped the whole dashboard to the words "Loading
+ * analytics…", so the layout collapsed and rebuilt on every toggle. Holding
+ * the shape steady makes the change feel like a refresh rather than a reload.
+ */
+function AnalyticsSkeleton() {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Loading analytics…</span>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="h-[116px] animate-pulse rounded-3xl border border-[var(--qlico-border)] bg-white"
+          />
+        ))}
+      </div>
+      {[0, 1].map((i) => (
+        <div
+          key={i}
+          className="h-[300px] animate-pulse rounded-3xl border border-[var(--qlico-border)] bg-white"
+        />
+      ))}
+    </div>
+  )
+}
+
 function StatCard({
   icon,
   label,
@@ -443,12 +495,25 @@ function StatCard({
   )
 }
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function ChartCard({
+  title,
+  summary,
+  children,
+}: {
+  title: string
+  /**
+   * Recharts draws to SVG with no accessible content, so the numbers behind
+   * each chart were unavailable to a screen reader. This states them in text.
+   */
+  summary?: string
+  children: React.ReactNode
+}) {
   return (
     <Reveal>
       <div className="rounded-3xl border border-[var(--qlico-border)] bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h2>
-        {children}
+        {summary && <p className="sr-only">{summary}</p>}
+        <div aria-hidden={summary ? 'true' : undefined}>{children}</div>
       </div>
     </Reveal>
   )

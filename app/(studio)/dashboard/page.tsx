@@ -2,6 +2,7 @@ import { Sparkles, BookOpen } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
 import { CreateBookLauncher } from '@/components/studio/CreateBookLauncher'
+import { StudioNav } from '@/components/studio/StudioNav'
 import { OnboardingChecklist } from '@/components/studio/OnboardingChecklist'
 import { LibraryBrowser } from '@/components/studio/LibraryBrowser'
 import Reveal from '@/components/landing/Reveal'
@@ -52,6 +53,7 @@ export default async function DashboardPage() {
     <main className="qlico-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--qlico-ink)] sm:px-8">
       <CreateBookLauncher />
       <div className="mx-auto max-w-6xl">
+        <StudioNav current="library" />
         <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/76 p-6 shadow-[var(--qlico-shadow)] backdrop-blur sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>

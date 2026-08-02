@@ -33,6 +33,10 @@ export default function Reveal({ children, delay = 0, as, className = '' }: Reve
 
   return (
     <MotionTag
+      // The hidden variant is rendered into the server HTML as inline styles,
+      // so without JS this content stays at opacity 0 forever. The hook lets a
+      // <noscript> rule in the root layout force it back into view.
+      data-reveal=""
       className={className}
       variants={variants}
       initial="hidden"

@@ -78,6 +78,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`h-full antialiased ${bodyFont.variable} ${displayFont.variable}`}>
+      <head>
+        {/* Scroll-reveal elements ship with their hidden state inlined by
+            framer-motion, so a page without JS would render them at opacity 0
+            permanently — on the landing page that is nearly all of the copy. */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1!important;transform:none!important}`}</style>
+        </noscript>
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <AppleSplashLinks />
         <Providers>{children}</Providers>

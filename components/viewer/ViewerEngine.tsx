@@ -27,6 +27,8 @@ interface ViewerEngineProps {
   book: Book
   onFlip?: (page: number) => void
   embed?: boolean
+  /** Multiplier on the computed page width, driven by the reader's zoom control. */
+  zoom?: number
 }
 
 interface Dims {
@@ -41,7 +43,7 @@ const PAGE_RATIO = 1.41 // A4
 const MAX_PAGE_WIDTH = 460
 
 export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
-  ({ book, onFlip, embed = false }, ref) => {
+  ({ book, onFlip, embed = false, zoom = 1 }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const bookRef = useRef<any>(null)
     const [dims, setDims] = useState<Dims>({ w: 600, h: 848 })
@@ -83,22 +85,39 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       [book.id, isGated]
     )
 
-    // Responsive sizing
+    // Responsive sizing. The container width is remembered so a zoom change
+    // can recompute without waiting for a resize that may never come.
+    const containerWidth = useRef(0)
     useEffect(() => {
       const container = containerRef.current
       if (!container) return
 
       const obs = new ResizeObserver(([entry]) => {
-        const cw = entry.contentRect.width
-        const mobile = cw < 768
-        setIsMobile(mobile)
-        const pageWidth = mobile ? cw : Math.min(cw / 2, MAX_PAGE_WIDTH)
-        setDims({ w: pageWidth, h: pageWidth * PAGE_RATIO })
+        containerWidth.current = entry.contentRect.width
+        applySize()
         setMeasured(true)
       })
       obs.observe(container)
       return () => obs.disconnect()
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    const applySize = useCallback(() => {
+      const cw = containerWidth.current
+      if (!cw) return
+      const mobile = cw < 768
+      setIsMobile(mobile)
+      // MAX_PAGE_WIDTH keeps the default at a comfortable "book on a table"
+      // size; zoom lets a large display actually use its space, still bounded
+      // by the container so the spread can't overflow.
+      const base = mobile ? cw : Math.min(cw / 2, MAX_PAGE_WIDTH)
+      const pageWidth = mobile ? base : Math.min(base * zoom, cw / 2)
+      setDims({ w: pageWidth, h: pageWidth * PAGE_RATIO })
+    }, [zoom])
+
+    useEffect(() => {
+      applySize()
+    }, [applySize])
 
     // Keyboard navigation
     useEffect(() => {

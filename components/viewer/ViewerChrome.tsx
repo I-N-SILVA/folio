@@ -2,11 +2,22 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
 import type { Book } from '@/lib/book-schema'
+
+const MIN_ZOOM = 0.7
+const MAX_ZOOM = 2
+const ZOOM_STEP = 0.1
+/** Width of the reading frame at 100%; scales with zoom. */
+const BASE_FRAME_WIDTH = 1040
+
+/** Keeps the label off values like 109.99999%. */
+function round1(n: number) {
+  return Math.round(n * 10) / 10
+}
 
 function subscribeToFullscreen(onChange: () => void) {
   document.addEventListener('fullscreenchange', onChange)
@@ -72,6 +83,7 @@ function CoverOpen({ book }: { book: Book }) {
 export function ViewerChrome({ book, embed = false }: { book: Book; embed?: boolean }) {
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
+  const [zoom, setZoom] = useState(1)
   const reduce = useReducedMotion()
 
   const totalPages = book.pages?.length ?? 0
@@ -114,7 +126,10 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       {/* Book settles in as the cover lifts away. Capped width keeps a
           comfortable margin around the spread instead of edge-to-edge zoom. */}
       <motion.div
-        className="w-full max-w-[1040px] mx-auto"
+        className="mx-auto w-full"
+        // The frame has to widen with the zoom, or the engine's own
+        // `container / 2` clamp swallows anything past ~113%.
+        style={{ maxWidth: Math.round(BASE_FRAME_WIDTH * zoom) }}
         initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: reduce ? 0 : 0.15, duration: reduce ? 0.3 : 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -124,6 +139,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
           book={book}
           onFlip={setCurrentPage}
           embed={embed}
+          zoom={zoom}
         />
       </motion.div>
 
@@ -136,7 +152,9 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       )}
 
       {!embed && (
-        <div className="flex items-center gap-3 rounded-full border border-[var(--qlico-border)] bg-white/60 px-4 py-3 text-[var(--qlico-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl sm:gap-6 sm:px-6">
+        // Sticky: zooming in makes the spread taller than the viewport, which
+        // used to scroll the very controls you were using out of sight.
+        <div className="sticky bottom-4 z-40 flex items-center gap-3 rounded-full border border-[var(--qlico-border)] bg-white/80 px-4 py-3 text-[var(--qlico-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl sm:gap-6 sm:px-6">
           <button
             onClick={() => engineRef.current?.flipPrev()}
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
@@ -158,6 +176,36 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
           >
             <ChevronRight size={20} />
           </button>
+
+          {/* A capped spread left a large display mostly empty with no way to
+              fill it. Desktop only — on a phone the page already spans the
+              full width. */}
+          <div className="hidden items-center gap-1 md:flex">
+            <span className="mx-1 h-5 w-px bg-black/10" aria-hidden="true" />
+            <button
+              onClick={() => setZoom((z) => Math.max(MIN_ZOOM, round1(z - ZOOM_STEP)))}
+              disabled={zoom <= MIN_ZOOM}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
+              aria-label="Zoom out"
+            >
+              <ZoomOut size={18} />
+            </button>
+            <button
+              onClick={() => setZoom(1)}
+              className="min-w-[52px] rounded-full px-1 py-1 text-xs font-semibold tabular-nums transition-colors hover:bg-black/10"
+              aria-label={`Zoom ${Math.round(zoom * 100)} percent — reset to 100 percent`}
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              onClick={() => setZoom((z) => Math.min(MAX_ZOOM, round1(z + ZOOM_STEP)))}
+              disabled={zoom >= MAX_ZOOM}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
+              aria-label="Zoom in"
+            >
+              <ZoomIn size={18} />
+            </button>
+          </div>
 
           {canFullscreen && (
             <button

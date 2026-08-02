@@ -6,7 +6,7 @@ import { getProfile, effectivePlan, countUserBooks } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { isBillingEnabled } from '@/lib/stripe'
 import { UpgradeButton, ManageBillingButton } from '@/components/studio/BillingButtons'
-import { SignOutButton } from '@/components/studio/SignOutButton'
+import { StudioNav } from '@/components/studio/StudioNav'
 import Reveal from '@/components/landing/Reveal'
 
 export const dynamic = 'force-dynamic'
@@ -54,12 +54,7 @@ export default async function AccountPage({
   return (
     <main className="qlico-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--qlico-ink)] sm:px-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm font-bold text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]">
-            ← Back to studio
-          </Link>
-          <SignOutButton />
-        </div>
+        <StudioNav current="account" />
 
         {upgraded && (
           <div className="mb-6 flex items-center gap-3 rounded-[1.5rem] border border-green-200 bg-green-50 px-6 py-4">

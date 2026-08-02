@@ -7,9 +7,12 @@ import { useRouter } from 'next/navigation'
 import { X, FileUp, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { renderPdfPages, type RenderProgress } from '@/lib/pdf-renderer'
+import { MAX_IMPORT_PAYLOAD_BYTES, MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
 
 interface ImportPDFModalProps {
   onClose: () => void
+  /** Lets the parent swap in its upgrade wall when the plan quota is hit. */
+  onLimitReached?: () => void
 }
 
 function slugify(value: string) {
@@ -24,7 +27,7 @@ function slugify(value: string) {
 
 type Status = 'idle' | 'rendering' | 'uploading' | 'done' | 'error'
 
-export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
+export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -102,29 +105,47 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
       setStatus('rendering')
       setErrorMessage('')
 
+      // The server no longer receives the PDF, so the size ceiling is checked
+      // here — before spending time rendering a document that's too big.
+      if (file.size > MAX_PDF_BYTES) {
+        throw new Error(
+          `That PDF is ${humanBytes(file.size)} — the limit is ${humanBytes(MAX_PDF_BYTES)}.`
+        )
+      }
+
       const renderedPages = await renderPdfPages(file, {
         maxPages: 50,
         scale: 2,
         onProgress: setProgress,
       })
 
-      // ── Phase 2: Upload everything ────────────────────────────────────
+      // ── Phase 2: Upload the rendered pages ────────────────────────────
       setStatus('uploading')
 
+      // The source PDF is deliberately not sent: the server has no use for it
+      // once the pages are rendered here, and including it pushed the request
+      // past hosting body-size limits for anything but a small document.
       const form = new FormData()
-      form.append('file', file)
       form.append('title', title.trim())
       form.append('slug', slug.trim())
       form.append('pageCount', renderedPages.length.toString())
       form.append('aiEnhance', aiEnhance.toString())
 
-      // Attach each rendered page as a separate file
       renderedPages.forEach((page, idx) => {
         form.append(
           `page_${idx}`,
           new File([page.blob], `page-${idx + 1}.png`, { type: 'image/png' })
         )
       })
+
+      const payloadBytes = renderedPages.reduce((sum, page) => sum + page.blob.size, 0)
+      if (payloadBytes > MAX_IMPORT_PAYLOAD_BYTES) {
+        throw new Error(
+          `These ${renderedPages.length} pages come to ${humanBytes(payloadBytes)}, over the ` +
+            `${humanBytes(MAX_IMPORT_PAYLOAD_BYTES)} an import can send at once. ` +
+            `Try splitting the PDF into smaller documents.`
+        )
+      }
 
       const res = await fetch('/api/import/pdf', {
         method: 'POST',
@@ -134,6 +155,11 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
       const data = await res.json()
 
       if (!res.ok) {
+        // Hand the quota case to the parent, which owns the upgrade wall.
+        if (data.code === 'plan_limit' && onLimitReached) {
+          onLimitReached()
+          return
+        }
         throw new Error(data.error ?? 'Import failed')
       }
 
@@ -151,7 +177,7 @@ export function ImportPDFModal({ onClose }: ImportPDFModalProps) {
       setErrorMessage(msg)
       toast.error(msg)
     }
-  }, [file, title, slug, router, onClose])
+  }, [file, title, slug, aiEnhance, router, onClose, onLimitReached])
 
   const isWorking = status === 'rendering' || status === 'uploading'
   const canSubmit =

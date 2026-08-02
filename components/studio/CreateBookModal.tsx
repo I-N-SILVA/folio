@@ -217,7 +217,15 @@ export function CreateBookModal({ onClose }: Props) {
   }
 
   if (step === 'pdf') {
-    return <ImportPDFModal onClose={onClose} />
+    return (
+      <ImportPDFModal
+        onClose={onClose}
+        onLimitReached={() => {
+          setStep('choice')
+          setLimitHit(true)
+        }}
+      />
+    )
   }
 
   const shell = (children: React.ReactNode, title = 'Create a new edition', maxW = 'max-w-xl') => (
