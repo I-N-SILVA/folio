@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useId, useRef } from 'react'
+import { useCallback, useEffect, useId, useRef, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { twMerge } from 'tailwind-merge'
 import { X } from 'lucide-react'
@@ -22,6 +22,11 @@ export const Z = {
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/** Capability/mount checks never change after load, but still need a subscriber. */
+function subscribeToNothing() {
+  return () => {}
+}
 
 interface ModalProps {
   onClose: () => void
@@ -61,6 +66,17 @@ export function Modal({
   const titleId = useId()
   const descId = useId()
 
+  // A portal has nowhere to go during SSR, so the server renders nothing here.
+  // Returning content on the very first client render would then mismatch what
+  // was hydrated, and React's recovery re-render can leave a second portal
+  // behind. Reporting "not mounted" for the hydration pass and flipping right
+  // after keeps both sides agreeing.
+  const mounted = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false
+  )
+
   // Return focus to whatever opened the dialog, so keyboard users don't get
   // dumped back at the top of the document on close.
   const openerRef = useRef<HTMLElement | null>(null)
@@ -69,13 +85,14 @@ export function Modal({
     return () => openerRef.current?.focus?.()
   }, [])
 
-  // Move focus into the panel on open.
+  // Move focus into the panel on open. Waits for `mounted` — the panel only
+  // exists from the post-hydration render onward.
   useEffect(() => {
     const panel = panelRef.current
     if (!panel) return
     const first = panel.querySelector<HTMLElement>(FOCUSABLE)
     ;(first ?? panel).focus({ preventScroll: true })
-  }, [])
+  }, [mounted])
 
   // The page behind a dialog must not scroll.
   useEffect(() => {
@@ -117,8 +134,7 @@ export function Modal({
     [onClose]
   )
 
-  // Portals need a DOM target, which doesn't exist during SSR.
-  if (typeof document === 'undefined') return null
+  if (!mounted) return null
 
   return createPortal(
     <div

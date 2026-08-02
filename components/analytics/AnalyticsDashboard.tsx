@@ -37,6 +37,16 @@ function formatDuration(ms: number) {
   return `${Math.floor(s / 60)}m ${s % 60}s`
 }
 
+/**
+ * RFC 4180 quoting. The previous export joined raw values with commas, so any
+ * field containing one — notably `payload`, which is stringified JSON — split
+ * across columns and corrupted every row after it.
+ */
+function csvCell(value: string): string {
+  if (/[",\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
+}
+
 function dwellColor(ms: number) {
   if (ms > 20000) return '#22c55e'
   if (ms > 5000) return '#f59e0b'
@@ -89,23 +99,41 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
       .catch(() => setLoading(false))
   }, [book.slug, range])
 
-  function downloadCSV() {
-    if (!data?.raw) return
-    const headers = ['id', 'book_id', 'session_id', 'event_type', 'page_number', 'payload', 'created_at']
-    const rows = data.raw.map((e) =>
-      headers.map((h) => {
-        const v = e[h]
-        return typeof v === 'object' ? JSON.stringify(v) : String(v ?? '')
-      }).join(',')
-    )
-    const csv = [headers.join(','), ...rows].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
+  function download(filename: string, headers: string[], rows: string[][]) {
+    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${book.slug}-events.csv`
+    a.download = filename
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  function downloadCSV() {
+    if (!data?.raw) return
+    const headers = ['id', 'book_id', 'session_id', 'event_type', 'page_number', 'payload', 'created_at']
+    download(
+      `${book.slug}-events.csv`,
+      headers,
+      data.raw.map((e) =>
+        headers.map((h) => {
+          const v = e[h]
+          return typeof v === 'object' ? JSON.stringify(v) : String(v ?? '')
+        })
+      )
+    )
+  }
+
+  // Leads are the commercially useful export, and they were only reachable by
+  // digging them out of the raw event dump.
+  function downloadLeadsCSV() {
+    if (!data?.leadData?.length) return
+    download(
+      `${book.slug}-leads.csv`,
+      ['email', 'captured_at', 'page_number'],
+      data.leadData.map((lead) => [lead.email, lead.timestamp, String(lead.page ?? '')])
+    )
   }
 
   const ranges: { label: string; value: DateRange }[] = [
@@ -342,7 +370,18 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
 
               {/* Captured Leads */}
               {data.leadData && data.leadData.length > 0 && (
-                <TableCard title="Captured Leads (Gate Unlocks)">
+                <TableCard
+                  title="Captured Leads (Gate Unlocks)"
+                  action={
+                    <button
+                      onClick={downloadLeadsCSV}
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
+                    >
+                      <Download size={12} />
+                      Export leads
+                    </button>
+                  }
+                >
                   <div className="max-h-64 overflow-y-auto">
                     <table className="w-full text-sm">
                       <thead className="sticky top-0 bg-white">
@@ -415,11 +454,22 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
   )
 }
 
-function TableCard({ title, children }: { title: string; children: React.ReactNode }) {
+function TableCard({
+  title,
+  action,
+  children,
+}: {
+  title: string
+  action?: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
     <Reveal>
       <div className="h-full rounded-3xl border border-[var(--qlico-border)] bg-white p-6">
-        <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h2>
+          {action}
+        </div>
         {children}
       </div>
     </Reveal>

@@ -37,9 +37,18 @@ export function CreateBookModal({ onClose }: Props) {
   const [quota, setQuota] = useState<Quota | null>(null)
   const [limitHit, setLimitHit] = useState(false)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
+  const [slug, setSlug] = useState('')
+  const [slugEdited, setSlugEdited] = useState(false)
+  const [slugError, setSlugError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createBrowserSupabase()
+
+  // The slug is the public URL and nothing in the app can change it later, so
+  // it has to be settable here. Derived from the title until the user takes
+  // it over — no random suffix, so the shared link reads as something a person
+  // wrote; a collision comes back from the server as a 409 to correct.
+  const effectiveSlug = slugifyTitle(slugEdited ? slug : newTitle.trim())
 
   // Fetch the user's quota so we can pre-empt creation when they're capped.
   useEffect(() => {
@@ -69,42 +78,41 @@ export function CreateBookModal({ onClose }: Props) {
 
   const handleCreateBlank = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    if (!newTitle.trim()) return
+    const title = newTitle.trim()
+    if (!title) return
 
     setLoading(true)
+    setSlugError('')
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const title = newTitle.trim()
-      const slug = `${slugifyTitle(title)}-${randomSuffix()}`
-
-      const { data: book, error: bookError } = await supabase
-        .from('books')
-        .insert({
-          title,
-          slug,
-          owner_id: user.id,
-          settings: { published: false, unlisted: false },
-          theme: { preset: 'ivory' },
-        })
-        .select()
-        .single()
-
-      if (bookError) throw bookError
-
-      await supabase.from('pages').insert({
-        id: crypto.randomUUID(),
-        book_id: book.id,
-        page_number: 1,
-        type: 'content',
-        layout: 'hero',
-        blocks: [
-          { id: crypto.randomUUID(), type: 'text', variant: 'title', content: title, align: 'center' },
-        ],
-        hotspots: [],
+      // Goes through the API rather than inserting from the browser, so the
+      // Zod schema, the plan-quota check with its friendly message, and slug
+      // conflict handling all apply to this path too. The direct-insert
+      // version drifted from the API's rules and shipped bugs the API's
+      // validation would have caught.
+      const res = await fetch('/api/books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, slug: effectiveSlug }),
       })
 
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        if (payload.code === 'plan_limit') {
+          setLimitHit(true)
+          setLoading(false)
+          return
+        }
+        if (res.status === 409) {
+          setSlugError('That URL is already taken — try another.')
+          setLoading(false)
+          return
+        }
+        throw new Error(
+          typeof payload.error === 'string' ? payload.error : 'Failed to create edition'
+        )
+      }
+
+      const book = await res.json()
       router.push(`/editor/${book.id}`)
     } catch (err: any) {
       if (guardLimit(err)) return
@@ -285,6 +293,42 @@ export function CreateBookModal({ onClose }: Props) {
             className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
           />
 
+          {/* This is the permanent public URL — nothing downstream can change
+              it, so it can't be a silent auto-generated string. */}
+          <label
+            htmlFor="new-book-slug"
+            className="mb-2 mt-5 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]"
+          >
+            Public link
+          </label>
+          <div
+            className={`flex items-center overflow-hidden rounded-[1.1rem] border bg-white/70 focus-within:ring-2 focus-within:ring-[var(--qlico-teal)]/20 ${
+              slugError ? 'border-red-400' : 'border-[var(--qlico-border)] focus-within:border-[var(--qlico-teal)]'
+            }`}
+          >
+            <span className="border-r border-[var(--qlico-border)] bg-black/[0.03] px-3 py-3 text-sm text-[var(--qlico-muted)]">
+              /book/
+            </span>
+            <input
+              id="new-book-slug"
+              value={effectiveSlug}
+              onChange={(e) => {
+                setSlugEdited(true)
+                setSlug(e.target.value)
+                setSlugError('')
+              }}
+              placeholder="q3-investor-update"
+              aria-invalid={Boolean(slugError)}
+              aria-describedby={slugError ? 'new-book-slug-error' : undefined}
+              className="flex-1 bg-transparent px-3 py-3 text-sm outline-none"
+            />
+          </div>
+          {slugError && (
+            <p id="new-book-slug-error" role="alert" className="mt-2 text-sm text-red-600">
+              {slugError}
+            </p>
+          )}
+
           <div className="flex gap-3 pt-6">
             <button
               type="button"
@@ -295,7 +339,7 @@ export function CreateBookModal({ onClose }: Props) {
             </button>
             <button
               type="submit"
-              disabled={loading || !newTitle.trim()}
+              disabled={loading || !newTitle.trim() || !effectiveSlug}
               className="flex-[2] rounded-full bg-[var(--qlico-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create QLICO'}

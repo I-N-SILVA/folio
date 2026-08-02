@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
@@ -79,5 +80,32 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Seed a first page. Without it the editor opens on "No page selected" with
+  // an empty inspector — a dead-end first run for anything created here.
+  const { error: pageError } = await supabase.from('pages').insert({
+    book_id: data.id,
+    page_number: 1,
+    type: 'cover',
+    layout: 'hero',
+    blocks: [
+      {
+        id: randomUUID(),
+        type: 'text',
+        variant: 'title',
+        content: parsed.data.title,
+        align: 'center',
+      },
+    ],
+    hotspots: [],
+  })
+
+  if (pageError) {
+    // A book with no pages counts against the plan quota while being useless,
+    // so don't leave one behind.
+    await supabase.from('books').delete().eq('id', data.id)
+    return NextResponse.json({ error: pageError.message }, { status: 500 })
+  }
+
   return NextResponse.json(data, { status: 201 })
 }
