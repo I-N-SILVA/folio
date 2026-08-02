@@ -8,6 +8,8 @@ import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 const ImportPDFModal = dynamic(() => import('./ImportPDFModal').then(m => m.ImportPDFModal), { ssr: false })
 import { createBrowserSupabase } from '@/lib/supabase'
+import { Modal } from '@/components/ui/Modal'
+import { MAX_ASSET_BYTES, humanBytes, isAllowedAssetType } from '@/lib/uploads'
 
 interface Props {
   onClose: () => void
@@ -19,12 +21,22 @@ function isLimitError(message: string) {
   return /BOOK_LIMIT_REACHED|plan_limit|plan's limit/i.test(message)
 }
 
+function slugifyTitle(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'edition'
+}
+
+/** `Math.random().toString(36).substring(7)` can come back empty. */
+function randomSuffix() {
+  return Math.random().toString(36).slice(2, 8).padEnd(6, '0')
+}
+
 export function CreateBookModal({ onClose }: Props) {
   const [step, setStep] = useState<'choice' | 'pdf' | 'images' | 'name-blank'>('choice')
   const [newTitle, setNewTitle] = useState('')
   const [loading, setLoading] = useState(false)
   const [quota, setQuota] = useState<Quota | null>(null)
   const [limitHit, setLimitHit] = useState(false)
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createBrowserSupabase()
@@ -65,7 +77,7 @@ export function CreateBookModal({ onClose }: Props) {
       if (!user) throw new Error('Not authenticated')
 
       const title = newTitle.trim()
-      const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Math.random().toString(36).substring(7)}`
+      const slug = `${slugifyTitle(title)}-${randomSuffix()}`
 
       const { data: book, error: bookError } = await supabase
         .from('books')
@@ -103,15 +115,35 @@ export function CreateBookModal({ onClose }: Props) {
 
   const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+    // Let the same files be re-picked after a failed run.
+    e.target.value = ''
     if (files.length === 0) return
 
+    // Validate before creating anything. A rejected file used to surface only
+    // after the book already existed and images had been uploaded.
+    const tooLarge = files.find((f) => f.size > MAX_ASSET_BYTES)
+    if (tooLarge) {
+      toast.error(
+        `${tooLarge.name} is ${humanBytes(tooLarge.size)} — the limit is ${humanBytes(MAX_ASSET_BYTES)}.`
+      )
+      return
+    }
+    const badType = files.find((f) => !isAllowedAssetType(f.type))
+    if (badType) {
+      toast.error(`${badType.name} isn't a supported image type.`)
+      return
+    }
+
     setLoading(true)
+    setProgress({ done: 0, total: files.length })
+
+    let createdBookId: string | null = null
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      const title = 'Image Collection'
-      const slug = `collection-${Math.random().toString(36).substring(7)}`
+      const title = newTitle.trim() || 'Image Collection'
+      const slug = `${slugifyTitle(title)}-${randomSuffix()}`
 
       const { data: book, error: bookError } = await supabase
         .from('books')
@@ -126,7 +158,9 @@ export function CreateBookModal({ onClose }: Props) {
         .single()
 
       if (bookError) throw bookError
+      createdBookId = book.id
 
+      const pages: Record<string, unknown>[] = []
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         const ext = file.name.split('.').pop()
@@ -137,19 +171,37 @@ export function CreateBookModal({ onClose }: Props) {
 
         const { data: { publicUrl } } = supabase.storage.from('folio-assets').getPublicUrl(path)
 
-        await supabase.from('pages').insert({
+        pages.push({
           book_id: book.id,
           page_number: i + 1,
           type: 'content',
-          layout: 'image',
-          background: publicUrl,
+          // 'image' is not a member of the layout enum — the DB CHECK
+          // constraint rejected it, so this path failed on its first page
+          // insert and left behind an orphan book. A full-bleed background
+          // image needs no block layout, so 'blank' is the right fit.
+          layout: 'blank',
+          // `background` is a jsonb object, not a URL string. Assigning the
+          // bare URL meant `page.background?.image` was always undefined, so
+          // even a page that survived would have rendered empty.
+          background: { image: publicUrl },
           blocks: [],
           hotspots: [],
         })
+
+        setProgress({ done: i + 1, total: files.length })
       }
+
+      const { error: pagesError } = await supabase.from('pages').insert(pages)
+      if (pagesError) throw pagesError
 
       router.push(`/editor/${book.id}`)
     } catch (err: any) {
+      // Don't strand an empty book against the user's plan quota — on the
+      // free tier a single orphan blocks every future creation.
+      if (createdBookId) {
+        await supabase.from('books').delete().eq('id', createdBookId)
+      }
+      setProgress(null)
       if (guardLimit(err)) return
       toast.error(err.message || 'Failed to upload images')
       setLoading(false)
@@ -160,12 +212,16 @@ export function CreateBookModal({ onClose }: Props) {
     return <ImportPDFModal onClose={onClose} />
   }
 
-  const shell = (children: React.ReactNode, maxW = 'max-w-xl') => (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1d1d1f]/55 p-4 backdrop-blur-sm">
-      <div className={`w-full ${maxW} overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff] shadow-[0_40px_120px_rgba(27,23,18,0.35)]`}>
-        {children}
-      </div>
-    </div>
+  const shell = (children: React.ReactNode, title = 'Create a new edition', maxW = 'max-w-xl') => (
+    <Modal
+      onClose={loading ? () => {} : onClose}
+      title={title}
+      hideCloseButton
+      dismissOnBackdrop={!loading}
+      className={`${maxW} overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] shadow-[0_40px_120px_rgba(27,23,18,0.35)]`}
+    >
+      {children}
+    </Modal>
   )
 
   // Upgrade wall — shown when the user is at their plan's book limit.
@@ -201,6 +257,7 @@ export function CreateBookModal({ onClose }: Props) {
           Close
         </button>
       </div>,
+      'Book limit reached',
       'max-w-md'
     )
   }
@@ -246,6 +303,7 @@ export function CreateBookModal({ onClose }: Props) {
           </div>
         </form>
       </>,
+      'Name your edition',
       'max-w-md'
     )
   }
@@ -293,9 +351,29 @@ export function CreateBookModal({ onClose }: Props) {
         <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={handleBulkImageUpload} className="hidden" />
 
         {loading && (
-          <div className="mt-8 flex animate-pulse items-center justify-center gap-3 text-sm font-semibold text-[var(--qlico-teal)]">
-            <Loader2 className="animate-spin" size={18} />
-            Initializing your edition…
+          <div className="mt-8">
+            <div className="flex items-center justify-center gap-3 text-sm font-semibold text-[var(--qlico-teal)]">
+              <Loader2 className="animate-spin" size={18} />
+              {progress
+                ? `Uploading image ${progress.done} of ${progress.total}…`
+                : 'Initializing your edition…'}
+            </div>
+            {/* A 40-image upload used to be an unbroken, unexplained wait. */}
+            {progress && (
+              <div
+                role="progressbar"
+                aria-valuenow={progress.done}
+                aria-valuemin={0}
+                aria-valuemax={progress.total}
+                aria-label="Upload progress"
+                className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-black/8"
+              >
+                <div
+                  className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
+                  style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

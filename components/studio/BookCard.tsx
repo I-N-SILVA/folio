@@ -1,15 +1,114 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BarChart2, ExternalLink, Trash2, Edit2, Check, X } from 'lucide-react'
+import { BarChart2, BookOpen, ExternalLink, Trash2, Edit2, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/Modal'
-import type { Book } from '@/lib/book-schema'
+import { PageRenderer } from '@/components/viewer/PageRenderer'
+import type { Book, Page } from '@/lib/book-schema'
 
 interface BookCardProps {
-  book: Omit<Book, 'pages'> & { pages?: { id: string }[] }
+  book: Omit<Book, 'pages'> & { pages?: { id: string }[]; cover?: Page | null }
+}
+
+/**
+ * A shelf of interactive editions was rendering as a wall of text. This is the
+ * same scaled-render trick the editor's page rail uses: lay the real page out
+ * at its design width, then transform it down. No thumbnail pipeline needed,
+ * and it can never drift from what the page actually looks like.
+ */
+const COVER_DESIGN_WIDTH = 800
+const COVER_DESIGN_HEIGHT = 500
+
+function CoverPreview({
+  cover,
+  title,
+  href,
+}: {
+  cover?: Page | null
+  title: string
+  href: string
+}) {
+  const frameRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0)
+  const [nearViewport, setNearViewport] = useState(false)
+
+  // The card width is fluid, so the shrink factor has to be measured. CSS
+  // can't express "divide a length by a length" portably yet.
+  useEffect(() => {
+    const frame = frameRef.current
+    if (!frame) return
+    const obs = new ResizeObserver(([entry]) => {
+      setScale(entry.contentRect.width / COVER_DESIGN_WIDTH)
+    })
+    obs.observe(frame)
+    return () => obs.disconnect()
+  }, [])
+
+  // A cover page is a real page: it can hold an embed (an iframe) or audio
+  // (which preloads metadata). Mounting every card's page at once would make
+  // a large library open dozens of them, so hold off until each is close to
+  // being seen.
+  useEffect(() => {
+    const frame = frameRef.current
+    if (!frame) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setNearViewport(true)
+      return
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNearViewport(true)
+          obs.disconnect()
+        }
+      },
+      { rootMargin: '400px' }
+    )
+    obs.observe(frame)
+    return () => obs.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={frameRef}
+      className="relative mb-4 aspect-[16/10] overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-vellum)]"
+    >
+      {cover && nearViewport ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 origin-top-left transition-opacity"
+          style={{
+            width: COVER_DESIGN_WIDTH,
+            height: COVER_DESIGN_HEIGHT,
+            transform: `scale(${scale})`,
+            // Hide the un-scaled flash before the first measurement lands.
+            opacity: scale > 0 ? 1 : 0,
+          }}
+        >
+          <PageRenderer page={cover} bookId={cover.book_id} className="h-full w-full" />
+        </div>
+      ) : cover ? null : (
+        <div className="absolute inset-0 grid place-items-center text-[var(--qlico-muted)]">
+          <BookOpen size={28} strokeWidth={1.5} className="opacity-50" />
+        </div>
+      )}
+
+      {/* A sibling of the rendered page, never an ancestor: pages can contain
+          button blocks, which are anchors, and an anchor inside an anchor is
+          invalid HTML the parser silently restructures. */}
+      <Link
+        href={href}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="absolute inset-0 z-10 rounded-2xl transition-colors hover:bg-[var(--accent)]/5"
+      >
+        <span className="sr-only">{`Open ${title}`}</span>
+      </Link>
+    </div>
+  )
 }
 
 export function BookCard({ book: initialBook }: BookCardProps) {
@@ -64,6 +163,13 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   return (
     <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
       <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(60,35,132,0.10)] blur-2xl transition group-hover:bg-[rgba(60,35,132,0.18)]" />
+
+      <CoverPreview
+        cover={initialBook.cover}
+        title={book.title}
+        href={`/editor/${book.id}`}
+      />
+
       <div className="flex items-start justify-between mb-3 gap-2">
         {isEditing ? (
           <div className="flex-1 flex items-center gap-1">

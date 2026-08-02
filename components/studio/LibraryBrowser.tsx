@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react'
 import { LibraryBig, Search, X } from 'lucide-react'
 import { BookCard } from './BookCard'
 import Reveal from '@/components/landing/Reveal'
-import type { Book } from '@/lib/book-schema'
+import type { Book, Page } from '@/lib/book-schema'
 
-type LibraryBook = Omit<Book, 'pages'> & { pages?: { id: string }[] }
+type LibraryBook = Omit<Book, 'pages'> & { pages?: { id: string }[]; cover?: Page | null }
 
 type Filter = 'all' | 'published' | 'draft'
 type Sort = 'recent' | 'created' | 'title'

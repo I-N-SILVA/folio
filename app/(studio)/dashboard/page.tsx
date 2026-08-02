@@ -5,9 +5,13 @@ import { OnboardingChecklist } from '@/components/studio/OnboardingChecklist'
 import { LibraryBrowser } from '@/components/studio/LibraryBrowser'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
-import type { Book } from '@/lib/book-schema'
+import type { Book, Page } from '@/lib/book-schema'
 
-type DashboardBook = Omit<Book, 'pages'> & { pages?: { id: string; hotspots?: unknown[] }[] }
+type DashboardBook = Omit<Book, 'pages'> & {
+  pages?: { id: string; hotspots?: unknown[] }[]
+  /** First page, fetched separately so cards can show a real preview. */
+  cover?: Page | null
+}
 
 async function getBooks(): Promise<DashboardBook[]> {
   const supabase = await createServerSupabase()
@@ -20,7 +24,19 @@ async function getBooks(): Promise<DashboardBook[]> {
     .eq('owner_id', user.id)
     .order('created_at', { ascending: false })
 
-  return (data ?? []) as DashboardBook[]
+  const books = (data ?? []) as DashboardBook[]
+  if (books.length === 0) return books
+
+  // One extra bounded query rather than pulling every page's blocks into the
+  // list query — this is one row per book regardless of how long a book is.
+  const { data: covers } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('page_number', 1)
+    .in('book_id', books.map((b) => b.id))
+
+  const coverByBook = new Map((covers ?? []).map((p: Page) => [p.book_id, p]))
+  return books.map((book) => ({ ...book, cover: coverByBook.get(book.id) ?? null }))
 }
 
 export default async function DashboardPage() {

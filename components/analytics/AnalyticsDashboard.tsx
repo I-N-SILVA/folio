@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
@@ -8,6 +8,8 @@ import {
 import { ArrowLeft, Download, BookOpen, Users, CheckCircle, Clock } from 'lucide-react'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
+import { PageRenderer } from '@/components/viewer/PageRenderer'
+import type { Book } from '@/lib/book-schema'
 
 type DateRange = '7d' | '30d' | '90d' | 'all'
 
@@ -41,11 +43,43 @@ function dwellColor(ms: number) {
   return '#ef4444'
 }
 
-export function AnalyticsDashboard({ book }: { book: any }) {
+/**
+ * The hotspot and CTA tables listed bare UUIDs, which tell the owner nothing
+ * about which pin or button people actually clicked. These map the IDs back
+ * onto the labels the owner typed in the editor.
+ */
+function buildLabelMaps(book: Book) {
+  const hotspots = new Map<string, { label: string; page: number }>()
+  const blocks = new Map<string, { label: string; page: number }>()
+
+  for (const page of book.pages ?? []) {
+    for (const hotspot of page.hotspots ?? []) {
+      hotspots.set(hotspot.id, {
+        label: hotspot.label || hotspot.modal?.title || 'Untitled hotspot',
+        page: page.page_number,
+      })
+    }
+    for (const block of page.blocks ?? []) {
+      if (block.type === 'button') {
+        blocks.set(block.id, { label: block.label || 'Untitled button', page: page.page_number })
+      }
+    }
+  }
+
+  return { hotspots, blocks }
+}
+
+export function AnalyticsDashboard({ book }: { book: Book }) {
   const [range, setRange] = useState<DateRange>('30d')
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [heatmapPage, setHeatmapPage] = useState<number>(1)
+
+  const labels = useMemo(() => buildLabelMaps(book), [book])
+  const pageByNumber = useMemo(
+    () => new Map((book.pages ?? []).map((p) => [p.page_number, p])),
+    [book]
+  )
 
   useEffect(() => {
     setLoading(true)
@@ -202,18 +236,32 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                         </button>
                       ))}
                   </div>
-                  <div className="flex-1 bg-[var(--qlico-subtle)] rounded-xl overflow-hidden aspect-[1/1.41] relative shadow-inner max-w-sm mx-auto">
-                    {/* Placeholder for the page background, eventually could load the actual page image */}
-                    <div className="absolute inset-0 bg-white"></div>
+                  <div className="relative mx-auto aspect-[1/1.41] max-w-sm flex-1 overflow-hidden rounded-xl bg-white shadow-inner">
+                    {/* Dots over a blank rectangle said nothing about *what*
+                        was clicked. Rendering the real page puts every click
+                        back in context. */}
+                    {pageByNumber.get(heatmapPage) ? (
+                      <div className="pointer-events-none absolute inset-0">
+                        <PageRenderer
+                          page={pageByNumber.get(heatmapPage)!}
+                          bookId={book.id}
+                          theme={book.theme}
+                          className="h-full w-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 bg-white" />
+                    )}
+                    <div className="absolute inset-0 bg-white/45" />
                     {data.heatmapData[heatmapPage]?.map((pt, i) => (
                       <div
                         key={i}
-                        className="absolute w-4 h-4 -ml-2 -mt-2 rounded-full bg-red-500/40 mix-blend-multiply blur-[2px]"
+                        className="absolute -ml-2 -mt-2 h-4 w-4 rounded-full bg-red-500/40 blur-[2px] mix-blend-multiply"
                         style={{ left: `${pt.x}%`, top: `${pt.y}%` }}
                       />
                     ))}
                     {(!data.heatmapData[heatmapPage] || data.heatmapData[heatmapPage].length === 0) && (
-                      <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--qlico-muted)]">
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-sm text-[var(--qlico-muted)]">
                         No clicks recorded on this page
                       </div>
                     )}
@@ -229,17 +277,27 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-[var(--qlico-muted)] text-xs border-b border-[var(--qlico-border)]">
-                        <th className="pb-2 font-medium">Hotspot ID</th>
+                        <th className="pb-2 font-medium">Hotspot</th>
                         <th className="pb-2 font-medium text-right">Clicks</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.topHotspots.map((h) => (
-                        <tr key={h.id} className="border-b border-[var(--qlico-hairline)]">
-                          <td className="py-2 font-mono text-xs text-[var(--qlico-muted)] truncate max-w-[180px]">{h.id}</td>
-                          <td className="py-2 text-right font-medium">{h.count}</td>
-                        </tr>
-                      ))}
+                      {data.topHotspots.map((h) => {
+                        const match = labels.hotspots.get(h.id)
+                        return (
+                          <tr key={h.id} className="border-b border-[var(--qlico-hairline)]">
+                            <td className="max-w-[220px] py-2">
+                              <span className="block truncate font-medium">
+                                {match?.label ?? 'Deleted hotspot'}
+                              </span>
+                              <span className="text-xs text-[var(--qlico-muted)]">
+                                {match ? `Page ${match.page}` : h.id}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right font-medium">{h.count}</td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </TableCard>
@@ -251,22 +309,32 @@ export function AnalyticsDashboard({ book }: { book: any }) {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-[var(--qlico-muted)] text-xs border-b border-[var(--qlico-border)]">
-                        <th className="pb-2 font-medium">Block / Page</th>
+                        <th className="pb-2 font-medium">Button</th>
                         <th className="pb-2 font-medium text-right">Clicks</th>
                         <th className="pb-2 font-medium text-right">Unique</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.ctaData.map((c) => (
-                        <tr key={c.id} className="border-b border-[var(--qlico-hairline)]">
-                          <td className="py-2">
-                            <span className="font-mono text-xs text-[var(--qlico-muted)] truncate">{c.id}</span>
-                            {c.page && <span className="text-xs text-[var(--qlico-muted)] ml-1">p.{c.page}</span>}
-                          </td>
-                          <td className="py-2 text-right font-medium">{c.clicks}</td>
-                          <td className="py-2 text-right text-[var(--qlico-muted)]">{c.uniqueClicks}</td>
-                        </tr>
-                      ))}
+                      {data.ctaData.map((c) => {
+                        const match = labels.blocks.get(c.id)
+                        const page = match?.page ?? c.page
+                        return (
+                          <tr key={c.id} className="border-b border-[var(--qlico-hairline)]">
+                            <td className="max-w-[220px] py-2">
+                              <span className="block truncate font-medium">
+                                {match?.label ?? 'Deleted button'}
+                              </span>
+                              <span className="block truncate text-xs text-[var(--qlico-muted)]">
+                                {page ? `Page ${page}` : ''}
+                                {page && c.href ? ' · ' : ''}
+                                {c.href ?? ''}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right font-medium">{c.clicks}</td>
+                            <td className="py-2 text-right text-[var(--qlico-muted)]">{c.uniqueClicks}</td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </TableCard>
