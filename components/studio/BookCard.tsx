@@ -19,8 +19,15 @@ interface BookCardProps {
  * at its design width, then transform it down. No thumbnail pipeline needed,
  * and it can never drift from what the page actually looks like.
  */
-const COVER_DESIGN_WIDTH = 800
-const COVER_DESIGN_HEIGHT = 500
+/**
+ * The reader's own page width, so the cover renders at exactly the size the
+ * blocks were styled for. It used to be an 800x500 landscape box for a page
+ * that is portrait 1:1.41 — every cover was a squashed, wrong-shaped rendition
+ * of the real thing, which is the main reason the previews read as off.
+ */
+const COVER_DESIGN_WIDTH = 460
+const COVER_RATIO = 1.41
+const COVER_DESIGN_HEIGHT = Math.round(COVER_DESIGN_WIDTH * COVER_RATIO)
 
 function CoverPreview({
   cover,
@@ -72,10 +79,17 @@ function CoverPreview({
   }, [])
 
   return (
-    <div
-      ref={frameRef}
-      className="relative mb-4 aspect-[16/10] overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-vellum)]"
-    >
+    // Presented as a book: portrait, capped so cards stay a sane height, with
+    // a spine edge and lift so a shelf of these reads as objects rather than
+    // cropped screenshots.
+    <div className="mb-5 flex justify-center">
+      <div
+        ref={frameRef}
+        style={{ aspectRatio: `1 / ${COVER_RATIO}` }}
+        // The ring uses the border token rather than the hairline so a dark
+        // cover still reads as an object against a dark card.
+        className="relative w-full max-w-[188px] overflow-hidden rounded-r-[5px] rounded-l-[2px] bg-[var(--qlico-vellum)] shadow-[0_1px_2px_rgba(20,26,58,0.18),0_10px_24px_-8px_rgba(20,26,58,0.28),0_28px_50px_-28px_rgba(20,26,58,0.35)] ring-1 ring-[var(--qlico-border)] transition-transform duration-300 group-hover:-translate-y-0.5"
+      >
       {cover && nearViewport ? (
         <div
           aria-hidden="true"
@@ -96,17 +110,28 @@ function CoverPreview({
         </div>
       )}
 
-      {/* A sibling of the rendered page, never an ancestor: pages can contain
-          button blocks, which are anchors, and an anchor inside an anchor is
-          invalid HTML the parser silently restructures. */}
-      <Link
-        href={href}
-        tabIndex={-1}
-        aria-hidden="true"
-        className="absolute inset-0 z-10 rounded-2xl transition-colors hover:bg-[var(--accent)]/5"
-      >
-        <span className="sr-only">{`Open ${title}`}</span>
-      </Link>
+        {/* Spine shading along the bound edge. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-3"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(20,26,58,0.16), rgba(20,26,58,0.05) 45%, transparent)',
+          }}
+        />
+
+        {/* A sibling of the rendered page, never an ancestor: pages can contain
+            button blocks, which are anchors, and an anchor inside an anchor is
+            invalid HTML the parser silently restructures. */}
+        <Link
+          href={href}
+          tabIndex={-1}
+          aria-hidden="true"
+          className="absolute inset-0 z-10 transition-colors hover:bg-[var(--accent)]/5"
+        >
+          <span className="sr-only">{`Open ${title}`}</span>
+        </Link>
+      </div>
     </div>
   )
 }

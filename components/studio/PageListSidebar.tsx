@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Wand2 } from 'lucide-react'
@@ -17,7 +17,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
@@ -71,6 +71,8 @@ const BLOCK_LIBRARY: {
 
 /** Design width the rail thumbnails render at before being scaled down. */
 const THUMB_DESIGN_WIDTH = 280
+/** Same A4 ratio as the canvas and the reader. */
+const PAGE_RATIO = 1.41
 
 const PAGE_TYPE_COLORS: Record<Page['type'], string> = {
   cover: 'bg-violet-700 text-violet-100',
@@ -100,6 +102,23 @@ function SortablePageItem({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: page.id })
 
+  // Each frame measures itself. Observing a parent and reading a child's width
+  // only gets one callback — the grid never resizes again — and that callback
+  // lands before the children have been laid out, so the scale stayed at 0 and
+  // every thumbnail rendered its page at zero size.
+  const frameRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0)
+
+  useEffect(() => {
+    const frame = frameRef.current
+    if (!frame) return
+    const obs = new ResizeObserver(([entry]) => {
+      setScale(entry.contentRect.width / THUMB_DESIGN_WIDTH)
+    })
+    obs.observe(frame)
+    return () => obs.disconnect()
+  }, [])
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -109,78 +128,91 @@ function SortablePageItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={twMerge(
-        'group relative flex items-center gap-2 px-2 py-2 rounded cursor-pointer border transition-colors select-none',
-        isSelected
-          ? 'bg-neutral-700 border-neutral-500'
-          : 'border-transparent hover:bg-neutral-800',
-        isDragging && 'opacity-50 z-50'
-      )}
-      onClick={onSelect}
+      className={twMerge('group relative select-none', isDragging && 'z-50 opacity-50')}
     >
-      {/* Drag handle */}
-      <button
-        {...listeners}
-        {...attributes}
-        onClick={(e) => e.stopPropagation()}
-        className="text-neutral-600 hover:text-neutral-400 cursor-grab active:cursor-grabbing shrink-0"
-        aria-label="Drag to reorder"
+      {/* A 44px-wide page can only ever be a smudge — an A4 body line lands
+          near a single pixel. Two columns of ~100px is the smallest size at
+          which a page reads as its own layout, which is the whole point of a
+          page navigator. */}
+      {/* A div, not a button: pages contain button and audio blocks, and
+          interactive content inside a <button> is invalid HTML that React
+          reports as a hydration error. The click target is the overlay below,
+          a sibling of the rendered page rather than its ancestor. */}
+      <div
+        ref={frameRef}
+        className={twMerge(
+          'relative w-full overflow-hidden rounded-[4px] bg-white shadow-md transition-all',
+          'ring-1 ring-black/40',
+          isSelected
+            ? 'ring-2 ring-[var(--accent-vivid)] ring-offset-2 ring-offset-neutral-900'
+            : 'group-hover:ring-neutral-500'
+        )}
+        style={{ aspectRatio: `1 / ${PAGE_RATIO}` }}
       >
-        <GripVertical size={14} />
-      </button>
-
-      {/* Page thumbnail preview */}
-      {/* The inner page renders at a fixed design size and is scaled down to
-          the rail width. The scale has to be boxWidth/designWidth — it was
-          0.0357, a quarter of that, so every thumbnail rendered its content
-          at 10px inside a 44px frame and read as a blank rectangle. */}
-      <div className="relative h-[62px] w-11 shrink-0 overflow-hidden rounded-[3px] border border-neutral-700 bg-white shadow-sm">
         <div
-          className="absolute left-0 top-0 origin-top-left"
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 origin-top-left"
           style={{
             width: THUMB_DESIGN_WIDTH,
-            height: Math.round(THUMB_DESIGN_WIDTH * 1.41),
-            transform: `scale(${44 / THUMB_DESIGN_WIDTH})`,
+            height: Math.round(THUMB_DESIGN_WIDTH * PAGE_RATIO),
+            transform: `scale(${scale})`,
+            opacity: scale > 0 ? 1 : 0,
           }}
         >
           <PageRenderer page={page} bookId={bookId} className="w-full h-full" />
         </div>
+
+        <button
+          type="button"
+          aria-current={isSelected ? 'true' : undefined}
+          onClick={onSelect}
+          className="absolute inset-0 z-10 cursor-pointer"
+        >
+          <span className="sr-only">{`Go to page ${page.page_number}`}</span>
+        </button>
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="text-[11px] text-neutral-300 truncate font-medium">
-          Page {page.page_number}
-        </div>
-        <div className="flex items-center gap-1 mt-0.5">
-          <span
-            className={twMerge(
-              'text-[9px] px-1 rounded font-bold uppercase',
-              PAGE_TYPE_COLORS[page.type]
-            )}
-          >
-            {page.type}
-          </span>
-        </div>
+      {/* Number and type sit under the page rather than beside it, so the
+          thumbnail gets the full column width. */}
+      <div className="mt-1.5 flex items-center gap-1.5 px-0.5">
+        <span className="text-[11px] font-medium tabular-nums text-neutral-300">
+          {page.page_number}
+        </span>
+        <span
+          className={twMerge(
+            'rounded px-1 text-[9px] font-bold uppercase leading-4',
+            PAGE_TYPE_COLORS[page.type]
+          )}
+        >
+          {page.type}
+        </span>
+        <span className="flex-1" />
+        <button
+          {...listeners}
+          {...attributes}
+          onClick={(e) => e.stopPropagation()}
+          className="cursor-grab text-neutral-600 opacity-0 transition-opacity hover:text-neutral-300 group-hover:opacity-100 active:cursor-grabbing"
+          aria-label={`Drag page ${page.page_number} to reorder`}
+        >
+          <GripVertical size={13} />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          disabled={isOnly}
+          className={twMerge(
+            'rounded transition-colors',
+            isOnly
+              ? 'cursor-not-allowed text-neutral-700'
+              : 'text-neutral-600 opacity-0 hover:text-red-400 group-hover:opacity-100'
+          )}
+          aria-label={`Delete page ${page.page_number}`}
+        >
+          <Trash2 size={13} />
+        </button>
       </div>
-
-      {/* Delete button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onDelete()
-        }}
-        disabled={isOnly}
-        className={twMerge(
-          'shrink-0 p-1 rounded transition-colors',
-          isOnly
-            ? 'text-neutral-700 cursor-not-allowed'
-            : 'text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100'
-        )}
-        aria-label="Delete page"
-      >
-        <Trash2 size={13} />
-      </button>
     </div>
   )
 }
@@ -263,31 +295,32 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
 
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {activeTab === 'pages' && (
-          <div className="p-2 space-y-1">
+          <div className="p-2">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext
-                items={pages.map((p) => p.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {pages.map((page, index) => (
-                  <SortablePageItem
-                    key={page.id}
-                    page={page}
-                    index={index}
-                    bookId={book.id}
-                    isSelected={currentPageIndex === index}
-                    isOnly={pages.length === 1}
-                    onSelect={() => {
-                      setCurrentPageIndex(index)
-                      onPageSelected?.()
-                    }}
-                    onDelete={() => removePage(page.id)}
-                  />
-                ))}
+              {/* rectSortingStrategy, not vertical: the pages are a grid now,
+                  so reordering has to consider both axes. */}
+              <SortableContext items={pages.map((p) => p.id)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-2">
+                  {pages.map((page, index) => (
+                    <SortablePageItem
+                      key={page.id}
+                      page={page}
+                      index={index}
+                      bookId={book.id}
+                      isSelected={currentPageIndex === index}
+                      isOnly={pages.length === 1}
+                      onSelect={() => {
+                        setCurrentPageIndex(index)
+                        onPageSelected?.()
+                      }}
+                      onDelete={() => removePage(page.id)}
+                    />
+                  ))}
+                </div>
               </SortableContext>
             </DndContext>
           </div>
