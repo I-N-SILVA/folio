@@ -11,17 +11,66 @@ export const dynamic = 'force-dynamic'
 
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due'])
 
-async function setPlanForCustomer(
-  customerId: string,
-  opts: { active: boolean; subscriptionId?: string | null; status?: string | null }
-) {
-  const { data: profile } = await supabaseAdmin
+/**
+ * Finds the profile a subscription belongs to.
+ *
+ * Looking it up only by `stripe_customer_id` meant that if that column was
+ * never written — the checkout route writes it in a separate statement, which
+ * can lose a race or simply fail — the webhook returned silently and a paying
+ * customer was never granted Pro, with nothing logged. Checkout already stamps
+ * `supabase_user_id` into the subscription's metadata and nothing read it, so
+ * that is the fallback, and finding a profile that way backfills the column so
+ * later events take the fast path.
+ */
+async function findProfile(customerId: string, metadataUserId?: string | null) {
+  const byCustomer = await supabaseAdmin
     .from('profiles')
     .select('id, plan')
     .eq('stripe_customer_id', customerId)
     .maybeSingle()
 
-  if (!profile) return
+  if (byCustomer.data) return byCustomer.data
+
+  if (!metadataUserId) return null
+
+  const byMetadata = await supabaseAdmin
+    .from('profiles')
+    .select('id, plan')
+    .eq('id', metadataUserId)
+    .maybeSingle()
+
+  if (!byMetadata.data) return null
+
+  console.warn(
+    `[stripe webhook] profile ${metadataUserId} had no stripe_customer_id for ${customerId}; backfilling`
+  )
+  await supabaseAdmin
+    .from('profiles')
+    .update({ stripe_customer_id: customerId })
+    .eq('id', metadataUserId)
+
+  return byMetadata.data
+}
+
+async function setPlanForCustomer(
+  customerId: string,
+  opts: {
+    active: boolean
+    subscriptionId?: string | null
+    status?: string | null
+    metadataUserId?: string | null
+  }
+) {
+  const profile = await findProfile(customerId, opts.metadataUserId)
+
+  if (!profile) {
+    // Silence here means a subscription changed and no account was updated —
+    // worth knowing about rather than swallowing.
+    console.error(
+      `[stripe webhook] no profile for customer ${customerId} (metadata user: ${opts.metadataUserId ?? 'none'})`
+    )
+    return
+  }
 
   // Never clobber an AppSumo lifetime plan with subscription changes.
   const isLifetime = typeof profile.plan === 'string' && profile.plan.startsWith('ltd_')
@@ -72,6 +121,7 @@ export async function POST(request: NextRequest) {
           active: ACTIVE_STATUSES.has(sub.status),
           subscriptionId: sub.id,
           status: sub.status,
+          metadataUserId: sub.metadata?.supabase_user_id ?? null,
         })
         break
       }
@@ -81,6 +131,7 @@ export async function POST(request: NextRequest) {
           active: false,
           subscriptionId: null,
           status: 'canceled',
+          metadataUserId: sub.metadata?.supabase_user_id ?? null,
         })
         break
       }

@@ -31,8 +31,33 @@ export async function POST(request: NextRequest) {
       email: user.email ?? undefined,
       metadata: { supabase_user_id: user.id },
     })
-    customerId = customer.id
-    await supabaseAdmin.from('profiles').update({ stripe_customer_id: customerId }).eq('id', user.id)
+
+    // Read-then-write: two checkout clicks in quick succession both saw an
+    // empty column and both created a customer, with the second overwriting
+    // the first. The subscription that then completed against the losing
+    // customer belonged to an id no longer stored anywhere, so the webhook
+    // couldn't find the account and the payment granted nothing.
+    //
+    // Claiming only while the column is still empty makes the database pick a
+    // winner. A loser reuses whichever id was stored rather than pushing its
+    // own, so exactly one customer id is ever in play per account.
+    const { data: claimed } = await supabaseAdmin
+      .from('profiles')
+      .update({ stripe_customer_id: customer.id })
+      .eq('id', user.id)
+      .is('stripe_customer_id', null)
+      .select('stripe_customer_id')
+
+    if (claimed && claimed.length > 0) {
+      customerId = customer.id
+    } else {
+      const { data: winner } = await supabaseAdmin
+        .from('profiles')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
+        .maybeSingle()
+      customerId = (winner?.stripe_customer_id as string | undefined) ?? customer.id
+    }
   }
 
   const session = await stripe.checkout.sessions.create({
