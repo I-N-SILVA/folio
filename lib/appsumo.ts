@@ -138,23 +138,53 @@ export type RedeemResult =
 export async function redeemLicense(userId: string, rawKey: string): Promise<RedeemResult> {
   const licenseKey = rawKey.trim()
 
+  // The claim below interpolates userId into a PostgREST filter expression.
+  // It always arrives from supabase.auth.getUser(), so it is a server-derived
+  // UUID rather than anything a caller supplies — but a filter string is the
+  // wrong place to discover otherwise, so it is checked rather than trusted.
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) return { ok: false, reason: 'not_found' }
+
   const { data: license } = await supabaseAdmin
     .from('appsumo_licenses')
     .select('license_key, plan, status, redeemed_by')
     .eq('license_key', licenseKey)
     .maybeSingle()
 
+  // Read first, purely so the caller gets a specific reason rather than a
+  // generic failure. The read is NOT what decides the outcome — see below.
   if (!license) return { ok: false, reason: 'not_found' }
   if (license.status === 'refunded') return { ok: false, reason: 'refunded' }
   if (license.redeemed_by && license.redeemed_by !== userId) {
     return { ok: false, reason: 'already_redeemed' }
   }
 
-  await supabaseAdmin
+  // The claim has to be the thing that decides it. Checking `redeemed_by` in a
+  // separate SELECT and then updating unconditionally left a window where two
+  // simultaneous redemptions of one license both passed the check and both
+  // wrote — the second overwriting the first — so a single license granted a
+  // paid plan to two accounts and the audit trail kept only the later one.
+  // Trivially exploitable: fire the same code from two sessions at once.
+  //
+  // Narrowing the UPDATE to rows that are still unclaimed (or already this
+  // user's, so a retry stays idempotent) makes the database arbitrate, and the
+  // returned rows say whether we won. Same reasoning as the slug insert in
+  // /api/books, which relies on the unique constraint rather than a prior read.
+  const { data: claimed, error: claimError } = await supabaseAdmin
     .from('appsumo_licenses')
     .update({ redeemed_by: userId, redeemed_at: new Date().toISOString() })
     .eq('license_key', licenseKey)
+    .neq('status', 'refunded')
+    .or(`redeemed_by.is.null,redeemed_by.eq.${userId}`)
+    .select('license_key, plan')
+
+  if (claimError) return { ok: false, reason: 'not_found' }
+
+  // No rows means another request claimed it between our read and our write,
+  // or a refund landed in the same window.
+  if (!claimed || claimed.length === 0) {
+    return { ok: false, reason: 'already_redeemed' }
+  }
 
   await syncProfileFromLicense(userId, licenseKey)
-  return { ok: true, plan: license.plan }
+  return { ok: true, plan: claimed[0].plan ?? license.plan }
 }
