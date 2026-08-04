@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
-import { detectHotspots, analyzeBookSEO } from '@/lib/ai'
+import { detectHotspots, analyzeBookSEO, isAiEnabled } from '@/lib/ai'
 import { checkBookQuota } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { rateLimit } from '@/lib/rate-limit'
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
   // Hotspot detection was one awaited Gemini call per page, in series. At the
   // 50-page ceiling that alone can outrun the 300s function budget, and the
   // whole import is lost with it. Run a bounded number at a time instead.
-  if (aiEnhance && pageBuffers.length > 0) {
+  if (aiEnhance && isAiEnabled() && pageBuffers.length > 0) {
     const detected = await mapWithConcurrency(pageBuffers, AI_CONCURRENCY, (buf, i) =>
       detectHotspots(Buffer.from(buf), i + 1)
     )
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
 
   // AI Enhancement: Generate SEO Metadata
   let seoMetadata = undefined
-  if (aiEnhance && pageBuffers.length > 0) {
+  if (aiEnhance && isAiEnabled() && pageBuffers.length > 0) {
     // First three pages are enough context, and they're already in memory —
     // this used to re-read and re-buffer them out of the form data.
     const buffers = pageBuffers.slice(0, 3).map((buf) => Buffer.from(buf))

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -36,6 +36,10 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
   const [aiEnhance, setAiEnhance] = useState(true) // Default to true for "Elite" experience
+  // null while we're still asking. AI is optional at deploy time — without a
+  // Gemini key the checkbox promised hotspot detection and SEO tags the install
+  // cannot produce, and every page of the import made a doomed API call.
+  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [progress, setProgress] = useState<RenderProgress>({
     current: 0,
@@ -43,6 +47,19 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
     phase: 'loading',
   })
   const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/api/entitlements', { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) setAiAvailable(Boolean(data.ai?.enabled))
+      })
+      // A failed probe shouldn't block the import — leave it unknown and let the
+      // server decide, which it does regardless of what we send.
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +146,7 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
       form.append('title', title.trim())
       form.append('slug', slug.trim())
       form.append('pageCount', renderedPages.length.toString())
-      form.append('aiEnhance', aiEnhance.toString())
+      form.append('aiEnhance', (aiEnhance && aiAvailable !== false).toString())
 
       renderedPages.forEach((page, idx) => {
         form.append(
@@ -177,7 +194,7 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
       setErrorMessage(msg)
       toast.error(msg)
     }
-  }, [file, title, slug, aiEnhance, router, onClose, onLimitReached])
+  }, [file, title, slug, aiEnhance, aiAvailable, router, onClose, onLimitReached])
 
   const isWorking = status === 'rendering' || status === 'uploading'
   const canSubmit =
@@ -313,24 +330,42 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
             </p>
           </div>
 
-          {/* AI Enhancement */}
-          <div className="mb-6 bg-[var(--accent)]/5 p-4 rounded-xl border border-[var(--accent)]/10">
-            <label className="flex items-start gap-3 cursor-pointer group">
+          {/* AI Enhancement — only offered when the deployment can actually do it */}
+          <div
+            className={`mb-6 p-4 rounded-xl border ${
+              aiAvailable === false
+                ? 'bg-gray-50 border-gray-200'
+                : 'bg-[var(--accent)]/5 border-[var(--accent)]/10'
+            }`}
+          >
+            <label
+              className={`flex items-start gap-3 group ${
+                aiAvailable === false ? 'cursor-default' : 'cursor-pointer'
+              }`}
+            >
               <div className="flex items-center h-5">
                 <input
                   type="checkbox"
-                  checked={aiEnhance}
+                  checked={aiEnhance && aiAvailable !== false}
                   onChange={(e) => setAiEnhance(e.target.checked)}
-                  disabled={isWorking || status === 'done'}
+                  disabled={isWorking || status === 'done' || aiAvailable === false}
                   className="w-4 h-4 text-[var(--accent-fg)] border-gray-300 rounded focus:ring-[var(--accent)]/30"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900 group-hover:text-[var(--accent-fg)] transition-colors">
+                <span
+                  className={`text-sm font-bold transition-colors ${
+                    aiAvailable === false
+                      ? 'text-gray-400'
+                      : 'text-gray-900 group-hover:text-[var(--accent-fg)]'
+                  }`}
+                >
                   Magic AI Enhancement
                 </span>
                 <span className="text-xs text-gray-500 leading-relaxed mt-0.5">
-                  Automatically detect products, hotspots, and generate SEO tags.
+                  {aiAvailable === false
+                    ? 'Unavailable — no AI key is configured for this deployment. Pages will import without hotspots or SEO tags.'
+                    : 'Automatically detect products, hotspots, and generate SEO tags.'}
                 </span>
               </div>
             </label>

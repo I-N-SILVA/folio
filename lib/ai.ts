@@ -4,8 +4,21 @@ import { v4 as uuidv4 } from 'uuid'
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || '')
 
+/**
+ * Whether an AI key is configured at all.
+ *
+ * The client above is constructed with `|| ''`, so without a key every call
+ * still made a real request that failed auth. A 50-page import runs hotspot
+ * detection per page, so an install that left this blank — .env.example marks
+ * it optional and ships it empty — spent 50 round-trips and 50 error lines
+ * discovering the same thing each time. Callers should check first.
+ */
+export function isAiEnabled(): boolean {
+  return Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+}
+
 export async function detectHotspots(imageBuffer: Buffer, pageNumber: number): Promise<Hotspot[]> {
-  // ... existing code ...
+  if (!isAiEnabled()) return []
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
@@ -54,6 +67,7 @@ export async function detectHotspots(imageBuffer: Buffer, pageNumber: number): P
 }
 
 export async function analyzeBookSEO(imageBuffers: Buffer[], title: string): Promise<{ description: string; keywords: string }> {
+  if (!isAiEnabled()) return { description: '', keywords: '' }
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 

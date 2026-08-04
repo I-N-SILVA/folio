@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { isAiEnabled } from '@/lib/ai'
 import { checkBookQuota } from '@/lib/entitlements'
 
 export const dynamic = 'force-dynamic'
@@ -12,7 +13,11 @@ export async function GET() {
 
   const { allowed, plan, used, limit } = await checkBookQuota(user.id, user.email)
 
+  // The studio offers "Magic AI Enhancement" checked by default. Without a key
+  // configured that promises hotspot detection and SEO tags the install cannot
+  // produce, so the UI needs to know.
   return NextResponse.json({
+    ai: { enabled: isAiEnabled() },
     plan: plan.id,
     planName: plan.name,
     lifetime: plan.lifetime,
