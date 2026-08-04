@@ -30,9 +30,13 @@ function LoginForm() {
     setError('')
 
     // Honor an optional ?next= target so post-login flows (e.g. upgrade) land
-    // on the right page. Only allow same-origin relative paths.
+    // on the right page. Only allow same-origin relative paths — and `//host`
+    // is not one: browsers read it as a protocol-relative absolute URL, so
+    // startsWith('/') alone would have carried ?next=//evil.com through. The
+    // callback rejects it too, but the two checks should agree.
     const rawNext = new URLSearchParams(window.location.search).get('next')
-    const next = rawNext && rawNext.startsWith('/') ? rawNext : null
+    const next =
+      rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
     const redirectTo = `${window.location.origin}/auth/callback${
       next ? `?next=${encodeURIComponent(next)}` : ''
     }`

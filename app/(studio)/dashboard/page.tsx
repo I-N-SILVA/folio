@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { Sparkles, BookOpen } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
@@ -18,7 +19,11 @@ type DashboardBook = Omit<Book, 'pages'> & {
 async function getBooks(): Promise<DashboardBook[]> {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  // Returning [] rendered a convincing but empty dashboard to a signed-out
+  // visitor. That only ever showed up if the middleware didn't run — which it
+  // skips whenever the Supabase env vars are missing, exactly the misconfigured
+  // deploy where you'd least want the studio to look reachable.
+  if (!user) redirect('/login?next=%2Fdashboard')
 
   const { data } = await supabase
     .from('books')
