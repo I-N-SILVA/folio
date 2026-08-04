@@ -32,12 +32,15 @@ export function LeadGate({ gating, isUnlocked, onUnlock, bookId, pageIndex }: Le
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className="bg-white/90 p-8 rounded-2xl shadow-2xl border border-white/50 max-w-sm w-full text-center space-y-6"
         >
+          {/* Both fields are author-supplied and optional in the schema, so an
+              edition that enabled gating without filling them in would have
+              rendered a card with no heading and no explanation. */}
           <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-gray-900 leading-tight">
-              {gating.title}
+            <h3 className="text-2xl font-bold leading-tight text-gray-900">
+              {gating.title || 'Read the rest of this edition'}
             </h3>
-            <p className="text-gray-600 text-sm">
-              {gating.description}
+            <p className="text-sm text-gray-600">
+              {gating.description || 'Enter your email to unlock the remaining pages.'}
             </p>
           </div>
 
@@ -52,16 +55,25 @@ export function LeadGate({ gating, isUnlocked, onUnlock, bookId, pageIndex }: Le
             }}
             className="space-y-4"
           >
+            {/* `bg-primary` / `ring-primary` were never real utilities — no
+                --color-primary is registered with Tailwind's theme, so the
+                submit button rendered with a transparent background under white
+                text and was completely invisible on the white card. The author's
+                theme colour is an inline variable on the page element, which
+                this overlay is a sibling of rather than a child, so it needs the
+                app accent as a fallback for when that variable isn't in scope. */}
             <input
               name="email"
               type="email"
               required
+              autoComplete="email"
+              aria-label="Email address"
               placeholder="your@email.com"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[var(--primary,var(--accent))]"
             />
             <button
               type="submit"
-              className="w-full bg-primary text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="w-full rounded-xl bg-[var(--primary,var(--accent))] py-3 font-semibold text-white shadow-lg transition-all hover:opacity-90 active:scale-[0.98]"
             >
               Unlock Full Content
             </button>
