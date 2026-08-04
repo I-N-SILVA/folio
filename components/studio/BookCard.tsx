@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BarChart2, BookOpen, ExternalLink, Trash2, Edit2, Check, X } from 'lucide-react'
+import { BarChart2, BookOpen, ExternalLink, Share2, Trash2, Edit2, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/Modal'
+import { ShareModal } from './ShareModal'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import type { Book, Page } from '@/lib/book-schema'
 import { PAGE_ASPECT, PAGE_DESIGN_HEIGHT, PAGE_DESIGN_WIDTH, pageScale } from '@/lib/page-geometry'
@@ -132,6 +133,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   const [book, setBook] = useState(initialBook)
   const [isDeleting, setIsDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [newTitle, setNewTitle] = useState(book.title)
   const router = useRouter()
@@ -247,6 +249,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
           </Link>
         )}
 
+        <button
+          onClick={() => setShowShare(true)}
+          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--accent)]/10 hover:text-[var(--accent-fg)]"
+          aria-label={`Share ${book.title}`}
+        >
+          <Share2 size={18} />
+        </button>
+
         <Link
           href={`/analytics/${book.slug}`}
           className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--qlico-teal)]/10 hover:text-[var(--qlico-teal)]"
@@ -274,6 +284,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
           <Trash2 size={16} />
         </button>
       </div>
+
+      {showShare && (
+        <ShareModal
+          slug={book.slug}
+          published={Boolean(published)}
+          onClose={() => setShowShare(false)}
+        />
+      )}
 
       {confirmDelete && (
         <ConfirmDialog

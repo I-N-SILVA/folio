@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
-import { ArrowLeft, Globe, EyeOff, Loader2, Check, Eye } from 'lucide-react'
+import { ArrowLeft, Globe, EyeOff, Loader2, Check, Eye, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { track } from '@vercel/analytics'
 import { useEditorStore } from '@/lib/editor-store'
@@ -13,6 +13,7 @@ import { EditorCanvas } from '@/components/studio/EditorCanvas'
 import { SettingsPanel } from '@/components/studio/settings'
 import { PreviewModal } from '@/components/studio/PreviewModal'
 import { PageManagerModal } from '@/components/studio/PageManagerModal'
+import { ShareModal } from '@/components/studio/ShareModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { Grid } from 'lucide-react'
 import type { Book } from '@/lib/book-schema'
@@ -29,6 +30,7 @@ export function EditorClient({ book }: Props) {
   const [titleValue, setTitleValue] = useState(book.title)
   const [showPreview, setShowPreview] = useState(false)
   const [showPageManager, setShowPageManager] = useState(false)
+  const [showShare, setShowShare] = useState(false)
 
   // Warn about unsaved changes
   useEffect(() => {
@@ -307,6 +309,18 @@ export function EditorClient({ book }: Props) {
           <span className="hidden sm:inline">Preview</span>
         </button>
 
+        {/* Share. There was no way to copy an edition's link or get its embed
+            snippet anywhere in the app — the modal existed but nothing opened
+            it. */}
+        <button
+          onClick={() => setShowShare(true)}
+          className="flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700"
+          title="Share or embed"
+        >
+          <Share2 size={13} />
+          <span className="hidden sm:inline">Share</span>
+        </button>
+
         {/* Publish toggle */}
         <button
           onClick={handlePublishToggle}
@@ -377,6 +391,14 @@ export function EditorClient({ book }: Props) {
 
       {/* Page Manager Modal */}
       {showPageManager && <PageManagerModal onClose={() => setShowPageManager(false)} />}
+
+      {showShare && storeBook?.slug && (
+        <ShareModal
+          slug={storeBook.slug}
+          published={isPublished}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   )
 }
