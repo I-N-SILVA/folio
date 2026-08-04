@@ -4,13 +4,12 @@
 export const MAX_ASSET_BYTES = 25 * 1024 * 1024 // 25 MB per image/audio/video asset
 export const MAX_PDF_BYTES = 50 * 1024 * 1024 // 50 MB per imported PDF
 
-/**
- * Ceiling for the rendered-page payload a PDF import posts in one request.
- * Serverless platforms cap request bodies well below what 50 pages of PNG can
- * reach, and the failure there is an opaque network error — this lets the
- * client say something useful before spending minutes rendering for nothing.
- */
-export const MAX_IMPORT_PAYLOAD_BYTES = 40 * 1024 * 1024
+// There is deliberately no import-payload ceiling here any more. There used to
+// be one, because the importer sent every rendered page in a single request and
+// had to refuse documents larger than the platform's body cap. Rendered pages
+// now go straight from the browser to storage, so no request carries more than
+// one page and there is no aggregate size to limit. If a ceiling ever looks
+// necessary again, it means the pages have been routed back through the server.
 
 // MIME prefixes we accept for inline media assets.
 const ALLOWED_ASSET_PREFIXES = ['image/', 'video/', 'audio/']

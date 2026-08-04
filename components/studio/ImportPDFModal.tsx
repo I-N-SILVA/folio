@@ -7,7 +7,9 @@ import { useRouter } from 'next/navigation'
 import { X, FileUp, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { renderPdfPages, type RenderProgress } from '@/lib/pdf-renderer'
-import { MAX_IMPORT_PAYLOAD_BYTES, MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
+import { MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
+import { createBrowserSupabase } from '@/lib/supabase'
+import { MAX_IMPORT_PAGES, mapWithConcurrency } from '@/lib/import'
 
 interface ImportPDFModalProps {
   onClose: () => void
@@ -25,7 +27,10 @@ function slugify(value: string) {
     .slice(0, 100)
 }
 
-type Status = 'idle' | 'rendering' | 'uploading' | 'done' | 'error'
+type Status = 'idle' | 'rendering' | 'uploading' | 'finishing' | 'done' | 'error'
+
+/** Parallel page uploads. Enough to saturate a connection, few enough to be fair. */
+const UPLOAD_CONCURRENCY = 4
 
 export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps) {
   const router = useRouter()
@@ -47,6 +52,10 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
     phase: 'loading',
   })
   const [errorMessage, setErrorMessage] = useState('')
+  // Pages written to storage so far, so the upload phase reports real progress
+  // instead of jumping to 100% and sitting there.
+  const [uploaded, setUploaded] = useState(0)
+  const [uploadTotal, setUploadTotal] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -117,6 +126,12 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
   const handleSubmit = useCallback(async () => {
     if (!file || !title.trim() || !slug.trim()) return
 
+    // The book row is now created before the uploads, so the slug is claimed
+    // early — which means a failure partway through would strand an empty book
+    // holding that slug and a slot against the plan quota. Tracked here so the
+    // error path can take it back out.
+    let createdBookId: string | null = null
+
     try {
       // ── Phase 1: Render PDF pages client-side ─────────────────────────
       setStatus('rendering')
@@ -131,57 +146,98 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
       }
 
       const renderedPages = await renderPdfPages(file, {
-        maxPages: 50,
+        maxPages: MAX_IMPORT_PAGES,
         scale: 2,
         onProgress: setProgress,
       })
 
-      // ── Phase 2: Upload the rendered pages ────────────────────────────
-      setStatus('uploading')
-
-      // The source PDF is deliberately not sent: the server has no use for it
-      // once the pages are rendered here, and including it pushed the request
-      // past hosting body-size limits for anything but a small document.
-      const form = new FormData()
-      form.append('title', title.trim())
-      form.append('slug', slug.trim())
-      form.append('pageCount', renderedPages.length.toString())
-      form.append('aiEnhance', (aiEnhance && aiAvailable !== false).toString())
-
-      renderedPages.forEach((page, idx) => {
-        form.append(
-          `page_${idx}`,
-          new File([page.blob], `page-${idx + 1}.png`, { type: 'image/png' })
-        )
-      })
-
-      const payloadBytes = renderedPages.reduce((sum, page) => sum + page.blob.size, 0)
-      if (payloadBytes > MAX_IMPORT_PAYLOAD_BYTES) {
-        throw new Error(
-          `These ${renderedPages.length} pages come to ${humanBytes(payloadBytes)}, over the ` +
-            `${humanBytes(MAX_IMPORT_PAYLOAD_BYTES)} an import can send at once. ` +
-            `Try splitting the PDF into smaller documents.`
-        )
+      if (renderedPages.length === 0) {
+        throw new Error('That PDF has no pages we could render.')
       }
 
-      const res = await fetch('/api/import/pdf', {
+      // ── Phase 2: Claim the book and get one signed target per page ─────
+      const beginRes = await fetch('/api/import/pdf', {
         method: 'POST',
-        body: form,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          slug: slug.trim(),
+          pageCount: renderedPages.length,
+        }),
       })
 
-      const data = await res.json()
+      const begin = await beginRes.json()
 
-      if (!res.ok) {
+      if (!beginRes.ok) {
         // Hand the quota case to the parent, which owns the upgrade wall.
-        if (data.code === 'plan_limit' && onLimitReached) {
+        if (begin.code === 'plan_limit' && onLimitReached) {
           onLimitReached()
           return
         }
-        throw new Error(data.error ?? 'Import failed')
+        throw new Error(begin.error ?? 'Import failed')
       }
 
+      createdBookId = begin.bookId as string
+
+      // ── Phase 3: Write the pages straight to storage ───────────────────
+      // These used to go up as one multipart body, which meant any real
+      // document exceeded the platform's request-body cap and the import
+      // refused to start. Going direct removes that ceiling entirely, and
+      // uploading page by page means the progress bar reflects actual work.
+      setStatus('uploading')
+      setUploaded(0)
+      setUploadTotal(renderedPages.length)
+
+      const supabase = createBrowserSupabase()
+      const targets = begin.uploads as { pageNumber: number; path: string; token: string }[]
+
+      const failures = await mapWithConcurrency(targets, UPLOAD_CONCURRENCY, async (target) => {
+        const page = renderedPages[target.pageNumber - 1]
+        if (!page) return target.pageNumber
+
+        const { error } = await supabase.storage
+          .from('folio-assets')
+          .uploadToSignedUrl(target.path, target.token, page.blob, {
+            contentType: 'image/png',
+          })
+
+        setUploaded((n) => n + 1)
+        return error ? target.pageNumber : null
+      })
+
+      const failed = failures.filter((n): n is number => n !== null)
+      if (failed.length === targets.length) {
+        throw new Error('None of the pages could be uploaded. Check your connection and retry.')
+      }
+
+      // ── Phase 4: Turn what landed into a book ──────────────────────────
+      setStatus('finishing')
+
+      const finishRes = await fetch('/api/import/pdf/finalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookId: begin.bookId,
+          aiEnhance: aiEnhance && aiAvailable !== false,
+        }),
+      })
+
+      const data = await finishRes.json()
+      if (!finishRes.ok) throw new Error(data.error ?? 'Import failed')
+
+      // Past this point the book is real, so the error path must not remove it.
+      createdBookId = null
       setStatus('done')
-      toast.success(`"${title}" imported — ${data.pageCount} pages ready.`)
+      if (failed.length > 0) {
+        // Partial success is still success — say what's missing rather than
+        // letting the author discover a short book later.
+        toast.warning(
+          `"${title}" imported with ${data.pageCount} of ${renderedPages.length} pages. ` +
+            `${failed.length} failed to upload.`
+        )
+      } else {
+        toast.success(`"${title}" imported — ${data.pageCount} pages ready.`)
+      }
 
       // Brief delay so user sees the success state
       setTimeout(() => {
@@ -189,6 +245,11 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
         router.push(`/editor/${data.bookId}`)
       }, 800)
     } catch (err) {
+      // Give the slug and the quota slot back, so retrying with the same slug
+      // doesn't collide with the wreckage of the attempt that just failed.
+      if (createdBookId) {
+        await fetch(`/api/books/${createdBookId}`, { method: 'DELETE' }).catch(() => {})
+      }
       setStatus('error')
       const msg = (err as Error).message
       setErrorMessage(msg)
@@ -196,17 +257,27 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
     }
   }, [file, title, slug, aiEnhance, aiAvailable, router, onClose, onLimitReached])
 
-  const isWorking = status === 'rendering' || status === 'uploading'
+  const isWorking = status === 'rendering' || status === 'uploading' || status === 'finishing'
   const canSubmit =
     !!file && title.trim().length > 0 && slug.trim().length > 0 && !isWorking && status !== 'done'
 
-  // Progress percentage
+  // Rendering and uploading are each roughly half the wait, so the bar tracks
+  // them as two halves rather than snapping to 100% the moment rendering ends.
   const pct =
-    status === 'rendering' && progress.total > 0
-      ? Math.round((progress.current / progress.total) * 100)
+    status === 'rendering'
+      ? progress.total > 0 ? Math.round((progress.current / progress.total) * 50) : 0
       : status === 'uploading'
-        ? 100
-        : 0
+        ? 50 + (uploadTotal > 0 ? Math.round((uploaded / uploadTotal) * 50) : 0)
+        : status === 'finishing'
+          ? 100
+          : 0
+
+  const phaseLabel =
+    status === 'rendering'
+      ? `Rendering page ${progress.current} of ${progress.total}…`
+      : status === 'uploading'
+        ? `Uploading page ${Math.min(uploaded + 1, uploadTotal)} of ${uploadTotal}…`
+        : 'Finishing up…'
 
   return createPortal(
     <AnimatePresence>
@@ -377,11 +448,7 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Loader2 size={14} className="animate-spin text-[var(--accent-fg)] flex-shrink-0" />
-                  <span>
-                    {status === 'rendering'
-                      ? `Rendering page ${progress.current} of ${progress.total}…`
-                      : 'Uploading to server…'}
-                  </span>
+                  <span>{phaseLabel}</span>
                 </div>
                 <span className="text-xs text-gray-400 font-mono">{pct}%</span>
               </div>
@@ -429,7 +496,11 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
               {isWorking ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  {status === 'rendering' ? 'Rendering…' : 'Uploading…'}
+                  {status === 'rendering'
+                    ? 'Rendering…'
+                    : status === 'uploading'
+                      ? 'Uploading…'
+                      : 'Finishing…'}
                 </>
               ) : status === 'error' ? (
                 <>
