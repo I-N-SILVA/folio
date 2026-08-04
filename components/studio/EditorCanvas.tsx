@@ -15,6 +15,8 @@ import {
   X,
   GripVertical,
   RefreshCw,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import {
   DndContext,
@@ -40,7 +42,20 @@ import type { Block } from '@/lib/book-schema'
 
 // ─── Sortable Block Wrapper ───────────────────────────────────────────────────
 
-function SortableBlock({ id, isSelected, onClick, children }: { id: string; isSelected: boolean; onClick: (e: React.MouseEvent) => void; children: React.ReactNode }) {
+function SortableBlock({
+  id,
+  label,
+  isSelected,
+  onClick,
+  children,
+}: {
+  id: string
+  /** Block type, surfaced on the selection so it's clear what's being edited. */
+  label: string
+  isSelected: boolean
+  onClick: (e: React.MouseEvent) => void
+  children: React.ReactNode
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
 
   const style = {
@@ -77,6 +92,15 @@ function SortableBlock({ id, isSelected, onClick, children }: { id: string; isSe
       >
         <GripVertical size={14} />
       </div>
+
+      {/* Names what's selected. The ring alone doesn't say whether you're about
+          to restyle a heading or a button. */}
+      {isSelected && (
+        <span className="pointer-events-none absolute -top-2 right-2 z-50 rounded-full bg-[var(--accent-vivid)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg">
+          {label}
+        </span>
+      )}
+
       <div className={twMerge(isSelected ? 'pointer-events-auto' : 'pointer-events-none')}>
         {children}
       </div>
@@ -184,6 +208,27 @@ function BlockPickerModal({ onPick, onClose }: BlockPickerModalProps) {
   )
 }
 
+// ─── Canvas geometry ──────────────────────────────────────────────────────────
+
+/**
+ * The canvas used to be `aspect-[4/3]` — landscape — while the reader renders
+ * a portrait A4 spread and the page rail shows portrait thumbnails. Composing
+ * against the wrong shape means the published page never matches what was
+ * designed, so this is the reader's ratio, not a decorative choice.
+ */
+const PAGE_RATIO = 1.41 // A4, matching ViewerEngine
+
+/**
+ * Reader pages render at 460px wide (ViewerEngine's MAX_PAGE_WIDTH) and the
+ * block styles are absolute, so matching it exactly is what makes the canvas a
+ * true preview rather than an approximation — and 460x649 clears the canvas
+ * viewport on a laptop without needing to scroll. Zoom changes this width — exactly what the reader's zoom does
+ * — which keeps every block in real layout space instead of under a CSS
+ * transform that drag-and-drop would have to compensate for.
+ */
+const BASE_PAGE_WIDTH = 460
+const ZOOM_STEPS = [0.75, 0.9, 1, 1.25, 1.5, 2]
+
 // ─── Editor Canvas ────────────────────────────────────────────────────────────
 
 export function EditorCanvas() {
@@ -200,9 +245,15 @@ export function EditorCanvas() {
   } = useEditorStore()
 
   const [showBlockPicker, setShowBlockPicker] = useState(false)
+  const [zoom, setZoom] = useState(1)
   const canvasRef = useRef<HTMLDivElement>(null)
 
   const currentPage = book?.pages?.[currentPageIndex]
+
+  const zoomIndex = ZOOM_STEPS.indexOf(zoom)
+  const prevStep = ZOOM_STEPS[Math.max(0, (zoomIndex === -1 ? 2 : zoomIndex) - 1)]
+  const nextStep = ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, (zoomIndex === -1 ? 2 : zoomIndex) + 1)]
+  const pageWidth = Math.round(BASE_PAGE_WIDTH * zoom)
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -265,39 +316,92 @@ export function EditorCanvas() {
   return (
     <div className="flex flex-col h-full overflow-hidden bg-neutral-900">
       {/* Canvas toolbar */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-800 shrink-0">
-        <span className="text-xs text-neutral-500">
-          Page {currentPage.page_number} · {currentPage.layout}
+      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-neutral-800 px-3">
+        <span className="flex items-center gap-2 text-xs text-neutral-400">
+          <span className="font-medium text-neutral-200">Page {currentPage.page_number}</span>
+          <span className="text-neutral-600">/</span>
+          <span className="capitalize">{currentPage.layout}</span>
         </span>
+
         <div className="flex-1" />
+
+        {/* Zoom */}
+        <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+          <button
+            onClick={() => setZoom(prevStep)}
+            disabled={zoom <= ZOOM_STEPS[0]}
+            aria-label="Zoom out"
+            className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
+          >
+            <Minimize2 size={13} />
+          </button>
+          <button
+            onClick={() => setZoom(1)}
+            aria-label={`Zoom ${Math.round(zoom * 100)} percent — reset to 100 percent`}
+            className="min-w-[46px] rounded-md px-1 py-1 text-[11px] font-semibold tabular-nums text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            onClick={() => setZoom(nextStep)}
+            disabled={zoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]}
+            aria-label="Zoom in"
+            className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
+          >
+            <Maximize2 size={13} />
+          </button>
+        </div>
+
+        <span className="h-5 w-px bg-neutral-800" aria-hidden="true" />
+
         <button
           onClick={() => setHotspotMode(!hotspotMode)}
+          aria-pressed={hotspotMode}
           className={twMerge(
-            'flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors font-medium',
+            'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors',
             hotspotMode
-              ? 'bg-amber-500 text-amber-950'
-              : 'bg-neutral-800 text-neutral-400 hover:text-neutral-200'
+              ? 'bg-amber-400 text-amber-950 shadow-[0_0_0_1px_rgba(251,191,36,0.4),0_4px_12px_rgba(251,191,36,0.25)]'
+              : 'border border-neutral-800 bg-neutral-950/60 text-neutral-400 hover:text-neutral-100'
           )}
         >
           <Crosshair size={13} />
-          {hotspotMode ? 'Hotspot Mode ON' : 'Hotspot Mode'}
+          {hotspotMode ? 'Placing hotspot' : 'Hotspot'}
         </button>
       </div>
 
       {/* Canvas area */}
-      <div className="flex-1 overflow-auto flex items-center justify-center p-6 bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:20px_20px]">
+      <div className="flex-1 overflow-auto bg-[radial-gradient(#232323_1px,transparent_1px)] p-8 [background-size:22px_22px]">
         <div
           ref={canvasRef}
+          style={{ width: pageWidth, height: Math.round(pageWidth * PAGE_RATIO) }}
           className={twMerge(
-            'relative bg-white rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden',
-            'w-full max-w-2xl aspect-[4/3]',
+            // Layered elevation reads as a physical sheet lifted off the
+            // surface, rather than a div with a drop shadow.
+            'relative mx-auto overflow-hidden rounded-[3px] bg-white',
+            'shadow-[0_1px_2px_rgba(0,0,0,0.35),0_12px_28px_-8px_rgba(0,0,0,0.55),0_40px_80px_-32px_rgba(0,0,0,0.7)]',
+            'ring-1 ring-black/40',
             hotspotMode && 'cursor-crosshair'
           )}
           onClick={handleCanvasClick}
         >
-          {/* Subtle grid on the page itself */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:40px_40px]" />
-          
+          {/* A blank page offered no hint about what to do next — the only
+              affordance was a button in the footer, below the fold of the
+              page itself. */}
+          {currentPage.blocks.length === 0 && !hotspotMode && (
+            <button
+              onClick={() => setShowBlockPicker(true)}
+              className="absolute inset-4 z-20 flex flex-col items-center justify-center gap-3 rounded-sm border border-dashed border-neutral-300 text-neutral-400 transition-colors hover:border-[var(--accent-vivid)]/60 hover:text-[var(--accent-vivid)]"
+            >
+              <span className="grid h-11 w-11 place-items-center rounded-full border border-current">
+                <Plus size={20} />
+              </span>
+              <span className="text-sm font-medium">Add your first block</span>
+              <span className="max-w-[220px] text-center text-xs text-neutral-400">
+                Text, images, video, buttons, or a live data field.
+              </span>
+            </button>
+          )}
+
           <div className={twMerge('absolute inset-0', hotspotMode && 'pointer-events-none')}>
             <DndContext
               sensors={sensors}
@@ -317,6 +421,7 @@ export function EditorCanvas() {
                     <SortableBlock
                       key={block.id}
                       id={block.id}
+                      label={block.type === 'text' ? (block.variant ?? 'text') : block.type}
                       isSelected={selectedBlockId === block.id}
                       onClick={(e) => {
                         e.stopPropagation()

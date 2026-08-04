@@ -39,28 +39,30 @@ export function SettingsPanel() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex items-center border-b border-neutral-800 shrink-0">
-        <button
-          onClick={() => setTab('selection')}
-          className={twMerge(
-            'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
-            tab === 'selection' ? 'text-white border-b-2 border-[var(--accent-vivid)] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
-          )}
-        >
-          Selection
-        </button>
-        <button
-          onClick={() => setTab('book')}
-          className={twMerge(
-            'flex-1 py-3 text-[10px] font-bold uppercase tracking-widest transition-colors',
-            tab === 'book' ? 'text-white border-b-2 border-[var(--accent-vivid)] bg-neutral-800/50' : 'text-neutral-500 hover:text-neutral-300'
-          )}
-        >
-          Edition
-        </button>
+      {/* Segmented control rather than two underlined tabs: at this width the
+          underline reads as a stray rule, and the pill makes the active pane
+          obvious at a glance. */}
+      <div className="shrink-0 border-b border-neutral-800 p-2">
+        <div className="flex gap-1 rounded-lg bg-neutral-950/60 p-1">
+          {(['selection', 'book'] as const).map((key) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              aria-pressed={tab === key}
+              className={twMerge(
+                'flex-1 rounded-md py-1.5 text-[11px] font-semibold tracking-wide transition-colors',
+                tab === key
+                  ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30'
+                  : 'text-neutral-500 hover:text-neutral-300'
+              )}
+            >
+              {key === 'selection' ? 'Selection' : 'Edition'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
         {tab === 'book' ? (
           <BookSettingsForm key={book.id} book={book} />
         ) : selectedBlock ? (

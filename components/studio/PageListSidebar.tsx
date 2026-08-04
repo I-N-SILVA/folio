@@ -69,6 +69,9 @@ const BLOCK_LIBRARY: {
   },
 ]
 
+/** Design width the rail thumbnails render at before being scaled down. */
+const THUMB_DESIGN_WIDTH = 280
+
 const PAGE_TYPE_COLORS: Record<Page['type'], string> = {
   cover: 'bg-violet-700 text-violet-100',
   content: 'bg-neutral-700 text-neutral-200',
@@ -127,8 +130,19 @@ function SortablePageItem({
       </button>
 
       {/* Page thumbnail preview */}
-      <div className="w-10 h-14 rounded bg-neutral-700 border border-neutral-600 shrink-0 overflow-hidden relative">
-        <div className="absolute inset-0 origin-top-left" style={{ width: 280, height: 396, transform: 'scale(0.0357)', transformOrigin: 'top left' }}>
+      {/* The inner page renders at a fixed design size and is scaled down to
+          the rail width. The scale has to be boxWidth/designWidth — it was
+          0.0357, a quarter of that, so every thumbnail rendered its content
+          at 10px inside a 44px frame and read as a blank rectangle. */}
+      <div className="relative h-[62px] w-11 shrink-0 overflow-hidden rounded-[3px] border border-neutral-700 bg-white shadow-sm">
+        <div
+          className="absolute left-0 top-0 origin-top-left"
+          style={{
+            width: THUMB_DESIGN_WIDTH,
+            height: Math.round(THUMB_DESIGN_WIDTH * 1.41),
+            transform: `scale(${44 / THUMB_DESIGN_WIDTH})`,
+          }}
+        >
           <PageRenderer page={page} bookId={bookId} className="w-full h-full" />
         </div>
       </div>

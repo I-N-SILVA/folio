@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { Layers, SlidersHorizontal } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
@@ -9,6 +9,15 @@ import { PageListSidebar } from './PageListSidebar'
 import { SettingsPanel } from './settings'
 
 type Panel = 'pages' | 'inspector' | null
+
+/** Matches the `lg` breakpoint, where the real side panels take over. */
+const DESKTOP_QUERY = '(min-width: 1024px)'
+
+function subscribeToDesktop(onChange: () => void) {
+  const mq = window.matchMedia(DESKTOP_QUERY)
+  mq.addEventListener('change', onChange)
+  return () => mq.removeEventListener('change', onChange)
+}
 
 /**
  * Below `lg` the editor's two side panels are hidden, which used to leave
@@ -19,6 +28,16 @@ type Panel = 'pages' | 'inspector' | null
 export function MobileEditorDock() {
   const { book, currentPageIndex, setCurrentPageIndex } = useEditorStore()
   const [panel, setPanel] = useState<Panel>(null)
+
+  // The sheets render through a portal to document.body, so the `lg:hidden`
+  // class on the dock bar never applied to them: on desktop, selecting a block
+  // popped a bottom sheet over the inspector that was already showing it.
+  // Whether this component does anything has to be a real viewport check.
+  const isDesktop = useSyncExternalStore(
+    subscribeToDesktop,
+    () => window.matchMedia(DESKTOP_QUERY).matches,
+    () => false
+  )
 
   const pages = book?.pages ?? []
   const total = pages.length
@@ -31,6 +50,7 @@ export function MobileEditorDock() {
   useEffect(
     () =>
       useEditorStore.subscribe((state, prev) => {
+        if (window.matchMedia(DESKTOP_QUERY).matches) return
         const changed =
           state.selectedBlockId !== prev.selectedBlockId ||
           state.selectedHotspotId !== prev.selectedHotspotId
@@ -48,7 +68,9 @@ export function MobileEditorDock() {
     setPanel(null)
   }
 
-  if (!book) return null
+  // Bailing out here covers a mid-session resize too: nothing this component
+  // owns renders on desktop, sheets included.
+  if (!book || isDesktop) return null
 
   return (
     <>

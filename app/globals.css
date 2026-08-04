@@ -195,6 +195,20 @@ section[id] {
     "WONK" 1;
 }
 
+/* Chevron for the studio inspector's selects. The OS-drawn arrow reads as a
+   pale wedge against the dark panel and is the one control that can't be
+   restyled from the element itself. */
+.studio-select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  background-size: 14px 14px;
+}
+
+.studio-select:hover {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23e5e5e5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
 /* The dark studio panels reference this class; without it they fell back to
    the default light scrollbar, a bright stripe against near-black chrome. */
 .custom-scrollbar {
