@@ -4,11 +4,11 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { useEditorStore } from '@/lib/editor-store'
-import { Field, inputCls, selectCls } from './shared'
+import { Field, FieldGroup, Toggle, inputCls, selectCls } from './shared'
 
 export function BookSettingsForm({ book }: { book: any }) {
   const { updateSettings, updateTheme } = useEditorStore()
-  const { register, watch } = useForm({
+  const { register, watch, setValue } = useForm({
     defaultValues: {
       password: book.settings?.password ?? '',
       burn_after_reading: book.settings?.burn_after_reading ?? false,
@@ -54,11 +54,8 @@ export function BookSettingsForm({ book }: { book: any }) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
-          Theme & Typography
-        </span>
-        <Field label="Theme Preset">
+      <FieldGroup title="Theme & typography">
+        <Field label="Theme preset">
           <select {...register('themePreset')} className={selectCls}>
             <option value="ivory">Ivory (Light)</option>
             <option value="slate">Slate (Dark)</option>
@@ -67,72 +64,67 @@ export function BookSettingsForm({ book }: { book: any }) {
             <option value="sage">Sage (Green)</option>
           </select>
         </Field>
-        <Field label="Heading Font">
+        <Field label="Heading font">
           <input {...register('headingFont')} className={inputCls} placeholder="e.g. Inter, serif" />
         </Field>
-        <Field label="Body Font">
+        <Field label="Body font">
           <input {...register('bodyFont')} className={inputCls} placeholder="e.g. Roboto, sans-serif" />
         </Field>
-      </div>
+      </FieldGroup>
 
-      <div className="space-y-4 pt-4 border-t border-neutral-800">
-        <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
-          Access Control
-        </span>
+      {/* "Password Protection" and "Burn after reading (View once)" used to sit
+          here. Nothing in the app read either value: a password-protected
+          edition served in full to anyone with the link, and a view-once
+          edition could be reopened forever. Offering them was worse than
+          omitting them — someone could ship a confidential document believing
+          it was protected. The schema fields are kept so stored values survive,
+          but the controls are gone until the behaviour exists. */}
+      <FieldGroup title="Access">
+        <Toggle
+          label="Unlisted — hide from search engines"
+          checked={watch('unlisted')}
+          onChange={(next) => setValue('unlisted', next, { shouldDirty: true })}
+        />
+        <Toggle
+          label="Remove “Made with QLICO” branding"
+          checked={watch('whitelabel')}
+          onChange={(next) => setValue('whitelabel', next, { shouldDirty: true })}
+        />
+      </FieldGroup>
 
-        <Field label="Password Protection">
-          <input
-            {...register('password')}
-            className={inputCls}
-            placeholder="Optional password"
-            type="password"
-          />
-        </Field>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('burn_after_reading')} className="accent-[var(--accent-vivid)]" />
-          <span className="text-sm text-neutral-300">Burn after reading (View once)</span>
-        </label>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('unlisted')} className="accent-[var(--accent-vivid)]" />
-          <span className="text-sm text-neutral-300">Unlisted (Hide from search)</span>
-        </label>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('whitelabel')} className="accent-[var(--accent-vivid)]" />
-          <span className="text-sm text-neutral-300">Remove "Made with QLICO" branding</span>
-        </label>
-      </div>
-
-      <div className="space-y-4 pt-4 border-t border-neutral-800">
-        <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
-          Lead Magnet Gating
-        </span>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('gatingEnabled')} className="accent-[var(--accent-vivid)]" />
-          <span className="text-sm text-neutral-300">Enable Email Gating</span>
-        </label>
+      <FieldGroup title="Lead gating">
+        <Toggle
+          label="Ask for an email to keep reading"
+          checked={watch('gatingEnabled')}
+          onChange={(next) => setValue('gatingEnabled', next, { shouldDirty: true })}
+        />
 
         {watch('gatingEnabled') && (
-          <div className="space-y-3 pl-4 border-l border-neutral-800">
-            <Field label="Gate at Page">
+          <div className="space-y-3 border-l border-neutral-800 pl-4">
+            <Field
+              label="Gate at page"
+              hint={`Pages 1–${Math.max(0, (watch('gatingPage') || 3) - 1)} stay readable; the rest are withheld until an email is given.`}
+            >
               <input
                 type="number"
+                min={1}
                 {...register('gatingPage', { valueAsNumber: true })}
                 className={inputCls}
               />
             </Field>
-            <Field label="Modal Title">
+            <Field label="Heading">
               <input {...register('gatingTitle')} className={inputCls} />
             </Field>
             <Field label="Description">
-              <textarea {...register('gatingDescription')} className={twMerge(inputCls, 'resize-none')} rows={2} />
+              <textarea
+                {...register('gatingDescription')}
+                className={twMerge(inputCls, 'resize-none')}
+                rows={2}
+              />
             </Field>
           </div>
         )}
-      </div>
+      </FieldGroup>
     </div>
   )
 }

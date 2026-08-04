@@ -319,6 +319,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
                   >
                     <LeadGate
                       gating={gating}
+                      bookId={book.id}
                       lockedCount={lockedCount}
                       slug={slug}
                       sessionId={getSessionId()}

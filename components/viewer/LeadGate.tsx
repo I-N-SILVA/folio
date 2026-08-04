@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2, Lock } from 'lucide-react'
+import { trackEvent } from '@/lib/tracking'
 import type { Gating } from '@/lib/book-schema'
 
 interface LeadGateProps {
   gating?: Gating
+  /** Needed to attribute the gate_view that gives unlocks a denominator. */
+  bookId: string
   /** How many pages are being withheld, for the "N more pages" line. */
   lockedCount: number
   slug: string
@@ -21,10 +24,27 @@ interface LeadGateProps {
  * already been sent to the browser, which meant the gate could be removed in
  * devtools and the edition read in full.
  */
-export function LeadGate({ gating, lockedCount, slug, sessionId, onUnlocked }: LeadGateProps) {
+export function LeadGate({
+  gating,
+  bookId,
+  lockedCount,
+  slug,
+  sessionId,
+  onUnlocked,
+}: LeadGateProps) {
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+
+  // Unlocks were being counted with no denominator, so "12 leads" said nothing
+  // about whether the gate converts. Recorded once per mount — the gate is one
+  // page of a flipbook, so it mounts when the edition loads, not on every flip.
+  const reported = useRef(false)
+  useEffect(() => {
+    if (reported.current) return
+    reported.current = true
+    trackEvent(bookId, 'gate_view', { page_number: gating?.page_number ?? 3 })
+  }, [bookId, gating?.page_number])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

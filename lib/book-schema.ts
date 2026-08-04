@@ -231,6 +231,7 @@ export type EventType =
   | 'cta_click'
   | 'book_complete'
   | 'page_click' // New for Heatmaps
+  | 'gate_view' // Reader reached the lead gate
   | 'gate_unlock' // New for Gating
 
 // ─── Theme presets ─────────────────────────────────────────────────────────────

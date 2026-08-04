@@ -111,28 +111,35 @@ function SortableBlock({
 
 // ─── Block Picker Modal ───────────────────────────────────────────────────────
 
-const BLOCK_TYPES: {
+interface BlockChoice {
   type: Block['type']
   label: string
+  /** What it's for, so the picker doesn't rely on an icon carrying the meaning. */
+  hint: string
   icon: React.ReactNode
   defaults: Omit<Block, 'id' | 'type'>
-}[] = [
+}
+
+const BLOCK_TYPES: BlockChoice[] = [
   {
     type: 'text',
     label: 'Text',
-    icon: <Type size={20} />,
+    hint: 'Headings, body, quotes',
+    icon: <Type size={18} />,
     defaults: { variant: 'body', content: 'New text block', align: 'left' },
   },
   {
     type: 'image',
     label: 'Image',
-    icon: <Image size={20} />,
+    hint: 'Photo or illustration',
+    icon: <Image size={18} />,
     defaults: { src: 'https://placehold.co/800x450', alt: '', lightbox: false },
   },
   {
     type: 'video',
     label: 'Video',
-    icon: <Video size={20} />,
+    hint: 'Inline player with poster',
+    icon: <Video size={18} />,
     defaults: {
       src: 'https://www.w3schools.com/html/mov_bbb.mp4',
       poster: 'https://placehold.co/800x450',
@@ -141,33 +148,45 @@ const BLOCK_TYPES: {
   {
     type: 'audio',
     label: 'Audio',
-    icon: <Music size={20} />,
+    hint: 'Narration or a track',
+    icon: <Music size={18} />,
     defaults: { src: 'https://www.w3schools.com/html/horse.ogg', title: 'Audio' },
   },
   {
     type: 'button',
     label: 'Button',
-    icon: <MousePointerClick size={20} />,
+    hint: 'A measured call to action',
+    icon: <MousePointerClick size={18} />,
     defaults: { label: 'Click me', href: 'https://example.com', variant: 'primary' },
   },
   {
     type: 'divider',
     label: 'Divider',
-    icon: <Minus size={20} />,
+    hint: 'A rule between sections',
+    icon: <Minus size={18} />,
     defaults: {},
   },
   {
     type: 'embed',
     label: 'Embed',
-    icon: <Code2 size={20} />,
+    hint: 'Paste third-party HTML',
+    icon: <Code2 size={18} />,
     defaults: { html: '<div>Paste embed HTML here</div>', height: 300 },
   },
   {
     type: 'data',
     label: 'Live data',
-    icon: <RefreshCw size={20} />,
+    hint: 'A field that refreshes after publish',
+    icon: <RefreshCw size={18} />,
     defaults: { label: 'Live price', source: '/demo-live.json', path: 'product.price', prefix: '$', align: 'left' },
   },
+]
+
+/** Three intents rather than eight equivalent tiles. */
+const BLOCK_GROUPS: { title: string; types: Block['type'][] }[] = [
+  { title: 'Text', types: ['text', 'divider'] },
+  { title: 'Media', types: ['image', 'video', 'audio'] },
+  { title: 'Interactive', types: ['button', 'data', 'embed'] },
 ]
 
 interface BlockPickerModalProps {
@@ -184,25 +203,51 @@ function BlockPickerModal({ onPick, onClose }: BlockPickerModalProps) {
       className="w-80 max-w-[calc(100vw-2rem)] border border-neutral-700 bg-neutral-900 p-4"
     >
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-semibold text-neutral-200">Add Block</span>
+        <span className="text-sm font-semibold text-neutral-100">Add a block</span>
         <button
           onClick={onClose}
           aria-label="Close"
-          className="text-neutral-400 hover:text-neutral-100"
+          className="text-neutral-400 transition-colors hover:text-neutral-100"
         >
           <X size={16} />
         </button>
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        {BLOCK_TYPES.map(({ type, label, icon, defaults }) => (
-          <button
-            key={label}
-            onClick={() => onPick(type, defaults)}
-            className="flex flex-col items-center gap-1.5 rounded-lg bg-neutral-800 p-3 text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white"
-          >
-            {icon}
-            <span className="text-xs">{label}</span>
-          </button>
+
+      {/* Grouped, with a line on what each one is for. Eight identical tiles
+          made the reader work out the difference between Embed and Live data
+          from a pair of icons. */}
+      <div className="space-y-4">
+        {BLOCK_GROUPS.map((group) => (
+          <section key={group.title}>
+            <h3 className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">
+              {group.title}
+            </h3>
+            <div className="space-y-1">
+              {group.types.map((type) => {
+                const choice = BLOCK_TYPES.find((b) => b.type === type)
+                if (!choice) return null
+                return (
+                  <button
+                    key={choice.label}
+                    onClick={() => onPick(choice.type, choice.defaults)}
+                    className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition-colors hover:border-neutral-700 hover:bg-neutral-800"
+                  >
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-neutral-800 text-neutral-300">
+                      {choice.icon}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-neutral-100">
+                        {choice.label}
+                      </span>
+                      <span className="block truncate text-[11px] text-neutral-500">
+                        {choice.hint}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
         ))}
       </div>
     </Modal>

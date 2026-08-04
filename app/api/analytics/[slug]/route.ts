@@ -143,7 +143,24 @@ export async function GET(
     }
   })
 
+  // Gate funnel. Unlocks alone are a count with no denominator — the author
+  // can't tell a gate nobody reaches from a gate nobody converts on.
+  const gateViewSessions = new Set(
+    events.filter((e) => e.event_type === 'gate_view').map((e) => e.session_id)
+  )
+  const gateUnlockSessions = new Set(
+    events.filter((e) => e.event_type === 'gate_unlock').map((e) => e.session_id)
+  )
+  const gate = {
+    views: gateViewSessions.size,
+    unlocks: gateUnlockSessions.size,
+    rate: gateViewSessions.size
+      ? Math.round((gateUnlockSessions.size / gateViewSessions.size) * 100)
+      : 0,
+  }
+
   return NextResponse.json({
+    gate,
     summary: { totalOpens, uniqueSessions, completionRate, avgSessionMs },
     pageViewData,
     funnelData,

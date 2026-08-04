@@ -26,6 +26,7 @@ interface AnalyticsData {
   ctaData: Array<{ id: string; href?: string; page?: number; clicks: number; uniqueClicks: number }>
   heatmapData: Record<number, Array<{ x: number; y: number }>>
   leadData: Array<{ email: string; timestamp: string; page: number }>
+  gate?: { views: number; unlocks: number; rate: number }
   raw: any[]
 }
 
@@ -217,6 +218,38 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                 {formatDuration(data.summary.avgSessionMs)}
               </StatCard>
             </div>
+
+            {/* Gate funnel — only meaningful for a gated edition. */}
+            {data.gate && data.gate.views > 0 && (
+              <Reveal>
+                <div className="grid gap-4 rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-6 sm:grid-cols-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--qlico-muted)]">
+                      Reached the gate
+                    </p>
+                    <p className="font-display mt-1 text-3xl font-semibold tracking-[-0.03em]">
+                      <NumberTicker value={data.gate.views} />
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--qlico-muted)]">
+                      Gave an email
+                    </p>
+                    <p className="font-display mt-1 text-3xl font-semibold tracking-[-0.03em]">
+                      <NumberTicker value={data.gate.unlocks} />
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--qlico-muted)]">
+                      Conversion
+                    </p>
+                    <p className="font-display mt-1 text-3xl font-semibold tracking-[-0.03em] text-[var(--accent-fg)]">
+                      <NumberTicker value={data.gate.rate} suffix="%" />
+                    </p>
+                  </div>
+                </div>
+              </Reveal>
+            )}
 
             {/* Page View Heatmap */}
             {data.pageViewData.length > 0 && (

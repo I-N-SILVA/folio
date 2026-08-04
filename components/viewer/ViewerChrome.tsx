@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { twMerge } from 'tailwind-merge'
-import { ChevronLeft, ChevronRight, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Lock, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
@@ -97,7 +97,14 @@ export function ViewerChrome({
   const visibleBook = unlocked ? { ...book, pages: [...(book.pages ?? []), ...released] } : book
   const stillLocked = unlocked ? 0 : lockedCount
 
-  const totalPages = (visibleBook.pages?.length ?? 0) + (stillLocked > 0 ? 1 : 0)
+  // Two different totals. `navigable` is what the flip engine actually holds —
+  // the free pages plus the gate standing in for the rest — and bounds the
+  // stepper. `edition` is how long the edition really is, which is what the
+  // counter should say: showing "1 / 3" for a gated ten-page edition made the
+  // reader think that was the whole thing.
+  const navigablePages = (visibleBook.pages?.length ?? 0) + (stillLocked > 0 ? 1 : 0)
+  const editionPages = (visibleBook.pages?.length ?? 0) + stillLocked
+  const onGatePage = stillLocked > 0 && currentPage >= (visibleBook.pages?.length ?? 0)
 
   // The button used to track its own state, so leaving fullscreen any other
   // way — Escape, F11, the OS chrome — left the icon showing "exit" while the
@@ -160,7 +167,7 @@ export function ViewerChrome({
 
       {!embed && (
         <ForeEdge
-          total={totalPages}
+          total={navigablePages}
           current={currentPage}
           onSeek={(i) => engineRef.current?.goTo(i)}
         />
@@ -198,8 +205,18 @@ export function ViewerChrome({
               embed ? 'min-w-[54px] text-xs' : 'min-w-[80px] text-sm'
             )}
           >
-            {currentPage + 1} / {totalPages}
+            {Math.min(currentPage + 1, editionPages)} / {editionPages}
           </span>
+
+          {stillLocked > 0 && !embed && (
+            <span
+              className="flex items-center gap-1 rounded-full bg-[var(--tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--qlico-muted)]"
+              title={`${editionPages - stillLocked} of ${editionPages} pages are free to read`}
+            >
+              <Lock size={10} />
+              {onGatePage ? 'Email to continue' : `${editionPages - stillLocked} free`}
+            </span>
+          )}
 
           <button
             onClick={() => engineRef.current?.flipNext()}
@@ -208,7 +225,7 @@ export function ViewerChrome({
               embed ? 'h-8 w-8' : 'min-h-[44px] min-w-[44px]'
             )}
             aria-label="Next page"
-            disabled={currentPage >= totalPages - 1}
+            disabled={currentPage >= navigablePages - 1}
           >
             <ChevronRight size={embed ? 16 : 20} />
           </button>
@@ -262,7 +279,9 @@ export function ViewerChrome({
 
       {/* Accessible page announcements */}
       <div className="sr-only" aria-live="polite">
-        Page {currentPage + 1} of {totalPages}
+        {onGatePage
+          ? `Email required to read the remaining ${stillLocked} ${stillLocked === 1 ? 'page' : 'pages'}`
+          : `Page ${Math.min(currentPage + 1, editionPages)} of ${editionPages}`}
       </div>
 
       {/* Branding */}

@@ -19,6 +19,7 @@ const EventBodySchema = z.object({
     'cta_click',
     'book_complete',
     'page_click',
+    'gate_view',
     'gate_unlock',
   ]),
   pageNumber: z.number().int().optional(),
