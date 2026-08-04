@@ -81,7 +81,7 @@ export function BookSettingsForm({ book }: { book: any }) {
           but the controls are gone until the behaviour exists. */}
       <FieldGroup title="Access">
         <Toggle
-          label="Unlisted — hide from search engines"
+          label="Unlisted — ask search engines not to index"
           checked={watch('unlisted')}
           onChange={(next) => setValue('unlisted', next, { shouldDirty: true })}
         />

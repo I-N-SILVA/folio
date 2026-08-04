@@ -49,6 +49,20 @@ interface EditorStore {
 // pausing to think starts a fresh step.
 const HISTORY_COALESCE_MS = 800
 
+/**
+ * Undo depth. Each entry is a deep snapshot of the whole book — every page,
+ * block, and hotspot — so an uncapped history grew without bound for as long as
+ * a tab stayed open. A fifty-page edition is a substantial object, and a long
+ * editing session pushes hundreds of them.
+ */
+const MAX_HISTORY = 60
+
+/** Appends a snapshot, dropping the oldest once the cap is reached. */
+function pushHistory(past: Book[], book: Book): Book[] {
+  const next = [...past, book]
+  return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next
+}
+
 type HistoryState = Pick<EditorStore, 'past' | 'lastEditKey' | 'lastEditAt'>
 
 /**
@@ -62,13 +76,13 @@ function coalescedHistory(state: HistoryState, book: Book, key: string) {
   return {
     lastEditKey: key,
     lastEditAt: now,
-    ...(isNewStep ? { past: [...state.past, book], future: [] } : {}),
+    ...(isNewStep ? { past: pushHistory(state.past, book), future: [] } : {}),
   }
 }
 
 /** History patch for a structural edit (add/remove/reorder) — always its own undo step. */
 function snapshotHistory(state: Pick<EditorStore, 'past'>, book: Book) {
-  return { past: [...state.past, book], future: [] }
+  return { past: pushHistory(state.past, book), future: [] }
 }
 
 export const useEditorStore = create<EditorStore>((set, get) => ({
@@ -318,7 +332,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const newFuture = state.future.slice(1)
     return {
       book: next,
-      past: [...state.past, state.book],
+      past: pushHistory(state.past, state.book),
       future: newFuture,
       isDirty: true,
       lastEditKey: null,

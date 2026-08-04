@@ -1,17 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { track } from '@vercel/analytics'
+import { useSearchParams } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [resent, setResent] = useState(false)
+
+  // The auth callback redirects here with a reason when a magic link fails, so
+  // an expired or reused link explains itself instead of looking like a bug.
+  const linkError = useSearchParams().get('error')
+  const linkMessage =
+    linkError === 'link_expired'
+      ? 'That sign-in link has expired. Send yourself a new one.'
+      : linkError === 'link_invalid'
+        ? "That sign-in link didn't work — it may already have been used. Send a new one."
+        : ''
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
@@ -125,9 +136,9 @@ export default function LoginPage() {
               />
             </div>
 
-            {error && (
+            {(error || linkMessage) && (
               <p className="text-sm text-red-600" role="alert">
-                {error}
+                {error || linkMessage}
               </p>
             )}
 
@@ -142,5 +153,15 @@ export default function LoginPage() {
         )}
       </motion.div>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  // useSearchParams requires a suspense boundary, or the whole route opts into
+  // client-side rendering.
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   )
 }

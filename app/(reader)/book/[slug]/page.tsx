@@ -49,6 +49,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     keywords: seo?.keywords,
+    // "Unlisted (Hide from search engines)" was a live checkbox that nothing
+    // read — the third no-op in that settings group, alongside the password and
+    // view-once controls. Unlike those two this is genuinely a metadata
+    // concern, so it's honoured rather than removed. Links still work; crawlers
+    // are asked not to index or follow.
+    robots: book.settings?.unlisted
+      ? { index: false, follow: false, googleBot: { index: false, follow: false } }
+      : undefined,
     openGraph: {
       title,
       description,
