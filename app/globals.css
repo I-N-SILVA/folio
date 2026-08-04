@@ -122,9 +122,25 @@
   }
 }
 
+/* Registering the brand colours with Tailwind's theme gives them real
+   utilities — bg-accent, text-muted, border-hairline — instead of every call
+   site spelling out bg-[var(--accent)]. This matters beyond tidiness: a colour
+   utility that isn't registered generates nothing at all and fails silently.
+   The lead gate shipped an invisible submit button for exactly that reason,
+   because `bg-primary` looked plausible and produced no background. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-ink: var(--qlico-ink);
+  --color-muted: var(--qlico-muted);
+  --color-paper: var(--qlico-paper);
+  --color-vellum: var(--qlico-vellum);
+  --color-subtle: var(--qlico-subtle);
+  --color-hairline: var(--qlico-border);
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }

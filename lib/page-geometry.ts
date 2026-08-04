@@ -29,3 +29,20 @@ export const PAGE_ASPECT = `1 / ${PAGE_RATIO}`
 export function pageScale(frameWidth: number): number {
   return frameWidth / PAGE_DESIGN_WIDTH
 }
+
+/**
+ * Zoom bounds, shared by the reader's control and the editor canvas. These were
+ * duplicated per surface — the same drift that made the page previews wrong,
+ * one level down.
+ */
+export const ZOOM_MIN = 0.7
+export const ZOOM_MAX = 2
+export const ZOOM_STEP = 0.1
+
+/** Discrete steps the editor canvas snaps through. */
+export const ZOOM_STEPS = [0.75, 0.9, 1, 1.25, 1.5, 2]
+
+/** Avoids labels reading 109.99999%. */
+export function roundZoom(z: number): number {
+  return Math.round(z * 10) / 10
+}

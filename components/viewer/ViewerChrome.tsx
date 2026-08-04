@@ -2,22 +2,16 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { twMerge } from 'tailwind-merge'
 import { ChevronLeft, ChevronRight, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
-import type { Book } from '@/lib/book-schema'
+import type { Book, Page } from '@/lib/book-schema'
+import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, roundZoom } from '@/lib/page-geometry'
 
-const MIN_ZOOM = 0.7
-const MAX_ZOOM = 2
-const ZOOM_STEP = 0.1
 /** Width of the reading frame at 100%; scales with zoom. */
 const BASE_FRAME_WIDTH = 1040
-
-/** Keeps the label off values like 109.99999%. */
-function round1(n: number) {
-  return Math.round(n * 10) / 10
-}
 
 function subscribeToFullscreen(onChange: () => void) {
   document.addEventListener('fullscreenchange', onChange)
@@ -80,13 +74,30 @@ function CoverOpen({ book }: { book: Book }) {
   )
 }
 
-export function ViewerChrome({ book, embed = false }: { book: Book; embed?: boolean }) {
+export function ViewerChrome({
+  book,
+  embed = false,
+  lockedCount = 0,
+}: {
+  book: Book
+  embed?: boolean
+  /** Pages the server withheld behind the lead gate. */
+  lockedCount?: number
+}) {
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
   const [zoom, setZoom] = useState(1)
   const reduce = useReducedMotion()
 
-  const totalPages = book.pages?.length ?? 0
+  // Pages released by the unlock endpoint are merged in here, which remounts
+  // the flip engine with the full edition — react-pageflip fixes its page count
+  // at mount, so it can't grow in place.
+  const [released, setReleased] = useState<Page[]>([])
+  const unlocked = released.length > 0
+  const visibleBook = unlocked ? { ...book, pages: [...(book.pages ?? []), ...released] } : book
+  const stillLocked = unlocked ? 0 : lockedCount
+
+  const totalPages = (visibleBook.pages?.length ?? 0) + (stillLocked > 0 ? 1 : 0)
 
   // The button used to track its own state, so leaving fullscreen any other
   // way — Escape, F11, the OS chrome — left the icon showing "exit" while the
@@ -121,7 +132,8 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
   }
 
   return (
-    <div className="flex w-full flex-col items-center gap-4">
+    // `relative` anchors the embed's absolutely-positioned control bar.
+    <div className="relative flex w-full flex-col items-center gap-4">
       {!embed && <CoverOpen book={book} />}
       {/* Book settles in as the cover lifts away. Capped width keeps a
           comfortable margin around the spread instead of edge-to-edge zoom. */}
@@ -136,10 +148,13 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       >
         <ViewerEngine
           ref={engineRef}
-          book={book}
+          book={visibleBook}
           onFlip={setCurrentPage}
           embed={embed}
           zoom={zoom}
+          lockedCount={stillLocked}
+          slug={book.slug}
+          onUnlocked={(pages) => setReleased(pages as Page[])}
         />
       </motion.div>
 
@@ -151,40 +166,61 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
         />
       )}
 
-      {!embed && (
-        // Sticky: zooming in makes the spread taller than the viewport, which
-        // used to scroll the very controls you were using out of sight.
-        <div className="sticky bottom-4 z-40 flex items-center gap-3 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 px-4 py-3 text-[var(--qlico-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl sm:gap-6 sm:px-6">
+      {/* Every control used to be behind `!embed`, so an embedded edition had
+          no page navigation at all — readers had to guess that clicking a page
+          corner turned it. Embeds get a compact version of the same bar. */}
+      <div
+        className={twMerge(
+          'z-40 flex items-center rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 text-[var(--qlico-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl',
+          embed
+            // fixed, not absolute: inside an iframe the spread can be taller
+            // than the frame, and a bar pinned to the content's bottom edge sits
+            // below the visible area and gets clipped away.
+            ? 'fixed bottom-3 left-1/2 -translate-x-1/2 gap-1 px-2 py-1.5'
+            : 'sticky bottom-4 gap-3 px-4 py-3 sm:gap-6 sm:px-6'
+        )}
+      >
           <button
             onClick={() => engineRef.current?.flipPrev()}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
+            className={twMerge(
+              'flex items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30',
+              embed ? 'h-8 w-8' : 'min-h-[44px] min-w-[44px]'
+            )}
             aria-label="Previous page"
             disabled={currentPage === 0}
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={embed ? 16 : 20} />
           </button>
 
-          <span className="min-w-[80px] text-center text-sm font-semibold tabular-nums tracking-[0.08em]">
+          <span
+            className={twMerge(
+              'text-center font-semibold tabular-nums tracking-[0.08em]',
+              embed ? 'min-w-[54px] text-xs' : 'min-w-[80px] text-sm'
+            )}
+          >
             {currentPage + 1} / {totalPages}
           </span>
 
           <button
             onClick={() => engineRef.current?.flipNext()}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
+            className={twMerge(
+              'flex items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30',
+              embed ? 'h-8 w-8' : 'min-h-[44px] min-w-[44px]'
+            )}
             aria-label="Next page"
             disabled={currentPage >= totalPages - 1}
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={embed ? 16 : 20} />
           </button>
 
           {/* A capped spread left a large display mostly empty with no way to
               fill it. Desktop only — on a phone the page already spans the
               full width. */}
-          <div className="hidden items-center gap-1 md:flex">
+          <div className={twMerge('items-center gap-1', embed ? 'hidden' : 'hidden md:flex')}>
             <span className="mx-1 h-5 w-px bg-[var(--tint)]" aria-hidden="true" />
             <button
-              onClick={() => setZoom((z) => Math.max(MIN_ZOOM, round1(z - ZOOM_STEP)))}
-              disabled={zoom <= MIN_ZOOM}
+              onClick={() => setZoom((z) => Math.max(ZOOM_MIN, roundZoom(z - ZOOM_STEP)))}
+              disabled={zoom <= ZOOM_MIN}
               className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
               aria-label="Zoom out"
             >
@@ -198,8 +234,8 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
               {Math.round(zoom * 100)}%
             </button>
             <button
-              onClick={() => setZoom((z) => Math.min(MAX_ZOOM, round1(z + ZOOM_STEP)))}
-              disabled={zoom >= MAX_ZOOM}
+              onClick={() => setZoom((z) => Math.min(ZOOM_MAX, roundZoom(z + ZOOM_STEP)))}
+              disabled={zoom >= ZOOM_MAX}
               className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
               aria-label="Zoom in"
             >
@@ -210,15 +246,17 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
           {canFullscreen && (
             <button
               onClick={toggleFullscreen}
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)]"
+              className={twMerge(
+                'flex items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)]',
+                embed ? 'h-8 w-8' : 'min-h-[44px] min-w-[44px]'
+              )}
               aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               aria-pressed={fullscreen}
             >
-              {fullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              {fullscreen ? <Minimize size={embed ? 15 : 18} /> : <Maximize size={embed ? 15 : 18} />}
             </button>
           )}
-        </div>
-      )}
+      </div>
 
       {!embed && <KeyboardHints />}
 

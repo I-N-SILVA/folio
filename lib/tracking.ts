@@ -3,7 +3,7 @@ import type { EventType } from './book-schema'
 
 const SESSION_KEY = 'qlico_session_id'
 
-function getSessionId(): string {
+export function getSessionId(): string {
   if (typeof window === 'undefined') return ''
   let id = sessionStorage.getItem(SESSION_KEY)
   if (!id) {

@@ -12,7 +12,7 @@ import HTMLFlipBook from 'react-pageflip'
 import { LeadGate } from './LeadGate'
 import { PageRenderer } from './PageRenderer'
 import { HotspotLayer } from './HotspotLayer'
-import { trackEvent } from '@/lib/tracking'
+import { getSessionId, trackEvent } from '@/lib/tracking'
 import type { Book } from '@/lib/book-schema'
 import { PAGE_DESIGN_WIDTH, PAGE_RATIO } from '@/lib/page-geometry'
 
@@ -30,6 +30,11 @@ interface ViewerEngineProps {
   embed?: boolean
   /** Multiplier on the computed page width, driven by the reader's zoom control. */
   zoom?: number
+  /** Pages the server withheld behind the lead gate; 0 when nothing is gated. */
+  lockedCount?: number
+  /** Needed by the gate to ask the server for the withheld pages. */
+  slug?: string
+  onUnlocked?: (pages: unknown[]) => void
 }
 
 interface Dims {
@@ -43,7 +48,7 @@ interface Dims {
 const MAX_PAGE_WIDTH = PAGE_DESIGN_WIDTH
 
 export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
-  ({ book, onFlip, embed = false, zoom = 1 }, ref) => {
+  ({ book, onFlip, embed = false, zoom = 1, lockedCount = 0, slug = '', onUnlocked }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const bookRef = useRef<any>(null)
     const [dims, setDims] = useState<Dims>({ w: 600, h: 848 })
@@ -56,22 +61,17 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
     const [ready, setReady] = useState(false)
     const [currentPage, setCurrentPage] = useState(0)
     const [modalOpen, setModalOpen] = useState(false)
-    const [isUnlocked, setIsUnlocked] = useState(false)
     const pageFlipTimes = useRef<Record<number, number>>({})
     const openedAt = useRef<number>(0)
     const completed = useRef(false)
 
     const pages = book.pages ?? []
     const gating = book.settings?.gating
-
-    // Check if current page is gated
-    const isGated = gating?.enabled && !isUnlocked && currentPage >= (gating.page_number ?? 3)
+    const isLocked = lockedCount > 0
 
     // Handle coordinate-based clicks for heatmaps
     const handlePageClick = useCallback(
       (e: React.MouseEvent<HTMLDivElement>, pageIdx: number) => {
-        if (isGated) return
-
         const rect = e.currentTarget.getBoundingClientRect()
         const x = ((e.clientX - rect.left) / rect.width) * 100
         const y = ((e.clientY - rect.top) / rect.height) * 100
@@ -82,7 +82,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
           y: Math.round(y * 100) / 100,
         })
       },
-      [book.id, isGated]
+      [book.id]
     )
 
     // Responsive sizing. The container width is remembered so a zoom change
@@ -111,9 +111,19 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       // size; zoom lets a large display actually use its space, still bounded
       // by the container so the spread can't overflow.
       const base = mobile ? cw : Math.min(cw / 2, MAX_PAGE_WIDTH)
-      const pageWidth = mobile ? base : Math.min(base * zoom, cw / 2)
+      let pageWidth = mobile ? base : Math.min(base * zoom, cw / 2)
+
+      // An embed lives in whatever box the host sized the iframe to, and that
+      // is usually shorter than a full A4 page. Sizing on width alone pushed
+      // the bottom of every page outside the frame, so bound by height too and
+      // leave room for the control bar.
+      if (embed && typeof window !== 'undefined') {
+        const available = window.innerHeight - 72
+        if (available > 120) pageWidth = Math.min(pageWidth, available / PAGE_RATIO)
+      }
+
       setDims({ w: pageWidth, h: pageWidth * PAGE_RATIO })
-    }, [zoom])
+    }, [zoom, embed])
 
     useEffect(() => {
       applySize()
@@ -237,7 +247,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       flipPrev: () => bookRef.current?.pageFlip()?.flipPrev(),
       goTo: (page: number) => bookRef.current?.pageFlip()?.turnToPage(page),
       get currentPage() { return currentPage },
-      get totalPages() { return pages.length },
+      get totalPages() { return pages.length + (isLocked ? 1 : 0) },
     }))
 
     if (pages.length === 0) return null
@@ -248,7 +258,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
         <HTMLFlipBook
           // Force a clean remount if the container crosses the mobile
           // breakpoint — the library won't reorient a live instance.
-          key={isMobile ? 'portrait' : 'landscape'}
+          key={`${isMobile ? 'portrait' : 'landscape'}-${pages.length}`}
           ref={bookRef}
           width={dims.w}
           height={dims.h}
@@ -276,31 +286,48 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
           clickEventForward={true}
           swipeDistance={30}
         >
-          {pages.map((page, idx) => (
-            <div
-              key={page.id}
-              className="relative bg-white group cursor-pointer"
-              style={{ width: dims.w, height: dims.h }}
-              onClick={(e) => handlePageClick(e, idx)}
-            >
-              <PageRenderer page={page} bookId={book.id} theme={book.theme} hideGutter={isMobile} />
-              <HotspotLayer
-                hotspots={page.hotspots}
-                bookId={book.id}
-                pageNumber={idx + 1}
-                onModalOpenChange={setModalOpen}
-              />
-
-              {/* Gating Overlay */}
-              <LeadGate
-                gating={gating}
-                isUnlocked={isUnlocked}
-                onUnlock={() => setIsUnlocked(true)}
-                bookId={book.id}
-                pageIndex={idx}
-              />
-            </div>
-          ))}
+          {/* Built as an array rather than JSX siblings with a `&&`: react-pageflip
+              walks its children expecting every one to be an element, and a
+              falsy branch reaches it as `false` and throws "The argument must be
+              a React element". That took out the whole reader, not just the
+              gated case. */}
+          {[
+            ...pages.map((page, idx) => (
+              <div
+                key={page.id}
+                className="relative bg-white group cursor-pointer"
+                style={{ width: dims.w, height: dims.h }}
+                onClick={(e) => handlePageClick(e, idx)}
+              >
+                <PageRenderer page={page} bookId={book.id} theme={book.theme} hideGutter={isMobile} />
+                <HotspotLayer
+                  hotspots={page.hotspots}
+                  bookId={book.id}
+                  pageNumber={idx + 1}
+                  onModalOpenChange={setModalOpen}
+                />
+              </div>
+            )),
+            // The gate stands in for the withheld pages rather than covering
+            // pages that were sent anyway.
+            ...(isLocked
+              ? [
+                  <div
+                    key="lead-gate"
+                    className="relative bg-white"
+                    style={{ width: dims.w, height: dims.h }}
+                  >
+                    <LeadGate
+                      gating={gating}
+                      lockedCount={lockedCount}
+                      slug={slug}
+                      sessionId={getSessionId()}
+                      onUnlocked={(released) => onUnlocked?.(released)}
+                    />
+                  </div>,
+                ]
+              : []),
+          ]}
         </HTMLFlipBook>
         )}
       </div>

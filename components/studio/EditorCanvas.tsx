@@ -39,7 +39,7 @@ import { useEditorStore } from '@/lib/editor-store'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import { Modal } from '@/components/ui/Modal'
 import type { Block } from '@/lib/book-schema'
-import { PAGE_DESIGN_WIDTH, PAGE_RATIO } from '@/lib/page-geometry'
+import { PAGE_DESIGN_WIDTH, PAGE_RATIO, ZOOM_STEPS } from '@/lib/page-geometry'
 
 // ─── Sortable Block Wrapper ───────────────────────────────────────────────────
 
@@ -208,11 +208,6 @@ function BlockPickerModal({ onPick, onClose }: BlockPickerModalProps) {
     </Modal>
   )
 }
-
-// ─── Canvas geometry ──────────────────────────────────────────────────────────
-
-/** Zoom presets. Changing the page width keeps blocks in real layout space. */
-const ZOOM_STEPS = [0.75, 0.9, 1, 1.25, 1.5, 2]
 
 // ─── Editor Canvas ────────────────────────────────────────────────────────────
 
