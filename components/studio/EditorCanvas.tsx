@@ -39,6 +39,7 @@ import { useEditorStore } from '@/lib/editor-store'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import { Modal } from '@/components/ui/Modal'
 import type { Block } from '@/lib/book-schema'
+import { PAGE_DESIGN_WIDTH, PAGE_RATIO } from '@/lib/page-geometry'
 
 // ─── Sortable Block Wrapper ───────────────────────────────────────────────────
 
@@ -210,23 +211,7 @@ function BlockPickerModal({ onPick, onClose }: BlockPickerModalProps) {
 
 // ─── Canvas geometry ──────────────────────────────────────────────────────────
 
-/**
- * The canvas used to be `aspect-[4/3]` — landscape — while the reader renders
- * a portrait A4 spread and the page rail shows portrait thumbnails. Composing
- * against the wrong shape means the published page never matches what was
- * designed, so this is the reader's ratio, not a decorative choice.
- */
-const PAGE_RATIO = 1.41 // A4, matching ViewerEngine
-
-/**
- * Reader pages render at 460px wide (ViewerEngine's MAX_PAGE_WIDTH) and the
- * block styles are absolute, so matching it exactly is what makes the canvas a
- * true preview rather than an approximation — and 460x649 clears the canvas
- * viewport on a laptop without needing to scroll. Zoom changes this width — exactly what the reader's zoom does
- * — which keeps every block in real layout space instead of under a CSS
- * transform that drag-and-drop would have to compensate for.
- */
-const BASE_PAGE_WIDTH = 460
+/** Zoom presets. Changing the page width keeps blocks in real layout space. */
 const ZOOM_STEPS = [0.75, 0.9, 1, 1.25, 1.5, 2]
 
 // ─── Editor Canvas ────────────────────────────────────────────────────────────
@@ -253,7 +238,7 @@ export function EditorCanvas() {
   const zoomIndex = ZOOM_STEPS.indexOf(zoom)
   const prevStep = ZOOM_STEPS[Math.max(0, (zoomIndex === -1 ? 2 : zoomIndex) - 1)]
   const nextStep = ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, (zoomIndex === -1 ? 2 : zoomIndex) + 1)]
-  const pageWidth = Math.round(BASE_PAGE_WIDTH * zoom)
+  const pageWidth = Math.round(PAGE_DESIGN_WIDTH * zoom)
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {

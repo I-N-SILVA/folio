@@ -24,6 +24,7 @@ import { useEditorStore } from '@/lib/editor-store'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import { PAGE_TEMPLATES } from '@/lib/templates'
 import type { Page, Block } from '@/lib/book-schema'
+import { PAGE_ASPECT, PAGE_DESIGN_HEIGHT, PAGE_DESIGN_WIDTH, pageScale } from '@/lib/page-geometry'
 
 const BLOCK_LIBRARY: {
   type: Block['type']
@@ -69,11 +70,6 @@ const BLOCK_LIBRARY: {
   },
 ]
 
-/** Design width the rail thumbnails render at before being scaled down. */
-const THUMB_DESIGN_WIDTH = 280
-/** Same A4 ratio as the canvas and the reader. */
-const PAGE_RATIO = 1.41
-
 const PAGE_TYPE_COLORS: Record<Page['type'], string> = {
   cover: 'bg-violet-700 text-violet-100',
   content: 'bg-neutral-700 text-neutral-200',
@@ -113,7 +109,7 @@ function SortablePageItem({
     const frame = frameRef.current
     if (!frame) return
     const obs = new ResizeObserver(([entry]) => {
-      setScale(entry.contentRect.width / THUMB_DESIGN_WIDTH)
+      setScale(pageScale(entry.contentRect.width))
     })
     obs.observe(frame)
     return () => obs.disconnect()
@@ -141,20 +137,22 @@ function SortablePageItem({
       <div
         ref={frameRef}
         className={twMerge(
-          'relative w-full overflow-hidden rounded-[4px] bg-white shadow-md transition-all',
-          'ring-1 ring-black/40',
+          'relative w-full overflow-hidden rounded-[3px] bg-white transition-all duration-200',
+          // A thin outline plus real elevation, rather than a chunky offset
+          // ring: the pages sit close together and a heavy selected state
+          // dominated the whole rail.
           isSelected
-            ? 'ring-2 ring-[var(--accent-vivid)] ring-offset-2 ring-offset-neutral-900'
-            : 'group-hover:ring-neutral-500'
+            ? 'ring-2 ring-[var(--accent-vivid)] shadow-[0_0_0_1px_rgba(124,92,255,0.35),0_8px_20px_-6px_rgba(124,92,255,0.45)]'
+            : 'ring-1 ring-black/50 shadow-[0_1px_2px_rgba(0,0,0,0.4),0_6px_14px_-8px_rgba(0,0,0,0.6)] group-hover:-translate-y-0.5 group-hover:ring-neutral-500'
         )}
-        style={{ aspectRatio: `1 / ${PAGE_RATIO}` }}
+        style={{ aspectRatio: PAGE_ASPECT }}
       >
         <div
           aria-hidden="true"
           className="pointer-events-none absolute left-0 top-0 origin-top-left"
           style={{
-            width: THUMB_DESIGN_WIDTH,
-            height: Math.round(THUMB_DESIGN_WIDTH * PAGE_RATIO),
+            width: PAGE_DESIGN_WIDTH,
+            height: PAGE_DESIGN_HEIGHT,
             transform: `scale(${scale})`,
             opacity: scale > 0 ? 1 : 0,
           }}
@@ -174,18 +172,27 @@ function SortablePageItem({
 
       {/* Number and type sit under the page rather than beside it, so the
           thumbnail gets the full column width. */}
-      <div className="mt-1.5 flex items-center gap-1.5 px-0.5">
-        <span className="text-[11px] font-medium tabular-nums text-neutral-300">
-          {page.page_number}
-        </span>
+      <div className="mt-2 flex items-center gap-1.5 px-0.5">
         <span
           className={twMerge(
-            'rounded px-1 text-[9px] font-bold uppercase leading-4',
-            PAGE_TYPE_COLORS[page.type]
+            'min-w-[16px] text-center text-[11px] font-semibold tabular-nums transition-colors',
+            isSelected ? 'text-[var(--accent-vivid)]' : 'text-neutral-400'
           )}
         >
-          {page.type}
+          {page.page_number}
         </span>
+        {/* Only the non-default page types earn a badge — labelling every
+            middle page "CONTENT" is noise that competes with the previews. */}
+        {page.type !== 'content' && (
+          <span
+            className={twMerge(
+              'rounded px-1 text-[9px] font-bold uppercase leading-4',
+              PAGE_TYPE_COLORS[page.type]
+            )}
+          >
+            {page.type}
+          </span>
+        )}
         <span className="flex-1" />
         <button
           {...listeners}
@@ -295,7 +302,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
 
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {activeTab === 'pages' && (
-          <div className="p-2">
+          <div className="p-3">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -304,7 +311,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
               {/* rectSortingStrategy, not vertical: the pages are a grid now,
                   so reordering has to consider both axes. */}
               <SortableContext items={pages.map((p) => p.id)} strategy={rectSortingStrategy}>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-3 lg:grid-cols-2">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 lg:grid-cols-2">
                   {pages.map((page, index) => (
                     <SortablePageItem
                       key={page.id}

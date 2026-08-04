@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/Modal'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import type { Book, Page } from '@/lib/book-schema'
+import { PAGE_ASPECT, PAGE_DESIGN_HEIGHT, PAGE_DESIGN_WIDTH, pageScale } from '@/lib/page-geometry'
 
 interface BookCardProps {
   book: Omit<Book, 'pages'> & { pages?: { id: string }[]; cover?: Page | null }
@@ -19,15 +20,6 @@ interface BookCardProps {
  * at its design width, then transform it down. No thumbnail pipeline needed,
  * and it can never drift from what the page actually looks like.
  */
-/**
- * The reader's own page width, so the cover renders at exactly the size the
- * blocks were styled for. It used to be an 800x500 landscape box for a page
- * that is portrait 1:1.41 — every cover was a squashed, wrong-shaped rendition
- * of the real thing, which is the main reason the previews read as off.
- */
-const COVER_DESIGN_WIDTH = 460
-const COVER_RATIO = 1.41
-const COVER_DESIGN_HEIGHT = Math.round(COVER_DESIGN_WIDTH * COVER_RATIO)
 
 function CoverPreview({
   cover,
@@ -48,7 +40,7 @@ function CoverPreview({
     const frame = frameRef.current
     if (!frame) return
     const obs = new ResizeObserver(([entry]) => {
-      setScale(entry.contentRect.width / COVER_DESIGN_WIDTH)
+      setScale(pageScale(entry.contentRect.width))
     })
     obs.observe(frame)
     return () => obs.disconnect()
@@ -85,7 +77,7 @@ function CoverPreview({
     <div className="mb-5 flex justify-center">
       <div
         ref={frameRef}
-        style={{ aspectRatio: `1 / ${COVER_RATIO}` }}
+        style={{ aspectRatio: PAGE_ASPECT }}
         // The ring uses the border token rather than the hairline so a dark
         // cover still reads as an object against a dark card.
         className="relative w-full max-w-[188px] overflow-hidden rounded-r-[5px] rounded-l-[2px] bg-[var(--qlico-vellum)] shadow-[0_1px_2px_rgba(20,26,58,0.18),0_10px_24px_-8px_rgba(20,26,58,0.28),0_28px_50px_-28px_rgba(20,26,58,0.35)] ring-1 ring-[var(--qlico-border)] transition-transform duration-300 group-hover:-translate-y-0.5"
@@ -95,8 +87,8 @@ function CoverPreview({
           aria-hidden="true"
           className="pointer-events-none absolute left-0 top-0 origin-top-left transition-opacity"
           style={{
-            width: COVER_DESIGN_WIDTH,
-            height: COVER_DESIGN_HEIGHT,
+            width: PAGE_DESIGN_WIDTH,
+            height: PAGE_DESIGN_HEIGHT,
             transform: `scale(${scale})`,
             // Hide the un-scaled flash before the first measurement lands.
             opacity: scale > 0 ? 1 : 0,

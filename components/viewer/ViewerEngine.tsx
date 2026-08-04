@@ -14,6 +14,7 @@ import { PageRenderer } from './PageRenderer'
 import { HotspotLayer } from './HotspotLayer'
 import { trackEvent } from '@/lib/tracking'
 import type { Book } from '@/lib/book-schema'
+import { PAGE_DESIGN_WIDTH, PAGE_RATIO } from '@/lib/page-geometry'
 
 export interface ViewerEngineHandle {
   flipNext: () => void
@@ -36,11 +37,10 @@ interface Dims {
   h: number
 }
 
-const PAGE_RATIO = 1.41 // A4
-// Cap how wide a single page can render, even in a wide container — keeps
-// the spread at a comfortable "book on a table" size instead of zooming in
-// to fill the whole viewport.
-const MAX_PAGE_WIDTH = 460
+// A page never renders wider than the shared design width — that is what
+// every preview lays out at, so exceeding it here would make the previews
+// wrong rather than the reader right.
+const MAX_PAGE_WIDTH = PAGE_DESIGN_WIDTH
 
 export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
   ({ book, onFlip, embed = false, zoom = 1 }, ref) => {
