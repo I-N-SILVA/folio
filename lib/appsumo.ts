@@ -68,23 +68,15 @@ export async function applyAppSumoEvent(event: AppSumoEvent): Promise<{ ok: bool
       .eq('license_key', event.prev_license_key)
   }
 
-  const { data: existing } = await supabaseAdmin
-    .from('appsumo_licenses')
-    .select('redeemed_by')
-    .eq('license_key', licenseKey)
-    .maybeSingle()
-
-  // Carry the redemption link across a tier change.
-  let redeemedBy: string | null = (existing?.redeemed_by as string | null) ?? null
-  if (!redeemedBy && event.prev_license_key) {
-    const { data: prev } = await supabaseAdmin
-      .from('appsumo_licenses')
-      .select('redeemed_by')
-      .eq('license_key', event.prev_license_key)
-      .maybeSingle()
-    redeemedBy = (prev?.redeemed_by as string | null) ?? null
-  }
-
+  // `redeemed_by` is deliberately absent from this upsert. It used to be read
+  // above and written back here, so a redemption landing between the read and
+  // the write was overwritten with null — silently un-linking a license its
+  // buyer had already claimed. That is worse now that redeeming is gated on
+  // `redeemed_by IS NULL`: the un-linked license becomes claimable by anyone.
+  //
+  // ON CONFLICT DO UPDATE only assigns the columns listed, so leaving it out
+  // preserves whatever the row already holds, and a genuinely new row gets the
+  // column default of null, which is correct for an unredeemed license.
   await supabaseAdmin.from('appsumo_licenses').upsert(
     {
       license_key: licenseKey,
@@ -94,13 +86,41 @@ export async function applyAppSumoEvent(event: AppSumoEvent): Promise<{ ok: bool
       status,
       activation_email: event.activation_email ?? null,
       invoice_item_uuid: event.invoice_item_uuid ?? null,
-      redeemed_by: redeemedBy,
     },
     { onConflict: 'license_key' }
   )
 
-  if (redeemedBy) {
-    await syncProfileFromLicense(redeemedBy, licenseKey)
+  // A tier change issues a new key, so the redemption link has to move across.
+  // Conditional on the new row still being unclaimed, so this can never
+  // overwrite a redemption that happened in the meantime.
+  if (event.prev_license_key && event.prev_license_key !== licenseKey) {
+    const { data: prev } = await supabaseAdmin
+      .from('appsumo_licenses')
+      .select('redeemed_by, redeemed_at')
+      .eq('license_key', event.prev_license_key)
+      .maybeSingle()
+
+    const carriedOver = (prev?.redeemed_by as string | null) ?? null
+    if (carriedOver) {
+      await supabaseAdmin
+        .from('appsumo_licenses')
+        .update({ redeemed_by: carriedOver, redeemed_at: prev?.redeemed_at ?? new Date().toISOString() })
+        .eq('license_key', licenseKey)
+        .is('redeemed_by', null)
+    }
+  }
+
+  // Read the holder back rather than trusting the value we started from: the
+  // upsert and the carry-over above are the authority on who owns it now.
+  const { data: current } = await supabaseAdmin
+    .from('appsumo_licenses')
+    .select('redeemed_by')
+    .eq('license_key', licenseKey)
+    .maybeSingle()
+
+  const holder = (current?.redeemed_by as string | null) ?? null
+  if (holder) {
+    await syncProfileFromLicense(holder, licenseKey)
   }
 
   return { ok: true, message: `${event.action} applied` }
