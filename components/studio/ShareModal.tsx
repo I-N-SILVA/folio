@@ -34,7 +34,7 @@ export function ShareModal({ slug, onClose }: ShareModalProps) {
       >
         <div className="absolute inset-0 bg-black/60" onClick={onClose} />
         <motion.div
-          className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+          className="relative bg-[var(--qlico-paper)] rounded-2xl shadow-2xl w-full max-w-md p-6"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}

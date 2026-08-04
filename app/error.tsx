@@ -24,7 +24,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
           </button>
           <Link
             href="/dashboard"
-            className="rounded-full border border-[var(--qlico-border)] px-6 py-3 text-[15px] font-semibold text-[var(--qlico-ink)] transition hover:bg-black/5"
+            className="rounded-full border border-[var(--qlico-border)] px-6 py-3 text-[15px] font-semibold text-[var(--qlico-ink)] transition hover:bg-[var(--tint-weak)]"
           >
             Go to dashboard
           </Link>

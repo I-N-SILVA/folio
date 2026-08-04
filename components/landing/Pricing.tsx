@@ -56,7 +56,7 @@ export function Pricing() {
             <Reveal key={name}>
               <div
                 className={`flex h-full flex-col rounded-3xl border p-8 ${
-                  featured ? 'border-[var(--qlico-ink)] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.1)]' : 'border-[var(--qlico-border)] bg-white'
+                  featured ? 'border-[var(--qlico-ink)] bg-[var(--qlico-paper)] shadow-[0_30px_80px_rgba(0,0,0,0.1)]' : 'border-[var(--qlico-border)] bg-[var(--qlico-paper)]'
                 }`}
               >
                 {featured && (
@@ -73,7 +73,7 @@ export function Pricing() {
                 <ul className="mt-7 flex-1 space-y-3">
                   {features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-[15px]">
-                      <Plus size={16} className="mt-1 shrink-0 text-[var(--accent)]" />
+                      <Plus size={16} className="mt-1 shrink-0 text-[var(--accent-fg)]" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -95,12 +95,12 @@ export function Pricing() {
         </div>
 
         <Reveal className="mt-6">
-          <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-[var(--qlico-border)] bg-white px-7 py-5 text-center sm:flex-row sm:text-left">
+          <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-7 py-5 text-center sm:flex-row sm:text-left">
             <div className="flex items-center gap-3">
-              <Gift size={20} className="text-[var(--accent)]" />
+              <Gift size={20} className="text-[var(--accent-fg)]" />
               <p className="text-[15px] font-medium">Got a lifetime deal code? Redeem it to unlock your tier.</p>
             </div>
-            <Link href="/redeem" className="shrink-0 text-[15px] font-semibold text-[var(--accent)] hover:underline">
+            <Link href="/redeem" className="shrink-0 text-[15px] font-semibold text-[var(--accent-fg)] hover:underline">
               Redeem a code →
             </Link>
           </div>

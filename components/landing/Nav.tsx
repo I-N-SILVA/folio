@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Mark } from './Mark'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false)
@@ -17,7 +18,7 @@ export function Nav() {
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'border-b border-[var(--qlico-hairline)] bg-white/60 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
+          ? 'border-b border-[var(--qlico-hairline)] bg-[var(--qlico-paper)]/60 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]'
           : 'border-b border-transparent bg-transparent'
       }`}
     >
@@ -32,7 +33,8 @@ export function Nav() {
           <Link href="/book/demo" className="transition hover:text-[var(--qlico-ink)]">Demo</Link>
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/login" className="hidden rounded-full px-4 py-1.5 text-[13px] font-medium text-[var(--qlico-ink)] transition hover:bg-black/5 active:scale-[0.97] sm:block">
+          <ThemeToggle className="hidden lg:flex" />
+          <Link href="/login" className="hidden rounded-full px-4 py-1.5 text-[13px] font-medium text-[var(--qlico-ink)] transition hover:bg-[var(--tint-weak)] active:scale-[0.97] sm:block">
             Sign in
           </Link>
           <Link href="/login" className="rounded-full bg-[var(--accent)] px-4 py-1.5 text-[13px] font-semibold text-white transition hover:bg-[var(--accent-hover)] active:scale-[0.97]">

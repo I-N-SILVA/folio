@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[var(--background)] p-8 text-[var(--qlico-ink)]">
       <div className="max-w-md text-center">
-        <p className="text-sm font-semibold text-[var(--accent)]">404</p>
+        <p className="text-sm font-semibold text-[var(--accent-fg)]">404</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.03em]">Page not found</h1>
         <p className="mx-auto mt-3 max-w-xs text-[15px] leading-7 text-[var(--qlico-muted)]">
           This edition doesn't exist or has been removed.

@@ -78,8 +78,8 @@ export function FeaturesBento() {
         <div className="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {TILES.map(({ icon: Icon, title, desc, span, visual }, i) => (
             <Reveal key={title} delay={(i % 4) * 70} className={span}>
-              <div className="group flex h-full flex-col rounded-3xl border border-[var(--qlico-border)] bg-white p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--qlico-subtle)] text-[var(--qlico-ink)] transition-colors duration-300 group-hover:bg-[var(--qlico-ink)] group-hover:text-white">
+              <div className="group flex h-full flex-col rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)]">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--qlico-subtle)] text-[var(--qlico-ink)] transition-colors duration-300 group-hover:bg-[var(--invert-surface)] group-hover:text-[var(--invert-text)]">
                   <Icon size={20} strokeWidth={1.75} />
                 </div>
                 <h3 className="mt-5 text-lg font-semibold tracking-[-0.01em]">{title}</h3>

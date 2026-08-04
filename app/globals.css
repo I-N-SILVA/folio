@@ -13,6 +13,30 @@
   /* Accent: QLICO Violet (the mark's exact color) */
   --accent: #3c2384;
   --accent-hover: #2e1a66;
+  /* The accent serves two jobs with different contrast needs: a fill behind
+     white text, and a foreground colour on the page background. In light mode
+     one value clears both. In dark mode it can't — a violet dark enough for
+     white text to sit on is too dark to read against the background — so the
+     foreground role gets its own token. */
+  --accent-fg: #3c2384;
+  --accent-contrast: #ffffff;
+  /* Emphasis panels that are deliberately inverted against the page. These
+     stay a dark surface in both modes — flipping them to near-white in dark
+     mode would put a glaring band across the page. */
+  --invert-surface: #141a3a;
+  --invert-text: #ffffff;
+  --invert-muted: #a1a1a6;
+  /* Solid primary buttons sitting *on a card*. The inverted-panel navy is the
+     right look on white, but on a dark card it lands within a few percent of
+     the card itself and the button disappears — so dark mode uses the accent,
+     which the light hover state already resolves to anyway. */
+  --btn-solid: #141a3a;
+  --btn-solid-hover: var(--accent);
+  /* Hover washes and hairline fills. Hardcoded black/N goes invisible on a
+     dark background, so these carry the tint for whichever mode is active. */
+  --tint-weak: rgba(20, 26, 58, 0.04);
+  --tint: rgba(20, 26, 58, 0.07);
+  --tint-strong: rgba(20, 26, 58, 0.12);
   /* Brighter violet for dark chrome (editor) where the deep mark violet
      lacks contrast. Same hue family, higher luminance. */
   --accent-vivid: #7c5cff;
@@ -29,11 +53,105 @@
   --font-ui: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Dark palette. Applied when the OS asks for it, unless an explicit choice on
+   the root element says otherwise; `[data-theme]` wins in both directions so
+   the in-app toggle can override the system preference either way.
+
+   Two surfaces deliberately do NOT follow this: the book pages themselves,
+   which render author content under an author-chosen theme, and the editor
+   chrome, which is dark by design in both modes. */
+:root[data-theme='dark'] {
+  --background: #0e1020;
+  --background-alt: #171a2e;
+  --foreground: #eceef6;
+  --qlico-ink: #eceef6;
+  --qlico-muted: #a7adc6;
+  --qlico-paper: #171a2e;
+  --qlico-vellum: #1f2338;
+  --qlico-subtle: #1f2338;
+  --accent: #6344e0;
+  --accent-hover: #7358f0;
+  --accent-fg: #a692ff;
+  --accent-contrast: #ffffff;
+  --qlico-brass: var(--accent);
+  --qlico-teal: var(--accent-fg);
+  --qlico-oxblood: #eceef6;
+  --qlico-border: #2c3149;
+  --qlico-hairline: rgba(236, 238, 246, 0.1);
+  --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  --invert-surface: #1c2138;
+  --invert-text: #eceef6;
+  --invert-muted: #a7adc6;
+  --btn-solid: var(--accent);
+  --btn-solid-hover: var(--accent-hover);
+  --tint-weak: rgba(236, 238, 246, 0.05);
+  --tint: rgba(236, 238, 246, 0.09);
+  --tint-strong: rgba(236, 238, 246, 0.15);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --background: #0e1020;
+    --background-alt: #171a2e;
+    --foreground: #eceef6;
+    --qlico-ink: #eceef6;
+    --qlico-muted: #a7adc6;
+    --qlico-paper: #171a2e;
+    --qlico-vellum: #1f2338;
+    --qlico-subtle: #1f2338;
+    --accent: #6344e0;
+    --accent-hover: #7358f0;
+    --accent-fg: #a692ff;
+    --accent-contrast: #ffffff;
+    --qlico-brass: var(--accent);
+    --qlico-teal: var(--accent-fg);
+    --qlico-oxblood: #eceef6;
+    --qlico-border: #2c3149;
+    --qlico-hairline: rgba(236, 238, 246, 0.1);
+    --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+    --invert-surface: #1c2138;
+    --invert-text: #eceef6;
+    --invert-muted: #a7adc6;
+    --btn-solid: var(--accent);
+    --btn-solid-hover: var(--accent-hover);
+    --tint-weak: rgba(236, 238, 246, 0.05);
+    --tint: rgba(236, 238, 246, 0.09);
+    --tint-strong: rgba(236, 238, 246, 0.15);
+    color-scheme: dark;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Per-theme assets. The wordmark is a raster with baked-in navy text, so no
+   filter can recolour it without also wrecking the violet mark — the light and
+   dark files are swapped instead. Done in CSS so there's no hydration flash. */
+.theme-dark-only {
+  display: none;
+}
+
+:root[data-theme='dark'] .theme-dark-only {
+  display: revert;
+}
+
+:root[data-theme='dark'] .theme-light-only {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .theme-dark-only {
+    display: revert;
+  }
+
+  :root:not([data-theme='light']) .theme-light-only {
+    display: none;
+  }
 }
 
 body {
@@ -52,15 +170,17 @@ section[id] {
   scroll-margin-top: 4.5rem;
 }
 
-/* Accessible, on-brand focus ring. */
+/* Accessible, on-brand focus ring. Uses the foreground accent so the ring keeps
+   its 3:1 against the page in dark mode, where the fill accent is too close to
+   the background to read as an indicator. */
 :where(a, button, input, [tabindex]):focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-fg);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
 ::selection {
-  background: rgba(60, 35, 132, 0.14);
+  background: color-mix(in srgb, var(--accent-fg) 28%, transparent);
   color: var(--qlico-ink);
 }
 

@@ -158,7 +158,7 @@ export function Modal({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={twMerge(
-          'relative overflow-y-auto bg-white shadow-2xl outline-none',
+          'relative overflow-y-auto bg-[var(--qlico-paper)] shadow-2xl outline-none',
           variant === 'sheet'
             ? 'max-h-[82vh] w-full rounded-t-2xl pb-[env(safe-area-inset-bottom)]'
             : 'max-h-[90vh] w-full max-w-md rounded-2xl',
@@ -170,7 +170,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full text-current opacity-50 transition hover:bg-black/10 hover:opacity-100"
+            className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full text-current opacity-50 transition hover:bg-[var(--tint)] hover:opacity-100"
           >
             <X size={16} />
           </button>
@@ -234,7 +234,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onCancel}
           disabled={busy}
-          className="rounded-full border border-[var(--qlico-border)] bg-white px-4 py-2.5 text-sm font-semibold transition hover:bg-[var(--qlico-subtle)] disabled:opacity-50"
+          className="rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2.5 text-sm font-semibold transition hover:bg-[var(--qlico-subtle)] disabled:opacity-50"
         >
           {cancelLabel}
         </button>

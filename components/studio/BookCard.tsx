@@ -161,7 +161,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   }
 
   return (
-    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
+    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--qlico-paper)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
       <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(60,35,132,0.10)] blur-2xl transition group-hover:bg-[rgba(60,35,132,0.18)]" />
 
       <CoverPreview
@@ -186,7 +186,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
             <button onClick={handleRename} className="rounded p-1 text-green-700 hover:bg-green-50">
               <Check size={14} />
             </button>
-            <button onClick={() => setIsEditing(false)} className="rounded p-1 text-[var(--qlico-muted)] hover:bg-black/5">
+            <button onClick={() => setIsEditing(false)} className="rounded p-1 text-[var(--qlico-muted)] hover:bg-[var(--tint-weak)]">
               <X size={14} />
             </button>
           </div>
@@ -199,7 +199,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         {!isEditing && (
           <span
             className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
-              published ? 'bg-[#dcebd7] text-[#3d6c38]' : 'bg-black/5 text-[var(--qlico-muted)]'
+              published ? 'bg-[#dcebd7] text-[#3d6c38]' : 'bg-[var(--tint-weak)] text-[var(--qlico-muted)]'
             }`}
           >
             {published ? 'Published' : 'Draft'}
@@ -214,7 +214,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
       <div className="flex items-center gap-2 mt-auto">
         <Link
           href={`/editor/${book.id}`}
-          className="flex-1 rounded-full bg-[var(--qlico-ink)] py-2.5 text-center text-sm font-semibold text-[#ffffff] transition-all hover:-translate-y-0.5 hover:bg-[var(--qlico-teal)]"
+          className="flex-1 rounded-full bg-[var(--btn-solid)] py-2.5 text-center text-sm font-semibold text-[var(--accent-contrast)] transition-all hover:-translate-y-0.5 hover:bg-[var(--btn-solid-hover)]"
         >
           Edit
         </Link>

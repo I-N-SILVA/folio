@@ -154,10 +154,10 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
       {!embed && (
         // Sticky: zooming in makes the spread taller than the viewport, which
         // used to scroll the very controls you were using out of sight.
-        <div className="sticky bottom-4 z-40 flex items-center gap-3 rounded-full border border-[var(--qlico-border)] bg-white/80 px-4 py-3 text-[var(--qlico-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl sm:gap-6 sm:px-6">
+        <div className="sticky bottom-4 z-40 flex items-center gap-3 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 px-4 py-3 text-[var(--qlico-ink)] shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-2xl sm:gap-6 sm:px-6">
           <button
             onClick={() => engineRef.current?.flipPrev()}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
             aria-label="Previous page"
             disabled={currentPage === 0}
           >
@@ -170,7 +170,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
 
           <button
             onClick={() => engineRef.current?.flipNext()}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
             aria-label="Next page"
             disabled={currentPage >= totalPages - 1}
           >
@@ -181,18 +181,18 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
               fill it. Desktop only — on a phone the page already spans the
               full width. */}
           <div className="hidden items-center gap-1 md:flex">
-            <span className="mx-1 h-5 w-px bg-black/10" aria-hidden="true" />
+            <span className="mx-1 h-5 w-px bg-[var(--tint)]" aria-hidden="true" />
             <button
               onClick={() => setZoom((z) => Math.max(MIN_ZOOM, round1(z - ZOOM_STEP)))}
               disabled={zoom <= MIN_ZOOM}
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
               aria-label="Zoom out"
             >
               <ZoomOut size={18} />
             </button>
             <button
               onClick={() => setZoom(1)}
-              className="min-w-[52px] rounded-full px-1 py-1 text-xs font-semibold tabular-nums transition-colors hover:bg-black/10"
+              className="min-w-[52px] rounded-full px-1 py-1 text-xs font-semibold tabular-nums transition-colors hover:bg-[var(--tint)]"
               aria-label={`Zoom ${Math.round(zoom * 100)} percent — reset to 100 percent`}
             >
               {Math.round(zoom * 100)}%
@@ -200,7 +200,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
             <button
               onClick={() => setZoom((z) => Math.min(MAX_ZOOM, round1(z + ZOOM_STEP)))}
               disabled={zoom >= MAX_ZOOM}
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10 disabled:opacity-30"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] disabled:opacity-30"
               aria-label="Zoom in"
             >
               <ZoomIn size={18} />
@@ -210,7 +210,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
           {canFullscreen && (
             <button
               onClick={toggleFullscreen}
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-black/10"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)]"
               aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               aria-pressed={fullscreen}
             >
@@ -233,7 +233,7 @@ export function ViewerChrome({ book, embed = false }: { book: Book; embed?: bool
           href="https://qlico.app?via=watermark"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--qlico-border)] bg-white/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"
+          className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"
         >
           Powered by <span className="font-display font-semibold text-[var(--qlico-ink)]">QLICO</span>
         </a>

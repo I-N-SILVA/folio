@@ -82,7 +82,7 @@ export function ForeEdge({ total, current, onSeek }: Props) {
         {/* Page number bubble that follows the cursor */}
         {hover !== null && (
           <span
-            className="absolute right-full mr-2 rounded-full bg-[var(--qlico-ink)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-white shadow-md"
+            className="absolute right-full mr-2 rounded-full bg-[var(--invert-surface)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[var(--invert-text)] shadow-md"
             style={{ top: `${(hover / (total - 1)) * 100}%`, transform: 'translateY(-50%)' }}
           >
             {hover + 1}

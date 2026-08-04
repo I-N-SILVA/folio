@@ -41,7 +41,7 @@ export function ManageBillingButton({ className = '' }: { className?: string }) 
     <button
       onClick={() => go('/api/billing/portal', setLoading)}
       disabled={loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-white disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/60 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-[var(--qlico-paper)] disabled:opacity-50 ${className}`}
     >
       {loading && <Loader2 size={15} className="animate-spin" />}
       {loading ? 'Opening…' : 'Manage billing'}

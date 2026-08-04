@@ -154,14 +154,14 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">Analytics</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-fg)]">Analytics</p>
               <h1 className="font-display text-3xl font-semibold tracking-[-0.02em]">{book.title}</h1>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Date range filter */}
-            <div className="flex rounded-full border border-[var(--qlico-border)] bg-white p-0.5">
+            <div className="flex rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-0.5">
               {ranges.map((r) => (
                 <button
                   key={r.value}
@@ -177,7 +177,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
 
             <button
               onClick={downloadCSV}
-              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--qlico-ink)] transition-colors hover:bg-black/5"
+              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2 text-sm font-semibold text-[var(--qlico-ink)] transition-colors hover:bg-[var(--tint-weak)]"
             >
               <Download size={14} />
               CSV
@@ -188,7 +188,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
         {loading ? (
           <AnalyticsSkeleton />
         ) : !data ? (
-          <div className="rounded-3xl border border-[var(--qlico-border)] bg-white py-16 text-center">
+          <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] py-16 text-center">
             <p className="font-semibold text-[var(--qlico-ink)]">Couldn&apos;t load analytics</p>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--qlico-muted)]">
               The request didn&apos;t come back. Check your connection and try again.
@@ -204,16 +204,16 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
           <>
             {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard icon={<BookOpen size={18} className="text-[var(--accent)]" />} label="Total Opens" delay={0}>
+              <StatCard icon={<BookOpen size={18} className="text-[var(--accent-fg)]" />} label="Total Opens" delay={0}>
                 <NumberTicker value={data.summary.totalOpens} />
               </StatCard>
-              <StatCard icon={<Users size={18} className="text-[var(--accent)]" />} label="Unique Sessions" delay={70}>
+              <StatCard icon={<Users size={18} className="text-[var(--accent-fg)]" />} label="Unique Sessions" delay={70}>
                 <NumberTicker value={data.summary.uniqueSessions} />
               </StatCard>
-              <StatCard icon={<CheckCircle size={18} className="text-[var(--accent)]" />} label="Completion Rate" delay={140}>
+              <StatCard icon={<CheckCircle size={18} className="text-[var(--accent-fg)]" />} label="Completion Rate" delay={140}>
                 <NumberTicker value={data.summary.completionRate} suffix="%" />
               </StatCard>
-              <StatCard icon={<Clock size={18} className="text-[var(--accent)]" />} label="Avg Session" delay={210}>
+              <StatCard icon={<Clock size={18} className="text-[var(--accent-fg)]" />} label="Avg Session" delay={210}>
                 {formatDuration(data.summary.avgSessionMs)}
               </StatCard>
             </div>
@@ -282,14 +282,14 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                           key={p}
                           onClick={() => setHeatmapPage(p)}
                           className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${
-                            heatmapPage === p ? 'bg-[var(--accent)] text-white' : 'hover:bg-black/5 text-[var(--qlico-ink)]'
+                            heatmapPage === p ? 'bg-[var(--accent)] text-white' : 'hover:bg-[var(--tint-weak)] text-[var(--qlico-ink)]'
                           }`}
                         >
                           Page {p}
                         </button>
                       ))}
                   </div>
-                  <div className="relative mx-auto aspect-[1/1.41] max-w-sm flex-1 overflow-hidden rounded-xl bg-white shadow-inner">
+                  <div className="relative mx-auto aspect-[1/1.41] max-w-sm flex-1 overflow-hidden rounded-xl bg-[var(--qlico-paper)] shadow-inner">
                     {/* Dots over a blank rectangle said nothing about *what*
                         was clicked. Rendering the real page puts every click
                         back in context. */}
@@ -303,9 +303,9 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                         />
                       </div>
                     ) : (
-                      <div className="absolute inset-0 bg-white" />
+                      <div className="absolute inset-0 bg-[var(--qlico-paper)]" />
                     )}
-                    <div className="absolute inset-0 bg-white/45" />
+                    <div className="absolute inset-0 bg-[var(--qlico-paper)]/45" />
                     {data.heatmapData[heatmapPage]?.map((pt, i) => (
                       <div
                         key={i}
@@ -314,7 +314,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                       />
                     ))}
                     {(!data.heatmapData[heatmapPage] || data.heatmapData[heatmapPage].length === 0) && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-sm text-[var(--qlico-muted)]">
+                      <div className="absolute inset-0 flex items-center justify-center bg-[var(--qlico-paper)]/70 text-sm text-[var(--qlico-muted)]">
                         No clicks recorded on this page
                       </div>
                     )}
@@ -400,7 +400,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                   action={
                     <button
                       onClick={downloadLeadsCSV}
-                      className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/5"
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-[var(--tint-weak)]"
                     >
                       <Download size={12} />
                       Export leads
@@ -409,7 +409,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                 >
                   <div className="max-h-64 overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="sticky top-0 bg-white">
+                      <thead className="sticky top-0 bg-[var(--qlico-paper)]">
                         <tr className="text-left text-[var(--qlico-muted)] text-xs border-b border-[var(--qlico-border)]">
                           <th className="pb-2 font-medium">Email</th>
                           <th className="pb-2 font-medium text-right">Captured On</th>
@@ -432,7 +432,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
             </div>
 
             {data.pageViewData.length === 0 && data.topHotspots.length === 0 && (
-              <div className="rounded-3xl border border-[var(--qlico-border)] bg-white py-16 text-center">
+              <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] py-16 text-center">
                 <p className="text-[var(--qlico-muted)]">No analytics data yet for this period.</p>
                 <p className="mt-1 text-sm text-[var(--qlico-muted)]">Share your edition to start collecting data.</p>
               </div>
@@ -457,14 +457,14 @@ function AnalyticsSkeleton() {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-[116px] animate-pulse rounded-3xl border border-[var(--qlico-border)] bg-white"
+            className="h-[116px] animate-pulse rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]"
           />
         ))}
       </div>
       {[0, 1].map((i) => (
         <div
           key={i}
-          className="h-[300px] animate-pulse rounded-3xl border border-[var(--qlico-border)] bg-white"
+          className="h-[300px] animate-pulse rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]"
         />
       ))}
     </div>
@@ -484,7 +484,7 @@ function StatCard({
 }) {
   return (
     <Reveal delay={delay}>
-      <div className="rounded-3xl border border-[var(--qlico-border)] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(0,0,0,0.07)]">
+      <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(0,0,0,0.07)]">
         <div className="mb-3 flex items-center gap-2">
           {icon}
           <span className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--qlico-muted)]">{label}</span>
@@ -510,7 +510,7 @@ function ChartCard({
 }) {
   return (
     <Reveal>
-      <div className="rounded-3xl border border-[var(--qlico-border)] bg-white p-6">
+      <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-6">
         <h2 className="mb-4 text-sm font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h2>
         {summary && <p className="sr-only">{summary}</p>}
         <div aria-hidden={summary ? 'true' : undefined}>{children}</div>
@@ -530,7 +530,7 @@ function TableCard({
 }) {
   return (
     <Reveal>
-      <div className="h-full rounded-3xl border border-[var(--qlico-border)] bg-white p-6">
+      <div className="h-full rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h2>
           {action}

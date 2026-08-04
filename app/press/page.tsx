@@ -54,11 +54,15 @@ export default function PressPage() {
         {/* Logo lockup */}
         <section className="mt-12">
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--qlico-muted)]">Logo</h2>
+          {/* These are specimens, not UI: each panel has to be the literal
+              background the lockup is approved against, or the swatch stops
+              telling the truth. Themed tokens put the dark lockup on a dark
+              panel and it vanished. */}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center justify-center rounded-[2rem] border border-[var(--qlico-border)] bg-white p-8">
+            <div className="flex items-center justify-center rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff] p-8">
               <Image src="/brand/qlico-logo.png" alt="QLICO logo on white" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
-            <div className="flex items-center justify-center rounded-[2rem] border border-white/10 bg-[var(--qlico-ink)] p-8">
+            <div className="flex items-center justify-center rounded-[2rem] border border-white/10 bg-[#141a3a] p-8">
               <Image src="/brand/qlico-logo-white.png" alt="QLICO logo on ink" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
           </div>
@@ -69,7 +73,7 @@ export default function PressPage() {
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--qlico-muted)]">Color</h2>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {COLORS.map((c) => (
-              <div key={c.name} className="overflow-hidden rounded-[1.25rem] border border-[var(--qlico-border)] bg-white/50">
+              <div key={c.name} className="overflow-hidden rounded-[1.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/50">
                 <div className="h-20" style={{ background: c.hex }} />
                 <div className="px-3 py-2">
                   <p className="text-sm font-bold">{c.name}</p>
@@ -90,7 +94,7 @@ export default function PressPage() {
                 href={a.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-[1.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/72 px-5 py-4 text-sm font-bold transition hover:-translate-y-0.5 hover:bg-white"
+                className="flex items-center justify-between rounded-[1.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/72 px-5 py-4 text-sm font-bold transition hover:-translate-y-0.5 hover:bg-[var(--qlico-paper)]"
               >
                 {a.label}
                 <span className="text-[var(--qlico-teal)]">Open →</span>
@@ -101,7 +105,7 @@ export default function PressPage() {
 
         {/* Fast facts + boilerplate */}
         <section className="mt-12 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/72 p-7">
+          <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/72 p-7">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Fast facts</h2>
             <dl className="mt-4 divide-y divide-[var(--qlico-border)]">
               {FACTS.map(([k, v]) => (
@@ -112,7 +116,7 @@ export default function PressPage() {
               ))}
             </dl>
           </div>
-          <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/72 p-7">
+          <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/72 p-7">
             <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Boilerplate</h2>
             <p className="mt-4 text-[15px] leading-7 text-[var(--qlico-muted)]">
               QLICO turns static PDFs into interactive editions with hotspots, analytics, embeds,

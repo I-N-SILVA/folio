@@ -9,7 +9,7 @@ import { MagneticButton } from './MagneticButton'
 
 const HeroShowcase = dynamic(() => import('./HeroShowcase'), {
   ssr: false,
-  loading: () => <div className="h-full w-full animate-pulse bg-[#f5f5f7]" />,
+  loading: () => <div className="h-full w-full animate-pulse bg-[var(--qlico-subtle)]" />,
 })
 
 /** Word-by-word blur-up reveal for the hero headline. */
@@ -51,7 +51,7 @@ function ProductShot() {
     <div ref={ref} className="relative mx-auto mt-16 max-w-5xl" style={{ perspective: 1400 }}>
       <m.div
         style={{ rotateX, scale, opacity, transformStyle: 'preserve-3d' }}
-        className="relative overflow-hidden rounded-[1.5rem] border border-[var(--qlico-border)] bg-white shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
+        className="relative overflow-hidden rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
       >
         <div className="flex items-center gap-1.5 border-b border-[var(--qlico-hairline)] bg-[#fbfbfd] px-4 py-3">
           <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
@@ -61,13 +61,13 @@ function ProductShot() {
             href="/book/demo"
             target="_blank"
             rel="noopener noreferrer"
-            className="mx-auto flex items-center gap-1.5 rounded-md bg-white px-3 py-1 text-left text-xs text-[var(--qlico-muted)] shadow-sm transition-colors hover:text-[var(--qlico-ink)]"
+            className="mx-auto flex items-center gap-1.5 rounded-md bg-[var(--qlico-paper)] px-3 py-1 text-left text-xs text-[var(--qlico-muted)] shadow-sm transition-colors hover:text-[var(--qlico-ink)]"
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
             qlico.app/book/demo
           </a>
         </div>
-        <a href="/book/demo" target="_blank" rel="noopener noreferrer" className="group relative block aspect-[16/10] bg-[#f5f5f7]">
+        <a href="/book/demo" target="_blank" rel="noopener noreferrer" className="group relative block aspect-[16/10] bg-[var(--qlico-subtle)]">
           <HeroShowcase />
           {/* Click-through affordance — this is a preview reel; the real, riffle-powered book is one click away. */}
           <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-gradient-to-t from-black/70 to-transparent py-4 text-xs font-semibold text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
@@ -80,7 +80,7 @@ function ProductShot() {
       {/* Soft floor reflection */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-10 left-1/2 -z-10 h-24 w-[78%] -translate-x-1/2 rounded-[50%] bg-black/15 blur-3xl"
+        className="pointer-events-none absolute -bottom-10 left-1/2 -z-10 h-24 w-[78%] -translate-x-1/2 rounded-[50%] bg-[var(--tint-strong)] blur-3xl"
       />
     </div>
   )
@@ -106,7 +106,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--qlico-muted)] backdrop-blur"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--qlico-muted)] backdrop-blur"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
           Interactive publishing
@@ -140,7 +140,7 @@ export function Hero() {
           <Link
             href="/book/demo"
             onClick={() => track('cta_click', { cta: 'view_demo', location: 'hero' })}
-            className="text-[15px] font-medium text-[var(--accent)] transition hover:underline"
+            className="text-[15px] font-medium text-[var(--accent-fg)] transition hover:underline"
           >
             View the demo →
           </Link>

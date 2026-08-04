@@ -90,7 +90,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
 
   if (name === 'editorial') {
     return (
-      <div className="grid h-full w-full grid-cols-2 bg-white">
+      <div className="grid h-full w-full grid-cols-2 bg-[var(--qlico-paper)]">
         <div className="flex flex-col justify-center gap-4 p-10">
           <motion.h3
             initial={{ opacity: 0, x: -16 }}
@@ -153,7 +153,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             initial={{ opacity: 0, y: 10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.7, type: 'spring', stiffness: 130, damping: 16 }}
-            className="absolute bottom-8 left-8 max-w-[15rem] rounded-2xl bg-white/95 p-4 text-left shadow-xl backdrop-blur"
+            className="absolute bottom-8 left-8 max-w-[15rem] rounded-2xl bg-[var(--qlico-paper)]/95 p-4 text-left shadow-xl backdrop-blur"
           >
             <p className="text-sm font-semibold text-[var(--qlico-ink)]">Built-in analytics</p>
             <p className="mt-1 text-xs leading-5 text-[var(--qlico-muted)]">Opens, dwell time, and hotspot clicks — in your own data layer.</p>
@@ -165,10 +165,10 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
 
   // analytics
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-6 bg-[var(--qlico-ink)] px-10 text-white">
+    <div className="flex h-full w-full flex-col justify-center gap-6 bg-[var(--invert-surface)] px-10 text-[var(--invert-text)]">
       <div className="flex items-end justify-between">
         <h3 className="font-display text-4xl font-semibold tracking-[-0.02em]">Numbers that land</h3>
-        <div className="font-display text-5xl font-semibold text-[var(--accent)]">
+        <div className="font-display text-5xl font-semibold text-[var(--accent-fg)]">
           <CountUp to={10} suffix="×" />
         </div>
       </div>
@@ -201,7 +201,7 @@ export default function HeroShowcase() {
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden bg-[#f5f5f7]"
+      className="relative h-full w-full overflow-hidden bg-[var(--qlico-subtle)]"
       style={{ perspective: 2000 }}
       onMouseEnter={() => (paused.current = true)}
       onMouseLeave={() => (paused.current = false)}

@@ -207,7 +207,7 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
 
         {/* Dialog */}
         <motion.div
-          className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+          className="relative bg-[var(--qlico-paper)] rounded-2xl shadow-2xl w-full max-w-md p-6"
           initial={{ opacity: 0, scale: 0.95, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -255,11 +255,11 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
             />
             <FileUp
               size={24}
-              className={`mx-auto mb-2 ${file ? 'text-[var(--accent)]' : 'text-gray-400'}`}
+              className={`mx-auto mb-2 ${file ? 'text-[var(--accent-fg)]' : 'text-gray-400'}`}
             />
             {file ? (
               <div>
-                <p className="text-sm font-medium text-[var(--accent)] truncate px-2">{file.name}</p>
+                <p className="text-sm font-medium text-[var(--accent-fg)] truncate px-2">{file.name}</p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {(file.size / 1024 / 1024).toFixed(1)} MB
                   {!isWorking && status !== 'done' && ' — click to change'}
@@ -322,11 +322,11 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
                   checked={aiEnhance}
                   onChange={(e) => setAiEnhance(e.target.checked)}
                   disabled={isWorking || status === 'done'}
-                  className="w-4 h-4 text-[var(--accent)] border-gray-300 rounded focus:ring-[var(--accent)]/30"
+                  className="w-4 h-4 text-[var(--accent-fg)] border-gray-300 rounded focus:ring-[var(--accent)]/30"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900 group-hover:text-[var(--accent)] transition-colors">
+                <span className="text-sm font-bold text-gray-900 group-hover:text-[var(--accent-fg)] transition-colors">
                   Magic AI Enhancement
                 </span>
                 <span className="text-xs text-gray-500 leading-relaxed mt-0.5">
@@ -341,7 +341,7 @@ export function ImportPDFModal({ onClose, onLimitReached }: ImportPDFModalProps)
             <div className="mb-5">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Loader2 size={14} className="animate-spin text-[var(--accent)] flex-shrink-0" />
+                  <Loader2 size={14} className="animate-spin text-[var(--accent-fg)] flex-shrink-0" />
                   <span>
                     {status === 'rendering'
                       ? `Rendering page ${progress.current} of ${progress.total}…`

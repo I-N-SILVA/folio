@@ -3,7 +3,7 @@ import Reveal from './Reveal'
 
 export function Statement() {
   return (
-    <section className="bg-[var(--qlico-ink)] px-5 py-28 text-white">
+    <section className="bg-[var(--invert-surface)] px-5 py-28 text-[var(--invert-text)]">
       <div className="mx-auto max-w-4xl text-center">
         <Reveal>
           <h2 className="font-display text-4xl font-semibold leading-[1.08] tracking-[-0.02em] sm:text-6xl">
@@ -13,7 +13,7 @@ export function Statement() {
             QLICO gives your publication a reason to be opened, explored, and finished — and
             shows you exactly what held attention.
           </p>
-          <Link href="/login" className="mt-9 inline-block rounded-full bg-white px-7 py-3.5 text-[15px] font-semibold text-[var(--qlico-ink)] transition hover:bg-white/90">
+          <Link href="/login" className="mt-9 inline-block rounded-full bg-[var(--qlico-paper)] px-7 py-3.5 text-[15px] font-semibold text-[var(--qlico-ink)] transition hover:bg-[var(--qlico-paper)]/90">
             Create your first edition
           </Link>
         </Reveal>

@@ -84,14 +84,14 @@ export function LibraryBrowser({ books }: { books: LibraryBook[] }) {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search editions…"
                 aria-label="Search editions"
-                className="w-full rounded-full border border-[var(--qlico-border)] bg-white/70 py-2.5 pl-9 pr-9 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/15 sm:w-56"
+                className="w-full rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 py-2.5 pl-9 pr-9 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/15 sm:w-56"
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery('')}
                   aria-label="Clear search"
-                  className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-[var(--qlico-muted)] transition hover:bg-black/5"
+                  className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full text-[var(--qlico-muted)] transition hover:bg-[var(--tint-weak)]"
                 >
                   <X size={13} />
                 </button>
@@ -101,7 +101,7 @@ export function LibraryBrowser({ books }: { books: LibraryBook[] }) {
             <div
               role="group"
               aria-label="Filter by status"
-              className="flex rounded-full border border-[var(--qlico-border)] bg-white/70 p-1"
+              className="flex rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 p-1"
             >
               {FILTERS.map((option) => (
                 <button
@@ -127,7 +127,7 @@ export function LibraryBrowser({ books }: { books: LibraryBook[] }) {
               id="library-sort"
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}
-              className="rounded-full border border-[var(--qlico-border)] bg-white/70 px-3 py-2.5 text-xs font-semibold text-[var(--qlico-ink)] outline-none transition focus:border-[var(--accent)]"
+              className="rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-3 py-2.5 text-xs font-semibold text-[var(--qlico-ink)] outline-none transition focus:border-[var(--accent)]"
             >
               {SORTS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -140,7 +140,7 @@ export function LibraryBrowser({ books }: { books: LibraryBook[] }) {
       </div>
 
       {visible.length === 0 ? (
-        <div className="rounded-[2rem] border border-dashed border-[var(--qlico-border)] bg-white/50 px-6 py-16 text-center">
+        <div className="rounded-[2rem] border border-dashed border-[var(--qlico-border)] bg-[var(--qlico-paper)]/50 px-6 py-16 text-center">
           <p className="font-display text-2xl font-semibold tracking-[-0.03em]">No matches</p>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--qlico-muted)]">
             Nothing in your library fits that search and filter.
@@ -151,7 +151,7 @@ export function LibraryBrowser({ books }: { books: LibraryBook[] }) {
               setQuery('')
               setFilter('all')
             }}
-            className="mt-5 rounded-full border border-[var(--qlico-border)] bg-white px-5 py-2.5 text-sm font-semibold transition hover:bg-[var(--qlico-subtle)]"
+            className="mt-5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-5 py-2.5 text-sm font-semibold transition hover:bg-[var(--qlico-subtle)]"
           >
             Clear filters
           </button>

@@ -79,6 +79,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`h-full antialiased ${bodyFont.variable} ${displayFont.variable}`}>
       <head>
+        {/* Stamp a stored theme choice before first paint. Without this, a user
+            who picked dark sees a white flash on every navigation while React
+            hydrates. No stored choice leaves the attribute off, so the
+            prefers-color-scheme block in globals.css takes over. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('qlico:theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
+          }}
+        />
         {/* Scroll-reveal elements ship with their hidden state inlined by
             framer-motion, so a page without JS would render them at opacity 0
             permanently — on the landing page that is nearly all of the copy. */}

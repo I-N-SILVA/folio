@@ -46,7 +46,7 @@ export function KeyboardHints() {
             >
               <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
               <motion.div
-                className="relative bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm"
+                className="relative bg-[var(--qlico-paper)] rounded-2xl shadow-xl p-6 w-full max-w-sm"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 20, opacity: 0 }}

@@ -47,7 +47,7 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-full max-w-md rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/80 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
+        className="w-full max-w-md rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
       >
         <div className="mb-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--qlico-teal)]">
@@ -55,7 +55,8 @@ export default function LoginPage() {
           </p>
           <h1>
             <span className="sr-only">QLICO</span>
-            <Image src="/brand/qlico-logo.png" alt="" width={181} height={50} priority className="h-[50px] w-auto object-contain" />
+            <Image src="/brand/qlico-logo.png" alt="" width={181} height={50} priority className="theme-light-only h-[50px] w-auto object-contain" />
+            <Image src="/brand/qlico-logo-white.png" alt="" width={181} height={50} priority className="theme-dark-only h-[50px] w-auto object-contain" />
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
             Sign in with a magic link to compose, publish, and measure your digital shelf.
@@ -84,7 +85,7 @@ export default function LoginPage() {
                   setResent(false)
                   setError('')
                 }}
-                className="font-semibold text-[var(--accent)] underline underline-offset-4 hover:text-[var(--accent-hover)]"
+                className="font-semibold text-[var(--accent-fg)] underline underline-offset-4 hover:text-[var(--accent-hover)]"
               >
                 Use a different email
               </button>
@@ -120,7 +121,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full rounded-2xl border border-[var(--qlico-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-4 focus:ring-[var(--qlico-teal)]/10"
+                className="w-full rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-4 focus:ring-[var(--qlico-teal)]/10"
               />
             </div>
 

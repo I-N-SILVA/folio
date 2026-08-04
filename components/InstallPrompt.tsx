@@ -43,7 +43,7 @@ export function InstallPrompt({ className = '' }: { className?: string }) {
   return (
     <button
       onClick={install}
-      className={`flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-white ${className}`}
+      className={`flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/60 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-[var(--qlico-paper)] ${className}`}
     >
       <Download size={16} />
       Install app

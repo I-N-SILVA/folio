@@ -42,7 +42,7 @@ export function OnboardingChecklist({ hasBook, hasHotspot, hasPublished, firstBo
   const doneCount = steps.filter((s) => s.done).length
 
   return (
-    <section className="mb-8 rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/76 p-6 shadow-sm backdrop-blur sm:p-8">
+    <section className="mb-8 rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/76 p-6 shadow-sm backdrop-blur sm:p-8">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="font-display text-2xl font-semibold tracking-[-0.03em]">Get set up</h2>
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--qlico-muted)]">
@@ -58,7 +58,7 @@ export function OnboardingChecklist({ hasBook, hasHotspot, hasPublished, firstBo
               className={`group flex h-full flex-col rounded-2xl border p-5 transition ${
                 step.done
                   ? 'pointer-events-none border-[var(--qlico-border)] bg-[var(--qlico-subtle)] opacity-70'
-                  : 'border-[var(--qlico-border)] bg-white hover:-translate-y-0.5 hover:shadow-[var(--qlico-shadow)]'
+                  : 'border-[var(--qlico-border)] bg-[var(--qlico-paper)] hover:-translate-y-0.5 hover:shadow-[var(--qlico-shadow)]'
               }`}
             >
               <span
@@ -73,7 +73,7 @@ export function OnboardingChecklist({ hasBook, hasHotspot, hasPublished, firstBo
               <h3 className={`text-[15px] font-semibold ${step.done ? 'line-through' : ''}`}>{step.title}</h3>
               <p className="mt-1 text-[13px] leading-5 text-[var(--qlico-muted)]">{step.desc}</p>
               {!step.done && (
-                <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--accent)] transition group-hover:gap-2">
+                <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--accent-fg)] transition group-hover:gap-2">
                   {step.cta} <ArrowRight size={13} />
                 </span>
               )}

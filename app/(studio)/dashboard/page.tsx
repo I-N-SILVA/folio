@@ -54,10 +54,10 @@ export default async function DashboardPage() {
       <CreateBookLauncher />
       <div className="mx-auto max-w-6xl">
         <StudioNav current="library" />
-        <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/76 p-6 shadow-[var(--qlico-shadow)] backdrop-blur sm:p-8">
+        <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/76 p-6 shadow-[var(--qlico-shadow)] backdrop-blur sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--qlico-teal)]">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--qlico-teal)]">
                 <Sparkles size={13} />
                 Creator Studio
               </div>
@@ -86,9 +86,9 @@ export default async function DashboardPage() {
         />
 
         {books.length === 0 ? (
-          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/78 px-6 py-20 text-center shadow-sm">
+          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/78 px-6 py-20 text-center shadow-sm">
             <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(60,35,132,0.16)] blur-3xl" />
-            <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--qlico-border)] bg-white shadow-sm">
+            <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-sm">
               <BookOpen size={48} className="text-[var(--qlico-muted)] opacity-60" strokeWidth={1.5} />
             </div>
             <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">Create your first edition.</h2>
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-3xl border border-[var(--qlico-border)] bg-white/55 p-5 shadow-sm">
+    <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/55 p-5 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--qlico-muted)]">{label}</p>
       <p className="mt-2 font-display text-4xl font-semibold tracking-[-0.06em]">
         <NumberTicker value={value} />

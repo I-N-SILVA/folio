@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { SignOutButton } from './SignOutButton'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 /**
  * The studio group had no shared chrome: the dashboard bolted its navigation
@@ -31,6 +32,7 @@ export function StudioNav({ current }: { current?: 'library' | 'account' }) {
       </nav>
 
       <div className="flex-1" />
+      <ThemeToggle className="hidden sm:flex" />
       <SignOutButton />
     </header>
   )
@@ -51,8 +53,8 @@ function NavLink({
       aria-current={active ? 'page' : undefined}
       className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
         active
-          ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
-          : 'text-[var(--qlico-muted)] hover:bg-black/5 hover:text-[var(--qlico-ink)]'
+          ? 'bg-[var(--accent)]/10 text-[var(--accent-fg)]'
+          : 'text-[var(--qlico-muted)] hover:bg-[var(--tint-weak)] hover:text-[var(--qlico-ink)]'
       }`}
     >
       {children}

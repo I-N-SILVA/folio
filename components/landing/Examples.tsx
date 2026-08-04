@@ -51,7 +51,7 @@ export function Examples() {
               <Link
                 href={`/book/${ex.slug}`}
                 onClick={() => track('demo_open', { edition: ex.slug, location: 'examples' })}
-                className="group block h-full overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-white transition hover:-translate-y-1 hover:shadow-[var(--qlico-shadow)]"
+                className="group block h-full overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] transition hover:-translate-y-1 hover:shadow-[var(--qlico-shadow)]"
               >
                 <div
                   className="flex aspect-[4/3] flex-col items-center justify-center gap-2 px-6 text-center"
@@ -61,7 +61,7 @@ export function Examples() {
                   <span className="font-display text-2xl font-semibold leading-tight tracking-[-0.02em]">{ex.title}</span>
                 </div>
                 <div className="p-6">
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">{ex.tag}</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-fg)]">{ex.tag}</span>
                   <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{ex.desc}</p>
                   <span className="mt-3 inline-block text-sm font-semibold text-[var(--qlico-ink)] transition group-hover:translate-x-1">
                     Flip through →

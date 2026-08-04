@@ -44,10 +44,10 @@ export default function RedeemPage() {
         initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-full max-w-md rounded-[2.25rem] border border-[var(--qlico-border)] bg-[#ffffff]/80 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
+        className="w-full max-w-md rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
       >
         <div className="mb-7">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--qlico-ink)] text-[#ffffff] shadow-lg">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--invert-surface)] text-[var(--invert-text)] shadow-lg">
             <Gift size={22} />
           </span>
           <h1 className="mt-5 font-display text-4xl font-semibold tracking-[-0.05em]">Redeem your deal</h1>
@@ -77,7 +77,7 @@ export default function RedeemPage() {
                 placeholder="e.g. AS-XXXX-XXXX-XXXX"
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-white/70 px-4 py-3 font-mono text-sm tracking-wide outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
+                className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-4 py-3 font-mono text-sm tracking-wide outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
               />
             </div>
 

@@ -74,7 +74,7 @@ export default async function BookPage({ params }: Props) {
   if (!book.settings.published && slug !== 'demo') {
     return (
       <main className="qlico-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-8 text-[var(--qlico-ink)]">
-        <div className="max-w-md rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff]/80 p-8 text-center shadow-[var(--qlico-shadow)]">
+        <div className="max-w-md rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 p-8 text-center shadow-[var(--qlico-shadow)]">
           <h1 className="font-display mb-3 text-4xl font-semibold tracking-[-0.06em]">Still in the bindery.</h1>
           <p className="text-[var(--qlico-muted)]">Check back later. The creator is still working on it.</p>
         </div>

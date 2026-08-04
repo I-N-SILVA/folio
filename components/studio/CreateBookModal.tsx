@@ -244,7 +244,7 @@ export function CreateBookModal({ onClose }: Props) {
   if (limitHit) {
     return shell(
       <div className="p-8 text-center">
-        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--qlico-ink)] text-[#ffffff]">
+        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--invert-surface)] text-[var(--invert-text)]">
           <Crown size={26} />
         </div>
         <h2 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">
@@ -264,7 +264,7 @@ export function CreateBookModal({ onClose }: Props) {
           </Link>
           <Link
             href="/redeem"
-            className="rounded-full border border-[var(--qlico-border)] bg-white/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-white"
+            className="rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-ink)] transition hover:-translate-y-0.5 hover:bg-[var(--qlico-paper)]"
           >
             Redeem a code
           </Link>
@@ -283,7 +283,7 @@ export function CreateBookModal({ onClose }: Props) {
       <>
         <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
           <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">Name your QLICO</h2>
-          <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-black/5">
+          <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)]">
             <X size={20} />
           </button>
         </div>
@@ -298,7 +298,7 @@ export function CreateBookModal({ onClose }: Props) {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="e.g. Q3 Investor Update"
-            className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-white/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
+            className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
           />
 
           {/* This is the permanent public URL — nothing downstream can change
@@ -310,11 +310,11 @@ export function CreateBookModal({ onClose }: Props) {
             Public link
           </label>
           <div
-            className={`flex items-center overflow-hidden rounded-[1.1rem] border bg-white/70 focus-within:ring-2 focus-within:ring-[var(--qlico-teal)]/20 ${
+            className={`flex items-center overflow-hidden rounded-[1.1rem] border bg-[var(--qlico-paper)]/70 focus-within:ring-2 focus-within:ring-[var(--qlico-teal)]/20 ${
               slugError ? 'border-red-400' : 'border-[var(--qlico-border)] focus-within:border-[var(--qlico-teal)]'
             }`}
           >
-            <span className="border-r border-[var(--qlico-border)] bg-black/[0.03] px-3 py-3 text-sm text-[var(--qlico-muted)]">
+            <span className="border-r border-[var(--qlico-border)] bg-[var(--tint-weak)] px-3 py-3 text-sm text-[var(--qlico-muted)]">
               /book/
             </span>
             <input
@@ -341,7 +341,7 @@ export function CreateBookModal({ onClose }: Props) {
             <button
               type="button"
               onClick={() => setStep('choice')}
-              className="flex-1 rounded-full border border-[var(--qlico-border)] bg-white/60 px-4 py-3 text-sm font-bold text-[var(--qlico-ink)] transition hover:bg-white"
+              className="flex-1 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/60 px-4 py-3 text-sm font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--qlico-paper)]"
             >
               Back
             </button>
@@ -371,7 +371,7 @@ export function CreateBookModal({ onClose }: Props) {
             </p>
           )}
         </div>
-        <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-black/5">
+        <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)]">
           <X size={20} />
         </button>
       </div>
@@ -387,9 +387,9 @@ export function CreateBookModal({ onClose }: Props) {
               key={key}
               disabled={loading}
               onClick={onClick}
-              className="group flex flex-col items-center gap-4 rounded-[1.5rem] border border-[var(--qlico-border)] bg-white/55 p-6 text-center transition-all hover:-translate-y-1 hover:border-[var(--qlico-teal)] hover:bg-white disabled:opacity-50"
+              className="group flex flex-col items-center gap-4 rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/55 p-6 text-center transition-all hover:-translate-y-1 hover:border-[var(--qlico-teal)] hover:bg-[var(--qlico-paper)] disabled:opacity-50"
             >
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--qlico-ink)] text-[#f5f5f7] transition-colors group-hover:bg-[var(--qlico-teal)]">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--invert-surface)] text-[var(--invert-text)] transition-colors group-hover:bg-[var(--qlico-teal)]">
                 <Icon size={26} />
               </div>
               <div>
@@ -418,7 +418,7 @@ export function CreateBookModal({ onClose }: Props) {
                 aria-valuemin={0}
                 aria-valuemax={progress.total}
                 aria-label="Upload progress"
-                className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-black/8"
+                className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-[var(--tint)]"
               >
                 <div
                   className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
@@ -430,7 +430,7 @@ export function CreateBookModal({ onClose }: Props) {
         )}
       </div>
 
-      <div className="flex items-center justify-center border-t border-[var(--qlico-border)] bg-white/40 p-5 text-xs text-[var(--qlico-muted)]">
+      <div className="flex items-center justify-center border-t border-[var(--qlico-border)] bg-[var(--qlico-paper)]/40 p-5 text-xs text-[var(--qlico-muted)]">
         Tip: PDFs are best for books, Images are best for portfolios.
       </div>
     </>

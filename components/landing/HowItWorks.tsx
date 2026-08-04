@@ -23,8 +23,8 @@ export function HowItWorks() {
         <div className="grid gap-4 sm:grid-cols-3">
           {STEPS.map(([num, title, desc], i) => (
             <Reveal key={num} delay={i * 90}>
-              <div className="h-full rounded-2xl border border-[var(--qlico-border)] bg-white p-8">
-                <span className="font-display text-sm font-semibold text-[var(--accent)]">{num}</span>
+              <div className="h-full rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-8">
+                <span className="font-display text-sm font-semibold text-[var(--accent-fg)]">{num}</span>
                 <h3 className="mt-4 text-xl font-semibold tracking-[-0.01em]">{title}</h3>
                 <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{desc}</p>
               </div>
