@@ -11,15 +11,17 @@ import Reveal from '@/components/landing/Reveal'
 
 export const dynamic = 'force-dynamic'
 
+// Every row here is a thing the server actually checks. Rows for PDF import,
+// custom domain and the watermark used to sit alongside these, and none of the
+// three was enforced anywhere — one of them wasn't even built. A plan sheet that
+// lists features the product gives away teaches the reader that plans are
+// decorative.
 const FEATURE_ROWS: { key: string; label: string }[] = [
-  { key: 'maxBooks', label: 'Books' },
+  { key: 'maxBooks', label: 'Editions' },
   { key: 'analyticsDays', label: 'Analytics history' },
-  { key: 'pdfImport', label: 'PDF import' },
-  { key: 'leadGating', label: 'Lead gating' },
-  { key: 'customDomain', label: 'Custom domain' },
+  { key: 'leadGating', label: 'Email capture on the reader' },
   { key: 'csvExport', label: 'CSV export' },
-  { key: 'whiteLabel', label: 'White-label (no QLICO branding)' },
-  { key: 'watermark', label: 'Reader watermark' },
+  { key: 'whiteLabel', label: 'Remove the QLICO badge' },
 ]
 
 export default async function AccountPage({
@@ -40,10 +42,7 @@ export default async function AccountPage({
   const renderValue = (key: string) => {
     if (key === 'maxBooks') return formatQuota(e.maxBooks)
     if (key === 'analyticsDays') return `${e.analyticsDays} days`
-    if (key === 'watermark') {
-      return e.watermark ? <Minus size={16} className="text-[var(--qlico-muted)]" /> : <Check size={16} className="text-[var(--qlico-teal)]" />
-    }
-    const on = (e as Record<string, unknown>)[key]
+    const on = (e as unknown as Record<string, unknown>)[key]
     return on ? <Check size={16} className="text-[var(--qlico-teal)]" /> : <Minus size={16} className="text-[var(--qlico-muted)]" />
   }
 
@@ -128,7 +127,8 @@ export default async function AccountPage({
                 <Sparkles size={20} className="text-[var(--qlico-brass)]" />
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Go Pro</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--qlico-muted)]">
-                  Unlimited books, custom domains, and 90-day analytics — $19/mo.
+                  Unlimited editions, email capture with lead export, and 12-month analytics —
+                  $19/mo.
                 </p>
                 {billingOn ? (
                   <UpgradeButton className="mt-5" />

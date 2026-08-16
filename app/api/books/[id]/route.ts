@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { ThemeSchema, BookSettingsSchema, PageSchema } from '@/lib/book-schema'
+import { ThemeSchema, BookSettingsSchema } from '@/lib/book-schema'
 
 // ─── PATCH /api/books/[id] — partial book update ─────────────────────────────
 
@@ -54,70 +54,12 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-// ─── PUT /api/books/[id] — replace all pages ─────────────────────────────────
-
-const PutPagesSchema = z.object({
-  pages: z.array(PageSchema),
-})
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  const supabase = await createServerSupabase()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  // Verify ownership
-  const { data: book } = await supabase
-    .from('books')
-    .select('id, owner_id')
-    .eq('id', id)
-    .single()
-
-  if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (book.owner_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-  const body = await request.json()
-  const parsed = PutPagesSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-  }
-
-  // Delete existing pages for this book, then insert new ones
-  const { error: deleteError } = await supabase
-    .from('pages')
-    .delete()
-    .eq('book_id', id)
-
-  if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 })
-  }
-
-  if (parsed.data.pages.length > 0) {
-    const pagesPayload = parsed.data.pages.map((p) => ({
-      id: p.id,
-      book_id: id,
-      page_number: p.page_number,
-      type: p.type,
-      layout: p.layout,
-      background: p.background ?? null,
-      blocks: p.blocks,
-      hotspots: p.hotspots,
-    }))
-
-    const { error: insertError } = await supabase.from('pages').insert(pagesPayload)
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
-    }
-  }
-
-  return NextResponse.json({ success: true, count: parsed.data.pages.length })
-}
+// A second page-replacement handler used to live here: `PUT /api/books/[id]`,
+// which deleted every page and then inserted the new set as two unrelated
+// statements — the exact data-loss shape that `supabase/migrations/010` and
+// `PUT /api/books/[id]/pages` exist to prevent. Nothing called it, so it was a
+// loaded gun pointed at whoever wired up saving next. Page replacement has one
+// route now, and that route is transactional.
 
 // ─── DELETE /api/books/[id] — remove book ────────────────────────────────────
 

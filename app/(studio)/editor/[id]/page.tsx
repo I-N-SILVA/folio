@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { EditorClient } from '@/components/studio/EditorClient'
+import { getUserPlan } from '@/lib/entitlements'
 import type { Book } from '@/lib/book-schema'
 
 interface Props {
@@ -33,5 +34,14 @@ export default async function EditorPage({ params }: Props) {
     notFound()
   }
 
-  return <EditorClient book={book as Book} />
+  // Resolved here rather than fetched from the client, so the inspector renders
+  // with the right locks on first paint instead of flickering from unlocked.
+  const plan = await getUserPlan(user.id, user.email)
+
+  return (
+    <EditorClient
+      book={book as Book}
+      entitlements={{ ...plan.entitlements, planName: plan.name, planId: plan.id }}
+    />
+  )
 }

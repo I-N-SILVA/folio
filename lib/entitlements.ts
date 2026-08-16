@@ -47,6 +47,46 @@ export async function getUserPlan(userId: string, email?: string | null): Promis
   return effectivePlan(await getProfile(userId, email))
 }
 
+/**
+ * The entitlements of a book's *owner*, for the public reader and embed.
+ *
+ * Deliberately read-only, unlike `getProfile`: this runs on a public page that
+ * anyone can request, and auto-provisioning a profile row there would turn every
+ * reader hit into a write. A missing row falls back to Free, which is the safe
+ * direction — a paid account always has a row, because that is where the webhook
+ * and the redeem flow put the plan.
+ */
+export async function getOwnerEntitlements(ownerId: string): Promise<Entitlements> {
+  const { data } = await supabaseAdmin
+    .from('profiles')
+    .select('plan, status')
+    .eq('id', ownerId)
+    .maybeSingle()
+
+  if (!data) return getEntitlements(DEFAULT_PLAN)
+  return effectivePlan(data as Pick<ProfileRow, 'plan' | 'status'>).entitlements
+}
+
+/**
+ * What a reader is allowed to see of an edition, given who owns it.
+ *
+ * Both decisions have to be made from the plan rather than from the book row.
+ * `settings.whitelabel` and `settings.gating.enabled` are author-controlled
+ * booleans that the editor writes straight to the database, so treating either
+ * as authoritative meant a free account could switch off the badge — removing
+ * both the upgrade reason and the only growth loop the product has — and could
+ * run a lead gate that only paid plans are sold.
+ */
+export function readerPolicy(
+  settings: { whitelabel?: boolean; gating?: { enabled?: boolean } } | null | undefined,
+  entitlements: Entitlements
+): { showBadge: boolean; gateEnabled: boolean } {
+  return {
+    showBadge: !(entitlements.whiteLabel && settings?.whitelabel === true),
+    gateEnabled: entitlements.leadGating && settings?.gating?.enabled === true,
+  }
+}
+
 export async function getUserEntitlements(userId: string, email?: string | null): Promise<Entitlements> {
   return (await getUserPlan(userId, email)).entitlements
 }

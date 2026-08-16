@@ -5,6 +5,8 @@ import { ViewerChrome } from '@/components/viewer/ViewerChrome'
 import type { Book } from '@/lib/book-schema'
 import { getDemoBook } from '@/data/books'
 import { applyGate } from '@/lib/gating'
+import { getOwnerEntitlements, readerPolicy } from '@/lib/entitlements'
+import { PLANS } from '@/lib/plans'
 
 async function getBook(slug: string): Promise<Book | null> {
   const demo = getDemoBook(slug)
@@ -47,11 +49,18 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
   const book = await getBook(slug)
   if (!book) notFound()
 
-  const { book: visible, lockedCount } = applyGate(book)
+  // Same plan resolution as the canonical reader — an embed is the same content
+  // at a different URL, so it must not be a way around the badge or the gate.
+  const entitlements = getDemoBook(slug)
+    ? PLANS.pro.entitlements
+    : await getOwnerEntitlements(book.owner_id)
+  const { showBadge, gateEnabled } = readerPolicy(book.settings, entitlements)
+
+  const { book: visible, lockedCount } = applyGate(book, gateEnabled)
 
   return (
     <main className="flex h-screen w-full items-center justify-center overflow-hidden bg-[var(--qlico-subtle)]">
-      <ViewerChrome book={visible} lockedCount={lockedCount} embed />
+      <ViewerChrome book={visible} lockedCount={lockedCount} showBadge={showBadge} embed />
     </main>
   )
 }

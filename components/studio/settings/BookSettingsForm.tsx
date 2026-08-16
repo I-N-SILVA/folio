@@ -3,11 +3,48 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
+import Link from 'next/link'
+import { Lock } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
+import { useEntitlements } from '@/components/studio/EntitlementsContext'
 import { Field, FieldGroup, Toggle, inputCls, selectCls } from './shared'
+
+/** A control the current plan doesn't include — shown, disabled, with the way out. */
+function LockedFeature({
+  label,
+  hint,
+  planName,
+}: {
+  label: string
+  hint?: string
+  planName: string
+}) {
+  return (
+    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
+      <div className="flex items-start gap-2">
+        <Lock size={13} className="mt-0.5 shrink-0 text-neutral-500" />
+        <div className="min-w-0">
+          <p className="text-sm text-neutral-400">{label}</p>
+          {hint && <p className="mt-1 text-[11px] leading-4 text-neutral-500">{hint}</p>}
+          <p className="mt-2 text-[11px] leading-4 text-neutral-500">
+            Not included in {planName}.{' '}
+            <Link
+              href="/account"
+              target="_blank"
+              className="font-semibold text-[var(--accent-vivid)] hover:underline"
+            >
+              See plans
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function BookSettingsForm({ book }: { book: any }) {
   const { updateSettings, updateTheme } = useEditorStore()
+  const entitlements = useEntitlements()
   const { register, watch, setValue } = useForm({
     defaultValues: {
       password: book.settings?.password ?? '',
@@ -85,21 +122,40 @@ export function BookSettingsForm({ book }: { book: any }) {
           checked={watch('unlisted')}
           onChange={(next) => setValue('unlisted', next, { shouldDirty: true })}
         />
-        <Toggle
-          label="Remove “Made with QLICO” branding"
-          checked={watch('whitelabel')}
-          onChange={(next) => setValue('whitelabel', next, { shouldDirty: true })}
-        />
+        {/* Both of the controls below are plan features, and the reader resolves
+            them from the plan rather than from what gets written here. Locking
+            them in the UI is so the author finds out now instead of wondering
+            why a switched-on gate never appears. */}
+        {entitlements.whiteLabel ? (
+          <Toggle
+            label="Remove the “Powered by QLICO” badge"
+            checked={watch('whitelabel')}
+            onChange={(next) => setValue('whitelabel', next, { shouldDirty: true })}
+          />
+        ) : (
+          <LockedFeature
+            label="Remove the “Powered by QLICO” badge"
+            planName={entitlements.planName}
+          />
+        )}
       </FieldGroup>
 
-      <FieldGroup title="Lead gating">
-        <Toggle
-          label="Ask for an email to keep reading"
-          checked={watch('gatingEnabled')}
-          onChange={(next) => setValue('gatingEnabled', next, { shouldDirty: true })}
-        />
+      <FieldGroup title="Email capture">
+        {entitlements.leadGating ? (
+          <Toggle
+            label="Ask for an email to keep reading"
+            checked={watch('gatingEnabled')}
+            onChange={(next) => setValue('gatingEnabled', next, { shouldDirty: true })}
+          />
+        ) : (
+          <LockedFeature
+            label="Ask for an email to keep reading"
+            hint="Readers give you their address to unlock the rest of the edition. Captured addresses land in Insights."
+            planName={entitlements.planName}
+          />
+        )}
 
-        {watch('gatingEnabled') && (
+        {entitlements.leadGating && watch('gatingEnabled') && (
           <div className="space-y-3 border-l border-neutral-800 pl-4">
             <Field
               label="Gate at page"

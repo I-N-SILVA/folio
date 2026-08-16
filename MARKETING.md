@@ -40,7 +40,8 @@ app stores) and `APPSUMO_LAUNCH.md` (lifetime-deal GTM). Voice: see `BRAND.md`.
 3. **Reader intelligence** — opens, dwell time, completion, hotspot clicks.
 4. **PDF → experience** — import an existing PDF and ship the same afternoon.
 5. **Elegant embeds** — one line into any landing page, store, or CMS.
-6. **Brand control** — themes, custom domains, and no watermark on paid plans.
+6. **Brand control** — themes, fonts, and no QLICO badge on paid plans. (Custom
+   domains are roadmap, not shipped — don't put them in copy.)
 
 ## 5. Product Hunt launch post
 

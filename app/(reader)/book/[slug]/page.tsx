@@ -5,6 +5,8 @@ import { ViewerChrome } from '@/components/viewer/ViewerChrome'
 import type { Book } from '@/lib/book-schema'
 import { getDemoBook } from '@/data/books'
 import { applyGate } from '@/lib/gating'
+import { getOwnerEntitlements, readerPolicy } from '@/lib/entitlements'
+import { PLANS } from '@/lib/plans'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -95,16 +97,24 @@ export default async function BookPage({ params }: Props) {
   const cover = book.pages?.[0]?.background?.color || book.theme?.background || '#f5f5f7'
   const tint = /^#[0-9a-f]{6}$/i.test(cover) ? `${cover}38` : 'rgba(0,0,0,0.04)'
 
+  // Both the badge and the gate are plan decisions, resolved here against the
+  // owner's plan rather than trusted from the book row the author controls.
+  // The bundled demos have no real owner row, so they run on Pro.
+  const entitlements = getDemoBook(slug)
+    ? PLANS.pro.entitlements
+    : await getOwnerEntitlements(book.owner_id)
+  const { showBadge, gateEnabled } = readerPolicy(book.settings, entitlements)
+
   // Withhold gated pages here rather than blurring them in the browser: this
   // response is what a reader can read, view-source included.
-  const { book: visible, lockedCount } = applyGate(book)
+  const { book: visible, lockedCount } = applyGate(book, gateEnabled)
 
   return (
     <main
       className="qlico-grain flex min-h-screen flex-col items-center justify-center p-6 sm:p-12 lg:p-16"
       style={{ background: `radial-gradient(circle at 50% -8%, ${tint} 0%, #f5f5f7 55%, #ececef 100%)` }}
     >
-      <ViewerChrome book={visible} lockedCount={lockedCount} />
+      <ViewerChrome book={visible} lockedCount={lockedCount} showBadge={showBadge} />
     </main>
   )
 }

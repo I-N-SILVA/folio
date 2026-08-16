@@ -78,11 +78,20 @@ export function ViewerChrome({
   book,
   embed = false,
   lockedCount = 0,
+  showBadge = true,
 }: {
   book: Book
   embed?: boolean
   /** Pages the server withheld behind the lead gate. */
   lockedCount?: number
+  /**
+   * Whether to show the "Powered by QLICO" badge. Decided on the server from the
+   * *owner's plan* — this used to read `book.settings.whitelabel` directly, which
+   * is a toggle the editor offers every account, so any free user could remove it.
+   * Defaults to shown: a caller that forgets to pass it gets the badge, not a
+   * silent free white-label.
+   */
+  showBadge?: boolean
 }) {
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
@@ -285,7 +294,7 @@ export function ViewerChrome({
       </div>
 
       {/* Branding */}
-      {!book.settings?.whitelabel && (
+      {showBadge && (
         <a
           href="https://qlico.app?via=watermark"
           target="_blank"

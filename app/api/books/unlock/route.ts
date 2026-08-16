@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { lockedPages } from '@/lib/gating'
+import { getOwnerEntitlements, readerPolicy } from '@/lib/entitlements'
 import { getDemoBook } from '@/data/books'
 import type { Book } from '@/lib/book-schema'
 
@@ -56,7 +57,15 @@ export async function POST(request: NextRequest) {
   }
 
   const book = data as unknown as Book
-  if (!book.settings?.gating?.enabled) {
+
+  // Lead capture is a paid entitlement, and the toggle that switches it on is
+  // written straight to the book row by the editor. Resolving the owner's plan
+  // here keeps this endpoint consistent with the reader: if the plan doesn't
+  // include gating, the reader served the whole edition and there is nothing
+  // withheld for this request to release.
+  const entitlements = await getOwnerEntitlements(book.owner_id)
+  const { gateEnabled } = readerPolicy(book.settings, entitlements)
+  if (!gateEnabled) {
     return NextResponse.json({ error: 'This edition is not gated.' }, { status: 400 })
   }
 

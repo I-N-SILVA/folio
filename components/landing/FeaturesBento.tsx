@@ -61,7 +61,7 @@ const TILES: Tile[] = [
   { icon: BarChart2, title: 'Reader analytics', desc: 'Opens, dwell time, completion — in your own data layer.', span: 'lg:col-span-1', visual: 'bars' },
   { icon: RefreshCw, title: 'Living editions', desc: 'Bind prices, stock, and dates. Publish once; it stays current.', span: 'lg:col-span-1' },
   { icon: Code2, title: 'One-line embeds', desc: 'Drop a responsive edition into any site, store, or CMS.', span: 'lg:col-span-1' },
-  { icon: Palette, title: 'Made to match', desc: 'Themes, custom domains, and no watermark on paid plans.', span: 'lg:col-span-2' },
+  { icon: Palette, title: 'Made to match', desc: 'Your theme, your fonts, your cover — and no QLICO badge on paid plans.', span: 'lg:col-span-2' },
 ]
 
 export function FeaturesBento() {

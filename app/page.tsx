@@ -6,7 +6,6 @@ import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
 import { FeaturesBento } from '@/components/landing/FeaturesBento'
 import { Statement } from '@/components/landing/Statement'
-import { Stats } from '@/components/landing/Stats'
 import { HowItWorks } from '@/components/landing/HowItWorks'
 import { Examples } from '@/components/landing/Examples'
 import { Pricing } from '@/components/landing/Pricing'
@@ -28,7 +27,7 @@ const JSON_LD = {
   offers: [
     { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
     { '@type': 'Offer', name: 'Pro', price: '19', priceCurrency: 'USD' },
-    { '@type': 'Offer', name: 'Lifetime', price: '199', priceCurrency: 'USD' },
+    { '@type': 'Offer', name: 'Lifetime', price: '59', priceCurrency: 'USD' },
   ],
 }
 
@@ -47,7 +46,6 @@ export default function HomePage() {
           <Hero />
           <FeaturesBento />
           <Statement />
-          <Stats />
           <HowItWorks />
           <Examples />
           <Pricing />
