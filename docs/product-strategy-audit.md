@@ -3,6 +3,29 @@
 Written from the repository at `5a041c9`, August 2026. No product code was changed
 to produce it.
 
+> **Status: P0–P2 of the roadmap in §Prioritised roadmap have since been
+> implemented** (commits `b5149e2`…`01fdde2`). The findings below are preserved as
+> written — they are the reasoning behind those changes, and a description of the
+> product as it was. Where a finding has been addressed, the roadmap table at the
+> end marks it **done** and names what shipped. The strategy sections (positioning,
+> GTM, research plan, experiment backlog) are unchanged and still to be executed;
+> those are decisions and motions, not code.
+>
+> **What was deliberately not done, and why:**
+>
+> - **Real social proof (E10).** Testimonials and customer logos cannot be
+>   invented. The unsourced claims came out; nothing was put in their place.
+> - **Custom domain.** Removed from all copy rather than built — it needs domain
+>   routing, certificate provisioning and a verification flow, which is a P3
+>   project, not a copy fix.
+> - **`/press` and `/create`.** The simplification plan listed both for deletion.
+>   `/press` hosts the brand assets `BRAND.md` §7 documents and a launch needs;
+>   `/create` is a six-line redirect protecting existing bookmarks, which the
+>   audit itself said to remove only "once links have decayed". Both kept.
+> - **Applying the migrations.** `009`, `010` and the new `011` still need to be
+>   run against production Supabase. Nothing in this environment can verify which
+>   migrations a given project has.
+
 **How to read the evidence markers.** Every claim is tagged:
 
 - **[O]** *Observed* — read directly out of the code, with a file reference.
@@ -1141,38 +1164,38 @@ Sequenced by *what unblocks what*, not by size. Effort is one engineer.
 These are the changes without which measurement lies, the paywall is fiction, and the
 marketing is unsafe.
 
-| # | Change | Files | Why now | Effort |
+| # | Change | Status | Why now | Effort |
 | --- | --- | --- | --- | --- |
-| 1 | **Remove or correct the unsupportable claims** — "10×", "your own infrastructure"/"your own Supabase project", custom domain in all three places | `Stats.tsx`, `Faq.tsx`, `Pricing.tsx`, `account/page.tsx`, `FeaturesBento.tsx` | Refund and trust risk; costs an hour | S |
-| 2 | **Fix the Lifetime dead end** | `Pricing.tsx` | Every visitor who picks column 3 hits a wall | S |
-| 3 | **Fix page delete + reorder persistence** — route editor autosave through `PUT /api/books/[id]/pages`; apply migrations `009` and `010` | `EditorClient.tsx`, Supabase | Silent data divergence in the core loop; the fix is already written and unused | M |
-| 4 | **Fix the watermark to be plan-driven** | `ViewerChrome.tsx`, `BookSettingsForm.tsx`, new server check | Restores both the upgrade reason and the growth loop | S |
-| 5 | **Instrument the product funnel** (§8.2) | `lib/tracking.ts` + call sites | Every decision below needs this data | M |
+| 1 | **Remove or correct the unsupportable claims** — "10×", "your own infrastructure"/"your own Supabase project", custom domain in all three places | **Done** — `Stats` section deleted; FAQ answer rewritten as an ownership/export promise; custom domain out of `Pricing`, `Faq`, `FeaturesBento`, `account` and `MARKETING.md` | Refund and trust risk | S |
+| 2 | **Fix the Lifetime dead end** | **Done** — the column now says it is an AppSumo lifetime deal and its CTA is "Redeem your code" | Every visitor who picks column 3 hit a wall | S |
+| 3 | **Fix page delete + reorder persistence** | **Done** — autosave routes through `PUT /api/books/[id]/pages`; the duplicate non-atomic `PUT /api/books/[id]` was deleted. *Migrations `009`/`010` still need applying* | Silent data divergence in the core loop | M |
+| 4 | **Fix the watermark to be plan-driven** | **Done** — `readerPolicy()` decides the badge and the gate from the owner's plan in the reader, the embed and `/api/books/unlock`; the editor toggle locks without the entitlement | Restores both the upgrade reason and the growth loop | S |
+| 5 | **Instrument the product funnel** (§8.2) | **Done** — `lib/product-analytics.ts`; `signup_completed` carried across the auth callback by `SignInTracker` | Every decision below needs this data | M |
 
 ## P1 — Activation (weeks 2–5). The user has to reach the aha.
 
-| # | Change | Why | Effort |
+| # | Change | Status | Effort |
 | --- | --- | --- | --- |
-| 6 | **Share modal on first publish** (E2) | Closes the largest post-signup leak | S |
-| 7 | **Strip the import form; derive title and slug** (E5) | Cuts a form out of the activation path | S |
-| 8 | **Insights in the nav + read counts on cards** (E6) | Makes the retention asset visible | S |
-| 9 | **Analytics empty state with a share action** | Fixes the most common first analytics view | S |
-| 10 | **Re-draw and enforce the plan matrix** (§7.5, E3) | Makes Free viable *and* Pro worth buying | M |
-| 11 | **Onboarding → publish + share** (E12) | Aligns the checklist with the activation event | S |
-| 12 | **Import modal onto the shared `Modal`; dark-mode it** | Focus trap + visual coherence in the highest-anxiety flow | S |
-| 13 | **Rename everything to *edition*** (§4.9) | Cheap coherence | S |
+| 6 | **Share modal on first publish** (E2) | **Done** — publish saves, waits for the save to land, then opens the share dialog | S |
+| 7 | **Strip the import form; derive title and slug** (E5) | **Done** — both derived from the filename, editable behind a disclosure; a taken slug retries itself with a suffix | S |
+| 8 | **Insights in the nav + read counts on cards** (E6) | **Done** — new `/insights` across all editions; cards show readers, completion and emails | S |
+| 9 | **Analytics empty state with a share action** | **Done** — hands over the live link with a copy button, or points a draft at the editor | S |
+| 10 | **Re-draw and enforce the plan matrix** (§7.5, E3) | **Done** — matrix re-drawn as proposed and enforced server-side; the account page lists only what is checked | M |
+| 11 | **Onboarding → publish + share** (E12) | **Done** — create → publish → send it to one person, ending at the activation event | S |
+| 12 | **Import modal onto the shared `Modal`; dark-mode it** | **Done** — rebuilt on the primitive (focus trap) with theme tokens | S |
+| 13 | **Rename everything to *edition*** (§4.9) | **Done** — table and public `/book/` URL unchanged | S |
 
 ## P2 — Retention and revenue (weeks 6–12)
 
-| # | Change | Why | Effort |
+| # | Change | Status | Effort |
 | --- | --- | --- | --- |
-| 14 | **Try-before-signup on the landing page** (E1) | Highest-leverage single change; needs P0/P1 instrumentation to prove | L |
-| 15 | **Lead notification + weekly digest email** (E7) | The only return trigger the product would have | M |
-| 16 | **Move CSV export server-side; stop returning `raw` events** | Breaks at scale, and it will break exactly when an edition succeeds | M |
-| 17 | **Real social proof; delete `Stats`** (E10) | Trust ceiling on the landing page | M |
-| 18 | **Simplification plan** (Phase 6) — drop the Images path, dead schema fields, `/press`, `/create`, card action overload | Less surface to maintain and explain | M |
-| 19 | **Stripe dunning limit on `past_due`** (`HANDOVER.md` §3.1) | Currently grants Pro indefinitely | S |
-| 20 | **Hotspot discoverability + keyboard path** | The flagship feature is mouse-only and hidden | M |
+| 14 | **Try-before-signup on the landing page** (E1) | **Done** — drop a PDF, flip it in the real reader, sign in only to keep it; the file crosses the magic link in IndexedDB | L |
+| 15 | **Lead notification** (E7) | **Done** — optional transactional email on gate unlock (`lib/email.ts`), keyless installs unaffected. *Weekly digest not built* | M |
+| 16 | **Move CSV export server-side; stop returning `raw` events** | **Done** — `/api/analytics/[slug]/export`, row-capped, and where `csvExport` is enforced | M |
+| 17 | **Real social proof; delete `Stats`** (E10) | **Partial** — `Stats` deleted. Social proof needs real customers | M |
+| 18 | **Simplification plan** (Phase 6) | **Mostly done** — image path, dead schema fields, free-text fonts and the card's action overload all gone. `/press` and `/create` kept, see the note at the top | M |
+| 19 | **Stripe dunning limit on `past_due`** | **Done** — migration `011` records the dunning start; `effectivePlan` expires it; the webhook also drops out-of-order events | S |
+| 20 | **Hotspot discoverability + keyboard path** | **Done** — on-canvas prompt, Enter to place, arrows to nudge | M |
 
 ## P3 — Only after the above earns it
 
