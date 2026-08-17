@@ -296,7 +296,7 @@ export function ViewerChrome({
       {/* Branding */}
       {showBadge && (
         <a
-          href="https://qlico.app?via=watermark"
+          href="https://qlico.app/?via=badge#try"
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"

@@ -97,9 +97,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       body += csvRow([email, e.created_at, e.page_number ?? ''])
     }
   } else {
-    body = csvRow(['id', 'book_id', 'session_id', 'event_type', 'page_number', 'payload', 'created_at'])
+    body = csvRow([
+      'id',
+      'book_id',
+      'session_id',
+      'event_type',
+      'page_number',
+      'payload',
+      'created_at',
+    ])
     for (const e of events) {
-      body += csvRow([e.id, e.book_id, e.session_id, e.event_type, e.page_number ?? '', e.payload, e.created_at])
+      body += csvRow([
+        e.id,
+        e.book_id,
+        e.session_id,
+        e.event_type,
+        e.page_number ?? '',
+        e.payload,
+        e.created_at,
+      ])
     }
   }
 

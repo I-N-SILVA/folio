@@ -108,9 +108,7 @@ export async function getEditionEngagement(
     byBook.set(bookId, {
       bookId,
       readers: readerSessions.size,
-      completionRate: readerSessions.size
-        ? Math.round((completed / readerSessions.size) * 100)
-        : 0,
+      completionRate: readerSessions.size ? Math.round((completed / readerSessions.size) * 100) : 0,
       leads: bookLeads,
       lastReadAt: lastRead.get(bookId) ?? null,
     })

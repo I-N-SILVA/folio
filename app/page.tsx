@@ -5,6 +5,7 @@ import { LazyMotion, domAnimation } from 'framer-motion'
 import { ScrollProgress } from '@/components/landing/ScrollProgress'
 import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
+import { TryItNow } from '@/components/landing/TryItNow'
 import { FeaturesBento } from '@/components/landing/FeaturesBento'
 import { Statement } from '@/components/landing/Statement'
 import { HowItWorks } from '@/components/landing/HowItWorks'
@@ -52,6 +53,7 @@ export default function HomePage() {
 
         <main>
           <Hero />
+          <TryItNow />
           <FeaturesBento />
           <Statement />
           <HowItWorks />

@@ -96,10 +96,18 @@ export default async function InsightsPage() {
                 </caption>
                 <thead>
                   <tr className="border-b border-[var(--qlico-border)] text-left text-xs font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
-                    <th scope="col" className="px-6 py-4">Edition</th>
-                    <th scope="col" className="px-4 py-4 text-right">Readers</th>
-                    <th scope="col" className="px-4 py-4 text-right">Finished</th>
-                    <th scope="col" className="px-4 py-4 text-right">Emails</th>
+                    <th scope="col" className="px-6 py-4">
+                      Edition
+                    </th>
+                    <th scope="col" className="px-4 py-4 text-right">
+                      Readers
+                    </th>
+                    <th scope="col" className="px-4 py-4 text-right">
+                      Finished
+                    </th>
+                    <th scope="col" className="px-4 py-4 text-right">
+                      Emails
+                    </th>
                     <th scope="col" className="px-6 py-4 text-right">
                       <span className="sr-only">Open</span>
                     </th>
@@ -145,7 +153,10 @@ export default async function InsightsPage() {
         {published.length > 0 && engagement.totalReaders === 0 && (
           <p className="mt-6 text-center text-sm leading-6 text-[var(--qlico-muted)]">
             No reads yet. An edition needs one person to open it before any of this moves —{' '}
-            <Link href="/dashboard" className="font-semibold text-[var(--accent-fg)] hover:underline">
+            <Link
+              href="/dashboard"
+              className="font-semibold text-[var(--accent-fg)] hover:underline"
+            >
               copy a link and send it
             </Link>
             .

@@ -131,11 +131,11 @@ export function Hero() {
           className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           <MagneticButton
-            href="/login"
-            onClick={() => trackProduct('cta_click', { cta: 'start_free', location: 'hero' })}
+            href="#try"
+            onClick={() => trackProduct('cta_click', { cta: 'drop_pdf', location: 'hero' })}
             className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(60,35,132,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
           >
-            Start for free
+            Drop in a PDF
           </MagneticButton>
           <Link
             href="/book/demo"

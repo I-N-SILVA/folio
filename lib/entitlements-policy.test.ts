@@ -38,11 +38,15 @@ describe('readerPolicy — the lead gate', () => {
   })
 
   it('gates when the plan includes it and the author switched it on', () => {
-    expect(readerPolicy({ gating: { enabled: true } }, PLANS.pro.entitlements).gateEnabled).toBe(true)
+    expect(readerPolicy({ gating: { enabled: true } }, PLANS.pro.entitlements).gateEnabled).toBe(
+      true
+    )
   })
 
   it('does not gate when the author left it off, on any plan', () => {
-    expect(readerPolicy({ gating: { enabled: false } }, PLANS.pro.entitlements).gateEnabled).toBe(false)
+    expect(readerPolicy({ gating: { enabled: false } }, PLANS.pro.entitlements).gateEnabled).toBe(
+      false
+    )
     expect(readerPolicy({}, PLANS.pro.entitlements).gateEnabled).toBe(false)
   })
 })
