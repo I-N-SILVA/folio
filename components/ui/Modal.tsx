@@ -30,9 +30,11 @@ function subscribeToNothing() {
 
 interface ModalProps {
   onClose: () => void
-  /** Accessible name. Rendered as the visible heading unless `hideTitle`. */
+  /**
+   * Accessible name for the dialog. Rendered screen-reader-only — panels supply
+   * their own visible heading, styled to their own surface.
+   */
   title: string
-  hideTitle?: boolean
   description?: string
   children: React.ReactNode
   /** Extra classes for the dialog panel. */
@@ -53,7 +55,6 @@ interface ModalProps {
 export function Modal({
   onClose,
   title,
-  hideTitle = false,
   description,
   children,
   className,
@@ -175,8 +176,15 @@ export function Modal({
             <X size={16} />
           </button>
         )}
-        <h2 id={titleId} className={hideTitle ? 'sr-only' : undefined}>
-          {hideTitle ? title : null}
+        {/* Always rendered, always the accessible name. This used to be empty
+            whenever `hideTitle` was false — the title text was only written into
+            it in the hidden case — so every dialog that supplied its own visible
+            heading pointed `aria-labelledby` at an empty element and announced
+            itself as an unnamed dialog. Panels render their own heading for the
+            eye; this one is for the screen reader, so it stays hidden either
+            way. */}
+        <h2 id={titleId} className="sr-only">
+          {title}
         </h2>
         {description && (
           <p id={descId} className="sr-only">
@@ -221,7 +229,6 @@ export function ConfirmDialog({
     <Modal
       onClose={busy ? () => {} : onCancel}
       title={title}
-      hideTitle
       z={Z.confirm}
       hideCloseButton
       dismissOnBackdrop={!busy}

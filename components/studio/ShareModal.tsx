@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { Check, Copy, ExternalLink } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
+import { trackProduct } from '@/lib/product-analytics'
 
 interface ShareModalProps {
   slug: string
@@ -36,8 +37,8 @@ export function ShareModal({ slug, published, onClose }: ShareModalProps) {
         </p>
       )}
 
-      <CopyField label="Direct link" value={url} />
-      <CopyField label="Embed code" value={embedCode} multiline />
+      <CopyField label="Direct link" value={url} kind="link" />
+      <CopyField label="Embed code" value={embedCode} multiline kind="embed" />
 
       {published && (
         <a
@@ -58,10 +59,13 @@ function CopyField({
   label,
   value,
   multiline = false,
+  kind,
 }: {
   label: string
   value: string
   multiline?: boolean
+  /** Which artifact was taken — the step that turns a publish into a reader. */
+  kind: 'link' | 'embed'
 }) {
   const [state, setState] = useState<'idle' | 'copied' | 'manual'>('idle')
   const fieldRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
@@ -73,6 +77,7 @@ function CopyField({
     try {
       if (!navigator.clipboard) throw new Error('unavailable')
       await navigator.clipboard.writeText(value)
+      trackProduct('share_link_copied', { kind })
       setState('copied')
       setTimeout(() => setState('idle'), 2000)
     } catch {

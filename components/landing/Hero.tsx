@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRef } from 'react'
 import { m, useReducedMotion, useScroll, useTransform } from 'framer-motion'
-import { track } from '@vercel/analytics'
+import { trackProduct } from '@/lib/product-analytics'
 import { MagneticButton } from './MagneticButton'
 
 const HeroShowcase = dynamic(() => import('./HeroShowcase'), {
@@ -132,14 +132,14 @@ export function Hero() {
         >
           <MagneticButton
             href="/login"
-            onClick={() => track('cta_click', { cta: 'start_free', location: 'hero' })}
+            onClick={() => trackProduct('cta_click', { cta: 'start_free', location: 'hero' })}
             className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(60,35,132,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
           >
             Start for free
           </MagneticButton>
           <Link
             href="/book/demo"
-            onClick={() => track('cta_click', { cta: 'view_demo', location: 'hero' })}
+            onClick={() => trackProduct('demo_opened', { edition: 'demo', location: 'hero' })}
             className="text-[15px] font-medium text-[var(--accent-fg)] transition hover:underline"
           >
             View the demo →

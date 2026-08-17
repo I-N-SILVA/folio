@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
 import { ArrowLeft, Globe, EyeOff, Loader2, Check, Eye, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { track } from '@vercel/analytics'
+import { trackProduct } from '@/lib/product-analytics'
 import { useEditorStore } from '@/lib/editor-store'
 import { PageListSidebar } from '@/components/studio/PageListSidebar'
 import { EditorCanvas } from '@/components/studio/EditorCanvas'
@@ -254,7 +254,7 @@ export function EditorClient({ book, entitlements }: Props) {
       return
     }
 
-    track('edition_published', { pages: storeBook.pages?.length ?? 0 })
+    trackProduct('edition_published', { pages: storeBook.pages?.length ?? 0 })
 
     // Publishing used to end in a toast, and that was the whole moment. But an
     // edition nobody has the link to produces nothing — no reader, no analytics,

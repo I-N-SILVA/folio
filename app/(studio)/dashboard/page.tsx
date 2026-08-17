@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { Sparkles, BookOpen } from 'lucide-react'
+import { SignInTracker } from '@/components/studio/SignInTracker'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
 import { CreateBookLauncher } from '@/components/studio/CreateBookLauncher'
@@ -57,6 +59,10 @@ export default async function DashboardPage() {
   return (
     <main className="qlico-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--qlico-ink)] sm:px-8">
       <CreateBookLauncher />
+      {/* useSearchParams needs a boundary, or the whole route opts into CSR. */}
+      <Suspense fallback={null}>
+        <SignInTracker />
+      </Suspense>
       <div className="mx-auto max-w-6xl">
         <StudioNav current="library" />
         <section className="mb-8 overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/76 p-6 shadow-[var(--qlico-shadow)] backdrop-blur sm:p-8">

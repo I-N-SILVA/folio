@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic'
 const ImportPDFModal = dynamic(() => import('./ImportPDFModal').then(m => m.ImportPDFModal), { ssr: false })
 import { createBrowserSupabase } from '@/lib/supabase'
 import { Modal } from '@/components/ui/Modal'
+import { trackProduct } from '@/lib/product-analytics'
 import { MAX_ASSET_BYTES, humanBytes, isAllowedAssetType } from '@/lib/uploads'
 
 interface Props {
@@ -49,6 +50,22 @@ export function CreateBookModal({ onClose }: Props) {
   // it over — no random suffix, so the shared link reads as something a person
   // wrote; a collision comes back from the server as a 409 to correct.
   const effectiveSlug = slugifyTitle(slugEdited ? slug : newTitle.trim())
+
+  useEffect(() => {
+    trackProduct('edition_create_started')
+  }, [])
+
+  // The edition cap is still the only place in the product that asks for money,
+  // so how often it is reached — and on which plan — is the whole monetisation
+  // funnel's top of pipe. Fired from an effect rather than at the top of the
+  // wall's render, which would emit again on every re-render behind it.
+  useEffect(() => {
+    if (!limitHit) return
+    trackProduct('upgrade_viewed', {
+      trigger: 'edition_limit',
+      plan: quota?.planName ?? 'unknown',
+    })
+  }, [limitHit, quota?.planName])
 
   // Fetch the user's quota so we can pre-empt creation when they're capped.
   useEffect(() => {
@@ -240,7 +257,7 @@ export function CreateBookModal({ onClose }: Props) {
     </Modal>
   )
 
-  // Upgrade wall — shown when the user is at their plan's book limit.
+  // Upgrade wall — shown when the user is at their plan's edition limit.
   if (limitHit) {
     return shell(
       <div className="p-8 text-center">

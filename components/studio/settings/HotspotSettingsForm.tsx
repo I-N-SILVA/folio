@@ -75,7 +75,10 @@ export function HotspotSettingsForm({
         </button>
       </div>
 
-      <Field label="Position (read-only)">
+      <Field
+        label="Position"
+        hint="Drag the pin on the page, or nudge it with the arrow keys — hold Shift for bigger steps."
+      >
         <div className="flex gap-2">
           <div className={twMerge(inputCls, 'flex-1 text-neutral-500 cursor-default')}>
             X: {hotspot.x.toFixed(1)}%

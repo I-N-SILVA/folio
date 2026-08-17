@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { LazyMotion, domAnimation } from 'framer-motion'
 import { ScrollProgress } from '@/components/landing/ScrollProgress'
 import { Nav } from '@/components/landing/Nav'
@@ -12,6 +13,7 @@ import { Pricing } from '@/components/landing/Pricing'
 import { Faq } from '@/components/landing/Faq'
 import { ClosingCta } from '@/components/landing/ClosingCta'
 import { Footer } from '@/components/landing/Footer'
+import { trackProduct } from '@/lib/product-analytics'
 
 // Schema.org markup so search results show QLICO as an application with
 // pricing. Rendered into the SSR HTML below.
@@ -32,6 +34,12 @@ const JSON_LD = {
 }
 
 export default function HomePage() {
+  // The denominator for every rate on the landing page. Without it, "signups
+  // per week" is a number with nothing to divide by.
+  useEffect(() => {
+    trackProduct('landing_viewed', { referrer: document.referrer || 'direct' })
+  }, [])
+
   return (
     <LazyMotion features={domAnimation}>
       <div className="min-h-screen bg-[var(--background)] text-[var(--qlico-ink)]">

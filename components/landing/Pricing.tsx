@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import { track } from '@vercel/analytics'
+import { trackProduct } from '@/lib/product-analytics'
 import Reveal from './Reveal'
 
 const PLANS: {
@@ -96,7 +96,7 @@ export function Pricing() {
                 </ul>
                 <Link
                   href={href}
-                  onClick={() => track('cta_click', { cta: name.toLowerCase(), location: 'pricing' })}
+                  onClick={() => trackProduct('cta_click', { cta: name.toLowerCase(), location: 'pricing' })}
                   className={`mt-8 rounded-full px-5 py-3 text-center text-[15px] font-semibold transition ${
                     featured
                       ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'

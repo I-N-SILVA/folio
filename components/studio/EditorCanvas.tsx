@@ -36,6 +36,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
+import { trackProduct } from '@/lib/product-analytics'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import { Modal } from '@/components/ui/Modal'
 import type { Block } from '@/lib/book-schema'
@@ -267,6 +268,7 @@ export function EditorCanvas() {
     selectBlock,
     addBlock,
     addHotspot,
+    updateHotspot,
   } = useEditorStore()
 
   const [showBlockPicker, setShowBlockPicker] = useState(false)
@@ -280,24 +282,84 @@ export function EditorCanvas() {
   const nextStep = ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, (zoomIndex === -1 ? 2 : zoomIndex) + 1)]
   const pageWidth = Math.round(PAGE_DESIGN_WIDTH * zoom)
 
+  /**
+   * Place a hotspot at a percentage position on the page.
+   *
+   * Split out of the click handler so the keyboard has a way in. Hotspots are
+   * the interactive feature the product leads with, and creating one used to be
+   * possible only by arming a toggle and then clicking an x/y coordinate — no
+   * keyboard path existed at all.
+   */
+  const placeHotspot = useCallback(
+    (x: number, y: number) => {
+      if (!currentPage) return
+      const isFirst = (currentPage.hotspots?.length ?? 0) === 0
+      addHotspot(currentPage.id, {
+        id: crypto.randomUUID(),
+        x: Math.min(100, Math.max(0, Math.round(x * 10) / 10)),
+        y: Math.min(100, Math.max(0, Math.round(y * 10) / 10)),
+        label: 'New hotspot',
+        icon: 'Info',
+        action: 'modal',
+        modal: { title: 'New hotspot', body: '' },
+      })
+      // Enrichment is the leading indicator of upgrade intent — an author who
+      // adds a hotspot is using the edition as something other than a PDF.
+      if (isFirst) trackProduct('edition_enriched', { kind: 'hotspot' })
+    },
+    [currentPage, addHotspot]
+  )
+
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!hotspotMode || !currentPage || !canvasRef.current) return
       const rect = canvasRef.current.getBoundingClientRect()
       const x = ((e.clientX - rect.left) / rect.width) * 100
       const y = ((e.clientY - rect.top) / rect.height) * 100
-      addHotspot(currentPage.id, {
-        id: crypto.randomUUID(),
-        x: Math.round(x * 10) / 10,
-        y: Math.round(y * 10) / 10,
-        label: 'New Hotspot',
-        icon: 'Info',
-        action: 'modal',
-        modal: { title: 'New Hotspot', body: '' }
-      })
-
+      placeHotspot(x, y)
     },
-    [hotspotMode, currentPage, addHotspot]
+    [hotspotMode, currentPage, placeHotspot]
+  )
+
+  /**
+   * Keyboard equivalent of clicking the page: with hotspot mode armed, Enter or
+   * Space drops one in the middle of the page. Arrow keys then nudge whichever
+   * hotspot is selected — 1% a press, 10% with Shift — which is also the only
+   * way to position one precisely, since the inspector shows X/Y read-only.
+   */
+  const handleCanvasKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!currentPage) return
+
+      if (hotspotMode && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault()
+        placeHotspot(50, 50)
+        return
+      }
+
+      const nudge = e.shiftKey ? 10 : 1
+      const delta =
+        e.key === 'ArrowLeft'
+          ? { x: -nudge, y: 0 }
+          : e.key === 'ArrowRight'
+            ? { x: nudge, y: 0 }
+            : e.key === 'ArrowUp'
+              ? { x: 0, y: -nudge }
+              : e.key === 'ArrowDown'
+                ? { x: 0, y: nudge }
+                : null
+
+      if (!delta || !selectedHotspotId) return
+      const hotspot = currentPage.hotspots?.find((h) => h.id === selectedHotspotId)
+      if (!hotspot) return
+
+      e.preventDefault()
+      updateHotspot(currentPage.id, selectedHotspotId, {
+        x: Math.min(100, Math.max(0, Math.round((hotspot.x + delta.x) * 10) / 10)),
+        y: Math.min(100, Math.max(0, Math.round((hotspot.y + delta.y) * 10) / 10)),
+      })
+    },
+    [hotspotMode, currentPage, selectedHotspotId, placeHotspot, updateHotspot]
   )
 
   const handleBlockPick = useCallback(
@@ -390,7 +452,7 @@ export function EditorCanvas() {
           )}
         >
           <Crosshair size={13} />
-          {hotspotMode ? 'Placing hotspot' : 'Hotspot'}
+          {hotspotMode ? 'Click the page to place' : 'Add hotspot'}
         </button>
       </div>
 
@@ -405,10 +467,33 @@ export function EditorCanvas() {
             'relative mx-auto overflow-hidden rounded-[3px] bg-white',
             'shadow-[0_1px_2px_rgba(0,0,0,0.35),0_12px_28px_-8px_rgba(0,0,0,0.55),0_40px_80px_-32px_rgba(0,0,0,0.7)]',
             'ring-1 ring-black/40',
-            hotspotMode && 'cursor-crosshair'
+            hotspotMode && 'cursor-crosshair',
+            hotspotMode && 'ring-2 ring-amber-400/70 focus:outline-none focus-visible:ring-4'
           )}
           onClick={handleCanvasClick}
+          onKeyDown={handleCanvasKeyDown}
+          // Focusable only while placing, so tabbing through a normal editing
+          // session doesn't stop on the page itself. With it armed, the page is
+          // the control: Enter drops a hotspot, arrows move the selected one.
+          tabIndex={hotspotMode || selectedHotspotId ? 0 : -1}
+          role={hotspotMode ? 'application' : undefined}
+          aria-label={
+            hotspotMode
+              ? 'Page canvas. Press Enter to place a hotspot in the centre, then use the arrow keys to move it.'
+              : undefined
+          }
         >
+          {/* Placing a hotspot required knowing that the toolbar toggle armed a
+              mode, and that the mode wanted a click on the page. Neither was
+              stated anywhere, for the feature the product leads with. */}
+          {hotspotMode && (
+            <div className="pointer-events-none absolute inset-x-0 top-4 z-30 flex justify-center">
+              <p className="rounded-full bg-amber-400 px-3 py-1.5 text-[11px] font-semibold text-amber-950 shadow-lg">
+                Click anywhere on the page to pin a hotspot — or press Enter
+              </p>
+            </div>
+          )}
+
           {/* A blank page offered no hint about what to do next — the only
               affordance was a button in the footer, below the fold of the
               page itself. */}
