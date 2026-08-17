@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { readerPolicy } from './entitlements'
-import { PLANS, clampAnalyticsDays } from './plans'
+import { effectivePlan, readerPolicy } from './entitlements'
+import { PLANS, clampAnalyticsDays, dunningExpired } from './plans'
 
 // These cover the enforcement that the plan catalog claims and the product used
 // not to do: seven of its eight entitlements were checked nowhere, so the
@@ -90,5 +90,57 @@ describe('plan catalog', () => {
     // One edition meant a single abandoned import — which strands a book
     // holding a slug and a quota slot — bricked the account.
     expect(PLANS.free.entitlements.maxBooks).toBeGreaterThan(1)
+  })
+})
+
+describe('dunningExpired', () => {
+  const DAY = 24 * 60 * 60 * 1000
+  const now = Date.parse('2026-06-01T00:00:00Z')
+
+  it('is false for a healthy subscription', () => {
+    expect(dunningExpired(null, now)).toBe(false)
+    expect(dunningExpired(undefined, now)).toBe(false)
+  })
+
+  it('holds entitlements through the grace period', () => {
+    // A card that fails on a Friday should not take the product away.
+    expect(dunningExpired(new Date(now - 1 * DAY).toISOString(), now)).toBe(false)
+    expect(dunningExpired(new Date(now - 13 * DAY).toISOString(), now)).toBe(false)
+  })
+
+  it('expires once the grace period has passed', () => {
+    // The regression: past_due counted as active with no expiry, so a
+    // subscription whose payments kept failing held Pro indefinitely whenever
+    // the final cancellation event was missed or arrived out of order.
+    expect(dunningExpired(new Date(now - 15 * DAY).toISOString(), now)).toBe(true)
+    expect(dunningExpired(new Date(now - 400 * DAY).toISOString(), now)).toBe(true)
+  })
+
+  it('ignores an unparseable timestamp rather than revoking access', () => {
+    expect(dunningExpired('not a date', now)).toBe(false)
+  })
+})
+
+describe('effectivePlan', () => {
+  const longAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+
+  it('honours an active plan', () => {
+    expect(effectivePlan({ plan: 'pro', status: 'active' }).id).toBe('pro')
+  })
+
+  it('reverts a non-active account to free', () => {
+    expect(effectivePlan({ plan: 'pro', status: 'refunded' }).id).toBe('free')
+  })
+
+  it('reverts a subscription stuck past_due beyond the grace period', () => {
+    expect(
+      effectivePlan({ plan: 'pro', status: 'active', stripe_past_due_since: longAgo }).id
+    ).toBe('free')
+  })
+
+  it('leaves lifetime plans alone — they were never paid by subscription', () => {
+    expect(
+      effectivePlan({ plan: 'ltd_tier2', status: 'active', stripe_past_due_since: longAgo }).id
+    ).toBe('ltd_tier2')
   })
 })

@@ -1,6 +1,13 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase'
-import { DEFAULT_PLAN, getEntitlements, getPlan, type Entitlements, type Plan } from '@/lib/plans'
+import {
+  DEFAULT_PLAN,
+  dunningExpired,
+  getEntitlements,
+  getPlan,
+  type Entitlements,
+  type Plan,
+} from '@/lib/plans'
 
 export type ProfileRow = {
   id: string
@@ -9,6 +16,8 @@ export type ProfileRow = {
   status: string
   appsumo_license_key: string | null
   appsumo_tier: number | null
+  /** When the current Stripe dunning run began; null when healthy. */
+  stripe_past_due_since?: string | null
 }
 
 /**
@@ -17,9 +26,11 @@ export type ProfileRow = {
  * not yet fired). Uses the service-role client so it works in any context.
  */
 export async function getProfile(userId: string, email?: string | null): Promise<ProfileRow> {
+  // `select('*')` rather than a column list: migration 011 adds dunning columns,
+  // and a named select fails outright on an install that hasn't applied it yet.
   const { data } = await supabaseAdmin
     .from('profiles')
-    .select('id, email, plan, status, appsumo_license_key, appsumo_tier')
+    .select('*')
     .eq('id', userId)
     .maybeSingle()
 
@@ -37,10 +48,27 @@ export async function getProfile(userId: string, email?: string | null): Promise
   return seed
 }
 
-/** The plan to honour for a profile — refunded/deactivated accounts fall back to free. */
-export function effectivePlan(profile: Pick<ProfileRow, 'plan' | 'status'>): Plan {
+/**
+ * The plan to honour for a profile.
+ *
+ * Refunded and deactivated accounts fall back to Free, and so does a
+ * subscription that has been `past_due` longer than the grace period. That last
+ * case used to have no expiry: `past_due` counted as active, nothing recorded
+ * when it started, and an account whose payments kept failing held Pro
+ * indefinitely if the final cancellation event was missed or arrived out of
+ * order. Deciding it here rather than in the webhook means the entitlement
+ * lapses on time even if no further event ever arrives.
+ *
+ * Lifetime plans are untouched — they were never paid by subscription.
+ */
+export function effectivePlan(
+  profile: Pick<ProfileRow, 'plan' | 'status'> & { stripe_past_due_since?: string | null }
+): Plan {
   if (profile.status !== 'active') return getPlan(DEFAULT_PLAN)
-  return getPlan(profile.plan)
+  const plan = getPlan(profile.plan)
+  if (plan.lifetime) return plan
+  if (dunningExpired(profile.stripe_past_due_since)) return getPlan(DEFAULT_PLAN)
+  return plan
 }
 
 export async function getUserPlan(userId: string, email?: string | null): Promise<Plan> {
@@ -59,12 +87,12 @@ export async function getUserPlan(userId: string, email?: string | null): Promis
 export async function getOwnerEntitlements(ownerId: string): Promise<Entitlements> {
   const { data } = await supabaseAdmin
     .from('profiles')
-    .select('plan, status')
+    .select('*')
     .eq('id', ownerId)
     .maybeSingle()
 
   if (!data) return getEntitlements(DEFAULT_PLAN)
-  return effectivePlan(data as Pick<ProfileRow, 'plan' | 'status'>).entitlements
+  return effectivePlan(data as ProfileRow).entitlements
 }
 
 /**

@@ -144,6 +144,24 @@ export function getEntitlements(id: string | null | undefined): Entitlements {
   return getPlan(id).entitlements
 }
 
+/**
+ * How long a subscription may stay `past_due` before entitlements revert.
+ *
+ * A failed payment shouldn't take the product away the same afternoon — cards
+ * expire, banks decline for a day — but the grace has to end somewhere, and
+ * `past_due` was previously treated as active with no expiry at all. Two weeks
+ * covers Stripe's retry schedule with room to spare.
+ */
+export const DUNNING_GRACE_DAYS = 14
+
+/** Whether a dunning run has outlived its grace period. */
+export function dunningExpired(pastDueSince: string | null | undefined, now = Date.now()): boolean {
+  if (!pastDueSince) return false
+  const since = Date.parse(pastDueSince)
+  if (Number.isNaN(since)) return false
+  return now - since > DUNNING_GRACE_DAYS * 24 * 60 * 60 * 1000
+}
+
 /** Human-readable edition quota, e.g. "10" or "Unlimited". */
 export function formatQuota(n: number): string {
   return Number.isFinite(n) ? String(n) : 'Unlimited'
