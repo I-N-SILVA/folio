@@ -6,7 +6,11 @@ import { BookCard } from './BookCard'
 import Reveal from '@/components/landing/Reveal'
 import type { Book, Page } from '@/lib/book-schema'
 
-type LibraryBook = Omit<Book, 'pages'> & { pages?: { id: string }[]; cover?: Page | null }
+type LibraryBook = Omit<Book, 'pages'> & {
+  pages?: { id: string }[]
+  cover?: Page | null
+  engagement?: { readers: number; completionRate: number; leads: number } | null
+}
 
 type Filter = 'all' | 'published' | 'draft'
 type Sort = 'recent' | 'created' | 'title'

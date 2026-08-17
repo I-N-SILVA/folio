@@ -10,12 +10,15 @@ import { OnboardingChecklist } from '@/components/studio/OnboardingChecklist'
 import { LibraryBrowser } from '@/components/studio/LibraryBrowser'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
+import { getEditionEngagement, type EditionEngagement } from '@/lib/insights'
 import type { Book, Page } from '@/lib/book-schema'
 
 type DashboardBook = Omit<Book, 'pages'> & {
   pages?: { id: string; hotspots?: unknown[] }[]
   /** First page, fetched separately so cards can show a real preview. */
   cover?: Page | null
+  /** Reader numbers, so a card says how the edition is doing, not just that it exists. */
+  engagement?: EditionEngagement | null
 }
 
 async function getBooks(): Promise<DashboardBook[]> {
@@ -45,16 +48,28 @@ async function getBooks(): Promise<DashboardBook[]> {
     .in('book_id', books.map((b) => b.id))
 
   const coverByBook = new Map((covers ?? []).map((p: Page) => [p.book_id, p]))
-  return books.map((book) => ({ ...book, cover: coverByBook.get(book.id) ?? null }))
+
+  // Reader numbers for the published ones, so a card can say "18 reads" rather
+  // than only "Published".
+  const engagement = await getEditionEngagement(
+    user.id,
+    books.filter((b) => b.settings?.published).map((b) => b.id),
+    user.email
+  )
+
+  return books.map((book) => ({
+    ...book,
+    cover: coverByBook.get(book.id) ?? null,
+    engagement: engagement.byBook.get(book.id) ?? null,
+  }))
 }
 
 export default async function DashboardPage() {
   const books = await getBooks()
   const publishedCount = books.filter((book) => book.settings?.published).length
-  const pageCount = books.reduce((total, book) => total + (book.pages?.length ?? 0), 0)
-  const hasHotspot = books.some((book) =>
-    book.pages?.some((page) => (page.hotspots?.length ?? 0) > 0)
-  )
+  const readers = books.reduce((total, book) => total + (book.engagement?.readers ?? 0), 0)
+  const leads = books.reduce((total, book) => total + (book.engagement?.leads ?? 0), 0)
+  const firstBook = books[books.length - 1]
 
   return (
     <main className="qlico-grain min-h-screen bg-[var(--background)] px-5 py-8 text-[var(--qlico-ink)] sm:px-8">
@@ -73,27 +88,33 @@ export default async function DashboardPage() {
                 Creator Studio
               </div>
               <h1 className="font-display text-5xl font-semibold leading-none tracking-[-0.06em] sm:text-6xl">
-                Your digital shelf
+                Your editions
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-[var(--qlico-muted)] sm:text-base">
-                Compose, publish, and measure interactive publications from one calm workspace.
+                {publishedCount === 0
+                  ? 'Publish one and send the link — everything else follows from a reader opening it.'
+                  : `${publishedCount} live · ${readers} ${readers === 1 ? 'reader' : 'readers'} recently.`}
               </p>
             </div>
             <DashboardActions />
           </div>
 
+          {/* These used to be Books / Published / Pages — three counts of the
+              author's own output, none of which change between visits. Readers
+              and captured emails do. */}
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <Reveal delay={0}><StatCard label="Books" value={books.length} /></Reveal>
-            <Reveal delay={70}><StatCard label="Published" value={publishedCount} /></Reveal>
-            <Reveal delay={140}><StatCard label="Pages" value={pageCount} /></Reveal>
+            <Reveal delay={0}><StatCard label="Readers" value={readers} /></Reveal>
+            <Reveal delay={70}><StatCard label="Emails captured" value={leads} /></Reveal>
+            <Reveal delay={140}><StatCard label="Live editions" value={publishedCount} /></Reveal>
           </div>
         </section>
 
         <OnboardingChecklist
           hasBook={books.length > 0}
-          hasHotspot={hasHotspot}
           hasPublished={publishedCount > 0}
-          firstBookId={books[books.length - 1]?.id}
+          hasReader={readers > 0}
+          firstBookId={firstBook?.id}
+          firstBookSlug={firstBook?.slug}
         />
 
         {books.length === 0 ? (
@@ -104,7 +125,8 @@ export default async function DashboardPage() {
             </div>
             <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">Create your first edition.</h2>
             <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--qlico-muted)]">
-              Create interactive portfolios, catalogs, magazines, and reports that feel crafted on every device.
+              Drop in a PDF and it becomes something people can read, click through, and finish —
+              on any device, from one link.
             </p>
             <DashboardActions />
           </section>

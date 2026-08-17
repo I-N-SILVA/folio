@@ -3,7 +3,18 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BarChart2, BookOpen, ExternalLink, Share2, Trash2, Edit2, Check, X } from 'lucide-react'
+import {
+  BarChart2,
+  BookOpen,
+  Check,
+  Edit2,
+  ExternalLink,
+  MoreHorizontal,
+  Share2,
+  Trash2,
+  Users,
+  X,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/Modal'
 import { ShareModal } from './ShareModal'
@@ -12,7 +23,12 @@ import type { Book, Page } from '@/lib/book-schema'
 import { PAGE_ASPECT, PAGE_DESIGN_HEIGHT, PAGE_DESIGN_WIDTH, pageScale } from '@/lib/page-geometry'
 
 interface BookCardProps {
-  book: Omit<Book, 'pages'> & { pages?: { id: string }[]; cover?: Page | null }
+  book: Omit<Book, 'pages'> & {
+    pages?: { id: string }[]
+    cover?: Page | null
+    /** Reader numbers for a published edition, when there are any. */
+    engagement?: { readers: number; completionRate: number; leads: number } | null
+  }
 }
 
 /**
@@ -134,20 +150,37 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [newTitle, setNewTitle] = useState(book.title)
   const router = useRouter()
 
   const published = book.settings?.published
   const displayDate = book.updated_at || book.created_at || new Date().toISOString()
+  const engagement = initialBook.engagement
+
+  // A menu that only closes by pressing its own button is a trap on touch.
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent && e.key !== 'Escape') return
+      setMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', close)
+    return () => {
+      document.removeEventListener('pointerdown', close)
+      document.removeEventListener('keydown', close)
+    }
+  }, [menuOpen])
 
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
       const res = await fetch(`/api/books/${book.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete book')
+      if (!res.ok) throw new Error('Could not delete this edition')
       setConfirmDelete(false)
-      toast.success('Book deleted')
+      toast.success('Edition deleted')
       router.refresh()
     } catch (err: any) {
       toast.error(err.message)
@@ -168,12 +201,12 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         body: JSON.stringify({ title: newTitle.trim() }),
       })
 
-      if (!res.ok) throw new Error('Failed to rename book')
+      if (!res.ok) throw new Error('Could not rename this edition')
       
       const updated = await res.json()
       setBook(updated)
       setIsEditing(false)
-      toast.success('Book renamed')
+      toast.success('Edition renamed')
     } catch (err: any) {
       toast.error(err.message)
     }
@@ -226,63 +259,94 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         )}
       </div>
 
-      <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
-        {new Date(displayDate).toLocaleDateString()} / {book.pages?.length || 0} pages
-      </p>
+      {/* "12 Jan / 24 pages" told the author what they already knew. If anyone
+          has read it, that is the more interesting half. */}
+      {published && engagement && engagement.readers > 0 ? (
+        <p className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[var(--qlico-muted)]">
+          <span className="inline-flex items-center gap-1.5 text-[var(--qlico-ink)]">
+            <Users size={13} className="text-[var(--accent-fg)]" />
+            {engagement.readers} {engagement.readers === 1 ? 'reader' : 'readers'}
+          </span>
+          <span>{engagement.completionRate}% finished</span>
+          {engagement.leads > 0 && (
+            <span>
+              {engagement.leads} {engagement.leads === 1 ? 'email' : 'emails'}
+            </span>
+          )}
+        </p>
+      ) : (
+        <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
+          {published ? 'No reads yet' : 'Draft'} · {book.pages?.length || 0} pages ·{' '}
+          {new Date(displayDate).toLocaleDateString()}
+        </p>
+      )}
 
-      <div className="flex items-center gap-2 mt-auto">
+      {/* Seven controls at one visual weight used to sit here, five of them
+          icon-only — including Delete, one 44px target away from Edit. Two
+          named actions and a menu for the rest. */}
+      <div className="mt-auto flex items-center gap-2">
         <Link
           href={`/editor/${book.id}`}
           className="flex-1 rounded-full bg-[var(--btn-solid)] py-2.5 text-center text-sm font-semibold text-[var(--accent-contrast)] transition-all hover:-translate-y-0.5 hover:bg-[var(--btn-solid-hover)]"
         >
-          Edit
+          Open
         </Link>
-
-        {published && (
-          <Link
-            href={`/book/${book.slug}`}
-            target="_blank"
-            className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--qlico-teal)]/10 hover:text-[var(--qlico-teal)]"
-            aria-label="View live"
-          >
-            <ExternalLink size={18} />
-          </Link>
-        )}
 
         <button
           onClick={() => setShowShare(true)}
-          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--accent)]/10 hover:text-[var(--accent-fg)]"
-          aria-label={`Share ${book.title}`}
+          className="rounded-full border border-[var(--qlico-border)] px-4 py-2.5 text-sm font-semibold text-[var(--qlico-ink)] transition-colors hover:bg-[var(--tint-weak)]"
         >
-          <Share2 size={18} />
+          Share
         </button>
 
-        <Link
-          href={`/analytics/${book.slug}`}
-          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--qlico-teal)]/10 hover:text-[var(--qlico-teal)]"
-          aria-label="Analytics"
-        >
-          <BarChart2 size={18} />
-        </Link>
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            aria-label={`More actions for ${book.title}`}
+            className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)] hover:text-[var(--qlico-ink)]"
+          >
+            <MoreHorizontal size={18} />
+          </button>
 
-        <div className="mx-1 h-4 w-px bg-[var(--qlico-border)]" />
-
-        <button
-          onClick={() => setIsEditing(true)}
-          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-blue-50 hover:text-blue-700"
-          aria-label="Rename"
-        >
-          <Edit2 size={16} />
-        </button>
-
-        <button
-          disabled={isDeleting}
-          onClick={() => setConfirmDelete(true)}
-          className="rounded-full p-2.5 text-[var(--qlico-muted)] transition-colors hover:bg-red-50 hover:text-red-700"
-          aria-label={`Delete ${book.title}`}
-        >
-          <Trash2 size={16} />
-        </button>
+          {menuOpen && (
+            <div
+              role="menu"
+              className="absolute bottom-full right-0 z-30 mb-2 w-52 overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] py-1.5 shadow-[var(--qlico-shadow)]"
+            >
+              {published && (
+                <>
+                  <MenuLink href={`/book/${book.slug}`} external icon={<ExternalLink size={15} />}>
+                    View live
+                  </MenuLink>
+                  <MenuLink href={`/analytics/${book.slug}`} icon={<BarChart2 size={15} />}>
+                    Insights
+                  </MenuLink>
+                </>
+              )}
+              <MenuButton
+                onClick={() => {
+                  setMenuOpen(false)
+                  setIsEditing(true)
+                }}
+                icon={<Edit2 size={15} />}
+              >
+                Rename
+              </MenuButton>
+              <MenuButton
+                onClick={() => {
+                  setMenuOpen(false)
+                  setConfirmDelete(true)
+                }}
+                icon={<Trash2 size={15} />}
+                destructive
+              >
+                Delete
+              </MenuButton>
+            </div>
+          )}
+        </div>
       </div>
 
       {showShare && (
@@ -299,7 +363,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
           body={
             <>
               <strong className="font-semibold text-[var(--qlico-ink)]">{book.title}</strong> and
-              all of its pages, hotspots, and analytics will be permanently removed. This can&apos;t
+              and all of its pages, hotspots, and reader data will be permanently removed. This can&apos;t
               be undone.
             </>
           }
@@ -311,5 +375,57 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         />
       )}
     </article>
+  )
+}
+
+function MenuLink({
+  href,
+  external = false,
+  icon,
+  children,
+}: {
+  href: string
+  external?: boolean
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      role="menuitem"
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-[var(--qlico-ink)] transition-colors hover:bg-[var(--tint-weak)]"
+    >
+      <span className="text-[var(--qlico-muted)]">{icon}</span>
+      {children}
+    </Link>
+  )
+}
+
+function MenuButton({
+  onClick,
+  icon,
+  destructive = false,
+  children,
+}: {
+  onClick: () => void
+  icon: React.ReactNode
+  destructive?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium transition-colors ${
+        destructive
+          ? 'text-[#b3261e] hover:bg-red-50'
+          : 'text-[var(--qlico-ink)] hover:bg-[var(--tint-weak)]'
+      }`}
+    >
+      <span className={destructive ? 'text-[#b3261e]' : 'text-[var(--qlico-muted)]'}>{icon}</span>
+      {children}
+    </button>
   )
 }

@@ -80,7 +80,7 @@ export default async function AccountPage({
 
           <div className="mt-7 max-w-md">
             <div className="flex items-center justify-between text-sm font-bold">
-              <span>Books used</span>
+              <span>Editions used</span>
               <span className="text-[var(--qlico-muted)]">
                 {used} / {formatQuota(e.maxBooks)}
               </span>

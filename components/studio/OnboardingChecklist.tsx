@@ -3,38 +3,51 @@ import { Check, ArrowRight } from 'lucide-react'
 
 interface Props {
   hasBook: boolean
-  hasHotspot: boolean
   hasPublished: boolean
+  /** Whether anyone has actually opened a published edition. */
+  hasReader: boolean
   firstBookId?: string
+  firstBookSlug?: string
 }
 
 /**
- * First-run checklist: import → enrich → publish. Renders until all three
- * steps are done, then disappears for good. Activation (redeemed → first
- * publish) is the metric AppSumo buyers are graded on — this walks them there.
+ * First-run checklist, ending at the activation event rather than at a feature.
+ *
+ * It used to read create → add a hotspot → publish. The middle step was the
+ * product's agenda, not the author's: nobody signs up to place a pin, and the
+ * step linked to an editor where the hotspot tool was an unlabelled toggle. It
+ * also stopped one step short of the point — an edition nobody has opened
+ * produces no analytics, no leads and no reason to come back, so "published" is
+ * not the finish line. "Someone read it" is.
  */
-export function OnboardingChecklist({ hasBook, hasHotspot, hasPublished, firstBookId }: Props) {
+export function OnboardingChecklist({
+  hasBook,
+  hasPublished,
+  hasReader,
+  firstBookId,
+  firstBookSlug,
+}: Props) {
   const steps = [
     {
       done: hasBook,
       title: 'Create your first edition',
-      desc: 'Import a PDF or start from a blank page.',
+      desc: 'Drop in a PDF, or start from a blank page.',
       href: '/dashboard?new=1',
       cta: 'Create',
     },
     {
-      done: hasHotspot,
-      title: 'Add a hotspot',
-      desc: 'Drop a tappable pin on any page — info, link, or checkout.',
-      href: firstBookId ? `/editor/${firstBookId}` : '/dashboard?new=1',
-      cta: 'Open editor',
-    },
-    {
       done: hasPublished,
       title: 'Publish it',
-      desc: 'Get a hosted link you can share and embed anywhere.',
+      desc: 'Turns it into a link anyone can open — no account, no app.',
       href: firstBookId ? `/editor/${firstBookId}` : '/dashboard?new=1',
-      cta: 'Publish',
+      cta: 'Open the editor',
+    },
+    {
+      done: hasReader,
+      title: 'Send the link to one person',
+      desc: 'The moment someone opens it, Insights starts filling in.',
+      href: hasPublished && firstBookSlug ? `/analytics/${firstBookSlug}` : '/insights',
+      cta: 'Get the link',
     },
   ]
 
@@ -70,7 +83,9 @@ export function OnboardingChecklist({ hasBook, hasHotspot, hasPublished, firstBo
               >
                 {step.done ? <Check size={14} strokeWidth={3} /> : i + 1}
               </span>
-              <h3 className={`text-[15px] font-semibold ${step.done ? 'line-through' : ''}`}>{step.title}</h3>
+              <h3 className={`text-[15px] font-semibold ${step.done ? 'line-through' : ''}`}>
+                {step.title}
+              </h3>
               <p className="mt-1 text-[13px] leading-5 text-[var(--qlico-muted)]">{step.desc}</p>
               {!step.done && (
                 <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--accent-fg)] transition group-hover:gap-2">

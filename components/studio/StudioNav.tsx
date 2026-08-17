@@ -8,7 +8,7 @@ import { ThemeToggle } from '@/components/ThemeToggle'
  * into DashboardActions and /account made do with a lone "← Back to studio"
  * link, so which surface you were on and how to leave it changed page to page.
  */
-export function StudioNav({ current }: { current?: 'library' | 'account' }) {
+export function StudioNav({ current }: { current?: 'library' | 'insights' | 'account' }) {
   return (
     <header className="mb-8 flex items-center gap-4 border-b border-[var(--qlico-border)] pb-4">
       <Link href="/dashboard" className="flex items-center gap-2" aria-label="QLICO dashboard">
@@ -24,7 +24,14 @@ export function StudioNav({ current }: { current?: 'library' | 'account' }) {
 
       <nav aria-label="Studio" className="flex items-center gap-1">
         <NavLink href="/dashboard" active={current === 'library'}>
-          Library
+          Editions
+        </NavLink>
+        {/* Reader numbers used to live behind an unlabelled icon on a single
+            book card. They're the only thing in the product that changes while
+            the author is away, so they're the reason to come back — which makes
+            a nav slot the right price for them. */}
+        <NavLink href="/insights" active={current === 'insights'}>
+          Insights
         </NavLink>
         <NavLink href="/account" active={current === 'account'}>
           Account

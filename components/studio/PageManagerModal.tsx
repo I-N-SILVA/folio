@@ -110,7 +110,7 @@ export function PageManagerModal({ onClose }: PageManagerModalProps) {
           <div className="flex items-center justify-between p-6 border-b border-neutral-800 shrink-0">
             <div>
               <h2 className="text-xl font-bold text-white">Visual Page Manager</h2>
-              <p className="text-sm text-neutral-400 mt-1">Drag and drop to rearrange your entire book's structure.</p>
+              <p className="text-sm text-neutral-400 mt-1">Drag and drop to rearrange this edition.</p>
             </div>
             <button
               onClick={onClose}

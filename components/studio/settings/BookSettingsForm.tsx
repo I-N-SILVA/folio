@@ -42,13 +42,21 @@ function LockedFeature({
   )
 }
 
+/** Faces the reader is guaranteed to get: the theme default, or a web-safe stack. */
+const FONT_CHOICES = [
+  { value: '', label: 'Theme default' },
+  { value: 'Georgia, serif', label: 'Serif — Georgia' },
+  { value: 'Palatino, "Palatino Linotype", serif', label: 'Serif — Palatino' },
+  { value: '"Helvetica Neue", Helvetica, Arial, sans-serif', label: 'Sans — Helvetica' },
+  { value: 'system-ui, sans-serif', label: 'Sans — System' },
+  { value: '"Courier New", monospace', label: 'Mono — Courier' },
+]
+
 export function BookSettingsForm({ book }: { book: any }) {
   const { updateSettings, updateTheme } = useEditorStore()
   const entitlements = useEntitlements()
   const { register, watch, setValue } = useForm({
     defaultValues: {
-      password: book.settings?.password ?? '',
-      burn_after_reading: book.settings?.burn_after_reading ?? false,
       unlisted: book.settings?.unlisted ?? false,
       whitelabel: book.settings?.whitelabel ?? false,
       gatingEnabled: book.settings?.gating?.enabled ?? false,
@@ -65,8 +73,6 @@ export function BookSettingsForm({ book }: { book: any }) {
     const sub = watch((values) => {
       // Update book settings
       updateSettings({
-        password: values.password || undefined,
-        burn_after_reading: values.burn_after_reading,
         unlisted: values.unlisted,
         whitelabel: values.whitelabel,
         gating: {
@@ -101,11 +107,27 @@ export function BookSettingsForm({ book }: { book: any }) {
             <option value="sage">Sage (Green)</option>
           </select>
         </Field>
+        {/* These were free-text family names. Typing one you have installed
+            locally produced an edition that looked right to you and fell back to
+            something else for every reader — a difference the author had no way
+            to see. */}
         <Field label="Heading font">
-          <input {...register('headingFont')} className={inputCls} placeholder="e.g. Inter, serif" />
+          <select {...register('headingFont')} className={selectCls}>
+            {FONT_CHOICES.map((f) => (
+              <option key={f.value || 'theme'} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Body font">
-          <input {...register('bodyFont')} className={inputCls} placeholder="e.g. Roboto, sans-serif" />
+          <select {...register('bodyFont')} className={selectCls}>
+            {FONT_CHOICES.map((f) => (
+              <option key={f.value || 'theme'} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
         </Field>
       </FieldGroup>
 
@@ -114,8 +136,8 @@ export function BookSettingsForm({ book }: { book: any }) {
           edition served in full to anyone with the link, and a view-once
           edition could be reopened forever. Offering them was worse than
           omitting them — someone could ship a confidential document believing
-          it was protected. The schema fields are kept so stored values survive,
-          but the controls are gone until the behaviour exists. */}
+          it was protected. The schema fields are now gone too, so there is
+          nothing left to accidentally wire a control back onto. */}
       <FieldGroup title="Access">
         <Toggle
           label="Unlisted — ask search engines not to index"
