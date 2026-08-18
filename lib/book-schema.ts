@@ -140,10 +140,13 @@ export const ThemeSchema = z.object({
 
 // ─── Book Settings Schema ──────────────────────────────────────────────────────
 
+// `type` used to offer 'password' alongside 'email'. Only email was ever
+// implemented, so it was a live enum value with no behaviour behind it — the
+// kind of thing that gets wired to a UI control on the assumption it works.
 export const GatingSchema = z.object({
   enabled: z.boolean().default(false),
   page_number: z.number().default(3),
-  type: z.enum(['email', 'password']).default('email'),
+  type: z.literal('email').default('email'),
   title: z.string().default('Unlock the full version'),
   description: z.string().default('Enter your email to continue reading.'),
 })
@@ -154,10 +157,16 @@ export const SEOSchema = z.object({
   keywords: z.string().optional(),
 })
 
+// `password` and `burn_after_reading` were removed from the editor because
+// nothing read either one: a "password-protected" edition served in full to
+// anyone with the link, and a "view once" edition could be reopened forever.
+// The fields lingered here so stored values would survive, which mostly meant
+// they stayed available for someone to wire a control back onto. Zod strips
+// unknown keys rather than rejecting them, so dropping them here reads old rows
+// fine and clears the values on the next write.
 export const BookSettingsSchema = z.object({
   published: z.boolean().default(false),
   unlisted: z.boolean().default(false),
-  password: z.string().optional(),
   gating: GatingSchema.default({
     enabled: false,
     page_number: 3,
@@ -165,7 +174,6 @@ export const BookSettingsSchema = z.object({
     title: 'Unlock the full version',
     description: 'Enter your email to continue reading.',
   }),
-  burn_after_reading: z.boolean().default(false),
   seo: SEOSchema.optional(),
   whitelabel: z.boolean().default(false),
 })
@@ -189,7 +197,6 @@ export const BookSchema = z.object({
       title: 'Unlock the full version',
       description: 'Enter your email to continue reading.',
     },
-    burn_after_reading: false,
     whitelabel: false,
   }),
   created_at: z.string().optional(),

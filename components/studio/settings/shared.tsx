@@ -1,7 +1,7 @@
 'use client'
 
 import { twMerge } from 'tailwind-merge'
-import * as Lucide from 'lucide-react'
+import { HOTSPOT_ICON_NAMES, hotspotIcon } from '@/lib/hotspot-icons'
 
 // Shared primitives for the settings-panel forms in this directory — one
 // form per block/page/hotspot/book type, mirroring the components/blocks/
@@ -99,16 +99,11 @@ export function Toggle({
   )
 }
 
-const HOTSPOT_ICONS = [
-  'Info', 'Star', 'Zap', 'Sparkles', 'BookOpen', 'BarChart2', 'Play', 'Link',
-  'ShoppingBag', 'ShoppingCart', 'Tag', 'Gift', 'Heart', 'MapPin', 'Quote', 'Pencil',
-]
-
 export function IconPicker({ value, onChange }: { value?: string; onChange: (name: string) => void }) {
   return (
     <div className="grid grid-cols-8 gap-1.5">
-      {HOTSPOT_ICONS.map((name) => {
-        const Ic = (Lucide as any)[name] ?? Lucide.Info
+      {HOTSPOT_ICON_NAMES.map((name) => {
+        const Ic = hotspotIcon(name)
         const active = value === name
         return (
           <button

@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Gift, Plus } from 'lucide-react'
-import { track } from '@vercel/analytics'
+import { Plus } from 'lucide-react'
+import { trackProduct } from '@/lib/product-analytics'
 import Reveal from './Reveal'
 
 const PLANS: {
@@ -13,33 +13,44 @@ const PLANS: {
   cta: string
   href: string
   featured?: boolean
+  note?: string
   features: string[]
 }[] = [
   {
     name: 'Free',
     price: '$0',
-    desc: 'Publish your first interactive edition.',
+    desc: 'Enough to publish something real and see who reads it.',
     cta: 'Start free',
     href: '/login',
-    features: ['1 publication', '7-day analytics', 'QLICO watermark'],
+    features: ['3 editions', 'PDF import', 'Hotspots and embeds', '30-day analytics', 'QLICO badge on the reader'],
   },
   {
     name: 'Pro',
     price: '$19',
     cadence: '/mo',
-    desc: 'For creators and teams who publish often.',
+    desc: 'For anyone whose editions have to bring something back.',
     cta: 'Get Pro',
     href: '/login?next=%2Faccount',
     featured: true,
-    features: ['Unlimited publications', '90-day analytics', 'Custom domain', 'No watermark', 'CSV export'],
+    features: [
+      'Unlimited editions',
+      'Email capture with lead export',
+      '12-month analytics',
+      'No QLICO badge',
+      'CSV export of every event',
+    ],
   },
   {
+    // There is no self-serve checkout for this tier — it is sold as a lifetime
+    // deal and redeemed with a code. Saying "see the deal" and landing people
+    // on a code box they can't fill is worse than saying so plainly.
     name: 'Lifetime',
-    price: '$199',
-    desc: 'One payment. Yours forever.',
-    cta: 'See the deal',
+    price: '$59+',
+    desc: 'Sold as a one-time lifetime deal on AppSumo.',
+    cta: 'Redeem your code',
     href: '/redeem',
-    features: ['Everything in Pro', 'Lifetime updates', 'PDF import', 'Priority support'],
+    note: 'Bought a code? Redeem it here. Tiers unlock more editions, longer analytics, and white-label.',
+    features: ['Everything in Pro', 'One payment, no renewal', 'Stackable tiers', 'Lifetime updates'],
   },
 ]
 
@@ -52,7 +63,7 @@ export function Pricing() {
           <p className="mt-4 text-lg text-[var(--qlico-muted)]">Start free. Upgrade when it earns its keep.</p>
         </Reveal>
         <div className="grid items-stretch gap-5 lg:grid-cols-3">
-          {PLANS.map(({ name, price, cadence, desc, cta, href, features, featured }) => (
+          {PLANS.map(({ name, price, cadence, desc, cta, href, features, featured, note }) => (
             <Reveal key={name}>
               <div
                 className={`flex h-full flex-col rounded-3xl border p-8 ${
@@ -70,6 +81,11 @@ export function Pricing() {
                   {cadence && <span className="mb-1.5 text-sm text-[var(--qlico-muted)]">{cadence}</span>}
                 </div>
                 <p className="mt-3 text-[15px] text-[var(--qlico-muted)]">{desc}</p>
+                {note && (
+                  <p className="mt-3 rounded-xl bg-[var(--qlico-subtle)] px-3 py-2 text-[13px] leading-5 text-[var(--qlico-muted)]">
+                    {note}
+                  </p>
+                )}
                 <ul className="mt-7 flex-1 space-y-3">
                   {features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-[15px]">
@@ -80,7 +96,7 @@ export function Pricing() {
                 </ul>
                 <Link
                   href={href}
-                  onClick={() => track('cta_click', { cta: name.toLowerCase(), location: 'pricing' })}
+                  onClick={() => trackProduct('cta_click', { cta: name.toLowerCase(), location: 'pricing' })}
                   className={`mt-8 rounded-full px-5 py-3 text-center text-[15px] font-semibold transition ${
                     featured
                       ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
@@ -94,16 +110,13 @@ export function Pricing() {
           ))}
         </div>
 
+        {/* The Lifetime column now says this itself, so the banner that used to
+            sit here was the third place on one screen offering the same link. */}
         <Reveal className="mt-6">
-          <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-7 py-5 text-center sm:flex-row sm:text-left">
-            <div className="flex items-center gap-3">
-              <Gift size={20} className="text-[var(--accent-fg)]" />
-              <p className="text-[15px] font-medium">Got a lifetime deal code? Redeem it to unlock your tier.</p>
-            </div>
-            <Link href="/redeem" className="shrink-0 text-[15px] font-semibold text-[var(--accent-fg)] hover:underline">
-              Redeem a code →
-            </Link>
-          </div>
+          <p className="text-center text-[13px] leading-6 text-[var(--qlico-muted)]">
+            Every plan includes the full reader, PDF import, hotspots, and embeds. You can export
+            your events and captured emails as CSV on any paid plan, at any time.
+          </p>
         </Reveal>
       </div>
     </section>

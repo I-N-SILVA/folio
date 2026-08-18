@@ -8,7 +8,11 @@ Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 ## 1. Essence
 
 - **Name:** QLICO — to flip quickly through the pages of a book.
-- **One-liner:** Flip through anything.
+- **One-liner:** Flip through anything. *(The brand line. It sits in the hero
+  eyebrow, not the headline — the H1 states the job the product does, because a
+  visitor who bounces on the headline never reaches the sentence that explains
+  it. See `docs/product-strategy-audit.md` §4.3.)*
+- **Headline:** Send a PDF. See who actually read it.
 - **Promise:** Turn static PDFs into interactive editions people actually finish.
 - **Personality:** Minimal · precise · modern · calm · confident.
 - **We are:** sleek and product-led. **We are not:** ornamental or busy.

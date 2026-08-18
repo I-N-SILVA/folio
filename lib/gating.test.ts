@@ -32,7 +32,6 @@ function book(pageCount: number, gating?: Partial<NonNullable<Book['settings']['
         description: 'd',
         ...gating,
       },
-      burn_after_reading: false,
     },
     pages: Array.from({ length: pageCount }, (_, i) => page(i + 1)),
   } as unknown as Book

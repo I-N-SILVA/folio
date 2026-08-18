@@ -5,13 +5,13 @@ import Link from 'next/link'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from 'recharts'
-import { ArrowLeft, Download, BookOpen, Users, CheckCircle, Clock } from 'lucide-react'
+import { ArrowLeft, Download, BookOpen, Users, CheckCircle, Clock, Lock } from 'lucide-react'
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import type { Book } from '@/lib/book-schema'
 
-type DateRange = '7d' | '30d' | '90d' | 'all'
+type DateRange = '7d' | '30d' | '90d' | '365d'
 
 interface AnalyticsData {
   summary: {
@@ -27,7 +27,9 @@ interface AnalyticsData {
   heatmapData: Record<number, Array<{ x: number; y: number }>>
   leadData: Array<{ email: string; timestamp: string; page: number }>
   gate?: { views: number; unlocks: number; rate: number }
-  raw: any[]
+  /** What the server actually queried, which is not always what was asked for. */
+  window?: { days: number; limitDays: number; clamped: boolean }
+  csvExport?: boolean
 }
 
 function formatDuration(ms: number) {
@@ -36,16 +38,6 @@ function formatDuration(ms: number) {
   const s = Math.round(ms / 1000)
   if (s < 60) return `${s}s`
   return `${Math.floor(s / 60)}m ${s % 60}s`
-}
-
-/**
- * RFC 4180 quoting. The previous export joined raw values with commas, so any
- * field containing one — notably `payload`, which is stringified JSON — split
- * across columns and corrupted every row after it.
- */
-function csvCell(value: string): string {
-  if (/[",\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
-  return value
 }
 
 function dwellColor(ms: number) {
@@ -86,6 +78,25 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
   const [loading, setLoading] = useState(true)
   const [heatmapPage, setHeatmapPage] = useState<number>(1)
   const [reloadKey, setReloadKey] = useState(0)
+  const [copied, setCopied] = useState(false)
+
+  const published = Boolean(book.settings?.published)
+  const [origin, setOrigin] = useState('')
+  useEffect(() => setOrigin(window.location.origin), [])
+  const liveUrl = `${origin}/book/${book.slug}`
+
+  async function copyLiveUrl() {
+    // navigator.clipboard is undefined on insecure origins and in some in-app
+    // browsers, so an unguarded call there throws and appears to do nothing.
+    try {
+      if (!navigator.clipboard) throw new Error('unavailable')
+      await navigator.clipboard.writeText(liveUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* the field is selectable — the reader can copy it by hand */
+    }
+  }
 
   const labels = useMemo(() => buildLabelMaps(book), [book])
   const pageByNumber = useMemo(
@@ -101,48 +112,21 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
       .catch(() => { setData(null); setLoading(false) })
   }, [book.slug, range, reloadKey])
 
-  function download(filename: string, headers: string[], rows: string[][]) {
-    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
+  // Export is a server route now — the browser no longer receives every event
+  // row just so it can build a CSV, and the paid `csvExport` entitlement is
+  // checked somewhere the client can't skip.
+  function exportUrl(kind: 'events' | 'leads') {
+    const days = data?.window?.days ?? 30
+    return `/api/analytics/${book.slug}/export?kind=${kind}&days=${days}`
   }
 
-  function downloadCSV() {
-    if (!data?.raw) return
-    const headers = ['id', 'book_id', 'session_id', 'event_type', 'page_number', 'payload', 'created_at']
-    download(
-      `${book.slug}-events.csv`,
-      headers,
-      data.raw.map((e) =>
-        headers.map((h) => {
-          const v = e[h]
-          return typeof v === 'object' ? JSON.stringify(v) : String(v ?? '')
-        })
-      )
-    )
-  }
-
-  // Leads are the commercially useful export, and they were only reachable by
-  // digging them out of the raw event dump.
-  function downloadLeadsCSV() {
-    if (!data?.leadData?.length) return
-    download(
-      `${book.slug}-leads.csv`,
-      ['email', 'captured_at', 'page_number'],
-      data.leadData.map((lead) => [lead.email, lead.timestamp, String(lead.page ?? '')])
-    )
-  }
+  const canExport = data?.csvExport !== false
 
   const ranges: { label: string; value: DateRange }[] = [
     { label: '7d', value: '7d' },
     { label: '30d', value: '30d' },
     { label: '90d', value: '90d' },
-    { label: 'All time', value: 'all' },
+    { label: '12m', value: '365d' },
   ]
 
   return (
@@ -176,13 +160,24 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
               ))}
             </div>
 
-            <button
-              onClick={downloadCSV}
-              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2 text-sm font-semibold text-[var(--qlico-ink)] transition-colors hover:bg-[var(--tint-weak)]"
-            >
-              <Download size={14} />
-              CSV
-            </button>
+            {canExport ? (
+              <a
+                href={exportUrl('events')}
+                className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2 text-sm font-semibold text-[var(--qlico-ink)] transition-colors hover:bg-[var(--tint-weak)]"
+              >
+                <Download size={14} />
+                CSV
+              </a>
+            ) : (
+              <Link
+                href="/account"
+                title="CSV export is available on paid plans"
+                className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2 text-sm font-semibold text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)]"
+              >
+                <Lock size={13} />
+                CSV
+              </Link>
+            )}
           </div>
         </div>
 
@@ -431,13 +426,23 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                 <TableCard
                   title="Captured Leads (Gate Unlocks)"
                   action={
-                    <button
-                      onClick={downloadLeadsCSV}
-                      className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-[var(--tint-weak)]"
-                    >
-                      <Download size={12} />
-                      Export leads
-                    </button>
+                    canExport ? (
+                      <a
+                        href={exportUrl('leads')}
+                        className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-[var(--tint-weak)]"
+                      >
+                        <Download size={12} />
+                        Export leads
+                      </a>
+                    ) : (
+                      <Link
+                        href="/account"
+                        className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)]"
+                      >
+                        <Lock size={12} />
+                        Upgrade to export
+                      </Link>
+                    )
                   }
                 >
                   <div className="max-h-64 overflow-y-auto">
@@ -464,11 +469,58 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
               )}
             </div>
 
+            {/* The most common first view of this screen, and it used to be a
+                dead end: two sentences telling the author to share, with nothing
+                to share. The link is the thing they need — so hand it over. */}
             {data.pageViewData.length === 0 && data.topHotspots.length === 0 && (
-              <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] py-16 text-center">
-                <p className="text-[var(--qlico-muted)]">No analytics data yet for this period.</p>
-                <p className="mt-1 text-sm text-[var(--qlico-muted)]">Share your edition to start collecting data.</p>
+              <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-6 py-14 text-center">
+                <p className="font-display text-2xl font-semibold tracking-[-0.03em]">
+                  Nobody has opened this edition yet.
+                </p>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--qlico-muted)]">
+                  {published
+                    ? 'Numbers appear here as soon as one person reads it. Copy the link and send it to someone — one reader is enough to see this screen come alive.'
+                    : 'This edition is still a draft, so its link is not live yet. Publish it in the editor, then send the link to one person.'}
+                </p>
+
+                {published && (
+                  <div className="mx-auto mt-6 flex max-w-md flex-col items-center gap-3 sm:flex-row">
+                    <input
+                      readOnly
+                      value={liveUrl}
+                      aria-label="Live edition link"
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="w-full flex-1 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] px-4 py-2.5 text-center font-mono text-xs text-[var(--qlico-ink)] outline-none sm:text-left"
+                    />
+                    <button
+                      onClick={copyLiveUrl}
+                      className="w-full shrink-0 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)] sm:w-auto"
+                    >
+                      {copied ? 'Copied' : 'Copy link'}
+                    </button>
+                  </div>
+                )}
+
+                {!published && (
+                  <Link
+                    href={`/editor/${book.id}`}
+                    className="mt-6 inline-block rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+                  >
+                    Open the editor
+                  </Link>
+                )}
               </div>
+            )}
+
+            {/* Say what window is actually on screen. The range buttons used to
+                imply the query honoured them; "all time" never did. */}
+            {data.window?.clamped && (
+              <p className="text-center text-xs text-[var(--qlico-muted)]">
+                Showing the last {data.window.days} days — the longest window your plan keeps.{' '}
+                <Link href="/account" className="font-semibold text-[var(--accent-fg)] hover:underline">
+                  See plans
+                </Link>
+              </p>
             )}
           </>
         )}

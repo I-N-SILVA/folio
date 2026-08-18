@@ -9,6 +9,9 @@ export const dynamic = 'force-dynamic'
 // Stripe subscription lifecycle → profile plan sync.
 // Configure this URL in the Stripe dashboard and set STRIPE_WEBHOOK_SECRET.
 
+// `past_due` still counts as active — a card that fails on a Friday shouldn't
+// take the product away — but only for as long as the grace period in
+// lib/plans.ts, which `effectivePlan` enforces from `stripe_past_due_since`.
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due'])
 
 /**
@@ -25,7 +28,7 @@ const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due'])
 async function findProfile(customerId: string, metadataUserId?: string | null) {
   const byCustomer = await supabaseAdmin
     .from('profiles')
-    .select('id, plan')
+    .select('*')
     .eq('stripe_customer_id', customerId)
     .maybeSingle()
 
@@ -35,7 +38,7 @@ async function findProfile(customerId: string, metadataUserId?: string | null) {
 
   const byMetadata = await supabaseAdmin
     .from('profiles')
-    .select('id, plan')
+    .select('*')
     .eq('id', metadataUserId)
     .maybeSingle()
 
@@ -59,6 +62,8 @@ async function setPlanForCustomer(
     subscriptionId?: string | null
     status?: string | null
     metadataUserId?: string | null
+    /** `created` on the Stripe event, for ordering. */
+    eventAt: Date
   }
 ) {
   const profile = await findProfile(customerId, opts.metadataUserId)
@@ -72,12 +77,36 @@ async function setPlanForCustomer(
     return
   }
 
+  // Stripe delivers at least once and does not guarantee order, so an older
+  // `updated` event arriving after a `deleted` one would resurrect a cancelled
+  // subscription. Ignore anything older than what has already been applied.
+  const lastEventAt = (profile as { stripe_event_at?: string | null }).stripe_event_at
+  if (lastEventAt && Date.parse(lastEventAt) > opts.eventAt.getTime()) {
+    console.warn(
+      `[stripe webhook] ignoring out-of-order event for ${customerId} (${opts.eventAt.toISOString()} < ${lastEventAt})`
+    )
+    return
+  }
+
   // Never clobber an AppSumo lifetime plan with subscription changes.
   const isLifetime = typeof profile.plan === 'string' && profile.plan.startsWith('ltd_')
 
   const update: Record<string, unknown> = {
     stripe_subscription_id: opts.subscriptionId ?? null,
     stripe_status: opts.status ?? null,
+    stripe_event_at: opts.eventAt.toISOString(),
+  }
+
+  // Stamp the start of a dunning run once, and clear it the moment the
+  // subscription recovers. Stamping on every retry event would restart the
+  // grace period each time Stripe tried the card again, which is a grace period
+  // that never expires.
+  const existingPastDueSince = (profile as { stripe_past_due_since?: string | null })
+    .stripe_past_due_since
+  if (opts.status === 'past_due') {
+    update.stripe_past_due_since = existingPastDueSince ?? opts.eventAt.toISOString()
+  } else {
+    update.stripe_past_due_since = null
   }
 
   if (opts.active) {
@@ -90,7 +119,22 @@ async function setPlanForCustomer(
     update.plan = 'free'
   }
 
-  await supabaseAdmin.from('profiles').update(update).eq('id', profile.id)
+  const { error } = await supabaseAdmin.from('profiles').update(update).eq('id', profile.id)
+
+  // 42703 = undefined_column, i.e. migration 011 hasn't been applied. Retry
+  // without the dunning columns rather than dropping a billing event entirely —
+  // the grace period simply doesn't expire until the migration lands, which is
+  // the behaviour this install already had.
+  if (error?.code === '42703') {
+    console.error(
+      '[stripe webhook] dunning columns missing — apply supabase/migrations/011_dunning_grace.sql'
+    )
+    delete update.stripe_past_due_since
+    delete update.stripe_event_at
+    await supabaseAdmin.from('profiles').update(update).eq('id', profile.id)
+  } else if (error) {
+    throw error
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -122,6 +166,7 @@ export async function POST(request: NextRequest) {
           subscriptionId: sub.id,
           status: sub.status,
           metadataUserId: sub.metadata?.supabase_user_id ?? null,
+          eventAt: new Date(event.created * 1000),
         })
         break
       }
@@ -132,6 +177,7 @@ export async function POST(request: NextRequest) {
           subscriptionId: null,
           status: 'canceled',
           metadataUserId: sub.metadata?.supabase_user_id ?? null,
+          eventAt: new Date(event.created * 1000),
         })
         break
       }

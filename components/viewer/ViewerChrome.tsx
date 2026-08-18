@@ -78,11 +78,20 @@ export function ViewerChrome({
   book,
   embed = false,
   lockedCount = 0,
+  showBadge = true,
 }: {
   book: Book
   embed?: boolean
   /** Pages the server withheld behind the lead gate. */
   lockedCount?: number
+  /**
+   * Whether to show the "Powered by QLICO" badge. Decided on the server from the
+   * *owner's plan* — this used to read `book.settings.whitelabel` directly, which
+   * is a toggle the editor offers every account, so any free user could remove it.
+   * Defaults to shown: a caller that forgets to pass it gets the badge, not a
+   * silent free white-label.
+   */
+  showBadge?: boolean
 }) {
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
@@ -105,6 +114,9 @@ export function ViewerChrome({
   const navigablePages = (visibleBook.pages?.length ?? 0) + (stillLocked > 0 ? 1 : 0)
   const editionPages = (visibleBook.pages?.length ?? 0) + stillLocked
   const onGatePage = stillLocked > 0 && currentPage >= (visibleBook.pages?.length ?? 0)
+  // The last spread of what the reader can actually reach — the gate counts as
+  // the end for a gated edition, since that is as far as they get.
+  const atEnd = navigablePages > 1 && currentPage >= navigablePages - 1
 
   // The button used to track its own state, so leaving fullscreen any other
   // way — Escape, F11, the OS chrome — left the icon showing "exit" while the
@@ -284,10 +296,43 @@ export function ViewerChrome({
           : `Page ${Math.min(currentPage + 1, editionPages)} of ${editionPages}`}
       </div>
 
+      {/* The second half of the growth loop.
+          A reader who reaches the last page of someone else's edition is the
+          best-qualified visitor this product ever gets: they have just spent
+          real attention on the format and know exactly what it is for. Until now
+          they were shown a badge in the corner and nothing else.
+          Shown only where the badge is — a paid, white-labelled edition is the
+          author's surface, not ours — and only at the end, so it can't interrupt
+          the reading it is arguing for. */}
+      {showBadge && !embed && atEnd && (
+        <motion.div
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-auto flex max-w-md flex-col items-center gap-2 rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/90 px-6 py-5 text-center shadow-sm backdrop-blur"
+        >
+          <p className="text-[15px] font-semibold text-[var(--qlico-ink)]">
+            Made with QLICO
+          </p>
+          <p className="text-[13px] leading-5 text-[var(--qlico-muted)]">
+            Turn your own PDF into an edition like this one. It takes a couple of minutes and
+            there&apos;s nothing to sign up for to try it.
+          </p>
+          <a
+            href="https://qlico.app/?via=reader#try"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)]"
+          >
+            Try it with your PDF
+          </a>
+        </motion.div>
+      )}
+
       {/* Branding */}
-      {!book.settings?.whitelabel && (
+      {showBadge && (
         <a
-          href="https://qlico.app?via=watermark"
+          href="https://qlico.app/?via=badge#try"
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"

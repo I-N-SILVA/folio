@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { track } from '@vercel/analytics'
+import { trackProduct } from '@/lib/product-analytics'
 import { useSearchParams } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase'
 
@@ -28,6 +28,7 @@ function LoginForm() {
     e?.preventDefault()
     setLoading(true)
     setError('')
+    trackProduct('signup_started')
 
     // Honor an optional ?next= target so post-login flows (e.g. upgrade) land
     // on the right page. Only allow same-origin relative paths — and `//host`
@@ -51,7 +52,7 @@ function LoginForm() {
       setError(error.message)
     } else {
       setSent(true)
-      track('signup_magic_link_sent')
+      trackProduct('signup_magic_link_sent')
     }
     setLoading(false)
   }

@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRef } from 'react'
 import { m, useReducedMotion, useScroll, useTransform } from 'framer-motion'
-import { track } from '@vercel/analytics'
+import { trackProduct } from '@/lib/product-analytics'
 import { MagneticButton } from './MagneticButton'
 
 const HeroShowcase = dynamic(() => import('./HeroShowcase'), {
@@ -109,11 +109,16 @@ export function Hero() {
           className="inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--qlico-muted)] backdrop-blur"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-          Interactive publishing
+          Flip through anything
         </m.span>
+        {/* The brand line moved up into the eyebrow and the headline now states
+            the job. "Flip through anything." is memorable and says nothing about
+            who this is for or what they get — and a visitor who bounces on the
+            H1 never reaches the sentence that did the work. Measurement is the
+            half of the promise no PDF can match, so it leads. */}
         <HeadlineReveal
-          text="Flip through anything."
-          className="font-display mt-6 text-6xl font-semibold leading-[1.0] tracking-[-0.02em] sm:text-7xl lg:text-[5.5rem]"
+          text="Send a PDF. See who actually read it."
+          className="font-display mt-6 text-5xl font-semibold leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-7xl"
         />
         <m.p
           initial={{ opacity: 0, y: 12 }}
@@ -121,8 +126,9 @@ export function Hero() {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="mx-auto mt-6 max-w-xl text-xl leading-8 text-[var(--qlico-muted)]"
         >
-          QLICO turns static PDFs into interactive editions — with hotspots, analytics, and
-          one-line embeds. Built for catalogs, lookbooks, portfolios, and reports.
+          Drop in a catalog, lookbook, report or portfolio. QLICO turns it into an interactive
+          edition you can send anywhere — then shows you which pages held attention, and who asked
+          for more.
         </m.p>
         <m.div
           initial={{ opacity: 0, y: 12 }}
@@ -131,15 +137,15 @@ export function Hero() {
           className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           <MagneticButton
-            href="/login"
-            onClick={() => track('cta_click', { cta: 'start_free', location: 'hero' })}
+            href="#try"
+            onClick={() => trackProduct('cta_click', { cta: 'drop_pdf', location: 'hero' })}
             className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-white shadow-[0_10px_30px_-8px_rgba(60,35,132,0.6)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
           >
-            Start for free
+            Drop in a PDF
           </MagneticButton>
           <Link
             href="/book/demo"
-            onClick={() => track('cta_click', { cta: 'view_demo', location: 'hero' })}
+            onClick={() => trackProduct('demo_opened', { edition: 'demo', location: 'hero' })}
             className="text-[15px] font-medium text-[var(--accent-fg)] transition hover:underline"
           >
             View the demo →

@@ -18,6 +18,7 @@ export function Footer() {
             <Link href="#features" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Features</Link>
             <Link href="#pricing" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Pricing</Link>
             <Link href="/book/demo" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Demo</Link>
+            <Link href="/help" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Help</Link>
             <Link href="/press" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Press</Link>
             <Link href="/privacy" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Privacy</Link>
             <Link href="/terms" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Terms</Link>

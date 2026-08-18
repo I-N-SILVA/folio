@@ -3,15 +3,61 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
+import Link from 'next/link'
+import { Lock } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
+import { useEntitlements } from '@/components/studio/EntitlementsContext'
 import { Field, FieldGroup, Toggle, inputCls, selectCls } from './shared'
+import { SlugField } from './SlugField'
+
+/** A control the current plan doesn't include — shown, disabled, with the way out. */
+function LockedFeature({
+  label,
+  hint,
+  planName,
+}: {
+  label: string
+  hint?: string
+  planName: string
+}) {
+  return (
+    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
+      <div className="flex items-start gap-2">
+        <Lock size={13} className="mt-0.5 shrink-0 text-neutral-500" />
+        <div className="min-w-0">
+          <p className="text-sm text-neutral-400">{label}</p>
+          {hint && <p className="mt-1 text-[11px] leading-4 text-neutral-500">{hint}</p>}
+          <p className="mt-2 text-[11px] leading-4 text-neutral-500">
+            Not included in {planName}.{' '}
+            <Link
+              href="/account"
+              target="_blank"
+              className="font-semibold text-[var(--accent-vivid)] hover:underline"
+            >
+              See plans
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Faces the reader is guaranteed to get: the theme default, or a web-safe stack. */
+const FONT_CHOICES = [
+  { value: '', label: 'Theme default' },
+  { value: 'Georgia, serif', label: 'Serif — Georgia' },
+  { value: 'Palatino, "Palatino Linotype", serif', label: 'Serif — Palatino' },
+  { value: '"Helvetica Neue", Helvetica, Arial, sans-serif', label: 'Sans — Helvetica' },
+  { value: 'system-ui, sans-serif', label: 'Sans — System' },
+  { value: '"Courier New", monospace', label: 'Mono — Courier' },
+]
 
 export function BookSettingsForm({ book }: { book: any }) {
   const { updateSettings, updateTheme } = useEditorStore()
+  const entitlements = useEntitlements()
   const { register, watch, setValue } = useForm({
     defaultValues: {
-      password: book.settings?.password ?? '',
-      burn_after_reading: book.settings?.burn_after_reading ?? false,
       unlisted: book.settings?.unlisted ?? false,
       whitelabel: book.settings?.whitelabel ?? false,
       gatingEnabled: book.settings?.gating?.enabled ?? false,
@@ -28,8 +74,6 @@ export function BookSettingsForm({ book }: { book: any }) {
     const sub = watch((values) => {
       // Update book settings
       updateSettings({
-        password: values.password || undefined,
-        burn_after_reading: values.burn_after_reading,
         unlisted: values.unlisted,
         whitelabel: values.whitelabel,
         gating: {
@@ -54,6 +98,13 @@ export function BookSettingsForm({ book }: { book: any }) {
 
   return (
     <div className="space-y-6">
+      {/* The public address used to be permanent, because nothing could forward
+          the old one — so a typo in the link that went out in an email was
+          forever. It can be changed now, and the old address redirects. */}
+      <FieldGroup title="Link">
+        <SlugField bookId={book.id} slug={book.slug} />
+      </FieldGroup>
+
       <FieldGroup title="Theme & typography">
         <Field label="Theme preset">
           <select {...register('themePreset')} className={selectCls}>
@@ -64,11 +115,27 @@ export function BookSettingsForm({ book }: { book: any }) {
             <option value="sage">Sage (Green)</option>
           </select>
         </Field>
+        {/* These were free-text family names. Typing one you have installed
+            locally produced an edition that looked right to you and fell back to
+            something else for every reader — a difference the author had no way
+            to see. */}
         <Field label="Heading font">
-          <input {...register('headingFont')} className={inputCls} placeholder="e.g. Inter, serif" />
+          <select {...register('headingFont')} className={selectCls}>
+            {FONT_CHOICES.map((f) => (
+              <option key={f.value || 'theme'} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Body font">
-          <input {...register('bodyFont')} className={inputCls} placeholder="e.g. Roboto, sans-serif" />
+          <select {...register('bodyFont')} className={selectCls}>
+            {FONT_CHOICES.map((f) => (
+              <option key={f.value || 'theme'} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
         </Field>
       </FieldGroup>
 
@@ -77,29 +144,48 @@ export function BookSettingsForm({ book }: { book: any }) {
           edition served in full to anyone with the link, and a view-once
           edition could be reopened forever. Offering them was worse than
           omitting them — someone could ship a confidential document believing
-          it was protected. The schema fields are kept so stored values survive,
-          but the controls are gone until the behaviour exists. */}
+          it was protected. The schema fields are now gone too, so there is
+          nothing left to accidentally wire a control back onto. */}
       <FieldGroup title="Access">
         <Toggle
           label="Unlisted — ask search engines not to index"
           checked={watch('unlisted')}
           onChange={(next) => setValue('unlisted', next, { shouldDirty: true })}
         />
-        <Toggle
-          label="Remove “Made with QLICO” branding"
-          checked={watch('whitelabel')}
-          onChange={(next) => setValue('whitelabel', next, { shouldDirty: true })}
-        />
+        {/* Both of the controls below are plan features, and the reader resolves
+            them from the plan rather than from what gets written here. Locking
+            them in the UI is so the author finds out now instead of wondering
+            why a switched-on gate never appears. */}
+        {entitlements.whiteLabel ? (
+          <Toggle
+            label="Remove the “Powered by QLICO” badge"
+            checked={watch('whitelabel')}
+            onChange={(next) => setValue('whitelabel', next, { shouldDirty: true })}
+          />
+        ) : (
+          <LockedFeature
+            label="Remove the “Powered by QLICO” badge"
+            planName={entitlements.planName}
+          />
+        )}
       </FieldGroup>
 
-      <FieldGroup title="Lead gating">
-        <Toggle
-          label="Ask for an email to keep reading"
-          checked={watch('gatingEnabled')}
-          onChange={(next) => setValue('gatingEnabled', next, { shouldDirty: true })}
-        />
+      <FieldGroup title="Email capture">
+        {entitlements.leadGating ? (
+          <Toggle
+            label="Ask for an email to keep reading"
+            checked={watch('gatingEnabled')}
+            onChange={(next) => setValue('gatingEnabled', next, { shouldDirty: true })}
+          />
+        ) : (
+          <LockedFeature
+            label="Ask for an email to keep reading"
+            hint="Readers give you their address to unlock the rest of the edition. Captured addresses land in Insights."
+            planName={entitlements.planName}
+          />
+        )}
 
-        {watch('gatingEnabled') && (
+        {entitlements.leadGating && watch('gatingEnabled') && (
           <div className="space-y-3 border-l border-neutral-800 pl-4">
             <Field
               label="Gate at page"

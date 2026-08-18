@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { lockedPages } from '@/lib/gating'
+import { getOwnerEntitlements, readerPolicy } from '@/lib/entitlements'
+import { isEmailEnabled, sendLeadNotification } from '@/lib/email'
 import { getDemoBook } from '@/data/books'
 import type { Book } from '@/lib/book-schema'
 
@@ -14,6 +16,35 @@ import type { Book } from '@/lib/book-schema'
  * the pages after the boundary. It is the single place those pages are
  * reachable; the reader's initial HTML never contains them.
  */
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app'
+
+/**
+ * Emails the edition's owner about a new lead, if email is configured.
+ *
+ * The owner's address comes from their profile row rather than from anything in
+ * the request, so a reader cannot direct where this goes.
+ */
+async function notifyOwner(book: Book, readerEmail: string): Promise<void> {
+  if (!isEmailEnabled()) return
+
+  const { data: owner } = await supabaseAdmin
+    .from('profiles')
+    .select('email')
+    .eq('id', book.owner_id)
+    .maybeSingle()
+
+  const to = owner?.email
+  if (!to) return
+
+  await sendLeadNotification({
+    to,
+    editionTitle: book.title,
+    readerEmail,
+    editionUrl: `${SITE_URL}/book/${book.slug}`,
+    insightsUrl: `${SITE_URL}/analytics/${book.slug}`,
+  })
+}
 
 const UnlockSchema = z.object({
   slug: z.string().min(1).max(100),
@@ -56,7 +87,15 @@ export async function POST(request: NextRequest) {
   }
 
   const book = data as unknown as Book
-  if (!book.settings?.gating?.enabled) {
+
+  // Lead capture is a paid entitlement, and the toggle that switches it on is
+  // written straight to the book row by the editor. Resolving the owner's plan
+  // here keeps this endpoint consistent with the reader: if the plan doesn't
+  // include gating, the reader served the whole edition and there is nothing
+  // withheld for this request to release.
+  const entitlements = await getOwnerEntitlements(book.owner_id)
+  const { gateEnabled } = readerPolicy(book.settings, entitlements)
+  if (!gateEnabled) {
     return NextResponse.json({ error: 'This edition is not gated.' }, { status: 400 })
   }
 
@@ -84,5 +123,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  return NextResponse.json({ pages: lockedPages(book) })
+  // Tell the author. A captured lead was the most valuable thing this product
+  // produces and the hardest to find out about — it sat in the events table
+  // until someone thought to open Insights and export a CSV.
+  //
+  // Deliberately after the lead is safely recorded and deliberately not awaited
+  // into the response's success: the reader is owed their pages whether or not
+  // an email provider is configured or reachable.
+  notifyOwner(book, email).catch((err) => console.error('[unlock] notify failed:', err))
+
+  return NextResponse.json({ pages: lockedPages(book, gateEnabled) })
 }

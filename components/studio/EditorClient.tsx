@@ -5,9 +5,8 @@ import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
 import { ArrowLeft, Globe, EyeOff, Loader2, Check, Eye, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { track } from '@vercel/analytics'
+import { trackProduct } from '@/lib/product-analytics'
 import { useEditorStore } from '@/lib/editor-store'
-import { createBrowserSupabase } from '@/lib/supabase'
 import { PageListSidebar } from '@/components/studio/PageListSidebar'
 import { EditorCanvas } from '@/components/studio/EditorCanvas'
 import { SettingsPanel } from '@/components/studio/settings'
@@ -15,14 +14,16 @@ import { PreviewModal } from '@/components/studio/PreviewModal'
 import { PageManagerModal } from '@/components/studio/PageManagerModal'
 import { ShareModal } from '@/components/studio/ShareModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
+import { EntitlementsProvider, type StudioEntitlements } from '@/components/studio/EntitlementsContext'
 import { Grid } from 'lucide-react'
 import type { Book } from '@/lib/book-schema'
 
 interface Props {
   book: Book
+  entitlements: StudioEntitlements
 }
 
-export function EditorClient({ book }: Props) {
+export function EditorClient({ book, entitlements }: Props) {
   const { book: storeBook, isDirty, setBook, setIsSaving } = useEditorStore()
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
@@ -31,6 +32,7 @@ export function EditorClient({ book }: Props) {
   const [showPreview, setShowPreview] = useState(false)
   const [showPageManager, setShowPageManager] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [publishing, setPublishing] = useState(false)
 
   // Warn about unsaved changes
   useEffect(() => {
@@ -46,7 +48,26 @@ export function EditorClient({ book }: Props) {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saveInFlight = useRef(false)
-  const supabase = createBrowserSupabase()
+
+  /**
+   * What the last successful save wrote, by object identity.
+   *
+   * Every save used to send both requests unconditionally, so toggling one
+   * setting rewrote every page of the edition and re-rendering one text block
+   * rewrote the book row — every two seconds, for the whole session. The store
+   * replaces only the branch that changed, so identity is an exact and free
+   * answer to "did this part move?".
+   */
+  const saved = useRef<{ pages?: unknown; meta?: string }>({})
+
+  /** The book-level fields, as the API receives them. */
+  const metaOf = (b: Book) =>
+    JSON.stringify({
+      theme: b.theme,
+      settings: b.settings,
+      title: b.title,
+      description: b.description ?? null,
+    })
 
   // Initialize store on mount
   useEffect(() => {
@@ -65,35 +86,59 @@ export function EditorClient({ book }: Props) {
     setSaveStatus('saving')
 
     try {
-      // Save book-level fields
-      await supabase
-        .from('books')
-        .update({
-          theme: bookAtSaveStart.theme,
-          settings: bookAtSaveStart.settings,
-          title: bookAtSaveStart.title,
-          description: bookAtSaveStart.description ?? null,
-          updated_at: new Date().toISOString(),
+      const meta = metaOf(bookAtSaveStart)
+      const pagesChanged = bookAtSaveStart.pages !== saved.current.pages
+      const metaChanged = meta !== saved.current.meta
+
+      // Book-level fields go through the API so the Zod schema applies to what
+      // the editor writes, the same way it applies to every other write path.
+      if (metaChanged) {
+        const bookRes = await fetch(`/api/books/${bookAtSaveStart.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            theme: bookAtSaveStart.theme,
+            settings: bookAtSaveStart.settings,
+            title: bookAtSaveStart.title,
+            description: bookAtSaveStart.description ?? undefined,
+          }),
         })
-        .eq('id', bookAtSaveStart.id)
-
-      // Upsert all pages
-      if (bookAtSaveStart.pages && bookAtSaveStart.pages.length > 0) {
-        const pagesPayload = bookAtSaveStart.pages.map((p) => ({
-          id: p.id,
-          book_id: p.book_id,
-          page_number: p.page_number,
-          type: p.type,
-          layout: p.layout,
-          background: p.background ?? null,
-          blocks: p.blocks,
-          hotspots: p.hotspots,
-        }))
-
-        await supabase
-          .from('pages')
-          .upsert(pagesPayload, { onConflict: 'id' })
+        if (!bookRes.ok) throw new Error('Could not save this edition’s settings')
       }
+
+      // Pages go through the transactional replace route.
+      //
+      // This used to upsert the page rows straight from the browser on `id`,
+      // which quietly broke the two structural edits the editor offers. A page
+      // the author deleted was never deleted — the upsert only writes the rows
+      // it is given, so the row survived and the page reappeared on reload. And
+      // a reorder renumbers `page_number` into a UNIQUE (book_id, page_number)
+      // constraint that is checked per row, so swapping two pages collided
+      // mid-statement and surfaced as "Save failed — check your connection".
+      //
+      // PUT /api/books/[id]/pages replaces the whole set inside one transaction
+      // (see supabase/migrations/010), which is what "the pages are now this"
+      // actually requires — so it is sent only when the pages have moved.
+      if (pagesChanged) {
+        const pagesRes = await fetch(`/api/books/${bookAtSaveStart.id}/pages`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            (bookAtSaveStart.pages ?? []).map((p) => ({
+              id: p.id,
+              page_number: p.page_number,
+              type: p.type,
+              layout: p.layout,
+              background: p.background ?? undefined,
+              blocks: p.blocks,
+              hotspots: p.hotspots,
+            }))
+          ),
+        })
+        if (!pagesRes.ok) throw new Error('Could not save these pages')
+      }
+
+      saved.current = { pages: bookAtSaveStart.pages, meta }
 
       // Only clear isDirty if nothing changed while this save was in
       // flight — otherwise a newer, unsaved edit gets incorrectly marked
@@ -104,14 +149,30 @@ export function EditorClient({ book }: Props) {
       setSaveStatus('saved')
       setLastSavedAt(new Date())
       setTimeout(() => setSaveStatus('idle'), 2000)
-    } catch {
-      toast.error('Save failed — check your connection')
+    } catch (err) {
+      // Say what failed. "Check your connection" was the message for every
+      // failure including constraint violations, which sent authors to retry a
+      // save that could never succeed.
+      toast.error(err instanceof Error ? err.message : 'Save failed — check your connection')
       setSaveStatus('idle')
     } finally {
       saveInFlight.current = false
       setIsSaving(false)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Save and actually wait for it — including waiting out an autosave that is
+   * already in flight, which `save()` returns early from. Publishing needs this:
+   * the share dialog hands over a link, so the publish flag has to have landed
+   * before the author can paste it anywhere.
+   */
+  const saveNow = useCallback(async () => {
+    for (let i = 0; i < 50 && saveInFlight.current; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    await save()
+  }, [save])
 
   useEffect(() => {
     if (!isDirty) return
@@ -217,13 +278,32 @@ export function EditorClient({ book }: Props) {
         ? { ...s.book, settings: { ...s.book.settings, published: next } }
         : s.book,
     }))
-    toast.success(next ? 'Edition published — it\'s live!' : 'Edition unpublished')
-    if (next) track('edition_published')
+
+    if (!next) {
+      toast.success('Edition unpublished')
+      return
+    }
+
+    trackProduct('edition_published', { pages: storeBook.pages?.length ?? 0 })
+
+    // Publishing used to end in a toast, and that was the whole moment. But an
+    // edition nobody has the link to produces nothing — no reader, no analytics,
+    // no lead — so the step that creates every downstream value was left for the
+    // author to think of on their own. Force the save first so the link works
+    // the instant they paste it, then hand them the link.
+    setPublishing(true)
+    try {
+      await saveNow()
+    } finally {
+      setPublishing(false)
+    }
+    setShowShare(true)
   }
 
   const isPublished = storeBook?.settings.published ?? false
 
   return (
+    <EntitlementsProvider value={entitlements}>
     <div className="flex flex-col h-screen bg-neutral-950 text-neutral-100 overflow-hidden">
       {/* Top toolbar */}
       <header className="flex items-center gap-3 px-4 h-13 border-b border-neutral-800 shrink-0 py-2">
@@ -324,15 +404,22 @@ export function EditorClient({ book }: Props) {
         {/* Publish toggle */}
         <button
           onClick={handlePublishToggle}
+          disabled={publishing}
           className={twMerge(
-            'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+            'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60',
             isPublished
               ? 'bg-emerald-600 text-white hover:bg-emerald-700'
               : 'border border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
           )}
         >
-          {isPublished ? <Globe size={13} /> : <EyeOff size={13} />}
-          {isPublished ? 'Published' : 'Draft'}
+          {publishing ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : isPublished ? (
+            <Globe size={13} />
+          ) : (
+            <EyeOff size={13} />
+          )}
+          {publishing ? 'Publishing…' : isPublished ? 'Published' : 'Draft'}
         </button>
 
         {/* View Live */}
@@ -400,6 +487,7 @@ export function EditorClient({ book }: Props) {
         />
       )}
     </div>
+    </EntitlementsProvider>
   )
 }
 

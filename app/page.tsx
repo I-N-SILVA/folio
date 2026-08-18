@@ -1,18 +1,20 @@
 'use client'
 
+import { useEffect } from 'react'
 import { LazyMotion, domAnimation } from 'framer-motion'
 import { ScrollProgress } from '@/components/landing/ScrollProgress'
 import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
+import { TryItNow } from '@/components/landing/TryItNow'
 import { FeaturesBento } from '@/components/landing/FeaturesBento'
 import { Statement } from '@/components/landing/Statement'
-import { Stats } from '@/components/landing/Stats'
 import { HowItWorks } from '@/components/landing/HowItWorks'
 import { Examples } from '@/components/landing/Examples'
 import { Pricing } from '@/components/landing/Pricing'
 import { Faq } from '@/components/landing/Faq'
 import { ClosingCta } from '@/components/landing/ClosingCta'
 import { Footer } from '@/components/landing/Footer'
+import { trackProduct } from '@/lib/product-analytics'
 
 // Schema.org markup so search results show QLICO as an application with
 // pricing. Rendered into the SSR HTML below.
@@ -28,11 +30,17 @@ const JSON_LD = {
   offers: [
     { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
     { '@type': 'Offer', name: 'Pro', price: '19', priceCurrency: 'USD' },
-    { '@type': 'Offer', name: 'Lifetime', price: '199', priceCurrency: 'USD' },
+    { '@type': 'Offer', name: 'Lifetime', price: '59', priceCurrency: 'USD' },
   ],
 }
 
 export default function HomePage() {
+  // The denominator for every rate on the landing page. Without it, "signups
+  // per week" is a number with nothing to divide by.
+  useEffect(() => {
+    trackProduct('landing_viewed', { referrer: document.referrer || 'direct' })
+  }, [])
+
   return (
     <LazyMotion features={domAnimation}>
       <div className="min-h-screen bg-[var(--background)] text-[var(--qlico-ink)]">
@@ -45,9 +53,9 @@ export default function HomePage() {
 
         <main>
           <Hero />
+          <TryItNow />
           <FeaturesBento />
           <Statement />
-          <Stats />
           <HowItWorks />
           <Examples />
           <Pricing />

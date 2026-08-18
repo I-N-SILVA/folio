@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { subDays } from 'date-fns'
+import { getUserEntitlements } from '@/lib/entitlements'
+import { clampAnalyticsDays } from '@/lib/plans'
 
-type DateRange = '7d' | '30d' | '90d' | 'all'
+type DateRange = '7d' | '30d' | '90d' | '365d' | 'all'
 
-function getStartDate(range: DateRange): string | null {
+/**
+ * Days the caller asked for, or null for "all time".
+ *
+ * "All time" was previously honoured literally, which meant the retention
+ * window sold on every plan — 30 days on Free, 12 months on Pro — was a label on
+ * a range picker and nothing else. The requested value is now only an upper
+ * bound; `clampAnalyticsDays` decides what is actually queried.
+ */
+function requestedDays(range: DateRange): number | null {
   if (range === 'all') return null
-  const days = range === '7d' ? 7 : range === '30d' ? 30 : 90
-  return subDays(new Date(), days).toISOString()
+  return range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365
 }
 
 export async function GET(
@@ -31,17 +40,16 @@ export async function GET(
   if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const range = (request.nextUrl.searchParams.get('range') ?? '30d') as DateRange
-  const startDate = getStartDate(range)
+  const entitlements = await getUserEntitlements(user.id, user.email)
+  const days = clampAnalyticsDays(requestedDays(range), entitlements)
+  const startDate = subDays(new Date(), days).toISOString()
 
-  let query = supabase
+  const { data: events, error } = await supabase
     .from('events')
     .select('*')
     .eq('book_id', book.id)
+    .gte('created_at', startDate)
     .order('created_at', { ascending: true })
-
-  if (startDate) query = query.gte('created_at', startDate)
-
-  const { data: events, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -168,6 +176,17 @@ export async function GET(
     ctaData,
     heatmapData,
     leadData,
-    raw: events,
+    // What the caller is actually looking at, so the UI can say so rather than
+    // implying the range button it highlighted is the range it got.
+    window: {
+      days,
+      limitDays: entitlements.analyticsDays,
+      clamped: requestedDays(range) === null || days < (requestedDays(range) ?? 0),
+    },
+    csvExport: entitlements.csvExport,
+    // `raw: events` used to ride along here purely so the browser could build a
+    // CSV — every event row of every edition, on every dashboard load. That
+    // breaks precisely when an edition succeeds. Export is a server route now:
+    // /api/analytics/[slug]/export.
   })
 }

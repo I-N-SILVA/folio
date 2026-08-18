@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { trackProduct } from '@/lib/product-analytics'
 
 async function go(endpoint: string, setLoading: (b: boolean) => void) {
   setLoading(true)
@@ -25,7 +26,10 @@ export function UpgradeButton({ className = '' }: { className?: string }) {
   const [loading, setLoading] = useState(false)
   return (
     <button
-      onClick={() => go('/api/billing/checkout', setLoading)}
+      onClick={() => {
+        trackProduct('checkout_started', { plan: 'pro' })
+        go('/api/billing/checkout', setLoading)
+      }}
       disabled={loading}
       className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--qlico-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:opacity-50 ${className}`}
     >

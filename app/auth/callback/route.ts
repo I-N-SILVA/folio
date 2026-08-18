@@ -26,5 +26,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`/login?error=${reason}`, request.url))
   }
 
-  return NextResponse.redirect(new URL(next, request.url))
+  // `signed_in` marks the one hop where the magic link actually worked, which is
+  // the only place the gap between "we sent a link" and "they came back" can be
+  // measured. The destination fires `signup_completed` and strips the param.
+  const destination = new URL(next, request.url)
+  destination.searchParams.set('signed_in', '1')
+  return NextResponse.redirect(destination)
 }

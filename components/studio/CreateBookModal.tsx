@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { X, FileText, Layout, Image as ImageIcon, Loader2, Crown } from 'lucide-react'
+import { X, FileText, Layout, Loader2, Crown } from 'lucide-react'
 import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 const ImportPDFModal = dynamic(() => import('./ImportPDFModal').then(m => m.ImportPDFModal), { ssr: false })
-import { createBrowserSupabase } from '@/lib/supabase'
 import { Modal } from '@/components/ui/Modal'
-import { MAX_ASSET_BYTES, humanBytes, isAllowedAssetType } from '@/lib/uploads'
+import { trackProduct } from '@/lib/product-analytics'
 
 interface Props {
   onClose: () => void
@@ -31,24 +30,37 @@ function randomSuffix() {
 }
 
 export function CreateBookModal({ onClose }: Props) {
-  const [step, setStep] = useState<'choice' | 'pdf' | 'images' | 'name-blank'>('choice')
+  const [step, setStep] = useState<'choice' | 'pdf' | 'name-blank'>('choice')
   const [newTitle, setNewTitle] = useState('')
   const [loading, setLoading] = useState(false)
   const [quota, setQuota] = useState<Quota | null>(null)
   const [limitHit, setLimitHit] = useState(false)
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
   const [slugError, setSlugError] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
-  const supabase = createBrowserSupabase()
 
   // The slug is the public URL and nothing in the app can change it later, so
   // it has to be settable here. Derived from the title until the user takes
   // it over — no random suffix, so the shared link reads as something a person
   // wrote; a collision comes back from the server as a 409 to correct.
   const effectiveSlug = slugifyTitle(slugEdited ? slug : newTitle.trim())
+
+  useEffect(() => {
+    trackProduct('edition_create_started')
+  }, [])
+
+  // The edition cap is still the only place in the product that asks for money,
+  // so how often it is reached — and on which plan — is the whole monetisation
+  // funnel's top of pipe. Fired from an effect rather than at the top of the
+  // wall's render, which would emit again on every re-render behind it.
+  useEffect(() => {
+    if (!limitHit) return
+    trackProduct('upgrade_viewed', {
+      trigger: 'edition_limit',
+      plan: quota?.planName ?? 'unknown',
+    })
+  }, [limitHit, quota?.planName])
 
   // Fetch the user's quota so we can pre-empt creation when they're capped.
   useEffect(() => {
@@ -121,101 +133,6 @@ export function CreateBookModal({ onClose }: Props) {
     }
   }
 
-  const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    // Let the same files be re-picked after a failed run.
-    e.target.value = ''
-    if (files.length === 0) return
-
-    // Validate before creating anything. A rejected file used to surface only
-    // after the book already existed and images had been uploaded.
-    const tooLarge = files.find((f) => f.size > MAX_ASSET_BYTES)
-    if (tooLarge) {
-      toast.error(
-        `${tooLarge.name} is ${humanBytes(tooLarge.size)} — the limit is ${humanBytes(MAX_ASSET_BYTES)}.`
-      )
-      return
-    }
-    const badType = files.find((f) => !isAllowedAssetType(f.type))
-    if (badType) {
-      toast.error(`${badType.name} isn't a supported image type.`)
-      return
-    }
-
-    setLoading(true)
-    setProgress({ done: 0, total: files.length })
-
-    let createdBookId: string | null = null
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const title = newTitle.trim() || 'Image Collection'
-      const slug = `${slugifyTitle(title)}-${randomSuffix()}`
-
-      const { data: book, error: bookError } = await supabase
-        .from('books')
-        .insert({
-          title,
-          slug,
-          owner_id: user.id,
-          settings: { published: false, unlisted: false },
-          theme: { preset: 'ivory' },
-        })
-        .select()
-        .single()
-
-      if (bookError) throw bookError
-      createdBookId = book.id
-
-      const pages: Record<string, unknown>[] = []
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const ext = file.name.split('.').pop()
-        const path = `${user.id}/${book.id}/page-${i + 1}-${Date.now()}.${ext}`
-
-        const { error: uploadError } = await supabase.storage.from('folio-assets').upload(path, file)
-        if (uploadError) throw uploadError
-
-        const { data: { publicUrl } } = supabase.storage.from('folio-assets').getPublicUrl(path)
-
-        pages.push({
-          book_id: book.id,
-          page_number: i + 1,
-          type: 'content',
-          // 'image' is not a member of the layout enum — the DB CHECK
-          // constraint rejected it, so this path failed on its first page
-          // insert and left behind an orphan book. A full-bleed background
-          // image needs no block layout, so 'blank' is the right fit.
-          layout: 'blank',
-          // `background` is a jsonb object, not a URL string. Assigning the
-          // bare URL meant `page.background?.image` was always undefined, so
-          // even a page that survived would have rendered empty.
-          background: { image: publicUrl },
-          blocks: [],
-          hotspots: [],
-        })
-
-        setProgress({ done: i + 1, total: files.length })
-      }
-
-      const { error: pagesError } = await supabase.from('pages').insert(pages)
-      if (pagesError) throw pagesError
-
-      router.push(`/editor/${book.id}`)
-    } catch (err: any) {
-      // Don't strand an empty book against the user's plan quota — on the
-      // free tier a single orphan blocks every future creation.
-      if (createdBookId) {
-        await supabase.from('books').delete().eq('id', createdBookId)
-      }
-      setProgress(null)
-      if (guardLimit(err)) return
-      toast.error(err.message || 'Failed to upload images')
-      setLoading(false)
-    }
-  }
-
   if (step === 'pdf') {
     return (
       <ImportPDFModal
@@ -240,7 +157,7 @@ export function CreateBookModal({ onClose }: Props) {
     </Modal>
   )
 
-  // Upgrade wall — shown when the user is at their plan's book limit.
+  // Upgrade wall — shown when the user is at their plan's edition limit.
   if (limitHit) {
     return shell(
       <div className="p-8 text-center">
@@ -248,12 +165,12 @@ export function CreateBookModal({ onClose }: Props) {
           <Crown size={26} />
         </div>
         <h2 className="font-display text-3xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">
-          You've reached your book limit
+          You&apos;ve reached your edition limit
         </h2>
         <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[var(--qlico-muted)]">
           {quota?.planName ? `Your ${quota.planName} plan` : 'Your plan'} includes{' '}
-          {quota?.limit ?? 'a limited number of'} book{quota?.limit === 1 ? '' : 's'}. Upgrade to
-          publish more interactive editions.
+          {quota?.limit ?? 'a limited number of'} edition{quota?.limit === 1 ? '' : 's'}. Delete one
+          you no longer need, or move up a plan.
         </p>
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
@@ -273,7 +190,7 @@ export function CreateBookModal({ onClose }: Props) {
           Close
         </button>
       </div>,
-      'Book limit reached',
+      'Edition limit reached',
       'max-w-md'
     )
   }
@@ -282,7 +199,7 @@ export function CreateBookModal({ onClose }: Props) {
     return shell(
       <>
         <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">Name your QLICO</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">Name your edition</h2>
           <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)]">
             <X size={20} />
           </button>
@@ -290,7 +207,7 @@ export function CreateBookModal({ onClose }: Props) {
 
         <form onSubmit={handleCreateBlank} className="p-8">
           <label className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
-            Book title
+            Edition title
           </label>
           <input
             autoFocus
@@ -350,7 +267,7 @@ export function CreateBookModal({ onClose }: Props) {
               disabled={loading || !newTitle.trim() || !effectiveSlug}
               className="flex-[2] rounded-full bg-[var(--qlico-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Creating…' : 'Create QLICO'}
+              {loading ? 'Creating…' : 'Create edition'}
             </button>
           </div>
         </form>
@@ -364,10 +281,10 @@ export function CreateBookModal({ onClose }: Props) {
     <>
       <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
         <div>
-          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">Create New QLICO</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">Create an edition</h2>
           {quota && (
             <p className="mt-1 text-xs font-semibold text-[var(--qlico-muted)]">
-              {quota.used} / {quota.limit ?? '∞'} books used · {quota.planName}
+              {quota.used} / {quota.limit ?? '∞'} editions used · {quota.planName}
             </p>
           )}
         </div>
@@ -377,61 +294,68 @@ export function CreateBookModal({ onClose }: Props) {
       </div>
 
       <div className="p-8">
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        {/* Three ways in became two. The image path inserted straight from the
+            browser, skipping the API's validation and its friendly quota
+            message, and shipped two bugs of its own doing so — while covering a
+            job "PDF" and "Blank" already cover. */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {[
-            { key: 'blank', icon: Layout, title: 'Blank', desc: 'Start from scratch', onClick: () => setStep('name-blank') },
-            { key: 'pdf', icon: FileText, title: 'PDF', desc: 'Convert document', onClick: () => setStep('pdf') },
-            { key: 'images', icon: ImageIcon, title: 'Images', desc: 'Bulk upload', onClick: () => fileInputRef.current?.click() },
-          ].map(({ key, icon: Icon, title, desc, onClick }) => (
+            {
+              key: 'pdf',
+              icon: FileText,
+              title: 'Import a PDF',
+              desc: 'Every page becomes a spread you can add hotspots and links to.',
+              onClick: () => setStep('pdf'),
+              primary: true,
+            },
+            {
+              key: 'blank',
+              icon: Layout,
+              title: 'Start blank',
+              desc: 'Build page by page from text, images, video and live data.',
+              onClick: () => setStep('name-blank'),
+              primary: false,
+            },
+          ].map(({ key, icon: Icon, title, desc, onClick, primary }) => (
             <button
               key={key}
               disabled={loading}
               onClick={onClick}
-              className="group flex flex-col items-center gap-4 rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/55 p-6 text-center transition-all hover:-translate-y-1 hover:border-[var(--qlico-teal)] hover:bg-[var(--qlico-paper)] disabled:opacity-50"
+              className={`group flex flex-col items-start gap-3 rounded-[1.5rem] border p-6 text-left transition-all hover:-translate-y-1 disabled:opacity-50 ${
+                primary
+                  ? 'border-[var(--accent)]/40 bg-[var(--accent)]/5 hover:border-[var(--accent)]'
+                  : 'border-[var(--qlico-border)] bg-[var(--qlico-paper)]/55 hover:border-[var(--qlico-ink)]'
+              }`}
             >
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[var(--invert-surface)] text-[var(--invert-text)] transition-colors group-hover:bg-[var(--qlico-teal)]">
-                <Icon size={26} />
+              <div
+                className={`grid h-12 w-12 place-items-center rounded-2xl transition-colors ${
+                  primary
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--invert-surface)] text-[var(--invert-text)]'
+                }`}
+              >
+                <Icon size={22} />
               </div>
               <div>
-                <h3 className="font-display text-lg font-semibold tracking-[-0.03em] text-[var(--qlico-ink)]">{title}</h3>
-                <p className="mt-1 text-xs text-[var(--qlico-muted)]">{desc}</p>
+                <h3 className="font-display text-lg font-semibold tracking-[-0.03em] text-[var(--qlico-ink)]">
+                  {title}
+                </h3>
+                <p className="mt-1 text-[13px] leading-5 text-[var(--qlico-muted)]">{desc}</p>
               </div>
             </button>
           ))}
         </div>
 
-        <input type="file" multiple accept="image/*" ref={fileInputRef} onChange={handleBulkImageUpload} className="hidden" />
-
         {loading && (
-          <div className="mt-8">
-            <div className="flex items-center justify-center gap-3 text-sm font-semibold text-[var(--qlico-teal)]">
-              <Loader2 className="animate-spin" size={18} />
-              {progress
-                ? `Uploading image ${progress.done} of ${progress.total}…`
-                : 'Initializing your edition…'}
-            </div>
-            {/* A 40-image upload used to be an unbroken, unexplained wait. */}
-            {progress && (
-              <div
-                role="progressbar"
-                aria-valuenow={progress.done}
-                aria-valuemin={0}
-                aria-valuemax={progress.total}
-                aria-label="Upload progress"
-                className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-[var(--tint)]"
-              >
-                <div
-                  className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
-                  style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }}
-                />
-              </div>
-            )}
+          <div className="mt-8 flex items-center justify-center gap-3 text-sm font-semibold text-[var(--accent-fg)]">
+            <Loader2 className="animate-spin" size={18} />
+            Setting up your edition…
           </div>
         )}
       </div>
 
       <div className="flex items-center justify-center border-t border-[var(--qlico-border)] bg-[var(--qlico-paper)]/40 p-5 text-xs text-[var(--qlico-muted)]">
-        Tip: PDFs are best for books, Images are best for portfolios.
+        You can rename an edition later — its link is the one thing that&apos;s permanent.
       </div>
     </>
   )

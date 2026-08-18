@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import * as LucideIcons from 'lucide-react'
+import { createElement, useState } from 'react'
 import { trackEvent } from '@/lib/tracking'
+import { hotspotIcon } from '@/lib/hotspot-icons'
 import type { Hotspot } from '@/lib/book-schema'
 
 interface HotspotIconProps {
@@ -14,8 +14,6 @@ interface HotspotIconProps {
 
 export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIconProps) {
   const [clicked, setClicked] = useState(false)
-
-  const Icon = (LucideIcons as any)[hotspot.icon] ?? LucideIcons.Info
 
   function handleClick(e: React.MouseEvent) {
     e.stopPropagation()
@@ -45,10 +43,23 @@ export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIco
     >
       {/* Pulsing ring — stops after first click, unless it's a high-value action */}
       {(!clicked || isEcomAction) && (
-        <span className={`absolute inline-flex w-full h-full rounded-full bg-white/60 ${isEcomAction ? 'animate-ping' : 'animate-ping'}`} style={isEcomAction ? { animationDuration: '2s' } : undefined} />
+        <span
+          aria-hidden="true"
+          className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/60"
+          // A slower pulse for a hotspot that leads somewhere, so it reads as an
+          // invitation rather than an alarm. (The global reduced-motion reset in
+          // globals.css stops the animation after one iteration either way.)
+          style={isEcomAction ? { animationDuration: '2s' } : undefined}
+        />
       )}
       <span className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/90 shadow-lg hover:scale-110 transition-transform">
-        <Icon size={16} className={isEcomAction ? 'text-[var(--accent)]' : 'text-gray-800'} />
+        {/* `createElement` rather than a `<Icon />` variable: the icon is chosen
+            at runtime from the shared map, and assigning a component inside
+            render is what the react-compiler lint rule (rightly) objects to. */}
+        {createElement(hotspotIcon(hotspot.icon), {
+          size: 16,
+          className: isEcomAction ? 'text-[var(--accent)]' : 'text-gray-800',
+        })}
       </span>
       {hotspot.action === 'checkout' && hotspot.price && (
         <span className="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--accent)] px-2 py-0.5 text-[10px] font-bold text-white shadow-md">

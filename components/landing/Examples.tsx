@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { track } from '@vercel/analytics'
+import { trackProduct } from '@/lib/product-analytics'
 import Reveal from './Reveal'
 
 const EXAMPLES = [
@@ -50,7 +50,7 @@ export function Examples() {
             <Reveal key={ex.slug} delay={i * 90}>
               <Link
                 href={`/book/${ex.slug}`}
-                onClick={() => track('demo_open', { edition: ex.slug, location: 'examples' })}
+                onClick={() => trackProduct('demo_opened', { edition: ex.slug, location: 'examples' })}
                 className="group block h-full overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] transition hover:-translate-y-1 hover:shadow-[var(--qlico-shadow)]"
               >
                 <div

@@ -1,14 +1,22 @@
 # Handover
 
-State of QLICO as of the `claude/app-ui-ux-improvements-swrrrt` work (21 commits,
-merged to `main`). Written for whoever picks this up next — human or agent.
+State of QLICO after the `claude/product-strategy-audit-xt5fdi` work. Written for
+whoever picks this up next — human or agent.
 
-Verification baseline at merge: **89 tests across 11 files passing, 0 lint
-errors, 31 lint warnings, `tsc --noEmit` clean, production build clean.**
+The reasoning behind every product decision below is in
+`docs/product-strategy-audit.md`, which audits the product as it was and ends in
+the roadmap this branch implements. Read it before undoing anything here.
+
+Verification baseline: **126 tests across 13 files passing, 0 lint errors, 28
+lint warnings, `tsc --noEmit` clean, production build clean.**
 
 ```bash
 npm run typecheck && npm test -- --run && npm run lint && npm run build
 ```
+
+`npm run format:check` fails on ~89 files and did before this work — the repo has
+never been Prettier-clean. New files are formatted; the rest is left alone rather
+than buried under a whole-repo reformat.
 
 ---
 
@@ -16,89 +24,103 @@ npm run typecheck && npm test -- --run && npm run lint && npm run build
 
 ### Apply the pending migrations
 
-Two migrations were written but **never applied**, because the Supabase account
-reachable from the session that wrote them contained only unrelated projects
-(`Plyaz-Oraculum`, no `books` table). Check what's actually applied before
-assuming:
+Six migrations may not be applied. Check what's actually live before assuming.
+
+Every one of these degrades rather than breaks, and each logs which file to
+apply. Grep for `is missing` and `apply supabase/migrations` in production logs.
 
 | Migration | Consequence if missing |
 |---|---|
-| `009_add_gate_view_event.sql` | Postgres rejects every `gate_view` insert, so the lead-capture funnel silently reads zero. |
-| `010_replace_book_pages.sql` | Autosave falls back to a non-atomic delete-then-insert. |
+| `009_add_gate_view_event.sql` | Postgres rejects every `gate_view` insert, so the lead-capture funnel silently reads zero — the one number that sells email capture. `/api/events` now names this migration in the log instead of failing opaquely. |
+| `010_replace_book_pages.sql` | Autosave falls back to a non-atomic delete-then-insert. **This now matters more than it did**: the editor routes every save through `PUT /api/books/[id]/pages`, so this is the live save path rather than dead code. |
+| `011_dunning_grace.sql` | The dunning grace period never expires, so a `past_due` subscription keeps Pro indefinitely. |
+| `012_edition_engagement.sql` | Insights falls back to counting rows in JavaScript, capped at 20,000, and reports its figures as a minimum. Verified against Postgres 16 before shipping. |
+| `013_weekly_digest.sql` | No weekly digest, and the account page's email switch returns 503. |
+| `014_slug_history.sql` | Renaming an edition's link is refused with an explanation, rather than performed in a way that breaks every link already sent. |
 
-`010` matters most. `PUT /api/books/[id]/pages` prefers the
-`replace_book_pages()` function; if it's absent it detects `PGRST202`/`42883`,
-logs a loud error, and falls back to the old two-statement path — but snapshots
-the pages first and restores them if the insert fails. So saving still works
-un-migrated, it just isn't atomic. Grep the logs for `replace_book_pages() is
-missing` to find out whether this is live.
+### Configure what's optional
+
+Five settings are optional at deploy time and each degrades by design. Know which
+are on:
+
+| Env | Without it |
+|---|---|
+| `GOOGLE_GENERATIVE_AI_API_KEY` | The import's "find products and write descriptions" option is hidden. |
+| `RESEND_API_KEY` + `EMAIL_FROM` | No lead notifications. A captured email is only visible in Insights. |
+| `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PRICE_PRO` | No self-serve upgrade. `/account` falls back to a link to the pricing section. |
+| `CRON_SECRET` | The weekly digest route refuses every request. It **fails closed deliberately** — without it the endpoint would be an unauthenticated way to make the app email its own users. Vercel Cron sends it as `Authorization: Bearer`; the schedule is in `vercel.json`. |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | `/help` shows `support@qlico.app`. |
 
 ### Authorize the Sentry and Stripe MCP servers
 
 Both need OAuth via claude.ai connector settings. Without them there is no error
-reporting and no way to exercise the billing paths listed in §3.
+reporting and no way to exercise the billing paths.
 
 ---
 
-## 2. What changed, and the reasoning you'd otherwise have to rediscover
+## 2. What changed on this branch, and the reasoning you'd otherwise rediscover
 
-Nine themes, in rough order of how badly they were broken.
+### The plans were decorative
 
-**Data loss in autosave.** `PUT /api/books/[id]/pages` replaced pages with a
-bare `DELETE` then `INSERT` — two round-trips, no transaction — every ~2 seconds
-while editing. Anything that stopped the insert made the book permanently empty.
-Note *why* an upsert isn't the fix: `UNIQUE (book_id, page_number)` is checked
-per row, so a reorder (page 3→5 while 5→3) collides mid-statement. That's why
-the original deleted first, and why the fix is a transaction rather than a
-different write shape. Verified against a local Postgres 16: identical failing
-payload leaves **0** pages through the old path and **2** through the new one.
+`lib/plans.ts` declared eight entitlements and the server checked exactly one
+(`maxBooks`). Lead gating, CSV export, analytics retention and the watermark were
+sold on the pricing page and handed to every free account; `customDomain` was sold
+in three places and had no implementation at all.
 
-**Four check-then-write claim sites.** Book slug (already correct, and carries a
-comment saying why), AppSumo licence redemption (one code granted two paid
-plans), Stripe customer creation (a completed payment granted nothing), and the
-licence webhook upsert (returned a claimed licence to the pool). All now let the
-database arbitrate. `lib/appsumo.ts` has the fullest write-up.
+The catalog was **re-drawn as well as enforced**, because enforcing it as written
+would have paywalled PDF import — the promise in the hero. Import is unmetered
+now; Free carries three editions and 30 days of analytics; paid plans sell what
+happens *after* the first read (email capture, exports, longer history, badge
+removal). **The rule is written at the top of `lib/plans.ts`: every key in that
+file is checked somewhere on the server. If you add one, add its check in the same
+change.**
 
-**`/editor/[id]` loaded books it didn't own.** `books` carries *two* SELECT
-policies, and `public_read_published` matches any published book for any caller,
-so an unqualified select rendered the full editor over a stranger's book. **This
-is a trap worth remembering: an unqualified select against a table with a public
-read policy is not scoped by RLS the way it looks.** Now filters on `owner_id`.
+Enforcement lives in `readerPolicy()` (`lib/entitlements.ts`), called by the
+reader, the embed and `/api/books/unlock`. **The important trap: `settings.whitelabel`
+and `settings.gating.enabled` are author-controlled booleans the editor writes
+straight to the database.** Reading either as authority is what let a free account
+switch off the badge. Decide from the plan, always.
 
-**Service worker cached private data.** It ended in a catch-all
-stale-while-revalidate, which swallowed RSC payloads (`?_rsc=` is not
-`mode:'navigate'`) — persisting authenticated dashboard payloads to disk past
-sign-out and serving them stale — and broke media seeking (Cache API ignores
-Range). Now an allowlist. **Never put a denylist in a service worker: it
-outlives the deploy that installed it.** `VERSION` is at `v2` so `activate()`
-purges v1 caches on returning visitors.
+### The editor was saving pages wrong
 
-**PDF import couldn't import real PDFs.** All rendered pages went up in one
-multipart body against a serverless body cap an order of magnitude smaller; the
-client "handled" this by refusing to start above 40 MB and telling the author to
-split the file. Pages now go browser→storage directly via signed upload URLs;
-`/api/import/pdf/finalize` reads back what landed. Storage — not the request
-body — is the authority on which pages exist.
+Autosave upserted page rows from the browser on `id`. That never deletes, so a
+deleted page came back on reload; and a reorder writes swapped `page_number`
+values into `UNIQUE (book_id, page_number)`, which is checked per row, so the save
+failed and blamed the network. Both the transactional route and its migration
+already existed and nothing called them. A second non-atomic page-replacement
+handler (`PUT /api/books/[id]`) was deleted outright.
 
-**Three of three "Access Control" settings were no-ops.** `password` and
-`burn_after_reading` were removed as false security promises; `unlisted` was
-implemented as real `noindex`. See §4 — this needs a product decision.
+### Nothing measured the author funnel
 
-**Server-side lead gating.** Was client-side only, so the withheld pages shipped
-in the HTML. `lib/gating.ts` now truncates server-side; `/api/books/unlock`
-records the lead *before* releasing pages and fails the request if that insert
-fails.
+Four events fired in the whole studio. `lib/product-analytics.ts` now covers one
+funnel end to end. Two needed something built: `signup_completed` rides a marker
+across the auth callback (a server redirect can't emit a client event), and
+`share_link_copied` exists because a publish nobody shares produces nothing.
 
-**AI is optional and the UI now says so.** `lib/ai.ts` built its client with
-`|| ''` and never checked, so a keyless install made 50 doomed Gemini calls per
-import while the checkbox promised hotspots and SEO. `isAiEnabled()` gates both
-call sites; `/api/entitlements` exposes `ai.enabled`; the modal reflects it.
+### Value came after the commitment
 
-**UI/UX.** Dark mode across app chrome, one home for page geometry
-(`lib/page-geometry.ts` — four surfaces had drifted between 280px and 460px
-design width, which is why rail previews overflowed), a shared `Modal` primitive
-replacing eight hand-rolled overlays, and the two creation flows collapsed into
-one.
+The landing page asked for an email before showing anything. A visitor can now
+drop a PDF and flip it in the real reader with no account; the file crosses the
+magic-link round trip in IndexedDB (`lib/pending-import.ts`) and the import
+resumes at `/dashboard?resume=1`. **Every part of that path fails soft** — a
+browser that won't store the file costs a re-upload, not a dead end.
+
+### Nothing brought an author back
+
+Reader numbers change while the author is away — that is the entire point of the
+analytics — and nothing ever told them. There is now a weekly digest
+(`/api/cron/digest`, scheduled in `vercel.json`), which is idempotent through
+`digest_last_sent_at` rather than by trusting the scheduler to fire once, and
+which claims its slot *before* sending so a failed send costs one missed week
+rather than a double send.
+
+### The retention assets were invisible
+
+Per-edition analytics sat behind an unlabelled icon on one card. `/insights` is a
+nav item covering every edition, cards show readers rather than page counts, and
+the dashboard's stat cards count readers and captured emails instead of the
+author's own output. A captured lead now emails the author, where before it sat
+in the events table until someone exported a CSV.
 
 ---
 
@@ -106,26 +128,49 @@ one.
 
 Ordered by how much they'd hurt.
 
-1. **`past_due` grants Pro indefinitely.** No dunning limit, and subscription
-   events are trusted as delivered though Stripe can reorder them. Needs a real
-   Stripe account to exercise.
-2. **Autosave rewrites every page every 2s** even for a one-word change. Atomic
-   now, so wasteful rather than dangerous. Diffing is the fix; the in-flight
-   race handling in the editor store is load-bearing, so read it first.
-3. **An abandoned import strands an empty book.** The client deletes it on the
-   error path, but closing the tab mid-upload leaves an orphan holding a slug
-   and a quota slot. Visible in the dashboard and deletable — not silent.
-4. **Never audited, still reachable:** `HotspotModal` / `HotspotIcon`, and
-   per-card empty states in analytics.
+1. **The migrations above.** Everything else assumes they land.
+2. **The digest has never been sent.** The route, the schedule, the template and
+   the opt-out all exist and are typechecked, but nothing has exercised them
+   against a live scheduler or a real mailbox. Trigger it by hand once
+   (`curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/digest`) and read
+   the JSON it returns before trusting the cron.
+3. **`totalReaders` means something slightly different on each Insights path.**
+   The database aggregate counts each edition's sessions independently, so one
+   person reading two editions counts twice; the JS fallback deduplicates across
+   editions. Documented in `fromRpc`. Worth unifying if the number is ever
+   quoted anywhere that matters.
+4. **Client-side PDF rendering on phones is still unmeasured.** The scale now
+   adapts (`renderScale()` in `ImportPDFModal`) and the landing preview caps at
+   six pages, but no low-memory device has actually been tested.
+5. **Nothing prunes `book_slug_history`.** It grows by one row per rename, which
+   is fine, but a released slug is never reusable by anyone — deliberately, since
+   reuse would hijack old links.
+6. **`profiles` now has an UPDATE policy** (migration 013), where 004
+   deliberately had none so nobody could promote themselves. It pins `plan` and
+   `status` to their current values, which is what makes it safe — read it before
+   adding another user-writable column.
 
 ---
 
 ## 4. Decisions that are the owner's, not the implementer's
 
-- **Password protection / view-once:** build them properly or leave them out?
-  Both were removed rather than left as fake security.
-- **Slug editing for existing books:** 301 from the old slug, or accept the
-  break?
+- **Was 301-from-the-old-slug the right call?** It is built (migration 014, the
+  editor's Link field, `lib/slug-history.ts`). The consequence to be comfortable
+  with: a slug that has ever been used can never be claimed by another edition,
+  because that would silently redirect someone else's circulated links.
+- **Password protection / view-once:** the schema fields are gone now, not just
+  the controls. Build them properly or leave them out.
+- **Custom domain:** removed from all copy. It needs domain routing, certificate
+  provisioning and verification — a project, not a fix.
+- **Pricing:** $19 Pro is unvalidated and undercuts Issuu, Flipsnack and
+  FlippingBook. See the audit §7.5 and §10.
+- **Social proof:** the unsourced claims are gone and nothing replaced them.
+  That gap closes with real design partners, not copywriting.
+- **The hero headline changed.** It is now "Send a PDF. See who actually read
+  it."; "Flip through anything." moved to the eyebrow and `BRAND.md` records
+  both. The audit wanted the H1 to name one audience — it still names four,
+  because narrowing the page to one is a GTM commitment the ICP hypothesis
+  hasn't earned yet (audit §9.1, H1).
 
 ---
 
@@ -134,31 +179,39 @@ Ordered by how much they'd hurt.
 Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
 `node_modules/next/dist/docs/` is the authority.
 
-- **Tailwind v4 `@theme inline`: an unregistered colour utility generates
-  nothing and fails silently.** `bg-primary` produced
-  `background: rgba(0,0,0,0)` behind white text — an invisible button that no
-  test or typecheck catches. Arbitrary data-URI values also failed quote
-  escaping; the select chevron lives in `.studio-select` in `globals.css` for
-  that reason. **Verify colour changes with a computed style or a screenshot.**
+- **pdf.js cannot be imported at module scope in anything that prerenders.** It
+  configures its worker on import and reaches for `DOMMatrix`. A static import in
+  a landing-page component fails `npm run build` with a prerender error, and
+  `'use client'` does not save you — client components are still prerendered.
+  Load it with `await import(...)`, or the component with `next/dynamic`
+  (`ssr: false`).
+- **Tailwind v4 `@theme inline`: an unregistered colour utility generates nothing
+  and fails silently.** `bg-primary` produced `background: rgba(0,0,0,0)` behind
+  white text — an invisible button that no test or typecheck catches. **Verify
+  colour changes with a computed style or a screenshot.**
 - **Portals and hydration:** portal content must report "not mounted" for the
-  hydration pass. `Modal` uses `useSyncExternalStore` for this. Returning `null`
-  on the server and content on first client render left React's recovery with a
-  *second* live dialog in the DOM.
+  hydration pass. `Modal` uses `useSyncExternalStore` for this.
+- **`Modal` renders its own `sr-only` `<h2>` as the accessible name.** Panels
+  supply their own visible heading. Don't add a second one with the same id.
 - **`PageRenderer` output can never be wrapped in an interactive element** — it
   contains `<a>`, `<button>`, `<audio>`, `<iframe>`. Click targets must be
-  sibling overlays. This caused two separate hydration failures.
+  sibling overlays.
 - **react-pageflip** fixes page count at mount and throws on a `false` child.
-  Build children as an **array**, never with JSX `&&` — `{isLocked && …}` broke
-  the ungated reader, and only the embed check caught it.
-- **`.upsert({ onConflict })` only SETs the columns you list.** Omitting a
-  column preserves it, which is load-bearing in `applyAppSumoEvent`.
+  Build children as an **array**, never with JSX `&&`.
+- **`.upsert({ onConflict })` only SETs the columns you list.** Omitting a column
+  preserves it, which is load-bearing in `applyAppSumoEvent`.
+- **An unqualified select against a table with a public read policy is not scoped
+  by RLS the way it looks.** `books` carries two SELECT policies and
+  `public_read_published` matches any published book for any caller. Filter on
+  `owner_id` explicitly.
+- **Read profile rows with `select('*')`.** A named column list breaks outright on
+  an install that hasn't applied the newest migration.
 - **Grep for unimported components as a habit.** Two complete features
-  (`PageManagerModal`, `ShareModal`) were dead code nothing imported. No test or
-  typecheck catches it.
-- **Postgres 16 is available in the container** (`/usr/lib/postgresql/16/bin`,
-  run as the `postgres` user, not root). Build the schema locally and test SQL
-  against it rather than reasoning about it — that's how the atomicity claim in
-  §2 was verified.
-- **When you fix a bug, revert the fix and confirm the new test fails.** Done
-  for every fix in this branch. A test that passes against broken code is worse
-  than no test.
+  (`PageManagerModal`, `ShareModal`) were once dead code nothing imported, and
+  this branch found two more dead paths the same way. No test or typecheck
+  catches it.
+- **Postgres 16 is available in the container** (`/usr/lib/postgresql/16/bin`, run
+  as the `postgres` user, not root). Build the schema locally and test SQL
+  against it rather than reasoning about it.
+- **When you fix a bug, revert the fix and confirm the new test fails.** A test
+  that passes against broken code is worse than no test.
