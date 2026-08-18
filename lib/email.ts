@@ -111,10 +111,12 @@ export async function sendWeeklyDigest(opts: {
   const { readers, leads, top } = opts
   const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
+  const window = opts.windowDays === 7 ? 'this week' : `in the last ${opts.windowDays} days`
+
   const headline =
     readers === 0
-      ? 'No new readers this week.'
-      : `${plural(readers, 'reader')} this week${leads > 0 ? `, and ${plural(leads, 'email')} captured` : ''}.`
+      ? `No new readers ${window}.`
+      : `${plural(readers, 'reader')} ${window}${leads > 0 ? `, and ${plural(leads, 'email')} captured` : ''}.`
 
   const body = [headline, '']
 
@@ -139,10 +141,7 @@ export async function sendWeeklyDigest(opts: {
 
   return sendEmail({
     to: opts.to,
-    subject:
-      readers === 0
-        ? 'Your editions this week'
-        : `${plural(readers, 'reader')} this week on QLICO`,
+    subject: readers === 0 ? 'Your editions this week' : `${plural(readers, 'reader')} on QLICO`,
     text: body.join('\n'),
   })
 }

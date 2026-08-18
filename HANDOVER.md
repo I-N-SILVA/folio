@@ -7,7 +7,7 @@ The reasoning behind every product decision below is in
 `docs/product-strategy-audit.md`, which audits the product as it was and ends in
 the roadmap this branch implements. Read it before undoing anything here.
 
-Verification baseline: **124 tests across 13 files passing, 0 lint errors, 28
+Verification baseline: **126 tests across 13 files passing, 0 lint errors, 28
 lint warnings, `tsc --noEmit` clean, production build clean.**
 
 ```bash
@@ -145,7 +145,10 @@ Ordered by how much they'd hurt.
 5. **Nothing prunes `book_slug_history`.** It grows by one row per rename, which
    is fine, but a released slug is never reusable by anyone — deliberately, since
    reuse would hijack old links.
-6. **Never audited, still reachable:** `HotspotModal` / `HotspotIcon`.
+6. **`profiles` now has an UPDATE policy** (migration 013), where 004
+   deliberately had none so nobody could promote themselves. It pins `plan` and
+   `status` to their current values, which is what makes it safe — read it before
+   adding another user-writable column.
 
 ---
 

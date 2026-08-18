@@ -18,6 +18,12 @@ export const Z = {
   modal: 200,
   /** Confirmations, which may open on top of a dialog. */
   confirm: 300,
+  /**
+   * Dialogs opened from inside the reader. The reader stacks its own chrome
+   * high — the cover-open animation at 9500 and the badge at 9000 — so a hotspot
+   * dialog has to clear both.
+   */
+  reader: 9800,
 } as const
 
 const FOCUSABLE =

@@ -148,3 +148,19 @@ describe('effectivePlan', () => {
     ).toBe('ltd_tier2')
   })
 })
+
+describe('clampAnalyticsDays — narrowing', () => {
+  it('lets a caller ask for less than the plan retains', () => {
+    // The weekly digest depends on this. It says "this week", so it asks for 7
+    // days; without the narrowing it reported the plan's whole window under that
+    // heading — a year of readers in a Pro account's first digest, then the same
+    // cumulative number every Monday after.
+    expect(clampAnalyticsDays(7, PLANS.pro.entitlements)).toBe(7)
+    expect(clampAnalyticsDays(7, PLANS.free.entitlements)).toBe(7)
+  })
+
+  it('still refuses to widen past the plan', () => {
+    expect(clampAnalyticsDays(400, PLANS.pro.entitlements)).toBe(365)
+    expect(clampAnalyticsDays(90, PLANS.free.entitlements)).toBe(30)
+  })
+})

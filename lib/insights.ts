@@ -56,10 +56,19 @@ const MAX_ROWS = 20_000
 export async function getEditionEngagement(
   userId: string,
   bookIds: string[],
-  email?: string | null
+  email?: string | null,
+  /**
+   * Days to look back. Defaults to the whole window the plan retains, which is
+   * what the Insights screen wants. The weekly digest passes 7 — it says "this
+   * week", and reporting the plan's full window under that heading would mean a
+   * Pro account's digest opened with a year's readers and then repeated the same
+   * cumulative number every Monday. Still clamped to the plan, so this can
+   * narrow the window and never widen it.
+   */
+  days?: number
 ): Promise<InsightsSummary> {
   const entitlements = await getUserEntitlements(userId, email)
-  const windowDays = clampAnalyticsDays(null, entitlements)
+  const windowDays = clampAnalyticsDays(days ?? null, entitlements)
 
   const empty: InsightsSummary = {
     windowDays,

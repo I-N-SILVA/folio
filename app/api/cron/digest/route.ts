@@ -26,6 +26,15 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app'
 /** How long before a profile is due again. Six days, not seven — a weekly cron drifts. */
 const DIGEST_INTERVAL_DAYS = 6
 
+/**
+ * The window the digest reports on.
+ *
+ * Seven rather than the six above: the send interval is deliberately short so a
+ * drifting cron doesn't skip a week, but the *reported* window has to match the
+ * word "week" in the subject line.
+ */
+const DIGEST_WINDOW_DAYS = 7
+
 /** Bounds one invocation. Remaining profiles are picked up by the next run. */
 const BATCH_SIZE = 200
 
@@ -110,7 +119,8 @@ export async function GET(request: NextRequest) {
     const engagement = await getEditionEngagement(
       profile.id,
       published.map((b) => b.id),
-      profile.email
+      profile.email,
+      DIGEST_WINDOW_DAYS
     )
 
     const top = published
