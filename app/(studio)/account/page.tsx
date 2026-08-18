@@ -6,6 +6,7 @@ import { getProfile, effectivePlan, countUserBooks } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { isBillingEnabled } from '@/lib/stripe'
 import { UpgradeButton, ManageBillingButton } from '@/components/studio/BillingButtons'
+import { DigestToggle } from '@/components/studio/DigestToggle'
 import { StudioNav } from '@/components/studio/StudioNav'
 import Reveal from '@/components/landing/Reveal'
 
@@ -108,6 +109,17 @@ export default async function AccountPage({
           </section>
 
           <aside className="flex flex-col gap-5">
+            {/* The digest's unsubscribe line points here, so the switch has to
+                actually be here. */}
+            <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/72 p-7 shadow-sm">
+              <h2 className="font-display text-2xl font-semibold tracking-[-0.04em]">Email</h2>
+              <div className="mt-4">
+                <DigestToggle
+                  initial={Boolean((profile as { digest_opt_out?: boolean }).digest_opt_out)}
+                />
+              </div>
+            </div>
+
             <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--invert-surface)] p-7 text-[var(--invert-text)] shadow-sm">
               <Gift size={22} className="text-[var(--accent-contrast)]" />
               <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Have an AppSumo code?</h2>

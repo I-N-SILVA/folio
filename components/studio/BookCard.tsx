@@ -158,6 +158,11 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   const published = book.settings?.published
   const displayDate = book.updated_at || book.created_at || new Date().toISOString()
   const engagement = initialBook.engagement
+  // An import that died partway leaves an edition with no pages, holding a slug
+  // and a slot against the plan quota. It was visible only as "0 pages" next to
+  // a date, which reads as an edition you haven't started rather than one that
+  // failed.
+  const emptyImport = (book.pages?.length ?? 0) === 0 && !published
 
   // A menu that only closes by pressing its own button is a trap on touch.
   useEffect(() => {
@@ -259,9 +264,17 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         )}
       </div>
 
-      {/* "12 Jan / 24 pages" told the author what they already knew. If anyone
-          has read it, that is the more interesting half. */}
-      {published && engagement && engagement.readers > 0 ? (
+      {emptyImport ? (
+        <div className="mb-5 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2">
+          <p className="text-xs font-semibold text-amber-900">This edition has no pages</p>
+          <p className="mt-0.5 text-[11px] leading-4 text-amber-800">
+            An import probably didn&apos;t finish. Open it to add pages, or delete it to free the
+            slot against your plan.
+          </p>
+        </div>
+      ) : /* "12 Jan / 24 pages" told the author what they already knew. If anyone
+             has read it, that is the more interesting half. */
+      published && engagement && engagement.readers > 0 ? (
         <p className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[var(--qlico-muted)]">
           <span className="inline-flex items-center gap-1.5 text-[var(--qlico-ink)]">
             <Users size={13} className="text-[var(--accent-fg)]" />

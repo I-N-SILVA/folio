@@ -89,3 +89,60 @@ export async function sendLeadNotification(opts: {
     ].join('\n'),
   })
 }
+
+/**
+ * The weekly digest: did anything happen, and is it worth a click.
+ *
+ * Written to be readable when the answer is "not much" — a digest that only
+ * makes sense on a good week trains people to ignore it. The unsubscribe line is
+ * in every send because a reporting email without one is spam, whatever the
+ * headers say.
+ */
+export async function sendWeeklyDigest(opts: {
+  to: string
+  readers: number
+  leads: number
+  windowDays: number
+  /** Best-performing edition of the week, when there is one. */
+  top?: { title: string; readers: number } | null
+  insightsUrl: string
+  accountUrl: string
+}): Promise<SendResult> {
+  const { readers, leads, top } = opts
+  const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
+
+  const headline =
+    readers === 0
+      ? 'No new readers this week.'
+      : `${plural(readers, 'reader')} this week${leads > 0 ? `, and ${plural(leads, 'email')} captured` : ''}.`
+
+  const body = [headline, '']
+
+  if (top && top.readers > 0) {
+    body.push(`Most read: "${top.title}" — ${plural(top.readers, 'reader')}.`, '')
+  }
+
+  if (readers === 0) {
+    body.push(
+      'Editions are read when they are sent. If one is sitting unshared, its link is on its',
+      'page in Insights and works anywhere you can paste it.',
+      ''
+    )
+  }
+
+  body.push(
+    `Which pages held attention, and for how long: ${opts.insightsUrl}`,
+    '',
+    `— QLICO`,
+    `Not useful? Turn this off at ${opts.accountUrl}`
+  )
+
+  return sendEmail({
+    to: opts.to,
+    subject:
+      readers === 0
+        ? 'Your editions this week'
+        : `${plural(readers, 'reader')} this week on QLICO`,
+    text: body.join('\n'),
+  })
+}

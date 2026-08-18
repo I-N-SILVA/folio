@@ -8,6 +8,7 @@ import { Lock } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import { useEntitlements } from '@/components/studio/EntitlementsContext'
 import { Field, FieldGroup, Toggle, inputCls, selectCls } from './shared'
+import { SlugField } from './SlugField'
 
 /** A control the current plan doesn't include — shown, disabled, with the way out. */
 function LockedFeature({
@@ -97,6 +98,13 @@ export function BookSettingsForm({ book }: { book: any }) {
 
   return (
     <div className="space-y-6">
+      {/* The public address used to be permanent, because nothing could forward
+          the old one — so a typo in the link that went out in an email was
+          forever. It can be changed now, and the old address redirects. */}
+      <FieldGroup title="Link">
+        <SlugField bookId={book.id} slug={book.slug} />
+      </FieldGroup>
+
       <FieldGroup title="Theme & typography">
         <Field label="Theme preset">
           <select {...register('themePreset')} className={selectCls}>

@@ -7,7 +7,7 @@ The reasoning behind every product decision below is in
 `docs/product-strategy-audit.md`, which audits the product as it was and ends in
 the roadmap this branch implements. Read it before undoing anything here.
 
-Verification baseline: **111 tests across 12 files passing, 0 lint errors, 28
+Verification baseline: **124 tests across 13 files passing, 0 lint errors, 28
 lint warnings, `tsc --noEmit` clean, production build clean.**
 
 ```bash
@@ -24,25 +24,32 @@ than buried under a whole-repo reformat.
 
 ### Apply the pending migrations
 
-Three migrations exist that may not be applied. Check what's actually live before
-assuming:
+Six migrations may not be applied. Check what's actually live before assuming.
+
+Every one of these degrades rather than breaks, and each logs which file to
+apply. Grep for `is missing` and `apply supabase/migrations` in production logs.
 
 | Migration | Consequence if missing |
 |---|---|
-| `009_add_gate_view_event.sql` | Postgres rejects every `gate_view` insert, so the lead-capture funnel silently reads zero — the one number that sells email capture. |
-| `010_replace_book_pages.sql` | Autosave falls back to a non-atomic delete-then-insert. **This now matters more than it did**: the editor routes every save through `PUT /api/books/[id]/pages`, so this is the live save path rather than dead code. Grep logs for `replace_book_pages() is missing`. |
-| `011_dunning_grace.sql` | The dunning grace period never expires, so a `past_due` subscription keeps Pro indefinitely — the behaviour this branch set out to fix. The webhook detects the missing columns (`42703`), logs loudly, and still applies the rest of the event. |
+| `009_add_gate_view_event.sql` | Postgres rejects every `gate_view` insert, so the lead-capture funnel silently reads zero — the one number that sells email capture. `/api/events` now names this migration in the log instead of failing opaquely. |
+| `010_replace_book_pages.sql` | Autosave falls back to a non-atomic delete-then-insert. **This now matters more than it did**: the editor routes every save through `PUT /api/books/[id]/pages`, so this is the live save path rather than dead code. |
+| `011_dunning_grace.sql` | The dunning grace period never expires, so a `past_due` subscription keeps Pro indefinitely. |
+| `012_edition_engagement.sql` | Insights falls back to counting rows in JavaScript, capped at 20,000, and reports its figures as a minimum. Verified against Postgres 16 before shipping. |
+| `013_weekly_digest.sql` | No weekly digest, and the account page's email switch returns 503. |
+| `014_slug_history.sql` | Renaming an edition's link is refused with an explanation, rather than performed in a way that breaks every link already sent. |
 
 ### Configure what's optional
 
-Three integrations are optional at deploy time and each degrades silently by
-design. Know which are on:
+Five settings are optional at deploy time and each degrades by design. Know which
+are on:
 
 | Env | Without it |
 |---|---|
 | `GOOGLE_GENERATIVE_AI_API_KEY` | The import's "find products and write descriptions" option is hidden. |
 | `RESEND_API_KEY` + `EMAIL_FROM` | No lead notifications. A captured email is only visible in Insights. |
 | `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PRICE_PRO` | No self-serve upgrade. `/account` falls back to a link to the pricing section. |
+| `CRON_SECRET` | The weekly digest route refuses every request. It **fails closed deliberately** — without it the endpoint would be an unauthenticated way to make the app email its own users. Vercel Cron sends it as `Authorization: Bearer`; the schedule is in `vercel.json`. |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | `/help` shows `support@qlico.app`. |
 
 ### Authorize the Sentry and Stripe MCP servers
 
@@ -98,6 +105,15 @@ magic-link round trip in IndexedDB (`lib/pending-import.ts`) and the import
 resumes at `/dashboard?resume=1`. **Every part of that path fails soft** — a
 browser that won't store the file costs a re-upload, not a dead end.
 
+### Nothing brought an author back
+
+Reader numbers change while the author is away — that is the entire point of the
+analytics — and nothing ever told them. There is now a weekly digest
+(`/api/cron/digest`, scheduled in `vercel.json`), which is idempotent through
+`digest_last_sent_at` rather than by trusting the scheduler to fire once, and
+which claims its slot *before* sending so a failed send costs one missed week
+rather than a double send.
+
 ### The retention assets were invisible
 
 Per-edition analytics sat behind an unlabelled icon on one card. `/insights` is a
@@ -112,29 +128,33 @@ in the events table until someone exported a CSV.
 
 Ordered by how much they'd hurt.
 
-1. **The three migrations above.** Everything else assumes they land.
-2. **`lib/insights.ts` aggregates in JS with a 20,000-row cap.** Right at this
-   size, wrong later — the cap is what stops a popular edition turning the
-   dashboard into a memory problem. When accounts trip it routinely, this becomes
-   a materialised view keyed by (book, day). The cap is silent; it does not tell
-   the author their numbers are truncated.
-3. **Autosave still rewrites every page on every save.** Atomic now, so wasteful
-   rather than dangerous. Diffing is the fix; the in-flight race handling in
-   `EditorClient` is load-bearing, so read it first.
-4. **An abandoned import still strands an empty edition** holding a slug and a
-   quota slot. Less severe now that Free allows three, and visible/deletable in
-   the dashboard.
-5. **Client-side PDF rendering on phones is untested.** The landing preview
-   renders at scale 1 and caps at 6 pages to keep it cheap, but a low-memory
-   device has not been measured.
+1. **The migrations above.** Everything else assumes they land.
+2. **The digest has never been sent.** The route, the schedule, the template and
+   the opt-out all exist and are typechecked, but nothing has exercised them
+   against a live scheduler or a real mailbox. Trigger it by hand once
+   (`curl -H "Authorization: Bearer $CRON_SECRET" .../api/cron/digest`) and read
+   the JSON it returns before trusting the cron.
+3. **`totalReaders` means something slightly different on each Insights path.**
+   The database aggregate counts each edition's sessions independently, so one
+   person reading two editions counts twice; the JS fallback deduplicates across
+   editions. Documented in `fromRpc`. Worth unifying if the number is ever
+   quoted anywhere that matters.
+4. **Client-side PDF rendering on phones is still unmeasured.** The scale now
+   adapts (`renderScale()` in `ImportPDFModal`) and the landing preview caps at
+   six pages, but no low-memory device has actually been tested.
+5. **Nothing prunes `book_slug_history`.** It grows by one row per rename, which
+   is fine, but a released slug is never reusable by anyone — deliberately, since
+   reuse would hijack old links.
 6. **Never audited, still reachable:** `HotspotModal` / `HotspotIcon`.
 
 ---
 
 ## 4. Decisions that are the owner's, not the implementer's
 
-- **Slug editing for existing editions:** 301 from the old slug, or accept the
-  break? The public link is still permanent and the import dialog says so.
+- **Was 301-from-the-old-slug the right call?** It is built (migration 014, the
+  editor's Link field, `lib/slug-history.ts`). The consequence to be comfortable
+  with: a slug that has ever been used can never be claimed by another edition,
+  because that would silently redirect someone else's circulated links.
 - **Password protection / view-once:** the schema fields are gone now, not just
   the controls. Build them properly or leave them out.
 - **Custom domain:** removed from all copy. It needs domain routing, certificate
@@ -143,6 +163,11 @@ Ordered by how much they'd hurt.
   FlippingBook. See the audit §7.5 and §10.
 - **Social proof:** the unsourced claims are gone and nothing replaced them.
   That gap closes with real design partners, not copywriting.
+- **The hero headline changed.** It is now "Send a PDF. See who actually read
+  it."; "Flip through anything." moved to the eyebrow and `BRAND.md` records
+  both. The audit wanted the H1 to name one audience — it still names four,
+  because narrowing the page to one is a GTM commitment the ICP hypothesis
+  hasn't earned yet (audit §9.1, H1).
 
 ---
 

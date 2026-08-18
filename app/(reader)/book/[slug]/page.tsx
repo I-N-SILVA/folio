@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { Metadata } from 'next'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { ViewerChrome } from '@/components/viewer/ViewerChrome'
@@ -6,6 +6,7 @@ import type { Book } from '@/lib/book-schema'
 import { getDemoBook } from '@/data/books'
 import { applyGate } from '@/lib/gating'
 import { getOwnerEntitlements, readerPolicy } from '@/lib/entitlements'
+import { findCurrentSlug } from '@/lib/slug-history'
 import { PLANS } from '@/lib/plans'
 
 interface Props {
@@ -80,7 +81,14 @@ export default async function BookPage({ params }: Props) {
   const { slug } = await params
   const book = await getBook(slug)
 
-  if (!book) notFound()
+  if (!book) {
+    // The link may predate a rename. A permanent redirect is what an old address
+    // deserves: it keeps whatever was already sent working, and tells search
+    // engines the edition moved rather than vanished.
+    const current = await findCurrentSlug(slug)
+    if (current) permanentRedirect(`/book/${current}`)
+    notFound()
+  }
 
   if (!book.settings.published && slug !== 'demo') {
     return (

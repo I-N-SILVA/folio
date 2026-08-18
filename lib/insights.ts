@@ -42,10 +42,14 @@ export type InsightsSummary = {
 }
 
 /**
- * Aggregation happens here rather than in Postgres, which is the right trade at
- * this size and the wrong one later: the row cap below is what keeps a popular
- * edition from turning this page into a memory problem. When an account
- * routinely trips it, this becomes a materialised view keyed by (book, day).
+ * Cap on the JavaScript fallback path only.
+ *
+ * The aggregate is computed in Postgres now (`edition_engagement`, migration
+ * 012), which is both exact and cheaper — three COUNT(DISTINCT) per edition
+ * instead of tens of thousands of rows crossing the wire. This constant governs
+ * the fallback used when that migration hasn't been applied, where the cap is
+ * what stops a popular account turning the dashboard into a memory problem. On
+ * that path the figures are a floor, and `truncated` says so.
  */
 const MAX_ROWS = 20_000
 
@@ -68,6 +72,29 @@ export async function getEditionEngagement(
 
   const since = subDays(new Date(), windowDays).toISOString()
 
+  // Preferred path: count in the database.
+  const rpc = await supabaseAdmin.rpc('edition_engagement', {
+    p_book_ids: bookIds,
+    p_since: since,
+  })
+
+  if (!rpc.error && rpc.data) {
+    return { windowDays, ...fromRpc(rpc.data as EngagementAggregate[], bookIds) }
+  }
+
+  // PGRST202 / 42883 mean migration 012 hasn't been applied. Anything else is a
+  // real failure, but the fallback answers the question either way, so it is
+  // worth taking rather than showing the author nothing.
+  const missingFunction = rpc.error?.code === 'PGRST202' || rpc.error?.code === '42883'
+  if (!missingFunction) {
+    console.error('[insights] edition_engagement failed:', rpc.error)
+  } else {
+    console.error(
+      '[insights] edition_engagement() is missing — apply ' +
+        'supabase/migrations/012_edition_engagement.sql. Falling back to a capped client-side count.'
+    )
+  }
+
   // Only the four columns the aggregate needs. `payload` in particular is
   // stringified JSON on every row and is never read here.
   const { data, error } = await supabaseAdmin
@@ -82,6 +109,51 @@ export async function getEditionEngagement(
   if (error || !data) return empty
 
   return { windowDays, ...aggregateEngagement(data as EngagementRow[], bookIds) }
+}
+
+export type EngagementAggregate = {
+  book_id: string
+  readers: number
+  completions: number
+  leads: number
+  last_read_at: string | null
+}
+
+/** Shapes the database's own aggregate into what the UI reads. */
+export function fromRpc(
+  rows: EngagementAggregate[],
+  bookIds: string[]
+): Omit<InsightsSummary, 'windowDays'> {
+  const byId = new Map(rows.map((r) => [r.book_id, r]))
+  const byBook = new Map<string, EditionEngagement>()
+  let totalReaders = 0
+  let totalLeads = 0
+
+  for (const bookId of bookIds) {
+    const row = byId.get(bookId)
+    const readers = Number(row?.readers ?? 0)
+    const completions = Number(row?.completions ?? 0)
+    const leads = Number(row?.leads ?? 0)
+
+    // Note this differs from the fallback: the database counts each edition's
+    // sessions independently, so one person reading two editions counts in both
+    // and therefore twice in the total. Deduplicating across editions would mean
+    // shipping the session ids back, which is the cost this path exists to
+    // avoid — and "readers across your editions" is the more useful reading of
+    // the number anyway.
+    totalReaders += readers
+    totalLeads += leads
+
+    byBook.set(bookId, {
+      bookId,
+      readers,
+      completionRate: readers ? Math.round((completions / readers) * 100) : 0,
+      leads,
+      lastReadAt: row?.last_read_at ?? null,
+    })
+  }
+
+  return { totalReaders, totalLeads, byBook, truncated: false }
 }
 
 export type EngagementRow = {

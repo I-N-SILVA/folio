@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aggregateEngagement, type EngagementRow } from './insights'
+import { aggregateEngagement, fromRpc, type EngagementRow } from './insights'
 
 function row(
   book_id: string,
@@ -94,5 +94,52 @@ describe('aggregateEngagement', () => {
 
   it('does not claim truncation for a small result set', () => {
     expect(aggregateEngagement([row('b1', 's1', 'book_open')], ['b1']).truncated).toBe(false)
+  })
+})
+
+describe('fromRpc', () => {
+  it('shapes the database aggregate into what the UI reads', () => {
+    const result = fromRpc(
+      [{ book_id: 'b1', readers: 4, completions: 1, leads: 2, last_read_at: '2026-06-01T00:00:00Z' }],
+      ['b1']
+    )
+    expect(result.byBook.get('b1')).toEqual({
+      bookId: 'b1',
+      readers: 4,
+      completionRate: 25,
+      leads: 2,
+      lastReadAt: '2026-06-01T00:00:00Z',
+    })
+    expect(result.totalReaders).toBe(4)
+    expect(result.totalLeads).toBe(2)
+  })
+
+  it('is never truncated — the database counted everything', () => {
+    expect(fromRpc([], ['b1']).truncated).toBe(false)
+  })
+
+  it('gives a zero row to an edition the aggregate did not return', () => {
+    const result = fromRpc([], ['b1', 'b2'])
+    expect(result.byBook.get('b1')?.readers).toBe(0)
+    expect(result.byBook.get('b2')?.completionRate).toBe(0)
+  })
+
+  it('coerces bigint counts that arrive as strings', () => {
+    // Postgres bigint crosses PostgREST as a string often enough to matter, and
+    // '4' / '1' would otherwise produce a NaN completion rate.
+    const result = fromRpc(
+      [
+        {
+          book_id: 'b1',
+          readers: '4' as unknown as number,
+          completions: '1' as unknown as number,
+          leads: '0' as unknown as number,
+          last_read_at: null,
+        },
+      ],
+      ['b1']
+    )
+    expect(result.byBook.get('b1')?.readers).toBe(4)
+    expect(result.byBook.get('b1')?.completionRate).toBe(25)
   })
 })
