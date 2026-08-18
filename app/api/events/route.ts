@@ -47,20 +47,13 @@ export async function POST(request: NextRequest) {
 
     const { bookId, sessionId, eventType, pageNumber, payload } = parsed.data
 
-    // Verify book exists (basic sanity check)
-    const { count, error: lookupError } = await supabaseAdmin
-      .from('books')
-      .select('*', { count: 'exact', head: true })
-      .eq('id', bookId)
-
-    if (lookupError) {
-      return NextResponse.json({ error: 'Invalid book id' }, { status: 400 })
-    }
-
-    if (count === 0) {
-      return NextResponse.json({ error: 'Book not found' }, { status: 404 })
-    }
-
+    // Insert first and let the foreign key answer "does this book exist?".
+    //
+    // There used to be a `count` query against `books` before every insert,
+    // which doubled the round trips on the hottest path in the product: a reader
+    // flipping through a twenty-page edition fires a `page_view` per page and a
+    // `page_click` per click, and each one was paying for a lookup whose only
+    // possible answers the FK already enforces.
     const { error: insertError } = await supabaseAdmin.from('events').insert({
       book_id: bookId,
       session_id: sessionId,
@@ -70,6 +63,20 @@ export async function POST(request: NextRequest) {
     })
 
     if (insertError) {
+      // 23503 = foreign_key_violation: no such book.
+      if (insertError.code === '23503') {
+        return NextResponse.json({ error: 'Book not found' }, { status: 404 })
+      }
+      // 23514 = check_violation, which for this table means the event_type
+      // enum in Postgres is behind the one in the app. `gate_view` is the
+      // live example — see supabase/migrations/009.
+      if (insertError.code === '23514') {
+        console.error(
+          `[events] the events_event_type_check constraint rejects "${eventType}" — ` +
+            'apply the pending migrations in supabase/migrations/'
+        )
+        return new NextResponse(null, { status: 204 })
+      }
       console.error('events insert failed', insertError)
       return NextResponse.json({ error: 'Internal error' }, { status: 500 })
     }

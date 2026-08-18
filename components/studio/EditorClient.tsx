@@ -49,6 +49,26 @@ export function EditorClient({ book, entitlements }: Props) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saveInFlight = useRef(false)
 
+  /**
+   * What the last successful save wrote, by object identity.
+   *
+   * Every save used to send both requests unconditionally, so toggling one
+   * setting rewrote every page of the edition and re-rendering one text block
+   * rewrote the book row — every two seconds, for the whole session. The store
+   * replaces only the branch that changed, so identity is an exact and free
+   * answer to "did this part move?".
+   */
+  const saved = useRef<{ pages?: unknown; meta?: string }>({})
+
+  /** The book-level fields, as the API receives them. */
+  const metaOf = (b: Book) =>
+    JSON.stringify({
+      theme: b.theme,
+      settings: b.settings,
+      title: b.title,
+      description: b.description ?? null,
+    })
+
   // Initialize store on mount
   useEffect(() => {
     setBook(book)
@@ -66,19 +86,25 @@ export function EditorClient({ book, entitlements }: Props) {
     setSaveStatus('saving')
 
     try {
+      const meta = metaOf(bookAtSaveStart)
+      const pagesChanged = bookAtSaveStart.pages !== saved.current.pages
+      const metaChanged = meta !== saved.current.meta
+
       // Book-level fields go through the API so the Zod schema applies to what
       // the editor writes, the same way it applies to every other write path.
-      const bookRes = await fetch(`/api/books/${bookAtSaveStart.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          theme: bookAtSaveStart.theme,
-          settings: bookAtSaveStart.settings,
-          title: bookAtSaveStart.title,
-          description: bookAtSaveStart.description ?? undefined,
-        }),
-      })
-      if (!bookRes.ok) throw new Error('Could not save this edition’s settings')
+      if (metaChanged) {
+        const bookRes = await fetch(`/api/books/${bookAtSaveStart.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            theme: bookAtSaveStart.theme,
+            settings: bookAtSaveStart.settings,
+            title: bookAtSaveStart.title,
+            description: bookAtSaveStart.description ?? undefined,
+          }),
+        })
+        if (!bookRes.ok) throw new Error('Could not save this edition’s settings')
+      }
 
       // Pages go through the transactional replace route.
       //
@@ -92,23 +118,27 @@ export function EditorClient({ book, entitlements }: Props) {
       //
       // PUT /api/books/[id]/pages replaces the whole set inside one transaction
       // (see supabase/migrations/010), which is what "the pages are now this"
-      // actually requires.
-      const pagesRes = await fetch(`/api/books/${bookAtSaveStart.id}/pages`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          (bookAtSaveStart.pages ?? []).map((p) => ({
-            id: p.id,
-            page_number: p.page_number,
-            type: p.type,
-            layout: p.layout,
-            background: p.background ?? undefined,
-            blocks: p.blocks,
-            hotspots: p.hotspots,
-          }))
-        ),
-      })
-      if (!pagesRes.ok) throw new Error('Could not save these pages')
+      // actually requires — so it is sent only when the pages have moved.
+      if (pagesChanged) {
+        const pagesRes = await fetch(`/api/books/${bookAtSaveStart.id}/pages`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            (bookAtSaveStart.pages ?? []).map((p) => ({
+              id: p.id,
+              page_number: p.page_number,
+              type: p.type,
+              layout: p.layout,
+              background: p.background ?? undefined,
+              blocks: p.blocks,
+              hotspots: p.hotspots,
+            }))
+          ),
+        })
+        if (!pagesRes.ok) throw new Error('Could not save these pages')
+      }
+
+      saved.current = { pages: bookAtSaveStart.pages, meta }
 
       // Only clear isDirty if nothing changed while this save was in
       // flight — otherwise a newer, unsaved edit gets incorrectly marked

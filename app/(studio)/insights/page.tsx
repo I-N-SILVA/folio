@@ -57,6 +57,15 @@ export default async function InsightsPage() {
             Every published edition, over the last {engagement.windowDays} days.
           </p>
 
+          {/* The aggregate is row-capped. Saying so beats quietly showing a
+              floor as though it were a total. */}
+          {engagement.truncated && (
+            <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-[13px] leading-5 text-amber-900">
+              You have more reader activity than this page counts in one pass, so these figures are
+              a minimum. Per-edition Insights are exact.
+            </p>
+          )}
+
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <SummaryCard icon={<Users size={16} />} label="Readers">
               <NumberTicker value={engagement.totalReaders} />

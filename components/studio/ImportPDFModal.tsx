@@ -46,6 +46,22 @@ type Status = 'idle' | 'rendering' | 'uploading' | 'finishing' | 'done' | 'error
 const UPLOAD_CONCURRENCY = 4
 
 /**
+ * Render scale, chosen from what the device can actually take.
+ *
+ * Rendering fifty pages of A4 at scale 2 allocates a canvas of roughly 1700 ×
+ * 2400 per page. On a laptop that is fine; on a mid-range phone it is how a tab
+ * gets killed halfway through an import, and the reader still gets a
+ * screen-resolution image at the end. `deviceMemory` is Chromium-only, so the
+ * viewport width carries the rest — a phone is a phone whatever it reports.
+ */
+function renderScale(): number {
+  if (typeof window === 'undefined') return 2
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
+  if (typeof memory === 'number' && memory <= 4) return 1.5
+  return window.innerWidth < 768 ? 1.5 : 2
+}
+
+/**
  * PDF import.
  *
  * Two things changed here beyond the styling. The dialog is built on the shared
@@ -143,7 +159,7 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
 
       const renderedPages = await renderPdfPages(file, {
         maxPages: MAX_IMPORT_PAGES,
-        scale: 2,
+        scale: renderScale(),
         onProgress: setProgress,
       })
 

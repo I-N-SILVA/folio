@@ -32,6 +32,13 @@ export type InsightsSummary = {
   totalReaders: number
   totalLeads: number
   byBook: Map<string, EditionEngagement>
+  /**
+   * Whether the row cap was reached, i.e. the numbers below are a floor rather
+   * than a total. Surfaced in the UI: a silent truncation reads as "this is how
+   * many people read it", which would be wrong in the one direction that
+   * matters to someone deciding whether the product works.
+   */
+  truncated: boolean
 }
 
 /**
@@ -55,6 +62,7 @@ export async function getEditionEngagement(
     totalReaders: 0,
     totalLeads: 0,
     byBook: new Map(),
+    truncated: false,
   }
   if (bookIds.length === 0) return empty
 
@@ -73,6 +81,28 @@ export async function getEditionEngagement(
 
   if (error || !data) return empty
 
+  return { windowDays, ...aggregateEngagement(data as EngagementRow[], bookIds) }
+}
+
+export type EngagementRow = {
+  book_id: string
+  session_id: string
+  event_type: string
+  created_at: string
+}
+
+/**
+ * The counting itself, separated from the query so it can be tested.
+ *
+ * Readers are distinct sessions rather than `book_open` events — one person who
+ * opens an edition three times in a day is one reader, and treating opens as
+ * readers is how an author's own tab-refreshing turns into an audience.
+ */
+export function aggregateEngagement(
+  rows: EngagementRow[],
+  bookIds: string[]
+): Omit<InsightsSummary, 'windowDays'> {
+  const data = rows
   const openers = new Map<string, Set<string>>()
   const completers = new Map<string, Set<string>>()
   const leads = new Map<string, number>()
@@ -114,5 +144,10 @@ export async function getEditionEngagement(
     })
   }
 
-  return { windowDays, totalReaders: allReaders.size, totalLeads, byBook }
+  return {
+    totalReaders: allReaders.size,
+    totalLeads,
+    byBook,
+    truncated: rows.length >= MAX_ROWS,
+  }
 }

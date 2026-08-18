@@ -36,6 +36,9 @@ export function StudioNav({ current }: { current?: 'library' | 'insights' | 'acc
         <NavLink href="/account" active={current === 'account'}>
           Account
         </NavLink>
+        {/* There was no help or support link anywhere in the app. For a
+            lifetime-deal launch that is a rating problem, not just a UX one. */}
+        <NavLink href="/help">Help</NavLink>
       </nav>
 
       <div className="flex-1" />
