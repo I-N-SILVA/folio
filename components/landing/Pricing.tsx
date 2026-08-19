@@ -13,6 +13,7 @@ const PLANS: {
   cta: string
   href: string
   featured?: boolean
+  isLifetime?: boolean
   note?: string
   features: string[]
 }[] = [
@@ -41,14 +42,12 @@ const PLANS: {
     ],
   },
   {
-    // There is no self-serve checkout for this tier — it is sold as a lifetime
-    // deal and redeemed with a code. Saying "see the deal" and landing people
-    // on a code box they can't fill is worse than saying so plainly.
     name: 'Lifetime',
     price: '$59+',
     desc: 'Sold as a one-time lifetime deal on AppSumo.',
     cta: 'Redeem your code',
     href: '/redeem',
+    isLifetime: true,
     note: 'Bought a code? Redeem it here. Tiers unlock more editions, longer analytics, and white-label.',
     features: ['Everything in Pro', 'One payment, no renewal', 'Stackable tiers', 'Lifetime updates'],
   },
@@ -63,7 +62,7 @@ export function Pricing() {
           <p className="mt-4 text-lg text-[var(--qlico-muted)]">Start free. Upgrade when it earns its keep.</p>
         </Reveal>
         <div className="grid items-stretch gap-5 lg:grid-cols-3">
-          {PLANS.map(({ name, price, cadence, desc, cta, href, features, featured, note }) => (
+          {PLANS.map(({ name, price, cadence, desc, cta, href, features, featured, isLifetime, note }) => (
             <Reveal key={name}>
               <div
                 className={`flex h-full flex-col rounded-3xl border p-8 ${
@@ -73,6 +72,12 @@ export function Pricing() {
                 {featured && (
                   <span className="mb-4 inline-block w-fit rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white">
                     Most popular
+                  </span>
+                )}
+                {isLifetime && (
+                  <span className="mb-4 inline-flex w-fit items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1 text-xs font-semibold text-yellow-700 dark:text-yellow-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
+                    AppSumo Exclusive
                   </span>
                 )}
                 <h3 className="text-lg font-semibold">{name}</h3>
@@ -110,8 +115,6 @@ export function Pricing() {
           ))}
         </div>
 
-        {/* The Lifetime column now says this itself, so the banner that used to
-            sit here was the third place on one screen offering the same link. */}
         <Reveal className="mt-6">
           <p className="text-center text-[13px] leading-6 text-[var(--qlico-muted)]">
             Every plan includes the full reader, PDF import, hotspots, and embeds. You can export

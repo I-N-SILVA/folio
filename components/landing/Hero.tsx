@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRef } from 'react'
-import { m, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { m, useReducedMotion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion'
 import { trackProduct } from '@/lib/product-analytics'
 import { MagneticButton } from './MagneticButton'
 
@@ -38,44 +38,71 @@ function HeadlineReveal({ text, className = '' }: { text: string; className?: st
   )
 }
 
-/** Browser mockup that straightens from a slight tilt as it scrolls in. */
+/** Browser mockup that straightens from a slight tilt as it scrolls in, with mouse parallax. */
 function ProductShot() {
   const ref = useRef<HTMLDivElement>(null)
   const reduce = useReducedMotion()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
-  const rotateX = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [12, 0])
+  const scrollRotateX = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [12, 0])
   const scale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [0.95, 1])
   const opacity = useTransform(scrollYProgress, [0, 0.55], [0.35, 1])
 
+  const mouseX = useMotionValue(0.5)
+  const mouseY = useMotionValue(0.5)
+  const springConfig = { damping: 25, stiffness: 150 }
+  const mouseRotateX = useSpring(useTransform(mouseY, [0, 1], [4, -4]), springConfig)
+  const mouseRotateY = useSpring(useTransform(mouseX, [0, 1], [-4, 4]), springConfig)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current || reduce) return
+    const rect = ref.current.getBoundingClientRect()
+    mouseX.set((e.clientX - rect.left) / rect.width)
+    mouseY.set((e.clientY - rect.top) / rect.height)
+  }
+
+  const handleMouseLeave = () => {
+    if (reduce) return
+    mouseX.set(0.5)
+    mouseY.set(0.5)
+  }
+
   return (
-    <div ref={ref} className="relative mx-auto mt-16 max-w-5xl" style={{ perspective: 1400 }}>
-      <m.div
-        style={{ rotateX, scale, opacity, transformStyle: 'preserve-3d' }}
-        className="relative overflow-hidden rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
-      >
-        <div className="flex items-center gap-1.5 border-b border-[var(--qlico-hairline)] bg-[#fbfbfd] px-4 py-3">
-          <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
-          <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
-          <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
-          <a
-            href="/book/demo"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mx-auto flex items-center gap-1.5 rounded-md bg-[var(--qlico-paper)] px-3 py-1 text-left text-xs text-[var(--qlico-muted)] shadow-sm transition-colors hover:text-[var(--qlico-ink)]"
-          >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-            qlico.app/book/demo
+    <div 
+      ref={ref} 
+      className="relative mx-auto mt-16 max-w-5xl" 
+      style={{ perspective: 1400 }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <m.div style={{ rotateX: scrollRotateX, scale, opacity, transformStyle: 'preserve-3d' }}>
+        <m.div
+          style={{ rotateX: mouseRotateX, rotateY: mouseRotateY, transformStyle: 'preserve-3d' }}
+          className="relative overflow-hidden rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-[0_50px_140px_-30px_rgba(0,0,0,0.4)]"
+        >
+          <div className="flex items-center gap-1.5 border-b border-[var(--qlico-hairline)] bg-[#fbfbfd] px-4 py-3">
+            <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
+            <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
+            <span className="h-3 w-3 rounded-full bg-[#e1e1e6]" />
+            <a
+              href="/book/demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mx-auto flex items-center gap-1.5 rounded-md bg-[var(--qlico-paper)] px-3 py-1 text-left text-xs text-[var(--qlico-muted)] shadow-sm transition-colors hover:text-[var(--qlico-ink)]"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+              qlico.app/book/demo
+            </a>
+          </div>
+          <a href="/book/demo" target="_blank" rel="noopener noreferrer" className="group relative block aspect-[16/10] bg-[var(--qlico-subtle)]">
+            <HeroShowcase />
+            {/* Click-through affordance */}
+            <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-gradient-to-t from-black/70 to-transparent py-4 text-xs font-semibold text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              Open the live edition →
+            </span>
           </a>
-        </div>
-        <a href="/book/demo" target="_blank" rel="noopener noreferrer" className="group relative block aspect-[16/10] bg-[var(--qlico-subtle)]">
-          <HeroShowcase />
-          {/* Click-through affordance — this is a preview reel; the real, riffle-powered book is one click away. */}
-          <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 bg-gradient-to-t from-black/70 to-transparent py-4 text-xs font-semibold text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            Open the live edition →
-          </span>
-        </a>
-        {/* Accent border beam */}
-        <span aria-hidden className="qlico-beam" />
+          {/* Accent border beam */}
+          <span aria-hidden className="qlico-beam" />
+        </m.div>
       </m.div>
       {/* Soft floor reflection */}
       <div

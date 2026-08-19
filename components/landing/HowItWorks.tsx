@@ -15,7 +15,7 @@ export function HowItWorks() {
           <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">From flat file to living edition.</h2>
         </Reveal>
 
-        {/* Animated flow conduit */}
+        {/* Animated flow conduit - Desktop */}
         <div className="relative mb-6 hidden h-[3px] overflow-hidden rounded-full bg-[var(--qlico-border)] lg:block">
           <div className="qlico-flow-line absolute inset-0" />
         </div>
@@ -23,8 +23,13 @@ export function HowItWorks() {
         <div className="grid gap-4 sm:grid-cols-3">
           {STEPS.map(([num, title, desc], i) => (
             <Reveal key={num} delay={i * 90}>
-              <div className="h-full rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-8">
-                <span className="font-display text-sm font-semibold text-[var(--accent-fg)]">{num}</span>
+              <div className="relative h-full rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-8">
+                {/* Mobile visual connector (hidden on lg) */}
+                {i < STEPS.length - 1 && (
+                  <div className="absolute left-10 top-full z-10 h-4 w-[2px] bg-[var(--qlico-border)] sm:hidden" />
+                )}
+                
+                <span className="font-display text-2xl font-semibold text-[var(--accent-fg)]">{num}</span>
                 <h3 className="mt-4 text-xl font-semibold tracking-[-0.01em]">{title}</h3>
                 <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{desc}</p>
               </div>

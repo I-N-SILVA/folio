@@ -14,9 +14,11 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [resent, setResent] = useState(false)
 
-  // The auth callback redirects here with a reason when a magic link fails, so
-  // an expired or reused link explains itself instead of looking like a bug.
-  const linkError = useSearchParams().get('error')
+  const searchParams = useSearchParams()
+  const linkError = searchParams.get('error')
+  const nextParam = searchParams.get('next')
+  const isResuming = nextParam?.includes('resume=1') || nextParam?.includes('new=1')
+
   const linkMessage =
     linkError === 'link_expired'
       ? 'That sign-in link has expired. Send yourself a new one.'
@@ -24,28 +26,30 @@ function LoginForm() {
         ? "That sign-in link didn't work — it may already have been used. Send a new one."
         : ''
 
+  function getRedirectTo() {
+    const rawNext = new URLSearchParams(window.location.search).get('next')
+    const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
+    return `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`
+  }
+
+  async function handleGoogleSignIn() {
+    const supabase = createBrowserSupabase()
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: getRedirectTo() },
+    })
+  }
+
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault()
     setLoading(true)
     setError('')
     trackProduct('signup_started')
 
-    // Honor an optional ?next= target so post-login flows (e.g. upgrade) land
-    // on the right page. Only allow same-origin relative paths — and `//host`
-    // is not one: browsers read it as a protocol-relative absolute URL, so
-    // startsWith('/') alone would have carried ?next=//evil.com through. The
-    // callback rejects it too, but the two checks should agree.
-    const rawNext = new URLSearchParams(window.location.search).get('next')
-    const next =
-      rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : null
-    const redirectTo = `${window.location.origin}/auth/callback${
-      next ? `?next=${encodeURIComponent(next)}` : ''
-    }`
-
     const supabase = createBrowserSupabase()
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirectTo },
+      options: { emailRedirectTo: getRedirectTo() },
     })
 
     if (error) {
@@ -67,7 +71,7 @@ function LoginForm() {
       >
         <div className="mb-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--qlico-teal)]">
-            Creator Studio
+            {isResuming ? 'Save your edition' : 'Creator Studio'}
           </p>
           <h1>
             <span className="sr-only">QLICO</span>
@@ -75,7 +79,9 @@ function LoginForm() {
             <Image src="/brand/qlico-logo-white.png" alt="" width={181} height={50} priority className="theme-dark-only h-[50px] w-auto object-contain" />
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
-            Sign in with a magic link to compose, publish, and measure your digital shelf.
+            {isResuming
+              ? "We've temporarily saved your PDF. Sign in to keep it and unlock analytics."
+              : "Sign in to compose, publish, and measure your digital shelf."}
           </p>
         </div>
 
@@ -91,8 +97,6 @@ function LoginForm() {
               </p>
             </div>
 
-            {/* A typo'd address used to be a dead end — the only way out was a
-                page reload. */}
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
               <button
                 type="button"
@@ -125,36 +129,49 @@ function LoginForm() {
             )}
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label htmlFor="email" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
-                Email address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="w-full rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-4 focus:ring-[var(--qlico-teal)]/10"
-              />
-            </div>
-
-            {(error || linkMessage) && (
-              <p className="text-sm text-red-600" role="alert">
-                {error || linkMessage}
-              </p>
-            )}
-
+          <div className="flex flex-col gap-5">
             <button
-              type="submit"
-              disabled={loading}
-              className="rounded-full bg-[var(--accent)] py-3.5 font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(60,35,132,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:translate-y-0 disabled:opacity-50"
+              type="button"
+              onClick={handleGoogleSignIn}
+              className="flex items-center justify-center gap-3 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] py-3 font-semibold text-[var(--qlico-ink)] transition hover:bg-[var(--qlico-subtle)]"
             >
-              {loading ? 'Sending…' : 'Send magic link'}
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+              Continue with Google
             </button>
-          </form>
+            <div className="flex items-center gap-3 text-xs font-semibold text-[var(--qlico-muted)] before:h-px before:flex-1 before:bg-[var(--qlico-border)] after:h-px after:flex-1 after:bg-[var(--qlico-border)]">
+              OR
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div>
+                <label htmlFor="email" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                  className="w-full rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-4 py-3 text-sm outline-none transition focus:border-[var(--qlico-teal)] focus:ring-4 focus:ring-[var(--qlico-teal)]/10"
+                />
+              </div>
+
+              {(error || linkMessage) && (
+                <p className="text-sm text-red-600" role="alert">
+                  {error || linkMessage}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="rounded-full bg-[var(--accent)] py-3.5 font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(60,35,132,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:translate-y-0 disabled:opacity-50"
+              >
+                {loading ? 'Sending…' : 'Send magic link'}
+              </button>
+            </form>
+          </div>
         )}
       </motion.div>
     </main>

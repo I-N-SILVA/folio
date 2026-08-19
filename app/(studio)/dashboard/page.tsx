@@ -64,7 +64,10 @@ async function getBooks(): Promise<DashboardBook[]> {
   }))
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams
+  const isResuming = searchParams?.resume === '1'
+  
   const books = await getBooks()
   const publishedCount = books.filter((book) => book.settings?.published).length
   const readers = books.reduce((total, book) => total + (book.engagement?.readers ?? 0), 0)
@@ -99,9 +102,6 @@ export default async function DashboardPage() {
             <DashboardActions />
           </div>
 
-          {/* These used to be Books / Published / Pages — three counts of the
-              author's own output, none of which change between visits. Readers
-              and captured emails do. */}
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <Reveal delay={0}><StatCard label="Readers" value={readers} /></Reveal>
             <Reveal delay={70}><StatCard label="Emails captured" value={leads} /></Reveal>
@@ -118,18 +118,30 @@ export default async function DashboardPage() {
         />
 
         {books.length === 0 ? (
-          <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/78 px-6 py-20 text-center shadow-sm">
-            <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(60,35,132,0.16)] blur-3xl" />
-            <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-sm">
-              <BookOpen size={48} className="text-[var(--qlico-muted)] opacity-60" strokeWidth={1.5} />
+          isResuming ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex aspect-[10/14] flex-col justify-end overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-5">
+                <div className="flex animate-pulse flex-col gap-3">
+                  <div className="h-4 w-3/4 rounded-full bg-[var(--qlico-border)]"></div>
+                  <div className="h-4 w-1/2 rounded-full bg-[var(--qlico-border)]"></div>
+                  <p className="mt-2 text-xs font-semibold text-[var(--accent-fg)]">Importing your edition...</p>
+                </div>
+              </div>
             </div>
-            <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">Create your first edition.</h2>
-            <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--qlico-muted)]">
-              Drop in a PDF and it becomes something people can read, click through, and finish —
-              on any device, from one link.
-            </p>
-            <DashboardActions />
-          </section>
+          ) : (
+            <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/78 px-6 py-20 text-center shadow-sm">
+              <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(60,35,132,0.16)] blur-3xl" />
+              <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-sm">
+                <BookOpen size={48} className="text-[var(--qlico-muted)] opacity-60" strokeWidth={1.5} />
+              </div>
+              <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">Create your first edition.</h2>
+              <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--qlico-muted)]">
+                Drop in a PDF and it becomes something people can read, click through, and finish —
+                on any device, from one link.
+              </p>
+              <DashboardActions />
+            </section>
+          )
         ) : (
           <LibraryBrowser books={books} />
         )}
