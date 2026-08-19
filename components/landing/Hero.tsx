@@ -100,8 +100,6 @@ function ProductShot() {
               Open the live edition →
             </span>
           </a>
-          {/* Accent border beam */}
-          <span aria-hidden className="qlico-beam" />
         </m.div>
       </m.div>
       {/* Soft floor reflection */}
