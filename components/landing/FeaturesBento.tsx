@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React from 'react'
 import {
   BarChart2,
   BookOpen,
@@ -12,31 +12,12 @@ import {
 import { m, useReducedMotion } from 'framer-motion'
 import Reveal from './Reveal'
 
-/** Hover spotlight wrapper for bento cards */
+/** Clean, Apple-grade bento card wrapper. */
 function BentoCard({ children, className }: { children: React.ReactNode, className?: string }) {
-  const ref = useRef<HTMLDivElement>(null)
-  
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return
-    const rect = ref.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    ref.current.style.setProperty('--mouse-x', `${x}px`)
-    ref.current.style.setProperty('--mouse-y', `${y}px`)
-  }
-
   return (
     <div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(0,0,0,0.08)] ${className || ''}`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-7 shadow-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_32px_64px_-12px_rgba(20,26,58,0.1)] ${className || ''}`}
     >
-      <div 
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background: `radial-gradient(600px circle at var(--mouse-x, 0) var(--mouse-y, 0), var(--tint-strong), transparent 40%)`,
-        }}
-      />
       <div className="relative z-10 flex h-full flex-col">
         {children}
       </div>
@@ -53,7 +34,7 @@ function MiniBars() {
       {bars.map((h, i) => (
         <m.span
           key={i}
-          className="w-full rounded-sm bg-[var(--accent)]/85"
+          className="w-full rounded-[2px] bg-[var(--accent)]/85"
           initial={{ height: reduce ? `${h}%` : '8%' }}
           whileInView={{ height: `${h}%` }}
           viewport={{ once: true, amount: 0.8 }}
