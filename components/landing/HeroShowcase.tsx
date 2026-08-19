@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, animate, motion, useInView, useReducedMotion } from 'framer-motion'
 
-const IMG_EDITORIAL = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=900&q=70'
-const IMG_HOTSPOT = 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&q=70'
+const IMG_EDITORIAL = '/demo/editorial.jpg'
+const IMG_HOTSPOT = '/demo/hotspot.jpg'
 
 const SCENES = ['cover', 'editorial', 'hotspot', 'analytics'] as const
 const HOLD_MS = 3000
@@ -80,7 +80,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65 }}
-          className="mt-7 rounded-full bg-[var(--accent)] px-6 py-2.5 text-sm font-semibold text-white"
+          className="mt-7 rounded-full bg-[var(--accent)] px-6 py-2.5 text-sm font-semibold text-[var(--accent-contrast)]"
         >
           Start reading →
         </motion.span>
@@ -98,7 +98,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             transition={{ delay: 0.2, type: 'spring', stiffness: 110, damping: 18 }}
             className="font-display text-4xl font-semibold leading-tight tracking-[-0.02em] text-[var(--qlico-ink)]"
           >
-            Typography that reads like print
+            Built on our own layout engine
           </motion.h3>
           <motion.p
             initial={{ opacity: 0 }}
@@ -106,7 +106,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             transition={{ delay: 0.4 }}
             className="text-[15px] leading-7 text-[var(--qlico-muted)]"
           >
-            A full type system — titles, headings, quotes, and captions — so every page feels composed.
+            Every QLICO edition is rendered precisely, matching your original PDF layout pixel-for-pixel while adding interactive depth.
           </motion.p>
           <motion.div
             initial={{ opacity: 0 }}
@@ -114,7 +114,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
             transition={{ delay: 0.55 }}
             className="border-l-2 border-[var(--accent)] pl-4 font-display text-lg italic text-[var(--qlico-ink)]"
           >
-            “The best documents feel considered.”
+            “This very demo is a QLICO edition.”
           </motion.div>
         </div>
         <motion.div
@@ -131,7 +131,7 @@ function Scene({ name }: { name: (typeof SCENES)[number] }) {
   if (name === 'hotspot') {
     return (
       <div className="relative h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${IMG_HOTSPOT})` }}>
-        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-black/20" />
         <div className="relative flex h-full flex-col items-center justify-center px-10 text-center">
           <motion.h3
             initial={{ opacity: 0, y: 12 }}

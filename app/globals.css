@@ -10,15 +10,15 @@
   --qlico-paper: #ffffff;
   --qlico-vellum: #f4f4f7;
   --qlico-subtle: #f4f4f7;
-  /* Accent: QLICO Violet (the mark's exact color) */
-  --accent: #3c2384;
-  --accent-hover: #2e1a66;
+  /* Accent: International Orange / Vermilion */
+  --accent: #ff3b00;
+  --accent-hover: #ff521f;
   /* The accent serves two jobs with different contrast needs: a fill behind
      white text, and a foreground colour on the page background. In light mode
      one value clears both. In dark mode it can't — a violet dark enough for
      white text to sit on is too dark to read against the background — so the
      foreground role gets its own token. */
-  --accent-fg: #3c2384;
+  --accent-fg: #cc2f00;
   --accent-contrast: #ffffff;
   /* Emphasis panels that are deliberately inverted against the page. These
      stay a dark surface in both modes — flipping them to near-white in dark
@@ -37,10 +37,10 @@
   --tint-weak: rgba(20, 26, 58, 0.04);
   --tint: rgba(20, 26, 58, 0.07);
   --tint-strong: rgba(20, 26, 58, 0.12);
-  /* Brighter violet for dark chrome (editor) where the deep mark violet
+  /* Brighter orange for dark chrome (editor) where the deep mark orange
      lacks contrast. Same hue family, higher luminance. */
-  --accent-vivid: #7c5cff;
-  --accent-vivid-hover: #6a4cf0;
+  --accent-vivid: #ff6633;
+  --accent-vivid-hover: #ff8566;
   --qlico-brass: var(--accent);
   --qlico-teal: var(--accent);
   --qlico-oxblood: #141a3a;
@@ -203,8 +203,6 @@ section[id] {
 .font-display {
   font-family: var(--font-display), Georgia, serif;
   letter-spacing: -0.02em;
-  /* Fraunces tuned: high optical size, soft terminals, wonky alternates on —
-     this is the ownable display voice. */
   font-variation-settings:
     "opsz" 144,
     "SOFT" 40,
