@@ -24,9 +24,17 @@ export function Footer() {
             <Link href="/terms" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Terms</Link>
           </div>
         </div>
-        <div className="mt-10 border-t border-[var(--qlico-hairline)] pt-6 text-sm text-[var(--qlico-muted)]">
-          © {new Date().getFullYear()} QLICO. All rights reserved.
+        <div className="mt-10 flex flex-col sm:flex-row sm:items-center justify-between border-t border-[var(--qlico-hairline)] pt-6 text-sm text-[var(--qlico-muted)]">
+          <span>© {new Date().getFullYear()} QLICO. All rights reserved.</span>
+          <span className="mt-2 sm:mt-0">Designed with precision.</span>
         </div>
+      </div>
+      
+      {/* Massive 21st.dev style typographic footer */}
+      <div className="w-full flex justify-center overflow-hidden pointer-events-none select-none mt-10">
+        <h2 className="font-display text-[22vw] leading-[0.75] font-bold tracking-tighter text-[var(--qlico-border)] opacity-60 whitespace-nowrap">
+          QLICO
+        </h2>
       </div>
     </footer>
   )

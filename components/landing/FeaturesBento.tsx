@@ -9,16 +9,33 @@ import {
   RefreshCw,
   ShoppingBag,
 } from 'lucide-react'
-import { m, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import Reveal from './Reveal'
 
 /** Clean, Apple-grade bento card wrapper. */
-function BentoCard({ children, className }: { children: React.ReactNode, className?: string }) {
+function BentoCard({ children, className, highlight = false }: { children: React.ReactNode, className?: string, highlight?: boolean }) {
   return (
     <div
-      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-7 shadow-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_32px_64px_-12px_rgba(20,26,58,0.1)] ${className || ''}`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-sm transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_32px_64px_-12px_rgba(20,26,58,0.1)] ${className || ''}`}
     >
-      <div className="relative z-10 flex h-full flex-col">
+      {highlight && (
+        <>
+          {/* Rotating gradient background for the border */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+             <m.div
+               animate={{ rotate: 360 }}
+               transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+               className="absolute -inset-[100%] z-0 opacity-80"
+               style={{
+                 background: 'conic-gradient(from 0deg, transparent 0 340deg, var(--accent) 360deg)'
+               }}
+             />
+          </div>
+          {/* Inner masking to hide everything but the 2px border */}
+          <div className="absolute inset-[2px] z-0 rounded-[calc(1.5rem-2px)] bg-[var(--qlico-paper)] pointer-events-none" />
+        </>
+      )}
+      <div className="relative z-10 flex h-full flex-col p-7">
         {children}
       </div>
     </div>
@@ -163,34 +180,55 @@ const TILES: Tile[] = [
 ]
 
 export function FeaturesBento() {
+  const containerRef = React.useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start end', 'end start'],
+  })
+
+  // We stagger the columns with different scroll speeds to create a deep parallax effect
+  const yDown = useTransform(scrollYProgress, [0, 1], [-30, 30])
+  const yUp = useTransform(scrollYProgress, [0, 1], [30, -30])
+  const yNeutral = useTransform(scrollYProgress, [0, 1], [0, 0])
+
   return (
-    <section id="features" className="px-5 py-28">
+    <section id="features" ref={containerRef} className="px-5 py-32 sm:py-48 overflow-hidden">
       <div className="mx-auto max-w-6xl">
-        <Reveal className="mx-auto mb-14 max-w-2xl text-center">
-          <span className="mx-auto mb-5 block h-9 w-[3px] rounded-full bg-[var(--accent)]" />
-          <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Everything a page can be.</h2>
-          <p className="mt-4 text-lg leading-8 text-[var(--qlico-muted)]">
-            A studio, a reader, and the intelligence in between.
+        <Reveal className="mx-auto mb-20 max-w-2xl text-center">
+          <span className="mx-auto mb-6 block h-10 w-[3px] rounded-full bg-[var(--accent)]" />
+          <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl lg:text-6xl text-[var(--qlico-ink)]">Everything a page can be.</h2>
+          <p className="mt-5 text-lg leading-8 text-[var(--qlico-muted)] max-w-xl mx-auto">
+            A precise studio, a frictionless reader, and the deep intelligence in between.
           </p>
         </Reveal>
-        <div className="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {TILES.map(({ icon: Icon, title, desc, span, visual }, i) => (
-            <Reveal key={title} delay={(i % 4) * 70} className={span}>
-              <BentoCard>
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--qlico-subtle)] text-[var(--qlico-ink)] transition-colors duration-300 group-hover:bg-[var(--invert-surface)] group-hover:text-[var(--invert-text)]">
-                  <Icon size={20} strokeWidth={1.75} />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold tracking-[-0.01em]">{title}</h3>
-                <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{desc}</p>
-                {visual === 'bars' && <div className="mt-auto pt-6"><MiniBars /></div>}
-                {visual === 'hotspots' && <div className="mt-auto pt-6"><MiniHotspots /></div>}
-                {visual === 'prices' && <div className="mt-auto pt-6"><MiniPrices /></div>}
-                {visual === 'code' && <div className="mt-auto pt-6"><MiniCode /></div>}
-                {visual === 'swatches' && <div className="mt-auto pt-6"><MiniSwatches /></div>}
-                {visual === 'pages' && <div className="mt-auto pt-6"><MiniPages /></div>}
-              </BentoCard>
-            </Reveal>
-          ))}
+        
+        {/* Asymmetrical 3-column grid */}
+        <div className="grid auto-rows-fr grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {TILES.map(({ icon: Icon, title, desc, span, visual }, i) => {
+            // Apply different parallax directions depending on column to break the grid
+            const y = i % 3 === 0 ? yUp : i % 3 === 1 ? yDown : yNeutral
+            const highlight = visual === 'bars'
+
+            return (
+              <Reveal key={title} delay={0} className={`${span} h-full`}>
+                <m.div style={{ y }} className="h-full w-full">
+                  <BentoCard highlight={highlight}>
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--qlico-subtle)] text-[var(--qlico-ink)] transition-colors duration-300 group-hover:bg-[var(--invert-surface)] group-hover:text-[var(--invert-text)]">
+                      <Icon size={20} strokeWidth={1.75} />
+                    </div>
+                    <h3 className="mt-6 text-xl font-semibold tracking-[-0.01em] text-[var(--qlico-ink)]">{title}</h3>
+                    <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">{desc}</p>
+                    {visual === 'bars' && <div className="mt-auto pt-8"><MiniBars /></div>}
+                    {visual === 'hotspots' && <div className="mt-auto pt-8"><MiniHotspots /></div>}
+                    {visual === 'prices' && <div className="mt-auto pt-8"><MiniPrices /></div>}
+                    {visual === 'code' && <div className="mt-auto pt-8"><MiniCode /></div>}
+                    {visual === 'swatches' && <div className="mt-auto pt-8"><MiniSwatches /></div>}
+                    {visual === 'pages' && <div className="mt-auto pt-8"><MiniPages /></div>}
+                  </BentoCard>
+                </m.div>
+              </Reveal>
+            )
+          })}
         </div>
       </div>
     </section>
