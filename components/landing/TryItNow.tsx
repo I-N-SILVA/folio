@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, FileUp, Loader2, X } from 'lucide-react'
+import { AlertCircle, FileUp, Loader2, X, Maximize2, Minimize2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
 import { savePendingImport } from '@/lib/pending-import'
 import { trackProduct } from '@/lib/product-analytics'
@@ -17,24 +18,7 @@ const ViewerChrome = dynamic(
   { ssr: false }
 )
 
-/**
- * Drop a PDF, see it as an edition, sign up afterwards.
- *
- * Every route into this product used to pass through an email round-trip before
- * anything could be seen: land, click "Start for free", type an address, leave
- * for an inbox, come back, and only then find out what the thing does. That is
- * the largest single drop in the funnel and it sat in front of the moment that
- * sells — a PDF you recognise, turning into pages.
- *
- * Nothing here needs an account. The renderer already runs in the browser
- * (lib/pdf-renderer.ts), so the preview is genuinely the reader, showing
- * genuinely the visitor's document. Signing in is asked for at the point where
- * they want to keep it, which is the point at which they have a reason to.
- */
-
-/** Enough to prove the point without making a 200-page document render in full. */
 const PREVIEW_PAGES = 6
-
 type Status = 'idle' | 'rendering' | 'ready' | 'error'
 
 export function TryItNow() {
@@ -47,9 +31,8 @@ export function TryItNow() {
   const [book, setBook] = useState<Book | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
-  // Blob URLs outlive the component unless revoked, and a 50-page preview holds
-  // real memory.
   const urlsRef = useRef<string[]>([])
   const revokeAll = useCallback(() => {
     urlsRef.current.forEach((url) => URL.revokeObjectURL(url))
@@ -83,17 +66,10 @@ export function TryItNow() {
       })
 
       try {
-        // Imported here rather than at module scope. pdf.js sets up its worker
-        // on import and reaches for DOMMatrix, which doesn't exist while the
-        // landing page is being prerendered — a static import fails the build
-        // outright. It also keeps ~1MB of PDF machinery out of the bundle for
-        // the majority of visitors who never drop a file.
         const { renderPdfPages } = await import('@/lib/pdf-renderer')
 
         const rendered = await renderPdfPages(picked, {
           maxPages: PREVIEW_PAGES,
-          // Half the import's scale. This is a preview on a screen, not the
-          // asset that gets stored, and the render is the whole wait.
           scale: 1,
           onProgress: (p) => setProgress({ current: p.current, total: p.total }),
         })
@@ -152,9 +128,6 @@ export function TryItNow() {
     setSaving(true)
     trackProduct('try_claim_clicked')
 
-    // Hand the file to the studio across the sign-in round trip. If the browser
-    // won't store it, the sign-in still happens and the import dialog opens
-    // empty — a re-upload, not a dead end.
     const stored = await savePendingImport(file)
     router.push(
       `/login?next=${encodeURIComponent(stored ? '/dashboard?resume=1' : '/dashboard?new=1')}`
@@ -167,6 +140,7 @@ export function TryItNow() {
     setFile(null)
     setStatus('idle')
     setError('')
+    setIsFullscreen(false)
   }, [revokeAll])
 
   if (status === 'ready' && book) {
@@ -186,41 +160,89 @@ export function TryItNow() {
                 keys.
               </p>
             </div>
-            <button
-              onClick={reset}
-              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-4 py-2 text-sm font-semibold transition-colors hover:bg-[var(--tint-weak)]"
-            >
-              <X size={14} />
-              Try another
-            </button>
-          </div>
-
-          <div className="overflow-hidden rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-4">
-            <div className="h-[60vh] min-h-[420px]">
-              <ViewerChrome book={book} showBadge={false} embed />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="hidden sm:flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-4 py-2 text-sm font-semibold transition-colors hover:bg-[var(--tint-weak)]"
+              >
+                <Maximize2 size={14} />
+                Expand
+              </button>
+              <button
+                onClick={reset}
+                className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-4 py-2 text-sm font-semibold transition-colors hover:bg-[var(--tint-weak)]"
+              >
+                <X size={14} />
+                Try another
+              </button>
             </div>
           </div>
 
-          <div className="mt-8 rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-7 text-center">
-            <h3 className="font-display text-2xl font-semibold tracking-[-0.03em]">
-              Keep it, and find out who reads it.
-            </h3>
-            <p className="mx-auto mt-2 max-w-md text-[15px] leading-7 text-[var(--qlico-muted)]">
-              Sign in and we&apos;ll import the whole document, give it a link you can send
-              anywhere, and show you which pages people actually finish.
-            </p>
-            <button
-              onClick={claim}
-              disabled={saving}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-[15px] font-semibold text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-60"
-            >
-              {saving && <Loader2 size={16} className="animate-spin" />}
-              {saving ? 'One moment…' : 'Save this edition'}
-            </button>
-            <p className="mt-3 text-xs text-[var(--qlico-muted)]">
-              Free for three editions. No card.
-            </p>
+          <div
+            className={
+              isFullscreen
+                ? 'fixed inset-0 z-50 flex flex-col bg-[var(--qlico-paper)] p-4 sm:p-6 backdrop-blur'
+                : 'overflow-hidden rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-4'
+            }
+          >
+            {isFullscreen && (
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-fg)]">Preview</p>
+                  <p className="font-display text-2xl font-semibold">{book.title}</p>
+                </div>
+                <button
+                  onClick={() => setIsFullscreen(false)}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--qlico-subtle)] transition hover:bg-[var(--qlico-border)]"
+                >
+                  <Minimize2 size={18} />
+                </button>
+              </div>
+            )}
+            <div className={isFullscreen ? 'flex-1 min-h-0 rounded-[1.5rem] overflow-hidden bg-[var(--qlico-subtle)] border border-[var(--qlico-border)]' : 'h-[60vh] min-h-[420px]'}>
+              <ViewerChrome book={book} showBadge={false} embed />
+            </div>
+            
+            {isFullscreen && (
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-[1.5rem] bg-[var(--qlico-subtle)] border border-[var(--qlico-border)] p-5">
+                <div>
+                  <p className="font-semibold">Keep it, and find out who reads it.</p>
+                  <p className="text-sm text-[var(--qlico-muted)]">Sign in to unlock analytics for this edition.</p>
+                </div>
+                <button
+                  onClick={claim}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-2.5 text-sm font-semibold text-[var(--accent-contrast)] transition hover:bg-[var(--accent-hover)] disabled:opacity-60"
+                >
+                  {saving && <Loader2 size={16} className="animate-spin" />}
+                  {saving ? 'Saving…' : 'Save this edition'}
+                </button>
+              </div>
+            )}
           </div>
+
+          {!isFullscreen && (
+            <div className="mt-8 rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-7 text-center shadow-sm">
+              <h3 className="font-display text-2xl font-semibold tracking-[-0.03em]">
+                Keep it, and find out who reads it.
+              </h3>
+              <p className="mx-auto mt-2 max-w-md text-[15px] leading-7 text-[var(--qlico-muted)]">
+                Sign in and we&apos;ll import the whole document, give it a link you can send
+                anywhere, and show you which pages people actually finish.
+              </p>
+              <button
+                onClick={claim}
+                disabled={saving}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-[15px] font-semibold text-[var(--accent-contrast)] shadow-[0_16px_34px_rgba(255,59,0,0.18)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:opacity-60 disabled:translate-y-0"
+              >
+                {saving && <Loader2 size={16} className="animate-spin" />}
+                {saving ? 'One moment…' : 'Save this edition'}
+              </button>
+              <p className="mt-3 text-xs text-[var(--qlico-muted)]">
+                Free for three editions. No card.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     )
@@ -248,9 +270,9 @@ export function TryItNow() {
             setDragging(false)
             handleFile(e.dataTransfer.files?.[0])
           }}
-          className={`mt-8 rounded-[1.5rem] border-2 border-dashed p-10 transition-colors ${
+          className={`relative mt-8 overflow-hidden rounded-[2rem] border-2 border-dashed p-10 transition-all duration-300 ${
             dragging
-              ? 'border-[var(--accent)] bg-[var(--accent)]/5'
+              ? 'border-[var(--accent)] bg-[var(--accent)]/5 scale-[1.02]'
               : 'border-[var(--qlico-border)] bg-[var(--qlico-paper)]'
           }`}
         >
@@ -264,7 +286,7 @@ export function TryItNow() {
 
           {status === 'rendering' ? (
             <div className="flex flex-col items-center gap-3">
-              <Loader2 size={22} className="animate-spin text-[var(--accent-fg)]" />
+              <Loader2 size={24} className="animate-spin text-[var(--accent)]" />
               <p className="text-sm font-medium">
                 {progress.total > 0
                   ? `Turning page ${progress.current} of ${progress.total}…`
@@ -273,15 +295,21 @@ export function TryItNow() {
             </div>
           ) : (
             <>
-              <FileUp size={26} className="mx-auto mb-3 text-[var(--qlico-muted)]" />
+              <motion.div
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-[var(--qlico-subtle)] shadow-sm border border-[var(--qlico-border)]"
+              >
+                <FileUp size={28} className="text-[var(--accent)]" />
+              </motion.div>
               <button
                 onClick={() => inputRef.current?.click()}
-                className="rounded-full bg-[var(--accent)] px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+                className="rounded-full bg-[var(--accent)] px-7 py-3.5 text-[15px] font-semibold text-[var(--accent-contrast)] shadow-[0_12px_24px_rgba(255,59,0,0.18)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
               >
                 Choose a PDF
               </button>
-              <p className="mt-3 text-xs text-[var(--qlico-muted)]">
-                …or drop one here. Up to {humanBytes(MAX_PDF_BYTES)}.
+              <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-[var(--qlico-muted)]">
+                Or drag and drop
               </p>
             </>
           )}
@@ -289,9 +317,9 @@ export function TryItNow() {
           {status === 'error' && error && (
             <p
               role="alert"
-              className="mx-auto mt-5 flex max-w-sm items-start gap-2 rounded-xl bg-red-50 p-3 text-left text-sm text-red-700"
+              className="mx-auto mt-6 flex max-w-sm items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-left text-sm text-red-700"
             >
-              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <AlertCircle size={18} className="shrink-0" />
               {error}
             </p>
           )}
