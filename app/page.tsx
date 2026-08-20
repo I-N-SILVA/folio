@@ -53,7 +53,6 @@ export default function HomePage() {
 
         <main>
           <Hero />
-          <TryItNow />
           <FeaturesBento />
           <Statement />
           <HowItWorks />
