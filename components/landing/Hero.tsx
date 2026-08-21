@@ -28,25 +28,29 @@ type Status = 'idle' | 'rendering' | 'ready' | 'error'
 /** Word-by-word blur-up reveal for the hero headline. */
 function HeadlineReveal({ text, className = '' }: { text: string; className?: string }) {
   const reduce = useReducedMotion()
-  const words = text.split(' ')
+  const words = text.split(/(\s+|\n)/)
   return (
     <h1 className={className}>
-      {words.map((w, i) => (
-        <m.span
-          key={i}
-          className="inline-block"
-          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 18, filter: 'blur(10px)' }}
-          animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={
-            reduce
-              ? { duration: 0.3 }
-              : { type: 'spring', stiffness: 130, damping: 18, delay: 0.15 + i * 0.13 }
-          }
-        >
-          {w}
-          {i < words.length - 1 ? ' ' : ''}
-        </m.span>
-      ))}
+      {words.map((w, i) => {
+        if (w === '\n') return <br key={i} className="hidden sm:block" />
+        if (w.trim() === '') return <span key={i}> </span>
+        
+        return (
+          <m.span
+            key={i}
+            className="inline-block"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 20, filter: 'blur(8px)' }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={
+              reduce
+                ? { duration: 0.3 }
+                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.1 + (i * 0.04) }
+            }
+          >
+            {w}
+          </m.span>
+        )
+      })}
     </h1>
   )
 }
@@ -289,7 +293,7 @@ export function Hero() {
           />
         </div>
 
-        <div className="mx-auto max-w-3xl relative z-10">
+        <div className="mx-auto max-w-4xl relative z-10">
           <m.span
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -297,23 +301,23 @@ export function Hero() {
             className="inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--qlico-muted)] backdrop-blur"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-            Flip through anything
+            The intelligent document format
           </m.span>
           
           <HeadlineReveal
-            text={status === 'rendering' ? "Processing your document..." : "Send a PDF. See who actually read it."}
-            className="font-display mt-6 text-5xl font-semibold leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-7xl"
+            text={status === 'rendering' ? "Processing your\ndocument..." : "Turn flat PDFs into\ncinematic experiences."}
+            className="font-display mt-6 text-5xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-[5.5rem] lg:leading-[0.95]"
           />
           
           <m.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="mx-auto mt-6 max-w-xl text-xl leading-8 text-[var(--qlico-muted)]"
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mx-auto mt-7 max-w-2xl text-xl leading-8 text-[var(--qlico-muted)]"
           >
             {status === 'rendering' 
               ? progress.total > 0 ? `Turning page ${progress.current} of ${progress.total}...` : 'Reading layers and compiling assets...'
-              : 'Drop in a catalog, lookbook, report or portfolio. QLICO turns it into an interactive edition you can send anywhere — then shows you which pages held attention.'
+              : 'Send a link that feels like a physical object. QLICO turns flat documents into living editions with fluid page turns, shoppable hotspots, and deep analytics.'
             }
           </m.p>
 
