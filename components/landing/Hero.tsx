@@ -8,44 +8,59 @@ function NeonGelBlobs() {
   const reduce = useReducedMotion()
   if (reduce) return null
 
+  // We use multiple layers of gradients and inset shadows to create a "3D gel" effect
+  // instead of just flat blurred circles.
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 flex justify-center items-center opacity-80 dark:opacity-60">
+    <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-[800px] pointer-events-none z-0">
       {/* Magenta Blob */}
       <m.div
         animate={{
-          scale: [1, 1.1, 1],
-          x: [0, 40, 0],
-          y: [0, -30, 0],
-          rotate: [0, 45, 0]
+          scale: [1, 1.15, 1],
+          rotate: [0, 90, 0],
+          borderRadius: ["40% 60% 70% 30%", "50% 50% 30% 70%", "40% 60% 70% 30%"]
         }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-[400px] h-[400px] rounded-[40%_60%_70%_30%] bg-fuchsia-500/50 mix-blend-multiply dark:mix-blend-screen filter blur-[80px]"
-        style={{ top: '5%', left: '15%' }}
+        className="absolute w-[450px] h-[450px] opacity-90 mix-blend-multiply dark:mix-blend-screen"
+        style={{
+          top: '0%', left: '10%',
+          background: 'radial-gradient(circle at 30% 30%, #ff00ff, #c026d3, transparent)',
+          boxShadow: 'inset 20px 20px 60px rgba(255,255,255,0.5), inset -20px -20px 60px rgba(0,0,0,0.5)',
+          filter: 'blur(30px) drop-shadow(0 20px 40px rgba(255,0,255,0.4))'
+        }}
       />
       
       {/* Cyan Blob */}
       <m.div
         animate={{
           scale: [1, 1.2, 1],
-          x: [0, -50, 0],
-          y: [0, 50, 0],
-          rotate: [0, -45, 0]
+          rotate: [0, -90, 0],
+          borderRadius: ["60% 40% 30% 70%", "40% 60% 70% 30%", "60% 40% 30% 70%"]
         }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute w-[500px] h-[500px] rounded-[60%_40%_30%_70%] bg-cyan-400/50 mix-blend-multiply dark:mix-blend-screen filter blur-[100px]"
-        style={{ top: '25%', right: '10%' }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute w-[550px] h-[550px] opacity-90 mix-blend-multiply dark:mix-blend-screen"
+        style={{
+          bottom: '-10%', right: '5%',
+          background: 'radial-gradient(circle at 70% 30%, #00ffff, #0891b2, transparent)',
+          boxShadow: 'inset 20px 20px 60px rgba(255,255,255,0.5), inset -20px -20px 60px rgba(0,0,0,0.5)',
+          filter: 'blur(40px) drop-shadow(0 20px 40px rgba(0,255,255,0.4))'
+        }}
       />
       
       {/* Chartreuse Blob */}
       <m.div
         animate={{
           scale: [1, 1.1, 1],
-          x: [0, 30, 0],
-          y: [0, 30, 0],
+          rotate: [0, 45, 0],
+          borderRadius: ["50% 50% 40% 60%", "30% 70% 50% 50%", "50% 50% 40% 60%"]
         }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-        className="absolute w-[350px] h-[350px] rounded-[50%_50%_40%_60%] bg-lime-400/50 mix-blend-multiply dark:mix-blend-screen filter blur-[70px]"
-        style={{ bottom: '15%', left: '35%' }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        className="absolute w-[380px] h-[380px] opacity-90 mix-blend-multiply dark:mix-blend-screen"
+        style={{
+          top: '40%', left: '0%',
+          background: 'radial-gradient(circle at 30% 70%, #a3e635, #65a30d, transparent)',
+          boxShadow: 'inset 20px 20px 60px rgba(255,255,255,0.5), inset -20px -20px 60px rgba(0,0,0,0.5)',
+          filter: 'blur(25px) drop-shadow(0 20px 40px rgba(163,230,53,0.4))'
+        }}
       />
     </div>
   )
@@ -81,28 +96,49 @@ function HeadlineReveal({ text, className = '' }: { text: string; className?: st
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden px-5 pb-24 pt-32 text-center sm:pt-40">
-      <NeonGelBlobs />
-      
-      <div className="mx-auto max-w-5xl relative z-10 pt-12">
+    <section className="relative overflow-hidden px-5 pb-32 pt-24 text-center">
+      {/* 1. Image and Blobs at the top */}
+      <div className="relative mx-auto mt-16 max-w-[1100px] h-[500px] sm:h-[650px] flex items-center justify-center">
+        <NeonGelBlobs />
+        
+        <m.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-20 w-full max-w-[900px] px-4" 
+        >
+          {/* Glassmorphism container for the product image */}
+          <div className="relative rounded-[2rem] p-3 bg-white/30 dark:bg-black/30 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.1)] border border-white/40 dark:border-white/10">
+            <img 
+              src="/demo/editorial.jpg" 
+              alt="QLICO App" 
+              className="w-full h-auto rounded-[1.5rem] shadow-xl object-cover"
+            />
+          </div>
+        </m.div>
+      </div>
+
+      {/* 2. Headline and Text below the image */}
+      <div className="mx-auto max-w-5xl relative z-10 pt-16">
         <HeadlineReveal
-          text="Transform chaos into flow."
-          className="font-display mx-auto max-w-4xl text-5xl font-bold leading-[1.05] tracking-[-0.04em] sm:text-7xl lg:text-[7.5rem] lg:leading-[0.92]"
+          text="Transform chaos into flow. Your documents, intelligent, organized, connected."
+          className="font-display mx-auto max-w-4xl text-4xl font-bold leading-[1.1] tracking-[-0.04em] sm:text-6xl lg:text-[6rem] lg:leading-[0.95]"
         />
         <m.p 
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
           className="mx-auto mt-8 max-w-2xl text-xl font-medium text-[var(--qlico-muted)]"
         >
-          Your documents, intelligent, organized, connected.
+          Unlock the power of your knowledge. QLICO makes document workflows seamless, intelligent, and collaborative.
         </m.p>
         
+        {/* 3. CTA Buttons at the bottom */}
         <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="mt-14 flex justify-center relative z-20"
+          transition={{ delay: 0.5, duration: 0.6 }}
+          className="mt-12 flex flex-col sm:flex-row justify-center items-center gap-4 relative z-20"
         >
           <MagneticButton
             href="/signup"
@@ -110,23 +146,15 @@ export function Hero() {
           >
             Try QLICO Free
           </MagneticButton>
+          
+          <MagneticButton
+            href="/demo"
+            className="rounded-full bg-transparent border-2 border-foreground px-10 py-3.5 text-[17px] font-bold text-foreground transition-all hover:bg-foreground hover:text-background"
+          >
+            Watch Demo
+          </MagneticButton>
         </m.div>
       </div>
-
-      <m.div 
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto mt-24 max-w-[1400px] relative z-20 px-4 sm:px-8" 
-      >
-        <div className="relative rounded-[2rem] p-2 bg-gradient-to-b from-white/40 to-white/10 dark:from-white/10 dark:to-white/5 backdrop-blur-md shadow-2xl border border-white/20">
-          <img 
-            src="/demo/editorial.jpg" 
-            alt="QLICO Edition" 
-            className="w-full h-auto rounded-[1.5rem] shadow-[var(--qlico-shadow)] object-cover"
-          />
-        </div>
-      </m.div>
     </section>
   )
 }
