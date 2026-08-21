@@ -7,9 +7,6 @@ import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
 import { TryItNow } from '@/components/landing/TryItNow'
 import { FeaturesBento } from '@/components/landing/FeaturesBento'
-import { Statement } from '@/components/landing/Statement'
-import { HowItWorks } from '@/components/landing/HowItWorks'
-import { Examples } from '@/components/landing/Examples'
 import { Pricing } from '@/components/landing/Pricing'
 import { Faq } from '@/components/landing/Faq'
 import { ClosingCta } from '@/components/landing/ClosingCta'
@@ -54,9 +51,6 @@ export default function HomePage() {
         <main>
           <Hero />
           <FeaturesBento />
-          <Statement />
-          <HowItWorks />
-          <Examples />
           <Pricing />
           <Faq />
           <ClosingCta />

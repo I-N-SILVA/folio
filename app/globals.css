@@ -1,39 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  /* QLICO — Editorial Luxury Palette */
-  --background: #f9f8f4;
-  --background-alt: #f0eee9;
-  --foreground: #1c1f26;
-  --qlico-ink: #1c1f26;
-  --qlico-muted: #6b6d76;
+  /* QLICO — Stark Minimal Palette */
+  --background: #ffffff;
+  --background-alt: #f9f9f9;
+  --foreground: #000000;
+  --qlico-ink: #000000;
+  --qlico-muted: #888888;
   --qlico-paper: #ffffff;
-  --qlico-vellum: #f3f1eb;
-  --qlico-subtle: #eae8e1;
-  /* Accent: Deep Oxblood */
-  --accent: #5c2c26;
-  --accent-hover: #4a231e;
-  --accent-fg: #5c2c26;
-  --accent-contrast: #f9f8f4;
-  --invert-surface: #1c1f26;
-  --invert-text: #f9f8f4;
-  --invert-muted: #a3a4ab;
-  --btn-solid: #1c1f26;
-  --btn-solid-hover: var(--accent);
-  --tint-weak: rgba(28, 31, 38, 0.03);
-  --tint: rgba(28, 31, 38, 0.06);
-  --tint-strong: rgba(28, 31, 38, 0.1);
-  --accent-vivid: #8a433a;
-  --accent-vivid-hover: #9e4d43;
-  --qlico-brass: #b39b7a;
-  --qlico-teal: #4a5d5c;
-  --qlico-oxblood: #5c2c26;
-  --qlico-border: #e2dfd8;
-  --qlico-hairline: rgba(28, 31, 38, 0.08);
-  --qlico-shadow: 0 18px 50px rgba(28, 31, 38, 0.06);
-  --font-display: var(--font-display), "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
-  --font-body: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-ui: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --qlico-vellum: #f5f5f5;
+  --qlico-subtle: #f0f0f0;
+  /* Accent: Pure Black */
+  --accent: #000000;
+  --accent-hover: #333333;
+  --accent-fg: #000000;
+  --accent-contrast: #ffffff;
+  --invert-surface: #000000;
+  --invert-text: #ffffff;
+  --invert-muted: #888888;
+  --btn-solid: #000000;
+  --btn-solid-hover: #333333;
+  --tint-weak: rgba(0, 0, 0, 0.03);
+  --tint: rgba(0, 0, 0, 0.06);
+  --tint-strong: rgba(0, 0, 0, 0.1);
+  --accent-vivid: #000000;
+  --accent-vivid-hover: #333333;
+  --qlico-brass: #e0e0e0;
+  --qlico-teal: #000000;
+  --qlico-oxblood: #000000;
+  --qlico-border: #eaeaea;
+  --qlico-hairline: rgba(0, 0, 0, 0.08);
+  --qlico-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  --font-display: var(--font-display), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: var(--font-body), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ui: var(--font-body), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Dark palette. Applied when the OS asks for it, unless an explicit choice on
@@ -44,29 +44,29 @@
    which render author content under an author-chosen theme, and the editor
    chrome, which is dark by design in both modes. */
 :root[data-theme='dark'] {
-  --background: #111216;
-  --background-alt: #16181d;
-  --foreground: #e5e3dc;
-  --qlico-ink: #e5e3dc;
-  --qlico-muted: #8c8e96;
-  --qlico-paper: #1a1c23;
-  --qlico-vellum: #1f2128;
-  --qlico-subtle: #252830;
-  --accent: #8a433a;
-  --accent-hover: #9e4d43;
-  --accent-fg: #9e4d43;
-  --accent-contrast: #111216;
-  --qlico-brass: #b39b7a;
-  --qlico-teal: #6b8281;
-  --qlico-oxblood: #e5e3dc;
-  --qlico-border: #333640;
-  --qlico-hairline: rgba(255, 255, 255, 0.06);
-  --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
-  --invert-surface: #f9f8f4;
-  --invert-text: #1c1f26;
-  --invert-muted: #6b6d76;
-  --btn-solid: #f9f8f4;
-  --btn-solid-hover: #eae8e1;
+  --background: #000000;
+  --background-alt: #0a0a0a;
+  --foreground: #ffffff;
+  --qlico-ink: #ffffff;
+  --qlico-muted: #888888;
+  --qlico-paper: #111111;
+  --qlico-vellum: #1a1a1a;
+  --qlico-subtle: #222222;
+  --accent: #ffffff;
+  --accent-hover: #e0e0e0;
+  --accent-fg: #ffffff;
+  --accent-contrast: #000000;
+  --qlico-brass: #333333;
+  --qlico-teal: #ffffff;
+  --qlico-oxblood: #ffffff;
+  --qlico-border: #333333;
+  --qlico-hairline: rgba(255, 255, 255, 0.1);
+  --qlico-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  --invert-surface: #ffffff;
+  --invert-text: #000000;
+  --invert-muted: #888888;
+  --btn-solid: #ffffff;
+  --btn-solid-hover: #e0e0e0;
   --tint-weak: rgba(255, 255, 255, 0.03);
   --tint: rgba(255, 255, 255, 0.06);
   --tint-strong: rgba(255, 255, 255, 0.1);
@@ -75,29 +75,29 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --background: #111216;
-    --background-alt: #16181d;
-    --foreground: #e5e3dc;
-    --qlico-ink: #e5e3dc;
-    --qlico-muted: #8c8e96;
-    --qlico-paper: #1a1c23;
-    --qlico-vellum: #1f2128;
-    --qlico-subtle: #252830;
-    --accent: #8a433a;
-    --accent-hover: #9e4d43;
-    --accent-fg: #9e4d43;
-    --accent-contrast: #111216;
-    --qlico-brass: #b39b7a;
-    --qlico-teal: #6b8281;
-    --qlico-oxblood: #e5e3dc;
-    --qlico-border: #333640;
-    --qlico-hairline: rgba(255, 255, 255, 0.06);
-    --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
-    --invert-surface: #f9f8f4;
-    --invert-text: #1c1f26;
-    --invert-muted: #6b6d76;
-    --btn-solid: #f9f8f4;
-    --btn-solid-hover: #eae8e1;
+    --background: #000000;
+    --background-alt: #0a0a0a;
+    --foreground: #ffffff;
+    --qlico-ink: #ffffff;
+    --qlico-muted: #888888;
+    --qlico-paper: #111111;
+    --qlico-vellum: #1a1a1a;
+    --qlico-subtle: #222222;
+    --accent: #ffffff;
+    --accent-hover: #e0e0e0;
+    --accent-fg: #ffffff;
+    --accent-contrast: #000000;
+    --qlico-brass: #333333;
+    --qlico-teal: #ffffff;
+    --qlico-oxblood: #ffffff;
+    --qlico-border: #333333;
+    --qlico-hairline: rgba(255, 255, 255, 0.1);
+    --qlico-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+    --invert-surface: #ffffff;
+    --invert-text: #000000;
+    --invert-muted: #888888;
+    --btn-solid: #ffffff;
+    --btn-solid-hover: #e0e0e0;
     --tint-weak: rgba(255, 255, 255, 0.03);
     --tint: rgba(255, 255, 255, 0.06);
     --tint-strong: rgba(255, 255, 255, 0.1);
@@ -184,12 +184,8 @@ section[id] {
 }
 
 .font-display {
-  font-family: var(--font-display), Georgia, serif;
-  letter-spacing: -0.02em;
-  font-variation-settings:
-    "opsz" 144,
-    "SOFT" 0,
-    "WONK" 0;
+  font-family: var(--font-display), sans-serif;
+  letter-spacing: -0.03em;
 }
 
 /* Chevron for the studio inspector's selects. The OS-drawn arrow reads as a
