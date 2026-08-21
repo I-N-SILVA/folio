@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { LazyMotion, domAnimation } from 'framer-motion'
 import { ScrollProgress } from '@/components/landing/ScrollProgress'
 import { Nav } from '@/components/landing/Nav'
-import HomeHeroLandingScrollAnimation from '@/components/ui/home-hero-landing-scroll-animation'
+import { BrutalistHero } from '@/components/ui/brutalist-hero'
 import { FeaturesBento } from '@/components/landing/FeaturesBento'
 import { Pricing } from '@/components/landing/Pricing'
 import { Faq } from '@/components/landing/Faq'
@@ -39,23 +39,32 @@ export default function HomePage() {
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="min-h-screen bg-[var(--background)] text-[var(--qlico-ink)]">
+      <div className="min-h-screen bg-[#050505] text-zinc-100 selection:bg-red-500 selection:text-white dark">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
         />
         <ScrollProgress />
-        <Nav />
+        
+        {/* Nav needs to be styled for dark mode or absolute so it overlays the hero */}
+        <div className="absolute top-0 left-0 w-full z-50">
+          <Nav />
+        </div>
 
         <main>
-          <HomeHeroLandingScrollAnimation />
-          <FeaturesBento />
-          <Pricing />
-          <Faq />
-          <ClosingCta />
+          <BrutalistHero />
+          
+          <div className="relative z-20 bg-[#050505]">
+            <FeaturesBento />
+            <Pricing />
+            <Faq />
+            <ClosingCta />
+          </div>
         </main>
 
-        <Footer />
+        <div className="bg-black relative z-20">
+          <Footer />
+        </div>
       </div>
     </LazyMotion>
   )
