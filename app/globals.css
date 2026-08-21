@@ -1,53 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  /* QLICO — palette drawn from the logo: violet mark + ink-navy wordmark. */
-  --background: #fcfcfd;
-  --background-alt: #f4f4f7;
-  --foreground: #141a3a;
-  --qlico-ink: #141a3a;
-  --qlico-muted: #575d78;
+  /* QLICO — Editorial Luxury Palette */
+  --background: #f9f8f4;
+  --background-alt: #f0eee9;
+  --foreground: #1c1f26;
+  --qlico-ink: #1c1f26;
+  --qlico-muted: #6b6d76;
   --qlico-paper: #ffffff;
-  --qlico-vellum: #f4f4f7;
-  --qlico-subtle: #f4f4f7;
-  /* Accent: International Orange / Vermilion */
-  --accent: #ff3b00;
-  --accent-hover: #ff521f;
-  /* The accent serves two jobs with different contrast needs: a fill behind
-     white text, and a foreground colour on the page background. In light mode
-     one value clears both. In dark mode it can't — a violet dark enough for
-     white text to sit on is too dark to read against the background — so the
-     foreground role gets its own token. */
-  --accent-fg: #cc2f00;
-  --accent-contrast: #ffffff;
-  /* Emphasis panels that are deliberately inverted against the page. These
-     stay a dark surface in both modes — flipping them to near-white in dark
-     mode would put a glaring band across the page. */
-  --invert-surface: #141a3a;
-  --invert-text: #ffffff;
-  --invert-muted: #a1a1a6;
-  /* Solid primary buttons sitting *on a card*. The inverted-panel navy is the
-     right look on white, but on a dark card it lands within a few percent of
-     the card itself and the button disappears — so dark mode uses the accent,
-     which the light hover state already resolves to anyway. */
-  --btn-solid: #141a3a;
+  --qlico-vellum: #f3f1eb;
+  --qlico-subtle: #eae8e1;
+  /* Accent: Deep Oxblood */
+  --accent: #5c2c26;
+  --accent-hover: #4a231e;
+  --accent-fg: #5c2c26;
+  --accent-contrast: #f9f8f4;
+  --invert-surface: #1c1f26;
+  --invert-text: #f9f8f4;
+  --invert-muted: #a3a4ab;
+  --btn-solid: #1c1f26;
   --btn-solid-hover: var(--accent);
-  /* Hover washes and hairline fills. Hardcoded black/N goes invisible on a
-     dark background, so these carry the tint for whichever mode is active. */
-  --tint-weak: rgba(20, 26, 58, 0.04);
-  --tint: rgba(20, 26, 58, 0.07);
-  --tint-strong: rgba(20, 26, 58, 0.12);
-  /* Brighter orange for dark chrome (editor) where the deep mark orange
-     lacks contrast. Same hue family, higher luminance. */
-  --accent-vivid: #ff6633;
-  --accent-vivid-hover: #ff8566;
-  --qlico-brass: var(--accent);
-  --qlico-teal: var(--accent);
-  --qlico-oxblood: #141a3a;
-  --qlico-border: #e3e4ea;
-  --qlico-hairline: rgba(20, 26, 58, 0.09);
-  --qlico-shadow: 0 18px 50px rgba(20, 26, 58, 0.08);
-  /* Editorial serif for headlines; geometric grotesk for UI/body. */
+  --tint-weak: rgba(28, 31, 38, 0.03);
+  --tint: rgba(28, 31, 38, 0.06);
+  --tint-strong: rgba(28, 31, 38, 0.1);
+  --accent-vivid: #8a433a;
+  --accent-vivid-hover: #9e4d43;
+  --qlico-brass: #b39b7a;
+  --qlico-teal: #4a5d5c;
+  --qlico-oxblood: #5c2c26;
+  --qlico-border: #e2dfd8;
+  --qlico-hairline: rgba(28, 31, 38, 0.08);
+  --qlico-shadow: 0 18px 50px rgba(28, 31, 38, 0.06);
   --font-display: var(--font-display), "Fraunces", "Iowan Old Style", Palatino, Georgia, serif;
   --font-body: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-ui: var(--font-body), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -61,63 +44,63 @@
    which render author content under an author-chosen theme, and the editor
    chrome, which is dark by design in both modes. */
 :root[data-theme='dark'] {
-  --background: #050505;
-  --background-alt: #0a0a0a;
-  --foreground: #fafafa;
-  --qlico-ink: #fafafa;
-  --qlico-muted: #8b8b93;
-  --qlico-paper: #121212;
-  --qlico-vellum: #1a1a1a;
-  --qlico-subtle: #1a1a1a;
-  --accent: #8b71f7;
-  --accent-hover: #9f8cf0;
-  --accent-fg: #b3a4f3;
-  --accent-contrast: #000000;
-  --qlico-brass: var(--accent);
-  --qlico-teal: var(--accent-fg);
-  --qlico-oxblood: #fafafa;
-  --qlico-border: #262626;
-  --qlico-hairline: rgba(255, 255, 255, 0.08);
-  --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.8);
-  --invert-surface: #ffffff;
-  --invert-text: #050505;
-  --invert-muted: #666666;
-  --btn-solid: #ffffff;
-  --btn-solid-hover: #f0f0f0;
-  --tint-weak: rgba(255, 255, 255, 0.04);
-  --tint: rgba(255, 255, 255, 0.08);
-  --tint-strong: rgba(255, 255, 255, 0.12);
+  --background: #111216;
+  --background-alt: #16181d;
+  --foreground: #e5e3dc;
+  --qlico-ink: #e5e3dc;
+  --qlico-muted: #8c8e96;
+  --qlico-paper: #1a1c23;
+  --qlico-vellum: #1f2128;
+  --qlico-subtle: #252830;
+  --accent: #8a433a;
+  --accent-hover: #9e4d43;
+  --accent-fg: #9e4d43;
+  --accent-contrast: #111216;
+  --qlico-brass: #b39b7a;
+  --qlico-teal: #6b8281;
+  --qlico-oxblood: #e5e3dc;
+  --qlico-border: #333640;
+  --qlico-hairline: rgba(255, 255, 255, 0.06);
+  --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
+  --invert-surface: #f9f8f4;
+  --invert-text: #1c1f26;
+  --invert-muted: #6b6d76;
+  --btn-solid: #f9f8f4;
+  --btn-solid-hover: #eae8e1;
+  --tint-weak: rgba(255, 255, 255, 0.03);
+  --tint: rgba(255, 255, 255, 0.06);
+  --tint-strong: rgba(255, 255, 255, 0.1);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --background: #050505;
-    --background-alt: #0a0a0a;
-    --foreground: #fafafa;
-    --qlico-ink: #fafafa;
-    --qlico-muted: #8b8b93;
-    --qlico-paper: #121212;
-    --qlico-vellum: #1a1a1a;
-    --qlico-subtle: #1a1a1a;
-    --accent: #8b71f7;
-    --accent-hover: #9f8cf0;
-    --accent-fg: #b3a4f3;
-    --accent-contrast: #000000;
-    --qlico-brass: var(--accent);
-    --qlico-teal: var(--accent-fg);
-    --qlico-oxblood: #fafafa;
-    --qlico-border: #262626;
-    --qlico-hairline: rgba(255, 255, 255, 0.08);
-    --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.8);
-    --invert-surface: #ffffff;
-    --invert-text: #050505;
-    --invert-muted: #666666;
-    --btn-solid: #ffffff;
-    --btn-solid-hover: #f0f0f0;
-    --tint-weak: rgba(255, 255, 255, 0.04);
-    --tint: rgba(255, 255, 255, 0.08);
-    --tint-strong: rgba(255, 255, 255, 0.12);
+    --background: #111216;
+    --background-alt: #16181d;
+    --foreground: #e5e3dc;
+    --qlico-ink: #e5e3dc;
+    --qlico-muted: #8c8e96;
+    --qlico-paper: #1a1c23;
+    --qlico-vellum: #1f2128;
+    --qlico-subtle: #252830;
+    --accent: #8a433a;
+    --accent-hover: #9e4d43;
+    --accent-fg: #9e4d43;
+    --accent-contrast: #111216;
+    --qlico-brass: #b39b7a;
+    --qlico-teal: #6b8281;
+    --qlico-oxblood: #e5e3dc;
+    --qlico-border: #333640;
+    --qlico-hairline: rgba(255, 255, 255, 0.06);
+    --qlico-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
+    --invert-surface: #f9f8f4;
+    --invert-text: #1c1f26;
+    --invert-muted: #6b6d76;
+    --btn-solid: #f9f8f4;
+    --btn-solid-hover: #eae8e1;
+    --tint-weak: rgba(255, 255, 255, 0.03);
+    --tint: rgba(255, 255, 255, 0.06);
+    --tint-strong: rgba(255, 255, 255, 0.1);
     color-scheme: dark;
   }
 }
@@ -205,8 +188,8 @@ section[id] {
   letter-spacing: -0.02em;
   font-variation-settings:
     "opsz" 144,
-    "SOFT" 40,
-    "WONK" 1;
+    "SOFT" 0,
+    "WONK" 0;
 }
 
 /* Chevron for the studio inspector's selects. The OS-drawn arrow reads as a

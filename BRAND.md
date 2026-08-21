@@ -1,7 +1,8 @@
 # QLICO — Brand Guidelines
 
-QLICO should feel like Apple-grade software: clean, confident, and effortless.
-Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
+QLICO should feel like a high-end editorial publication: elegant, curated, and luxurious.
+Lots of whitespace, creamy ivory backgrounds, deep navy ink, and a rich oxblood accent.
+Sophisticated, never loud.
 
 ---
 
@@ -14,8 +15,8 @@ Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
   it. See `docs/product-strategy-audit.md` §4.3.)*
 - **Headline:** Send a PDF. See who actually read it.
 - **Promise:** Turn static PDFs into interactive editions people actually finish.
-- **Personality:** Minimal · precise · modern · calm · confident.
-- **We are:** sleek and product-led. **We are not:** ornamental or busy.
+- **Personality:** Luxurious · editorial · refined · calm · sophisticated.
+- **We are:** elegant and story-driven. **We are not:** stark, sterile, or hyper-corporate.
 
 ## 2. Logo
 
@@ -36,22 +37,21 @@ Lots of whitespace, near-black on white, one decisive accent. Sleek, never loud.
 
 ## 3. Color
 
-The palette is drawn from the logo itself: ink navy for text, one violet
-accent. Source of truth: `app/globals.css` (`:root`).
+The palette is drawn from luxury editorial design: deep navy ink for text, creamy vellum backgrounds, and a rich oxblood accent. Source of truth: `app/globals.css` (`:root`).
 
 | Token | Hex | Use |
 | ----- | --- | --- |
-| White | `#ffffff` | Primary background |
-| Off-white | `#fcfcfd` | Page background |
-| Ink (`--qlico-ink`) | `#141a3a` | Text, dark sections (the wordmark navy) |
-| Gray (`--qlico-muted`) | `#575d78` | Secondary text |
-| Subtle | `#f4f4f7` | Fills, chips, secondary buttons |
-| Hairline (`--qlico-border`) | `#e3e4ea` | Borders / separators |
-| **QLICO Violet** (`--accent`) | `#3c2384` | Primary actions + links **only** (the mark's color) |
-| Accent hover | `#2e1a66` | Hover state for accent |
+| White | `#ffffff` | Elevated paper |
+| Cream / Ivory | `#f9f8f4` | Page background (`--background`) |
+| Navy Ink (`--qlico-ink`) | `#1c1f26` | Text, dark sections |
+| Gray (`--qlico-muted`) | `#6b6d76` | Secondary text |
+| Vellum | `#f3f1eb` | Fills, chips, secondary buttons (`--qlico-vellum`) |
+| Hairline (`--qlico-border`) | `#e2dfd8` | Borders / separators |
+| **Oxblood** (`--accent`) | `#5c2c26` | Primary actions + links **only** |
+| Accent hover | `#4a231e` | Hover state for accent |
 
 Rule: the accent is reserved for primary CTAs and links. Everything else is
-ink-on-white. Maintain AA contrast on text.
+navy-on-cream. Maintain AA contrast on text.
 
 ## 4. Typography
 
@@ -59,9 +59,9 @@ Two faces, loaded via `next/font` (see `app/layout.tsx`):
 
 - **Display — Fraunces** (`--font-display`): an editorial variable serif for
   headlines, big numbers, and the price. Tracking `-0.02em`, tuned via
-  `font-variation-settings` to high optical size (`opsz 144`), soft terminals
-  (`SOFT 40`), and wonky alternates (`WONK 1`) — this tuning is what makes the
-  voice ownable. Use it for impact, not body copy.
+  `font-variation-settings` to high optical size (`opsz 144`), sharp terminals
+  (`SOFT 0`), and elegant alternates (`WONK 0`) — this tuning is what makes the
+  voice ownable and refined. Use it for impact, not body copy.
 - **UI / body — DM Sans** (`--font-body`): a clean geometric grotesk for nav,
   cards, buttons, and paragraphs. 15–20px, `leading-7/8`, gray for secondary
   copy.

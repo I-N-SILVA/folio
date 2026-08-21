@@ -33,7 +33,7 @@ function HeadlineReveal({ text, className = '' }: { text: string; className?: st
     <h1 className={className}>
       {words.map((w, i) => {
         if (w === '\n') return <br key={i} className="hidden sm:block" />
-        if (w.trim() === '') return <span key={i}> </span>
+        if (w.trim() === '') return <span key={i}>&nbsp;</span>
         
         return (
           <m.span
@@ -282,31 +282,33 @@ export function Hero() {
 
         <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <m.div
-            className="absolute left-[20%] top-[-10%] h-[500px] w-[500px] rounded-full bg-[var(--accent)]/15 blur-[100px]"
-            animate={{ x: [0, 100, 0], y: [0, 50, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute left-[15%] top-[-10%] h-[600px] w-[600px] rounded-full bg-[var(--qlico-brass)]/10 blur-[120px]"
+            animate={{ x: [0, 60, 0], y: [0, 30, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
           />
           <m.div
-            className="absolute right-[20%] top-[20%] h-[400px] w-[400px] rounded-full bg-[#00d0ff]/15 blur-[100px]"
-            animate={{ x: [0, -100, 0], y: [0, -50, 0] }}
-            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute right-[15%] top-[10%] h-[500px] w-[500px] rounded-full bg-[var(--accent)]/5 blur-[120px]"
+            animate={{ x: [0, -60, 0], y: [0, -30, 0] }}
+            transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
 
-        <div className="mx-auto max-w-4xl relative z-10">
-          <m.span
+        <div className="mx-auto max-w-4xl relative z-10 pt-8">
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-3.5 py-1.5 text-[13px] font-medium text-[var(--qlico-muted)] backdrop-blur"
+            className="flex flex-col items-center justify-center gap-4"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-            The intelligent document format
-          </m.span>
+            <div className="h-10 w-[1px] bg-gradient-to-b from-transparent to-[var(--accent)]/40 mb-2"></div>
+            <span className="font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--qlico-muted)]">
+              The intelligent document format
+            </span>
+          </m.div>
           
           <HeadlineReveal
             text={status === 'rendering' ? "Processing your\ndocument..." : "Turn flat PDFs into\ncinematic experiences."}
-            className="font-display mt-6 text-5xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-[5.5rem] lg:leading-[0.95]"
+            className="font-display mt-8 text-5xl font-normal leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-[5.5rem] lg:leading-[0.95]"
           />
           
           <m.p
@@ -345,7 +347,7 @@ export function Hero() {
                   e.preventDefault()
                   claim()
                 }}
-                className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-[var(--accent-contrast)] shadow-[0_12px_24px_rgba(255,59,0,0.18)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
+                className="w-full rounded-full bg-[var(--accent)] px-8 py-3.5 text-center text-[15px] font-medium text-[var(--accent-contrast)] shadow-lg shadow-[var(--accent)]/10 transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
               >
                 {saving ? 'Saving...' : 'Save this edition'}
               </MagneticButton>
@@ -361,7 +363,7 @@ export function Hero() {
                   e.preventDefault()
                   inputRef.current?.click()
                 }}
-                className="w-full rounded-full bg-[var(--accent)] px-7 py-3.5 text-center text-[15px] font-semibold text-[var(--accent-contrast)] shadow-[0_12px_24px_rgba(255,59,0,0.18)] transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
+                className="w-full rounded-full bg-[var(--accent)] px-8 py-3.5 text-center text-[15px] font-medium text-[var(--accent-contrast)] shadow-lg shadow-[var(--accent)]/10 transition-colors hover:bg-[var(--accent-hover)] sm:w-auto"
               >
                 Drop in a PDF
               </MagneticButton>
