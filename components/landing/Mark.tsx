@@ -1,29 +1,21 @@
-import Image from 'next/image'
-
-/**
- * The lockup ships as two rasters — the wordmark's navy is baked in, so on a
- * dark background the type disappears and only the violet mark survives. Both
- * are rendered and CSS picks one, which keeps the swap flash-free.
- */
 export function Mark({ className = '' }: { className?: string }) {
   return (
-    <>
-      <Image
-        src="/brand/qlico-logo.png"
-        alt="QLICO"
-        width={116}
-        height={32}
-        priority
-        className={`theme-light-only object-contain ${className}`}
-      />
-      <Image
-        src="/brand/qlico-logo-white.png"
-        alt="QLICO"
-        width={116}
-        height={32}
-        priority
-        className={`theme-dark-only object-contain ${className}`}
-      />
-    </>
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      <svg 
+        width="28" 
+        height="28" 
+        viewBox="0 0 32 32" 
+        fill="none" 
+        xmlns="http://www.w3.org/2000/svg" 
+        className="text-[var(--foreground)]"
+      >
+        <circle cx="14" cy="14" r="10" stroke="currentColor" strokeWidth="5" />
+        <path d="M16 16 L28 28" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+        <rect x="18" y="18" width="12" height="12" rx="3" fill="currentColor" />
+      </svg>
+      <span className="font-display text-2xl font-black tracking-tighter text-[var(--foreground)]">
+        QLICO
+      </span>
+    </div>
   )
 }
