@@ -4,8 +4,7 @@ import { useEffect } from 'react'
 import { LazyMotion, domAnimation } from 'framer-motion'
 import { ScrollProgress } from '@/components/landing/ScrollProgress'
 import { Nav } from '@/components/landing/Nav'
-import { Hero } from '@/components/landing/Hero'
-import { TryItNow } from '@/components/landing/TryItNow'
+import HomeHeroLandingScrollAnimation from '@/components/ui/home-hero-landing-scroll-animation'
 import { FeaturesBento } from '@/components/landing/FeaturesBento'
 import { Pricing } from '@/components/landing/Pricing'
 import { Faq } from '@/components/landing/Faq'
@@ -49,7 +48,7 @@ export default function HomePage() {
         <Nav />
 
         <main>
-          <Hero />
+          <HomeHeroLandingScrollAnimation />
           <FeaturesBento />
           <Pricing />
           <Faq />
