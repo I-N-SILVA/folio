@@ -12,7 +12,7 @@ type Props = {
   className?: string
   /** How far the button drifts toward the cursor, in px. */
   strength?: number
-  onClick?: () => void
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
 }
 
 /** A primary CTA that subtly leans toward the cursor. */
