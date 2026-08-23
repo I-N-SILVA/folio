@@ -6,11 +6,7 @@ export const alt = 'QLICO — Publishing, Perfected.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-export default async function OgImage() {
-  const [bodoni] = await Promise.all([
-    readFile(join(process.cwd(), 'app/_fonts/bodoni-moda.ttf')),
-  ])
-
+export default function OgImage() {
   return new ImageResponse(
     (
       <div
@@ -22,11 +18,9 @@ export default async function OgImage() {
           justifyContent: 'space-between',
           padding: 80,
           background: '#050505',
-          fontFamily: 'Bodoni',
           position: 'relative',
         }}
       >
-
 
         <div style={{ fontSize: 48, fontWeight: 400, color: '#ffffff', letterSpacing: '-0.05em' }}>
           QLICO
@@ -34,7 +28,7 @@ export default async function OgImage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', zIndex: 10 }}>
           <div style={{ fontSize: 96, fontWeight: 400, color: '#ffffff', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
-            Publishing, <br/><span style={{ color: '#a1a1aa', fontStyle: 'italic' }}>Perfected.</span>
+            Publishing, <br/><span style={{ color: '#a1a1aa' }}>Perfected.</span>
           </div>
           <div style={{ marginTop: 24, fontSize: 32, color: '#a1a1aa', maxWidth: 880, lineHeight: 1.3 }}>
             Transform static PDFs into immersive, interactive editions.<br/>No code required. Unmatched elegance.
@@ -49,7 +43,6 @@ export default async function OgImage() {
     ),
     {
       ...size,
-      fonts: [{ name: 'Bodoni', data: bodoni, weight: 400, style: 'normal' }],
     }
   )
 }
