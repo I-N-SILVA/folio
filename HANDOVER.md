@@ -22,21 +22,16 @@ than buried under a whole-repo reformat.
 
 ## 1. Do these before launch — nothing else on this list matters more
 
-### Apply the pending migrations
+### Apply the pending migration
 
-Six migrations may not be applied. Check what's actually live before assuming.
+One consolidated migration may not be applied. Check what's actually live before assuming.
 
 Every one of these degrades rather than breaks, and each logs which file to
 apply. Grep for `is missing` and `apply supabase/migrations` in production logs.
 
 | Migration | Consequence if missing |
 |---|---|
-| `009_add_gate_view_event.sql` | Postgres rejects every `gate_view` insert, so the lead-capture funnel silently reads zero — the one number that sells email capture. `/api/events` now names this migration in the log instead of failing opaquely. |
-| `010_replace_book_pages.sql` | Autosave falls back to a non-atomic delete-then-insert. **This now matters more than it did**: the editor routes every save through `PUT /api/books/[id]/pages`, so this is the live save path rather than dead code. |
-| `011_dunning_grace.sql` | The dunning grace period never expires, so a `past_due` subscription keeps Pro indefinitely. |
-| `012_edition_engagement.sql` | Insights falls back to counting rows in JavaScript, capped at 20,000, and reports its figures as a minimum. Verified against Postgres 16 before shipping. |
-| `013_weekly_digest.sql` | No weekly digest, and the account page's email switch returns 503. |
-| `014_slug_history.sql` | Renaming an edition's link is refused with an explanation, rather than performed in a way that breaks every link already sent. |
+| `009_post_audit_features.sql` | The database will miss several key features including: Gate view events, atomic page saving, dunning grace periods, edition engagement insights, weekly digests, and slug history. |
 
 ### Configure what's optional
 

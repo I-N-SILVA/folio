@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus } from 'lucide-react'
 import Reveal from './Reveal'
 
 const FAQS = [
@@ -16,31 +17,53 @@ const FAQS = [
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border-b border-[var(--qlico-border)]">
+    <div className="border-b border-white/10 group">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 py-6 text-left"
+        className="flex w-full items-center justify-between gap-4 py-8 text-left outline-none transition-all duration-300"
       >
-        <span className="text-lg font-medium tracking-[-0.01em]">{q}</span>
-        <ChevronDown size={20} className={`shrink-0 text-[var(--qlico-muted)] transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+        <span className="font-display text-2xl font-medium tracking-tight text-white transition-colors group-hover:text-zinc-300">{q}</span>
+        <motion.div
+          animate={{ rotate: open ? 45 : 0 }}
+          transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 20 }}
+          className="shrink-0 flex items-center justify-center h-10 w-10 rounded-full border border-white/10 bg-white/5 text-zinc-400 group-hover:bg-white/10 group-hover:text-white transition-colors"
+        >
+          <Plus size={20} strokeWidth={1.5} />
+        </motion.div>
       </button>
-      <div className={`grid transition-all duration-300 ease-out ${open ? 'grid-rows-[1fr] pb-6 opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-        <p className="overflow-hidden text-[15px] leading-7 text-[var(--qlico-muted)]">{a}</p>
-      </div>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 25 }}
+            className="overflow-hidden"
+          >
+            <p className="pb-8 pt-2 text-lg font-normal leading-relaxed text-zinc-400 max-w-3xl pr-12">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 export function Faq() {
   return (
-    <section id="faq" className="bg-[var(--background-alt)] px-5 py-28">
-      <div className="mx-auto max-w-3xl">
-        <Reveal className="mb-12 text-center">
-          <h2 className="font-display text-4xl font-semibold tracking-[-0.02em] sm:text-5xl">Questions, answered.</h2>
+    <section id="faq" className="bg-[#050505] px-5 py-24 sm:py-32">
+      <div className="mx-auto max-w-4xl">
+        <Reveal className="mb-20">
+          <h2 className="font-display text-4xl font-medium tracking-tight sm:text-5xl lg:text-6xl text-white">
+            Questions.
+          </h2>
+          <p className="mt-4 text-xl text-zinc-400">
+            Everything you need to know about the platform.
+          </p>
         </Reveal>
-        <div>
+        
+        <div className="border-t border-white/10">
           {FAQS.map((item) => (
             <FaqItem key={item.q} q={item.q} a={item.a} />
           ))}

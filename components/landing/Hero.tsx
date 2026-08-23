@@ -1,159 +1,396 @@
 'use client'
 
-import Link from 'next/link'
-import { m, useReducedMotion } from 'framer-motion'
-import { MagneticButton } from './MagneticButton'
+import { useRef, useEffect, useState, useCallback } from 'react'
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion'
+import { FileUp, Loader2, AlertCircle, X, Maximize2, Minimize2 } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
+import { MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
+import { savePendingImport } from '@/lib/pending-import'
+import { trackProduct } from '@/lib/product-analytics'
+import type { Book, Page } from '@/lib/book-schema'
 
-function NeonGelBlobs() {
-  const reduce = useReducedMotion()
-  if (reduce) return null
+const ViewerChrome = dynamic(
+  () => import('@/components/viewer/ViewerChrome').then((m) => m.ViewerChrome),
+  { ssr: false }
+)
 
-  // We use multiple layers of gradients and inset shadows to create a "3D gel" effect
-  // instead of just flat blurred circles.
+const PREVIEW_PAGES = 6
+type Status = 'idle' | 'rendering' | 'ready' | 'error'
+
+const IMAGES = [
+  '/assets/hero_cover_1_1787417516940.jpg',
+  '/assets/hero_cover_2_1787417533333.jpg',
+  '/assets/hero_cover_3_1787417544237.jpg',
+  '/assets/hero_cover_4_1787417555268.jpg',
+  '/assets/hero_cover_5_1787417566803.jpg',
+  '/assets/hero_cover_6_1787417577923.jpg',
+]
+
+const TUNNEL_POSITIONS = [
+  { x: '-45vw', y: '-20vh', rotateZ: -12, zOffset: 0 },
+  { x: '40vw', y: '10vh', rotateZ: 8, zOffset: -150 },
+  { x: '-30vw', y: '40vh', rotateZ: 20, zOffset: -300 },
+  { x: '45vw', y: '-30vh', rotateZ: -15, zOffset: -450 },
+  { x: '-15vw', y: '-45vh', rotateZ: -5, zOffset: -600 },
+  { x: '25vw', y: '45vh', rotateZ: 10, zOffset: -750 },
+  { x: '-40vw', y: '15vh', rotateZ: 18, zOffset: -900 },
+  { x: '35vw', y: '-10vh', rotateZ: -8, zOffset: -1050 },
+  { x: '-20vw', y: '35vh', rotateZ: -25, zOffset: -1200 },
+  { x: '50vw', y: '30vh', rotateZ: 15, zOffset: -1350 },
+  { x: '-5vw', y: '-50vh', rotateZ: 12, zOffset: -1500 },
+  { x: '10vw', y: '50vh', rotateZ: -10, zOffset: -1650 },
+]
+
+const SEGMENT_LENGTH = 1800
+
+function TunnelSegment({ offsetZ }: { offsetZ: number }) {
   return (
-    <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 w-full max-w-[1200px] h-[800px] pointer-events-none z-0">
-      {/* Magenta Blob */}
-      <m.div
-        animate={{
-          scale: [1, 1.15, 1],
-          rotate: [0, 90, 0],
-          borderRadius: ["40% 60% 70% 30%", "50% 50% 30% 70%", "40% 60% 70% 30%"]
-        }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-[450px] h-[450px] opacity-90 mix-blend-multiply dark:mix-blend-screen"
-        style={{
-          top: '0%', left: '10%',
-          background: 'radial-gradient(circle at 30% 30%, #ff00ff, #c026d3, transparent)',
-          boxShadow: 'inset 20px 20px 60px rgba(255,255,255,0.5), inset -20px -20px 60px rgba(0,0,0,0.5)',
-          filter: 'blur(30px) drop-shadow(0 20px 40px rgba(255,0,255,0.4))'
-        }}
-      />
-      
-      {/* Cyan Blob */}
-      <m.div
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, -90, 0],
-          borderRadius: ["60% 40% 30% 70%", "40% 60% 70% 30%", "60% 40% 30% 70%"]
-        }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute w-[550px] h-[550px] opacity-90 mix-blend-multiply dark:mix-blend-screen"
-        style={{
-          bottom: '-10%', right: '5%',
-          background: 'radial-gradient(circle at 70% 30%, #00ffff, #0891b2, transparent)',
-          boxShadow: 'inset 20px 20px 60px rgba(255,255,255,0.5), inset -20px -20px 60px rgba(0,0,0,0.5)',
-          filter: 'blur(40px) drop-shadow(0 20px 40px rgba(0,255,255,0.4))'
-        }}
-      />
-      
-      {/* Chartreuse Blob */}
-      <m.div
-        animate={{
-          scale: [1, 1.1, 1],
-          rotate: [0, 45, 0],
-          borderRadius: ["50% 50% 40% 60%", "30% 70% 50% 50%", "50% 50% 40% 60%"]
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute w-[380px] h-[380px] opacity-90 mix-blend-multiply dark:mix-blend-screen"
-        style={{
-          top: '40%', left: '0%',
-          background: 'radial-gradient(circle at 30% 70%, #a3e635, #65a30d, transparent)',
-          boxShadow: 'inset 20px 20px 60px rgba(255,255,255,0.5), inset -20px -20px 60px rgba(0,0,0,0.5)',
-          filter: 'blur(25px) drop-shadow(0 20px 40px rgba(163,230,53,0.4))'
-        }}
-      />
+    <div 
+      className="absolute inset-0" 
+      style={{ transform: `translateZ(${offsetZ}px)`, transformStyle: 'preserve-3d' }}
+    >
+      {TUNNEL_POSITIONS.map((pos, i) => {
+        const src = IMAGES[i % IMAGES.length]
+        return (
+          <div 
+            key={i} 
+            className="absolute left-1/2 top-1/2 w-48 md:w-64 aspect-[3/4] -ml-24 md:-ml-32 -mt-36 md:-mt-48 rounded-lg shadow-2xl overflow-hidden border border-white/10"
+            style={{ 
+              transform: `translate3d(${pos.x}, ${pos.y}, ${pos.zOffset}px) rotateZ(${pos.rotateZ}deg)`
+            }}
+          >
+            <img src={src} className="w-full h-full object-cover opacity-50 transition-opacity duration-1000 hover:opacity-100" alt={`Cover ${i}`} />
+            <div className="absolute inset-0 bg-black/40 mix-blend-multiply pointer-events-none" />
+            <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-lg pointer-events-none" />
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-function HeadlineReveal({ text, className = '' }: { text: string; className?: string }) {
-  const reduce = useReducedMotion()
-  const words = text.split(/(\s+|\n)/)
-  return (
-    <h1 className={className}>
-      {words.map((w, i) => {
-        if (w === '\n') return <br key={i} className="hidden sm:block" />
-        if (w.trim() === '') return <span key={i}>&nbsp;</span>
-        return (
-          <m.span
-            key={i}
-            className="inline-block relative z-10"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 20, filter: 'blur(8px)' }}
-            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={
-              reduce
-                ? { duration: 0.3 }
-                : { type: 'spring', stiffness: 140, damping: 20, delay: 0.1 + (i * 0.04) }
-            }
-          >
-            {w}
-          </m.span>
-        )
-      })}
-    </h1>
-  )
-}
-
 export function Hero() {
-  return (
-    <section className="relative overflow-hidden px-5 pb-32 pt-24 text-center">
-      {/* 1. Image and Blobs at the top */}
-      <div className="relative mx-auto mt-16 max-w-[1100px] h-[500px] sm:h-[650px] flex items-center justify-center">
-        <NeonGelBlobs />
-        
-        <m.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-20 w-full max-w-[900px] px-4" 
-        >
-          {/* Glassmorphism container for the product image */}
-          <div className="relative rounded-[2rem] p-3 bg-white/30 dark:bg-black/30 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.1)] border border-white/40 dark:border-white/10">
-            <img 
-              src="/demo/editorial.jpg" 
-              alt="QLICO App" 
-              className="w-full h-auto rounded-[1.5rem] shadow-xl object-cover"
-            />
-          </div>
-        </m.div>
-      </div>
+  const containerRef = useRef<HTMLDivElement>(null)
+  
+  // --- UPLOAD STATE ---
+  const router = useRouter()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [status, setStatus] = useState<Status>('idle')
+  const [dragging, setDragging] = useState(false)
+  const [progress, setProgress] = useState({ current: 0, total: 0 })
+  const [error, setError] = useState('')
+  const [book, setBook] = useState<Book | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
-      {/* 2. Headline and Text below the image */}
-      <div className="mx-auto max-w-5xl relative z-10 pt-16">
-        <HeadlineReveal
-          text="Transform chaos into flow. Your documents, intelligent, organized, connected."
-          className="font-display mx-auto max-w-4xl text-4xl font-bold leading-[1.1] tracking-[-0.04em] sm:text-6xl lg:text-[6rem] lg:leading-[0.95]"
-        />
-        <m.p 
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="mx-auto mt-8 max-w-2xl text-xl font-medium text-[var(--qlico-muted)]"
+  const urlsRef = useRef<string[]>([])
+  const revokeAll = useCallback(() => {
+    urlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    urlsRef.current = []
+  }, [])
+  useEffect(() => revokeAll, [revokeAll])
+
+  const handleFile = useCallback(
+    async (picked: File | null | undefined) => {
+      if (!picked) return
+      if (picked.type !== 'application/pdf' && !picked.name.toLowerCase().endsWith('.pdf')) {
+        setStatus('error')
+        setError('That file isn’t a PDF. Try a .pdf and we’ll turn it into an edition.')
+        return
+      }
+      if (picked.size > MAX_PDF_BYTES) {
+        setStatus('error')
+        setError(`That PDF is ${humanBytes(picked.size)} — the limit is ${humanBytes(MAX_PDF_BYTES)}.`)
+        return
+      }
+
+      revokeAll()
+      setFile(picked)
+      setError('')
+      setStatus('rendering')
+      setProgress({ current: 0, total: 0 })
+      trackProduct('try_upload_started', { file_mb: Math.round((picked.size / 1024 / 1024) * 10) / 10 })
+
+      try {
+        const { renderPdfPages } = await import('@/lib/pdf-renderer')
+        const rendered = await renderPdfPages(picked, {
+          maxPages: PREVIEW_PAGES,
+          scale: 1,
+          onProgress: (p) => setProgress({ current: p.current, total: p.total }),
+        })
+
+        if (rendered.length === 0) throw new Error('We couldn’t read any pages from that PDF.')
+
+        const pages: Page[] = rendered.map((page, i) => {
+          const url = URL.createObjectURL(page.blob)
+          urlsRef.current.push(url)
+          return {
+            id: `preview-${i}`, book_id: 'preview', page_number: i + 1, type: i === 0 ? 'cover' : 'content',
+            layout: 'blank', background: { image: url }, blocks: [], hotspots: []
+          }
+        })
+
+        setBook({
+          id: 'preview', slug: 'preview', title: picked.name.replace(/\.pdf$/i, ''), owner_id: 'preview',
+          theme: { preset: 'ivory' },
+          settings: { published: true, unlisted: true, gating: { enabled: false, page_number: 3, type: 'email', title: '', description: '' }, whitelabel: true },
+          pages,
+        })
+        setStatus('ready')
+        trackProduct('try_preview_shown', { pages: rendered.length })
+      } catch (err) {
+        setStatus('error')
+        const message = err instanceof Error ? err.message : 'We couldn’t open that PDF.'
+        setError(message)
+        trackProduct('try_failed', { reason: message.slice(0, 80) })
+      }
+    },
+    [revokeAll]
+  )
+
+  const claim = useCallback(async () => {
+    if (!file) return
+    setSaving(true)
+    trackProduct('try_claim_clicked')
+    const stored = await savePendingImport(file)
+    router.push(`/login?next=${encodeURIComponent(stored ? '/dashboard?resume=1' : '/dashboard?new=1')}`)
+  }, [file, router])
+
+  const reset = useCallback(() => {
+    revokeAll()
+    setBook(null)
+    setFile(null)
+    setStatus('idle')
+    setError('')
+    setIsFullscreen(false)
+  }, [revokeAll])
+  // --- END UPLOAD STATE ---
+  
+  // Track mouse for perspective shift
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+
+  const smoothX = useSpring(mouseX, { damping: 50, stiffness: 100 })
+  const smoothY = useSpring(mouseY, { damping: 50, stiffness: 100 })
+
+  const rotateX = useTransform(smoothY, [-0.5, 0.5], [10, -10])
+  const rotateY = useTransform(smoothX, [-0.5, 0.5], [-10, 10])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const { innerWidth, innerHeight } = window
+      const x = (e.clientX / innerWidth) - 0.5
+      const y = (e.clientY / innerHeight) - 0.5
+      mouseX.set(x)
+      mouseY.set(y)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [mouseX, mouseY])
+
+  return (
+    <section 
+      ref={containerRef}
+      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#050505] perspective-1000"
+    >
+      {/* 3D Infinite Tunnel Scene */}
+      <motion.div 
+        className="absolute inset-0 pointer-events-none"
+        style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+      >
+        <motion.div
+          className="absolute inset-0"
+          animate={{ z: [0, SEGMENT_LENGTH] }}
+          transition={{ duration: 15, ease: "linear", repeat: Infinity }}
+          style={{ transformStyle: 'preserve-3d' }}
         >
-          Unlock the power of your knowledge. QLICO makes document workflows seamless, intelligent, and collaborative.
-        </m.p>
-        
-        {/* 3. CTA Buttons at the bottom */}
-        <m.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="mt-12 flex flex-col sm:flex-row justify-center items-center gap-4 relative z-20"
-        >
-          <MagneticButton
-            href="/signup"
-            className="rounded-full bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-10 py-4 text-[17px] font-bold text-white shadow-[0_0_40px_rgba(217,70,239,0.4)] transition-all hover:scale-105 hover:shadow-[0_0_60px_rgba(217,70,239,0.6)]"
-          >
-            Try QLICO Free
-          </MagneticButton>
-          
-          <MagneticButton
-            href="/demo"
-            className="rounded-full bg-transparent border-2 border-foreground px-10 py-3.5 text-[17px] font-bold text-foreground transition-all hover:bg-foreground hover:text-background"
-          >
-            Watch Demo
-          </MagneticButton>
-        </m.div>
+          {/* We render multiple segments to ensure the tunnel is deep enough and loops seamlessly */}
+          <TunnelSegment offsetZ={0} />
+          <TunnelSegment offsetZ={-SEGMENT_LENGTH} />
+          <TunnelSegment offsetZ={-SEGMENT_LENGTH * 2} />
+          <TunnelSegment offsetZ={-SEGMENT_LENGTH * 3} />
+        </motion.div>
+      </motion.div>
+
+      {/* Fog / Vignette Overlay */}
+      {/* This hides the hard edges of the planes as they spawn far away, and darkens the edges of the screen */}
+      <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_0%,#050505_85%)] pointer-events-none" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#050505] via-transparent to-[#050505] pointer-events-none opacity-80" />
+
+      {/* Center UI Layer */}
+      <div className="relative z-20 flex flex-col items-center text-center px-5 mt-10 w-full max-w-5xl mx-auto">
+        <AnimatePresence mode="wait">
+          {status === 'ready' && book ? (
+            <motion.div
+              key="viewer"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className={isFullscreen 
+                ? 'fixed inset-0 z-[100] flex flex-col bg-black/90 backdrop-blur-2xl p-4 sm:p-6'
+                : 'w-full flex flex-col rounded-[2rem] border border-white/10 bg-black/60 backdrop-blur-2xl p-4 shadow-2xl'
+              }
+            >
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="text-left">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Preview Edition</p>
+                  <h2 className="font-display mt-1 text-2xl md:text-3xl font-semibold tracking-[-0.03em] text-white">
+                    {book.title}
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                  >
+                    {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                    {isFullscreen ? 'Minimize' : 'Expand'}
+                  </button>
+                  <button
+                    onClick={reset}
+                    className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                  >
+                    <X size={14} />
+                    Try another
+                  </button>
+                </div>
+              </div>
+
+              <div className={isFullscreen ? 'flex-1 min-h-0 rounded-2xl overflow-hidden bg-black/40 border border-white/10' : 'h-[60vh] min-h-[420px] rounded-2xl overflow-hidden bg-black/40 border border-white/10'}>
+                <ViewerChrome book={book} showBadge={false} embed />
+              </div>
+              
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-[1.5rem] bg-white/5 border border-white/10 p-5">
+                <div className="text-left">
+                  <p className="font-semibold text-white">Keep it, and find out who reads it.</p>
+                  <p className="text-sm text-zinc-400">Sign in to unlock analytics for this edition.</p>
+                </div>
+                <button
+                  onClick={claim}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-60"
+                >
+                  {saving && <Loader2 size={16} className="animate-spin" />}
+                  {saving ? 'Saving…' : 'Save this edition'}
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="hero"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center"
+            >
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.2 }}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-xl px-4 py-1.5 text-xs font-medium tracking-widest text-zinc-300 uppercase mb-8 shadow-2xl"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white/80"></span>
+                </span>
+                QLICO 2.0
+              </motion.div>
+              
+              <motion.h1 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.2, delay: 0.4, ease: "easeOut" }}
+                className="font-display text-5xl sm:text-6xl md:text-8xl lg:text-[7rem] leading-[1.05] tracking-tight text-white mb-6 font-normal drop-shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+              >
+                Publishing, <br/>
+                <span className="italic text-zinc-400">Perfected.</span>
+              </motion.h1>
+              
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.6 }}
+                className="max-w-2xl text-lg md:text-xl font-normal leading-relaxed text-zinc-400 drop-shadow-lg"
+              >
+                Transform static PDFs into immersive, interactive editions. No code required. Unmatched elegance.
+              </motion.p>
+              
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.8 }}
+                className="mt-14 pointer-events-auto"
+              >
+                <div 
+                  onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(e) => { e.preventDefault(); setDragging(false); handleFile(e.dataTransfer.files?.[0]) }}
+                  onClick={() => {
+                    if (status !== 'rendering') inputRef.current?.click()
+                  }}
+                  className={`group flex flex-col items-center justify-center p-8 w-[320px] rounded-[2rem] backdrop-blur-3xl shadow-[0_0_80px_rgba(255,255,255,0.03)] transition-all cursor-pointer ${
+                    dragging 
+                      ? 'border-2 border-white bg-white/10 scale-105' 
+                      : 'border border-white/10 bg-black/40 hover:border-white/30 hover:bg-black/60'
+                  }`}
+                >
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="sr-only"
+                    onChange={(e) => handleFile(e.target.files?.[0])}
+                  />
+
+                  {status === 'rendering' ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 size={32} className="animate-spin text-white" />
+                      <p className="text-sm font-medium text-white">
+                        {progress.total > 0
+                          ? `Turning page ${progress.current} of ${progress.total}…`
+                          : 'Opening your PDF…'}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 group-hover:scale-110 group-hover:bg-white text-white group-hover:text-black transition-all duration-300">
+                        <FileUp size={28} strokeWidth={2} />
+                      </div>
+                      <p className="mt-6 text-sm font-medium tracking-wide text-white">
+                        Drag & drop your PDF
+                      </p>
+                      <p className="mt-1 text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">
+                        or browse files to begin
+                      </p>
+                    </>
+                  )}
+                  {status === 'error' && error && (
+                    <p className="mt-4 text-xs text-red-400 flex items-center gap-1 bg-red-950/50 p-2 rounded-lg border border-red-500/20 text-left">
+                      <AlertCircle size={14} className="shrink-0" />
+                      {error}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Scroll indicator */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 1.5 }}
+                className="absolute -bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto cursor-pointer"
+                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+              >
+                <span className="text-[10px] font-medium tracking-widest uppercase text-zinc-500">Discover</span>
+                <div className="w-[1px] h-12 bg-gradient-to-b from-zinc-500 to-transparent" />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   )

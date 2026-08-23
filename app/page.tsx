@@ -3,17 +3,15 @@
 import { useEffect } from 'react'
 import { LazyMotion, domAnimation } from 'framer-motion'
 import { ScrollProgress } from '@/components/landing/ScrollProgress'
-import { Nav } from '@/components/landing/Nav'
-import { BrutalistHero } from '@/components/ui/brutalist-hero'
-import { FeaturesBento } from '@/components/landing/FeaturesBento'
-import { Pricing } from '@/components/landing/Pricing'
-import { Faq } from '@/components/landing/Faq'
-import { ClosingCta } from '@/components/landing/ClosingCta'
-import { Footer } from '@/components/landing/Footer'
 import { trackProduct } from '@/lib/product-analytics'
 
-// Schema.org markup so search results show QLICO as an application with
-// pricing. Rendered into the SSR HTML below.
+import { Nav } from '@/components/landing/Nav'
+import { Hero } from '@/components/landing/Hero'
+import { Features } from '@/components/landing/Features'
+import { Pricing } from '@/components/landing/Pricing'
+import { Faq } from '@/components/landing/Faq'
+import { Footer } from '@/components/landing/Footer'
+
 const JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
@@ -31,38 +29,32 @@ const JSON_LD = {
 }
 
 export default function HomePage() {
-  // The denominator for every rate on the landing page. Without it, "signups
-  // per week" is a number with nothing to divide by.
   useEffect(() => {
     trackProduct('landing_viewed', { referrer: document.referrer || 'direct' })
   }, [])
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className="min-h-screen bg-[#050505] text-zinc-100 selection:bg-red-500 selection:text-white dark">
+      <div className="min-h-screen bg-[#050505] text-white selection:bg-white selection:text-black font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
         />
         <ScrollProgress />
         
-        {/* Nav needs to be styled for dark mode or absolute so it overlays the hero */}
-        <div className="absolute top-0 left-0 w-full z-50">
-          <Nav />
-        </div>
+        <Nav />
 
         <main>
-          <BrutalistHero />
+          <Hero />
           
           <div className="relative z-20 bg-[#050505]">
-            <FeaturesBento />
+            <Features />
             <Pricing />
             <Faq />
-            <ClosingCta />
           </div>
         </main>
 
-        <div className="bg-black relative z-20">
+        <div className="relative z-20 bg-[#050505]">
           <Footer />
         </div>
       </div>

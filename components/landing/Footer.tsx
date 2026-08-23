@@ -3,36 +3,36 @@ import { Mark } from './Mark'
 
 export function Footer() {
   return (
-    <footer className="border-t border-[var(--qlico-hairline)] px-5 py-12">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+    <footer className="border-t border-white/10 px-5 py-16 bg-[#050505] text-white">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col gap-12 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center">
-              <Mark className="h-7 w-auto" />
+            <div className="flex items-center text-white">
+              <Mark className="h-8 w-auto" />
             </div>
-            <p className="mt-3 max-w-xs text-sm text-[var(--qlico-muted)]">
+            <p className="mt-6 max-w-xs text-[15px] font-normal leading-relaxed text-zinc-400">
               Interactive publishing — with craft, context, and control.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-x-14 gap-y-2.5 text-sm sm:grid-cols-3">
-            <Link href="#features" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Features</Link>
-            <Link href="#pricing" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Pricing</Link>
-            <Link href="/book/demo" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Demo</Link>
-            <Link href="/help" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Help</Link>
-            <Link href="/press" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Press</Link>
-            <Link href="/privacy" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Privacy</Link>
-            <Link href="/terms" className="text-[var(--qlico-muted)] transition hover:text-[var(--qlico-ink)]">Terms</Link>
+          <div className="grid grid-cols-2 gap-x-16 gap-y-4 text-[14px] font-medium tracking-wide sm:grid-cols-3">
+            <Link href="#features" className="text-zinc-500 transition-colors hover:text-white">Features</Link>
+            <Link href="#pricing" className="text-zinc-500 transition-colors hover:text-white">Pricing</Link>
+            <Link href="/book/demo" className="text-zinc-500 transition-colors hover:text-white">Demo</Link>
+            <Link href="/help" className="text-zinc-500 transition-colors hover:text-white">Help</Link>
+            <Link href="/press" className="text-zinc-500 transition-colors hover:text-white">Press</Link>
+            <Link href="/privacy" className="text-zinc-500 transition-colors hover:text-white">Privacy</Link>
+            <Link href="/terms" className="text-zinc-500 transition-colors hover:text-white">Terms</Link>
           </div>
         </div>
-        <div className="mt-10 flex flex-col sm:flex-row sm:items-center justify-between border-t border-[var(--qlico-hairline)] pt-6 text-sm text-[var(--qlico-muted)]">
+        <div className="mt-16 flex flex-col sm:flex-row sm:items-center justify-between border-t border-white/5 pt-8 text-[13px] font-medium text-zinc-600">
           <span>© {new Date().getFullYear()} QLICO. All rights reserved.</span>
-          <span className="mt-2 sm:mt-0">Designed with precision.</span>
+          <span className="mt-4 sm:mt-0 text-zinc-500">Designed with precision.</span>
         </div>
       </div>
       
-      {/* Massive 21st.dev style typographic footer */}
-      <div className="w-full flex justify-center overflow-hidden pointer-events-none select-none mt-10">
-        <h2 className="font-display text-[22vw] leading-[0.75] font-bold tracking-tighter text-[var(--qlico-border)] opacity-60 whitespace-nowrap">
+      {/* Soft elegant typographic footer */}
+      <div className="w-full flex justify-center overflow-hidden pointer-events-none select-none mt-16 border-t border-white/5 pt-12">
+        <h2 className="font-display text-[20vw] leading-[0.75] font-medium tracking-tighter text-zinc-800 whitespace-nowrap">
           QLICO
         </h2>
       </div>

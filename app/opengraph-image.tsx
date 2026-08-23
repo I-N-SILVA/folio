@@ -2,16 +2,14 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 
-export const alt = 'QLICO — Flip through anything'
+export const alt = 'QLICO — Publishing, Perfected.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 export default async function OgImage() {
-  const [logo, fraunces] = await Promise.all([
-    readFile(join(process.cwd(), 'public/brand/qlico-logo.png')),
-    readFile(join(process.cwd(), 'app/_fonts/fraunces-semibold.ttf')),
+  const [bodoni] = await Promise.all([
+    readFile(join(process.cwd(), 'app/_fonts/bodoni-moda.ttf')),
   ])
-  const logoSrc = `data:image/png;base64,${logo.toString('base64')}`
 
   return new ImageResponse(
     (
@@ -23,30 +21,46 @@ export default async function OgImage() {
           flexDirection: 'column',
           justifyContent: 'space-between',
           padding: 80,
-          background: '#ffffff',
-          fontFamily: 'Fraunces',
+          background: '#050505',
+          fontFamily: 'Bodoni',
+          position: 'relative',
         }}
       >
-        <img src={logoSrc} alt="" width={196} height={54} style={{ objectFit: 'contain' }} />
+        {/* Subtle background glow */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 800,
+          height: 800,
+          borderRadius: 400,
+          background: 'rgba(255,255,255,0.05)',
+          filter: 'blur(100px)',
+        }} />
 
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 96, fontWeight: 600, color: '#141a3a', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
-            Flip through anything.
+        <div style={{ fontSize: 48, fontWeight: 400, color: '#ffffff', letterSpacing: '-0.05em' }}>
+          QLICO
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+          <div style={{ fontSize: 96, fontWeight: 400, color: '#ffffff', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
+            Publishing, <br/><span style={{ color: '#a1a1aa', fontStyle: 'italic' }}>Perfected.</span>
           </div>
-          <div style={{ marginTop: 24, fontSize: 32, color: '#575d78', maxWidth: 880, lineHeight: 1.3 }}>
-            Turn static PDFs into interactive editions — hotspots, analytics, and one-line embeds.
+          <div style={{ marginTop: 24, fontSize: 32, color: '#a1a1aa', maxWidth: 880, lineHeight: 1.3 }}>
+            Transform static PDFs into immersive, interactive editions.<br/>No code required. Unmatched elegance.
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ height: 10, width: 10, borderRadius: 999, background: '#3c2384' }} />
-          <div style={{ fontSize: 24, color: '#575d78' }}>qlico.app</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, zIndex: 10 }}>
+          <div style={{ height: 10, width: 10, borderRadius: 999, background: '#ffffff' }} />
+          <div style={{ fontSize: 24, color: '#a1a1aa' }}>qlico.app</div>
         </div>
       </div>
     ),
     {
       ...size,
-      fonts: [{ name: 'Fraunces', data: fraunces, weight: 600, style: 'normal' }],
+      fonts: [{ name: 'Bodoni', data: bodoni, weight: 400, style: 'normal' }],
     }
   )
 }
