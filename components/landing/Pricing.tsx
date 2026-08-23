@@ -101,18 +101,17 @@ export function Pricing() {
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2 h-6 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
                 
                 {/* Grip lines */}
-                {[...Array(36)].map((_, i) => (
-                  <div 
-                    key={i}
-                    className="absolute w-[2px] h-3 bg-white/10"
-                    style={{
-                      top: '2px',
-                      left: '50%',
-                      transformOrigin: '50% calc(50% + 4.5rem)', 
-                      transform: `translateX(-50%) rotate(${i * 10}deg)`
-                    }}
-                  />
-                ))}
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(36)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className="absolute inset-0"
+                      style={{ transform: `rotate(${i * 10}deg)` }}
+                    >
+                      <div className="absolute top-[2px] sm:top-[4px] left-1/2 -translate-x-1/2 w-[2px] h-3 sm:h-5 bg-white/10" />
+                    </div>
+                  ))}
+                </div>
               </motion.div>
             </div>
           </div>
