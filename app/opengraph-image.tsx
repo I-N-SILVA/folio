@@ -26,18 +26,7 @@ export default async function OgImage() {
           position: 'relative',
         }}
       >
-        {/* Subtle background glow */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 800,
-          height: 800,
-          borderRadius: 400,
-          background: 'rgba(255,255,255,0.05)',
-          filter: 'blur(100px)',
-        }} />
+
 
         <div style={{ fontSize: 48, fontWeight: 400, color: '#ffffff', letterSpacing: '-0.05em' }}>
           QLICO
