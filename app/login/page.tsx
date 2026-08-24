@@ -75,8 +75,8 @@ function LoginForm() {
           </p>
           <h1>
             <span className="sr-only">QLICO</span>
-            <Image src="/brand/qlico-logo.png" alt="" width={181} height={50} priority className="theme-light-only h-[50px] w-auto object-contain" />
-            <Image src="/brand/qlico-logo-white.png" alt="" width={181} height={50} priority className="theme-dark-only h-[50px] w-auto object-contain" />
+            <Image src="/brand/logo-dark.svg" alt="" width={181} height={50} priority className="theme-light-only h-[50px] w-auto object-contain" />
+            <Image src="/brand/logo-light.svg" alt="" width={181} height={50} priority className="theme-dark-only h-[50px] w-auto object-contain" />
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
             {isResuming

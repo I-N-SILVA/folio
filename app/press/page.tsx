@@ -17,8 +17,8 @@ const COLORS = [
 ]
 
 const ASSETS = [
-  { label: 'Logo lockup (PNG, transparent)', href: '/brand/qlico-logo.png' },
-  { label: 'Logo lockup — white (PNG, transparent)', href: '/brand/qlico-logo-white.png' },
+  { label: 'Logo lockup (SVG, transparent)', href: '/brand/logo-dark.svg' },
+  { label: 'Logo lockup — light (SVG, transparent)', href: '/brand/logo-light.svg' },
   { label: 'Mark only (PNG, transparent)', href: '/brand/qlico-mark.png' },
   { label: 'App icon (512×512)', href: '/brand/icon-512.png' },
   { label: 'Apple touch icon (180×180)', href: '/brand/apple-icon-180.png' },
@@ -59,11 +59,11 @@ export default function PressPage() {
               telling the truth. Themed tokens put the dark lockup on a dark
               panel and it vanished. */}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center justify-center rounded-[2rem] border border-[var(--qlico-border)] bg-[#ffffff] p-8">
-              <Image src="/brand/qlico-logo.png" alt="QLICO logo on white" width={217} height={60} className="h-[60px] w-auto object-contain" />
+            <div className="flex h-40 items-center justify-center rounded-2xl bg-white p-8 sm:h-48">
+              <Image src="/brand/logo-dark.svg" alt="QLICO logo on white" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
-            <div className="flex items-center justify-center rounded-[2rem] border border-white/10 bg-[#141a3a] p-8">
-              <Image src="/brand/qlico-logo-white.png" alt="QLICO logo on ink" width={217} height={60} className="h-[60px] w-auto object-contain" />
+            <div className="flex h-40 items-center justify-center rounded-2xl bg-[var(--qlico-ink)] p-8 sm:h-48">
+              <Image src="/brand/logo-light.svg" alt="QLICO logo on ink" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
           </div>
         </section>
