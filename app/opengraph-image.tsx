@@ -26,16 +26,18 @@ export default function OgImage() {
           QLICO
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-          <div style={{ fontSize: 96, fontWeight: 400, color: '#ffffff', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
-            Publishing, <br/><span style={{ color: '#a1a1aa' }}>Perfected.</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', fontSize: 96, fontWeight: 400, color: '#ffffff', lineHeight: 1.04, letterSpacing: '-0.03em' }}>
+            <span>Publishing, </span>
+            <span style={{ color: '#a1a1aa' }}>Perfected.</span>
           </div>
-          <div style={{ marginTop: 24, fontSize: 32, color: '#a1a1aa', maxWidth: 880, lineHeight: 1.3 }}>
-            Transform static PDFs into immersive, interactive editions.<br/>No code required. Unmatched elegance.
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 24, fontSize: 32, color: '#a1a1aa', maxWidth: 880, lineHeight: 1.3 }}>
+            <span>Transform static PDFs into immersive, interactive editions.</span>
+            <span>No code required. Unmatched elegance.</span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ height: 10, width: 10, borderRadius: 999, background: '#ffffff' }} />
           <div style={{ fontSize: 24, color: '#a1a1aa' }}>qlico.app</div>
         </div>
