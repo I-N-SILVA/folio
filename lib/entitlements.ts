@@ -26,16 +26,6 @@ export type ProfileRow = {
  * not yet fired). Uses the service-role client so it works in any context.
  */
 export async function getProfile(userId: string, email?: string | null): Promise<ProfileRow> {
-  // `select('*')` rather than a column list: migration 011 adds dunning columns,
-  // and a named select fails outright on an install that hasn't applied it yet.
-  const { data } = await supabaseAdmin
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle()
-
-  if (data) return data as ProfileRow
-
   const seed: ProfileRow = {
     id: userId,
     email: email ?? null,
@@ -44,8 +34,24 @@ export async function getProfile(userId: string, email?: string | null): Promise
     appsumo_license_key: null,
     appsumo_tier: null,
   }
-  await supabaseAdmin.from('profiles').upsert(seed, { onConflict: 'id' })
-  return seed
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (data) return data as ProfileRow
+
+    if (!error) {
+      await supabaseAdmin.from('profiles').upsert(seed, { onConflict: 'id' })
+    }
+    return seed
+  } catch (err) {
+    console.error('[entitlements] getProfile error fallback:', err)
+    return seed
+  }
 }
 
 /**
@@ -64,15 +70,25 @@ export async function getProfile(userId: string, email?: string | null): Promise
 export function effectivePlan(
   profile: Pick<ProfileRow, 'plan' | 'status'> & { stripe_past_due_since?: string | null }
 ): Plan {
-  if (profile.status !== 'active') return getPlan(DEFAULT_PLAN)
-  const plan = getPlan(profile.plan)
-  if (plan.lifetime) return plan
-  if (dunningExpired(profile.stripe_past_due_since)) return getPlan(DEFAULT_PLAN)
-  return plan
+  try {
+    if (!profile || profile.status !== 'active') return getPlan(DEFAULT_PLAN)
+    const plan = getPlan(profile.plan || DEFAULT_PLAN)
+    if (plan.lifetime) return plan
+    if (dunningExpired(profile.stripe_past_due_since)) return getPlan(DEFAULT_PLAN)
+    return plan
+  } catch {
+    return getPlan(DEFAULT_PLAN)
+  }
 }
 
 export async function getUserPlan(userId: string, email?: string | null): Promise<Plan> {
-  return effectivePlan(await getProfile(userId, email))
+  try {
+    const profile = await getProfile(userId, email)
+    return effectivePlan(profile)
+  } catch (err) {
+    console.error('[entitlements] getUserPlan error fallback:', err)
+    return getPlan(DEFAULT_PLAN)
+  }
 }
 
 /**
@@ -85,14 +101,18 @@ export async function getUserPlan(userId: string, email?: string | null): Promis
  * and the redeem flow put the plan.
  */
 export async function getOwnerEntitlements(ownerId: string): Promise<Entitlements> {
-  const { data } = await supabaseAdmin
-    .from('profiles')
-    .select('*')
-    .eq('id', ownerId)
-    .maybeSingle()
+  try {
+    const { data } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', ownerId)
+      .maybeSingle()
 
-  if (!data) return getEntitlements(DEFAULT_PLAN)
-  return effectivePlan(data as ProfileRow).entitlements
+    if (!data) return getEntitlements(DEFAULT_PLAN)
+    return effectivePlan(data as ProfileRow).entitlements
+  } catch {
+    return getEntitlements(DEFAULT_PLAN)
+  }
 }
 
 /**
@@ -120,11 +140,20 @@ export async function getUserEntitlements(userId: string, email?: string | null)
 }
 
 export async function countUserBooks(userId: string): Promise<number> {
-  const { count } = await supabaseAdmin
-    .from('books')
-    .select('id', { count: 'exact', head: true })
-    .eq('owner_id', userId)
-  return count ?? 0
+  try {
+    const { count, error } = await supabaseAdmin
+      .from('books')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId)
+    if (error) {
+      console.warn('[entitlements] countUserBooks query warning:', error.message)
+      return 0
+    }
+    return count ?? 0
+  } catch (err) {
+    console.error('[entitlements] countUserBooks error fallback:', err)
+    return 0
+  }
 }
 
 /**
@@ -135,11 +164,17 @@ export async function checkBookQuota(
   userId: string,
   email?: string | null
 ): Promise<{ allowed: boolean; plan: Plan; used: number; limit: number }> {
-  const plan = await getUserPlan(userId, email)
-  const limit = plan.entitlements.maxBooks
-  if (!Number.isFinite(limit)) return { allowed: true, plan, used: 0, limit }
-  const used = await countUserBooks(userId)
-  return { allowed: used < limit, plan, used, limit }
+  try {
+    const plan = await getUserPlan(userId, email)
+    const limit = plan.entitlements.maxBooks
+    if (!Number.isFinite(limit)) return { allowed: true, plan, used: 0, limit }
+    const used = await countUserBooks(userId)
+    return { allowed: used < limit, plan, used, limit }
+  } catch (err) {
+    console.error('[entitlements] checkBookQuota error fallback:', err)
+    const plan = getPlan(DEFAULT_PLAN)
+    return { allowed: true, plan, used: 0, limit: plan.entitlements.maxBooks }
+  }
 }
 
 export { getEntitlements }

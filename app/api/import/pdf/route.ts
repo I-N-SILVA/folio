@@ -121,14 +121,23 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Ensure storage bucket is provisioned
+  const { ensureFolioBucket } = await import('@/lib/supabase')
+  await ensureFolioBucket()
+
   // One signed target per page. The paths are server-chosen, so holding these
   // tokens lets the client write the pages of this book and nothing else.
   const pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1)
+  let lastStorageError: string | null = null
   const uploads = await mapWithConcurrency(pageNumbers, 10, async (pageNumber) => {
     const { data, error } = await supabaseAdmin.storage
       .from('folio-assets')
       .createSignedUploadUrl(pagePath(bookId, pageNumber))
-    if (error || !data) return null
+    if (error || !data) {
+      lastStorageError = error?.message ?? 'Unknown storage error'
+      console.error(`[pdf-import] Failed to create signed URL for page ${pageNumber}:`, error)
+      return null
+    }
     return { pageNumber, path: data.path, token: data.token }
   })
 
@@ -138,8 +147,9 @@ export async function POST(request: NextRequest) {
     // Without every target the import can't complete, and a half-written book is
     // worse than none — roll it back so the slug and the quota slot are freed.
     await supabaseAdmin.from('books').delete().eq('id', bookId)
+    console.error('[pdf-import] Upload grant mismatch:', { granted: granted.length, expected: pageCount, lastError: lastStorageError })
     return NextResponse.json(
-      { error: 'Could not prepare the upload. Please try again.' },
+      { error: `Could not prepare upload storage (${lastStorageError || 'please check Supabase storage configuration'}).` },
       { status: 500 }
     )
   }

@@ -28,16 +28,26 @@ const FEATURE_ROWS: { key: string; label: string }[] = [
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ upgraded?: string }>
+  searchParams?: Promise<{ upgraded?: string }>
 }) {
-  const { upgraded } = await searchParams
+  const resolvedParams = searchParams ? await searchParams : {}
+  const upgraded = resolvedParams?.upgraded
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const profile = await getProfile(user.id, user.email)
+  let profile
+  try {
+    profile = await getProfile(user.id, user.email)
+  } catch {
+    profile = { id: user.id, email: user.email ?? null, plan: 'free', status: 'active', appsumo_license_key: null, appsumo_tier: null }
+  }
+
   const plan = effectivePlan(profile)
-  const used = await countUserBooks(user.id)
+  let used = 0
+  try {
+    used = await countUserBooks(user.id)
+  } catch {}
   const e = plan.entitlements
 
   const renderValue = (key: string) => {

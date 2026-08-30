@@ -8,7 +8,11 @@ function sanitizeKey(val: string | undefined): string {
 
 const supabaseUrl = sanitizeKey(process.env.NEXT_PUBLIC_SUPABASE_URL)
 const supabaseAnonKey = sanitizeKey(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-const supabaseServiceKey = sanitizeKey(process.env.SUPABASE_SERVICE_KEY)
+const supabaseServiceKey = sanitizeKey(
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
 
 // Browser client — safe to use in client components
 export function createBrowserSupabase() {
@@ -19,11 +23,24 @@ export function createBrowserSupabase() {
 let _admin: SupabaseClient | null = null
 export function getSupabaseAdmin(): SupabaseClient {
   if (!_admin) {
-    _admin = createClient(supabaseUrl, supabaseServiceKey, {
+    _admin = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
       auth: { persistSession: false },
     })
   }
   return _admin
+}
+
+// Ensure the storage bucket exists on demand
+let _bucketReady = false
+export async function ensureFolioBucket(): Promise<void> {
+  if (_bucketReady) return
+  try {
+    const admin = getSupabaseAdmin()
+    await admin.storage.createBucket('folio-assets', { public: true })
+    _bucketReady = true
+  } catch {
+    _bucketReady = true
+  }
 }
 
 // Keep named export for backwards compat — proxy to lazy getter

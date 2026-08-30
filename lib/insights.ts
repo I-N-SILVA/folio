@@ -67,57 +67,55 @@ export async function getEditionEngagement(
    */
   days?: number
 ): Promise<InsightsSummary> {
-  const entitlements = await getUserEntitlements(userId, email)
-  const windowDays = clampAnalyticsDays(days ?? null, entitlements)
-
   const empty: InsightsSummary = {
-    windowDays,
+    windowDays: 30,
     totalReaders: 0,
     totalLeads: 0,
     byBook: new Map(),
     truncated: false,
   }
-  if (bookIds.length === 0) return empty
 
-  const since = subDays(new Date(), windowDays).toISOString()
+  if (!bookIds || bookIds.length === 0) return empty
 
-  // Preferred path: count in the database.
-  const rpc = await supabaseAdmin.rpc('edition_engagement', {
-    p_book_ids: bookIds,
-    p_since: since,
-  })
+  try {
+    const entitlements = await getUserEntitlements(userId, email)
+    const windowDays = clampAnalyticsDays(days ?? null, entitlements)
+    empty.windowDays = windowDays
 
-  if (!rpc.error && rpc.data) {
-    return { windowDays, ...fromRpc(rpc.data as EngagementAggregate[], bookIds) }
+    const since = subDays(new Date(), windowDays).toISOString()
+
+    // Preferred path: count in the database.
+    try {
+      const rpc = await supabaseAdmin.rpc('edition_engagement', {
+        p_book_ids: bookIds,
+        p_since: since,
+      })
+
+      if (!rpc.error && rpc.data) {
+        return { windowDays, ...fromRpc(rpc.data as EngagementAggregate[], bookIds) }
+      }
+    } catch {
+      // Ignore RPC failure and use fallback query
+    }
+
+    // Only the four columns the aggregate needs. `payload` in particular is
+    // stringified JSON on every row and is never read here.
+    const { data, error } = await supabaseAdmin
+      .from('events')
+      .select('book_id, session_id, event_type, created_at')
+      .in('book_id', bookIds)
+      .gte('created_at', since)
+      .in('event_type', ['book_open', 'book_complete', 'gate_unlock'])
+      .order('created_at', { ascending: false })
+      .limit(MAX_ROWS)
+
+    if (error || !data) return empty
+
+    return { windowDays, ...aggregateEngagement(data as EngagementRow[], bookIds) }
+  } catch (err) {
+    console.error('[insights] getEditionEngagement error fallback:', err)
+    return empty
   }
-
-  // PGRST202 / 42883 mean migration 012 hasn't been applied. Anything else is a
-  // real failure, but the fallback answers the question either way, so it is
-  // worth taking rather than showing the author nothing.
-  const missingFunction = rpc.error?.code === 'PGRST202' || rpc.error?.code === '42883'
-  if (!missingFunction) {
-    console.error('[insights] edition_engagement failed:', rpc.error)
-  } else {
-    console.error(
-      '[insights] edition_engagement() is missing — apply ' +
-        'supabase/migrations/012_edition_engagement.sql. Falling back to a capped client-side count.'
-    )
-  }
-
-  // Only the four columns the aggregate needs. `payload` in particular is
-  // stringified JSON on every row and is never read here.
-  const { data, error } = await supabaseAdmin
-    .from('events')
-    .select('book_id, session_id, event_type, created_at')
-    .in('book_id', bookIds)
-    .gte('created_at', since)
-    .in('event_type', ['book_open', 'book_complete', 'gate_unlock'])
-    .order('created_at', { ascending: false })
-    .limit(MAX_ROWS)
-
-  if (error || !data) return empty
-
-  return { windowDays, ...aggregateEngagement(data as EngagementRow[], bookIds) }
 }
 
 export type EngagementAggregate = {

@@ -184,7 +184,13 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
             pageCount: renderedPages.length,
           }),
         })
-        const payload = await beginRes.json()
+        
+        let payload: any = {}
+        try {
+          payload = await beginRes.json()
+        } catch {
+          payload = { error: `Server returned status ${beginRes.status}` }
+        }
 
         if (beginRes.ok) {
           begin = payload
@@ -202,7 +208,7 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
           effectiveSlug = `${effectiveSlug}-${randomSuffix()}`.slice(0, 100)
           continue
         }
-        throw new Error(payload.error ?? 'Import failed')
+        throw new Error(payload.error ?? `Import failed (${beginRes.status})`)
       }
 
       if (!begin) throw new Error('Could not start the import. Please try again.')
@@ -242,7 +248,13 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
         body: JSON.stringify({ bookId: begin.bookId, aiEnhance: aiEnhance && aiAvailable !== false }),
       })
 
-      const data = await finishRes.json()
+      let data: any = {}
+      try {
+        data = await finishRes.json()
+      } catch {
+        data = { error: `Finalize failed with status ${finishRes.status}` }
+      }
+
       if (!finishRes.ok) throw new Error(data.error ?? 'Import failed')
 
       // Past this point the book is real, so the error path must not remove it.
@@ -311,7 +323,7 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
       title="Import a PDF"
       dismissOnBackdrop={!isWorking && status !== 'done'}
       hideCloseButton={isWorking || status === 'done'}
-      className="max-w-md rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-6 text-[var(--qlico-ink)]"
+      className="max-w-md w-full max-h-[92vh] overflow-y-auto rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-5 sm:p-6 text-[var(--qlico-ink)]"
     >
       <h2 className="font-display text-2xl font-semibold tracking-[-0.03em]">Import a PDF</h2>
       <p className="mt-1 text-sm text-[var(--qlico-muted)]">

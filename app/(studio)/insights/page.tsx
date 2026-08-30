@@ -25,23 +25,40 @@ export default async function InsightsPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=%2Finsights')
 
-  const { data } = await supabase
-    .from('books')
-    .select('id, title, slug, settings, updated_at')
-    .eq('owner_id', user.id)
-    .order('updated_at', { ascending: false })
+  let books: Array<{ id: string; title: string; slug: string; settings?: { published?: boolean }; updated_at?: string }> = []
+  try {
+    const { data } = await supabase
+      .from('books')
+      .select('id, title, slug, settings, updated_at')
+      .eq('owner_id', user.id)
+      .order('updated_at', { ascending: false })
+    books = data ?? []
+  } catch (err) {
+    console.error('[insights] Failed to fetch books:', err)
+  }
 
-  const books = data ?? []
   const published = books.filter((b) => b.settings?.published)
-  const engagement = await getEditionEngagement(
-    user.id,
-    published.map((b) => b.id),
-    user.email
-  )
+  let engagement: { windowDays: number; totalReaders: number; totalLeads: number; byBook: Map<string, { readers: number; completionRate: number; leads: number; lastReadAt: string | null }>; truncated: boolean } = {
+    windowDays: 30,
+    totalReaders: 0,
+    totalLeads: 0,
+    byBook: new Map(),
+    truncated: false,
+  }
+
+  try {
+    engagement = await getEditionEngagement(
+      user.id,
+      published.map((b) => b.id),
+      user.email
+    )
+  } catch (err) {
+    console.error('[insights] Failed to get engagement:', err)
+  }
 
   const ranked = [...published].sort(
     (a, b) =>
-      (engagement.byBook.get(b.id)?.readers ?? 0) - (engagement.byBook.get(a.id)?.readers ?? 0)
+      (engagement.byBook?.get(b.id)?.readers ?? 0) - (engagement.byBook?.get(a.id)?.readers ?? 0)
   )
 
   return (

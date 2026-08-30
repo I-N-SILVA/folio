@@ -2,30 +2,48 @@ import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { isAiEnabled } from '@/lib/ai'
 import { checkBookQuota } from '@/lib/entitlements'
+import { getPlan, DEFAULT_PLAN } from '@/lib/plans'
 
 export const dynamic = 'force-dynamic'
 
 // Lightweight endpoint the studio UI calls to render quota / upgrade state.
 export async function GET() {
-  const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    const supabase = await createServerSupabase()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { allowed, plan, used, limit } = await checkBookQuota(user.id, user.email)
+    const { allowed, plan, used, limit } = await checkBookQuota(user.id, user.email)
 
-  // The studio offers "Magic AI Enhancement" checked by default. Without a key
-  // configured that promises hotspot detection and SEO tags the install cannot
-  // produce, so the UI needs to know.
-  return NextResponse.json({
-    ai: { enabled: isAiEnabled() },
-    plan: plan.id,
-    planName: plan.name,
-    lifetime: plan.lifetime,
-    entitlements: plan.entitlements,
-    books: {
-      used,
-      limit: Number.isFinite(limit) ? limit : null,
-      allowed,
-    },
-  })
+    // The studio offers "Magic AI Enhancement" checked by default. Without a key
+    // configured that promises hotspot detection and SEO tags the install cannot
+    // produce, so the UI needs to know.
+    return NextResponse.json({
+      ai: { enabled: isAiEnabled() },
+      plan: plan.id,
+      planName: plan.name,
+      lifetime: plan.lifetime,
+      entitlements: plan.entitlements,
+      books: {
+        used,
+        limit: Number.isFinite(limit) ? limit : null,
+        allowed,
+      },
+    })
+  } catch (err) {
+    console.error('[api/entitlements] Error fallback:', err)
+    const fallback = getPlan(DEFAULT_PLAN)
+    return NextResponse.json({
+      ai: { enabled: isAiEnabled() },
+      plan: fallback.id,
+      planName: fallback.name,
+      lifetime: fallback.lifetime,
+      entitlements: fallback.entitlements,
+      books: {
+        used: 0,
+        limit: fallback.entitlements.maxBooks,
+        allowed: true,
+      },
+    })
+  }
 }

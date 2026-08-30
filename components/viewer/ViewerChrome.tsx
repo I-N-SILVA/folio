@@ -466,11 +466,11 @@ export function ViewerChrome({
             </button>
           )}
 
-          {/* Client Feedback & Proofing Drawer */}
+          {/* Client Feedback & Proofing Drawer (Desktop / Tablet) */}
           {!embed && (
             <button
               onClick={() => setShowReview(true)}
-              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+              className="relative hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
               aria-label="Feedback & Review"
               title="Feedback & Review"
             >
@@ -493,11 +493,11 @@ export function ViewerChrome({
             </button>
           )}
 
-          {/* Tactile page turn sound toggle */}
+          {/* Tactile page turn sound toggle (Desktop / Tablet) */}
           {!embed && (
             <button
               onClick={toggleSound}
-              className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] ${
+              className={`hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] ${
                 soundEnabled ? 'text-[var(--accent-fg)]' : 'text-[var(--qlico-muted)]'
               }`}
               aria-label={soundEnabled ? 'Mute page sound' : 'Enable tactile flip sound'}
@@ -507,9 +507,9 @@ export function ViewerChrome({
             </button>
           )}
 
-          {/* Read-Aloud / Audiobook Narration toggle */}
+          {/* Read-Aloud / Audiobook Narration toggle (Desktop / Tablet) */}
           {!embed && canSpeech && (
-            <div className="flex items-center">
+            <div className="hidden sm:flex items-center">
               <button
                 onClick={toggleNarration}
                 className={twMerge(
@@ -537,7 +537,7 @@ export function ViewerChrome({
 
           {/* Multi-Language Instant Translation */}
           {!embed && (
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <button
                 onClick={() => setShowLangMenu(!showLangMenu)}
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
@@ -581,7 +581,7 @@ export function ViewerChrome({
           {!embed && (
             <button
               onClick={() => window.print()}
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+              className="hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
               aria-label="Print edition / Export PDF"
               title="Print edition / Export PDF"
             >

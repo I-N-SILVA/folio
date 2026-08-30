@@ -10,40 +10,37 @@ import { ThemeToggle } from '@/components/ThemeToggle'
  */
 export function StudioNav({ current }: { current?: 'library' | 'insights' | 'account' }) {
   return (
-    <header className="mb-8 flex items-center gap-4 border-b border-[var(--qlico-border)] pb-4">
-      <Link href="/dashboard" className="flex items-center gap-2" aria-label="QLICO dashboard">
-        <Image
-          src="/brand/icon.svg"
-          alt=""
-          width={28}
-          height={28}
-          className="h-7 w-7 rounded-md object-contain"
-        />
-        <span className="sr-only">QLICO</span>
-      </Link>
+    <header className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-3 sm:gap-4 border-b border-[var(--qlico-border)] pb-4">
+      <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+        <Link href="/dashboard" className="flex items-center gap-2 shrink-0" aria-label="QLICO dashboard">
+          <Image
+            src="/brand/icon.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-md object-contain"
+          />
+          <span className="sr-only">QLICO</span>
+        </Link>
 
-      <nav aria-label="Studio" className="flex items-center gap-1">
-        <NavLink href="/dashboard" active={current === 'library'}>
-          Editions
-        </NavLink>
-        {/* Reader numbers used to live behind an unlabelled icon on a single
-            book card. They're the only thing in the product that changes while
-            the author is away, so they're the reason to come back — which makes
-            a nav slot the right price for them. */}
-        <NavLink href="/insights" active={current === 'insights'}>
-          Insights
-        </NavLink>
-        <NavLink href="/account" active={current === 'account'}>
-          Account
-        </NavLink>
-        {/* There was no help or support link anywhere in the app. For a
-            lifetime-deal launch that is a rating problem, not just a UX one. */}
-        <NavLink href="/help">Help</NavLink>
-      </nav>
+        <nav aria-label="Studio" className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 scroll-smooth max-w-[calc(100vw-120px)] sm:max-w-none">
+          <NavLink href="/dashboard" active={current === 'library'}>
+            Editions
+          </NavLink>
+          <NavLink href="/insights" active={current === 'insights'}>
+            Insights
+          </NavLink>
+          <NavLink href="/account" active={current === 'account'}>
+            Account
+          </NavLink>
+          <NavLink href="/help">Help</NavLink>
+        </nav>
+      </div>
 
-      <div className="flex-1" />
-      <ThemeToggle className="hidden sm:flex" />
-      <SignOutButton />
+      <div className="flex items-center gap-2 shrink-0">
+        <ThemeToggle className="flex" />
+        <SignOutButton />
+      </div>
     </header>
   )
 }
@@ -61,9 +58,9 @@ function NavLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+      className={`rounded-full px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition shrink-0 whitespace-nowrap ${
         active
-          ? 'bg-[var(--accent)]/10 text-[var(--accent-fg)]'
+          ? 'bg-[var(--accent)]/10 text-[var(--accent-fg)] font-bold'
           : 'text-[var(--qlico-muted)] hover:bg-[var(--tint-weak)] hover:text-[var(--qlico-ink)]'
       }`}
     >
