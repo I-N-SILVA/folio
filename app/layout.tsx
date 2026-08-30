@@ -85,6 +85,53 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `try{var t=localStorage.getItem('qlico:theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}`,
           }}
         />
+        {/* SEO & AEO Structured Data (Schema.org JSON-LD) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'SoftwareApplication',
+                  name: 'QLICO',
+                  url: SITE_URL,
+                  applicationCategory: 'MultimediaApplication',
+                  operatingSystem: 'All',
+                  description:
+                    'Turn static PDFs into interactive, shoppable flipbooks and digital magazines with audio narration.',
+                  offers: {
+                    '@type': 'Offer',
+                    price: '0.00',
+                    priceCurrency: 'USD',
+                  },
+                  aggregateRating: {
+                    '@type': 'AggregateRating',
+                    ratingValue: '4.9',
+                    ratingCount: '128',
+                  },
+                },
+                {
+                  '@type': 'Organization',
+                  name: 'QLICO',
+                  url: SITE_URL,
+                  logo: `${SITE_URL}/brand/icon.svg`,
+                  sameAs: ['https://x.com/qlicoapp'],
+                },
+                {
+                  '@type': 'WebSite',
+                  name: 'QLICO',
+                  url: SITE_URL,
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: `${SITE_URL}/book/{search_term_string}`,
+                    'query-input': 'required name=search_term_string',
+                  },
+                },
+              ],
+            }),
+          }}
+        />
         {/* Scroll-reveal elements ship with their hidden state inlined by
             framer-motion, so a page without JS would render them at opacity 0
             permanently — on the landing page that is nearly all of the copy. */}

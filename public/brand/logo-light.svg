@@ -11,11 +11,13 @@
       }
     </style>
   </defs>
-  <!-- Monogram Mark -->
-  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="translate(18, 16) scale(0.18)">
-    <circle cx="236" cy="236" r="132" stroke-width="44" />
-    <path d="M 296 296 L 396 396" stroke-width="44" />
-    <path d="M 326 396 H 396 V 326" stroke-width="44" />
+  <!-- Creative Monogram Mark -->
+  <g fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" transform="translate(14, 14) scale(0.18)">
+    <path d="M 230 100 C 145 100 84 165 84 250 C 84 335 145 400 230 400 C 315 400 376 335 376 250 C 376 165 315 100 230 100 Z" stroke-width="36" />
+    <path d="M 230 100 C 230 180 290 240 376 240" stroke-width="36" />
+    <path d="M 290 310 L 410 430" stroke-width="40" />
+    <path d="M 340 430 Q 410 430 410 360" stroke-width="36" />
+    <circle cx="230" cy="250" r="14" fill="#000000" stroke="none" />
   </g>
-  <text x="126" y="55%" dominant-baseline="middle" text-anchor="start" class="logo-text">QLICO</text>
+  <text x="124" y="55%" dominant-baseline="middle" text-anchor="start" class="logo-text">QLICO</text>
 </svg>

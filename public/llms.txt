@@ -1,0 +1,18 @@
+# QLICO
+
+> QLICO is a modern digital publishing platform that transforms static PDFs, lookbooks, portfolios, and reports into interactive, shoppable flipbooks with audiobook-style voice narration, interactive hotspots, and real-time reader attention heatmaps.
+
+## Core Capabilities
+- **Tactile Reader Engine**: WebGL/Canvas-powered page flip physics with physical paper modeling (gloss magazine, hardcover monograph, washi cotton) and corner peel indicators.
+- **Shoppable Magazine Hotspots**: Interactive product pins with direct 1-click in-edition cart drawer and checkout.
+- **Audiobook & Narration Mode**: Integrated speech synthesis that reads spreads aloud and auto-advances pages.
+- **Print QR Studio**: High-resolution vector QR code generator (SVG & PNG) with embedded brand monogram for physical catalogs, packaging, and table tents.
+- **Real-Time Analytics & Heatmaps**: Visual reader dwell duration thermal gradients, completion funnel tracking, and hotspot tap clusters.
+- **Lead Capture & Webhooks**: Gate editions with email unlock and automatically dispatch lead payloads to CRMs (HubSpot, Zapier, Klaviyo, Make).
+
+## URLs & Resources
+- Homepage: https://qlico.app
+- Live Demo: https://qlico.app/book/demo-book
+- Partner & LTD Redemption: https://qlico.app/redeem
+- Brand Assets & Press: https://qlico.app/press
+- Full Context: https://qlico.app/llms-full.txt

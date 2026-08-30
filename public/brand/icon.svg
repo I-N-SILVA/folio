@@ -1,10 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="112" fill="#000000"/>
+  <rect width="512" height="512" rx="120" fill="#000000"/>
   <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Minimalist Monogram Q -->
-    <circle cx="236" cy="236" r="132" stroke-width="40" />
-    <!-- Folio Fold Tail -->
-    <path d="M 296 296 L 396 396" stroke-width="40" />
-    <path d="M 326 396 H 396 V 326" stroke-width="40" />
+    <!-- Sculptural Continuous Q-Folio Form -->
+    <!-- Primary Outer Ring with Open Folio Spine Break -->
+    <path d="M 230 100 C 145 100 84 165 84 250 C 84 335 145 400 230 400 C 315 400 376 335 376 250 C 376 165 315 100 230 100 Z" stroke-width="36" />
+    <!-- Dynamic Inner Turned Leaf -->
+    <path d="M 230 100 C 230 180 290 240 376 240" stroke-width="36" />
+    <!-- Infinite Diagonal Folio Tail -->
+    <path d="M 290 310 L 410 430" stroke-width="40" />
+    <path d="M 340 430 Q 410 430 410 360" stroke-width="36" />
+    <!-- Architectural Folio Spine Dot -->
+    <circle cx="230" cy="250" r="14" fill="#ffffff" stroke="none" />
   </g>
 </svg>
