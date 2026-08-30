@@ -740,6 +740,97 @@ CREATE TRIGGER books_enforce_limit
 -- ============================================================================</div>
   </div>
 
+  <!-- Step 1.5: Magic Links & Google Sign-In Dummy's Guide -->
+  <div class="card card-full" id="auth-setup" style="border-color: rgba(56, 189, 248, 0.3); background: #080d14;">
+    <span class="badge" style="color: var(--blue); border-color: rgba(56, 189, 248, 0.3);">Step 02 · Authentication Configuration</span>
+    <h2 style="margin: 6px 0 12px; color: #fff;">🔑 The Dummy's Guide to Fixing Magic Links & Google Sign-In</h2>
+    <p>Follow these quick steps in your <strong>Supabase Dashboard</strong> and <strong>Google Cloud Console</strong> to make sign-in 100% operational.</p>
+
+    <!-- Part A: Fixing Magic Links -->
+    <div class="card" style="background: rgba(255,255,255,0.02); margin-top: 20px; border-color: rgba(255,255,255,0.1);">
+      <h3 style="color: var(--gold); margin-top: 0;">✉️ 1. Why Magic Links Are Broken & How to Fix (2 Minutes)</h3>
+      <p>By default, Supabase sets your <strong>Site URL</strong> to <code>http://localhost:3000</code>. When you request a magic link in production, Supabase rejects the live redirect URL and sends an email pointing to <code>localhost</code>!</p>
+      
+      <div style="margin: 16px 0;">
+        <p><strong>Step-by-step fix in Supabase:</strong></p>
+        <ol style="margin-left: 20px; margin-top: 8px;">
+          <li>Go to <a href="https://supabase.com/dashboard" target="_blank" style="color: var(--blue); text-decoration: underline;">Supabase Dashboard</a> → Select your project.</li>
+          <li>In the left sidebar, click <strong>Authentication (🔐)</strong> → <strong>URL Configuration</strong>.</li>
+          <li>Under <strong>Site URL</strong>, change <code>http://localhost:3000</code> to your live production domain:
+            <div class="code-box" style="margin: 8px 0;">
+              <span>https://qlico.app</span>
+              <button class="copy-btn" onclick="copyText('https://qlico.app')">Copy</button>
+            </div>
+          </li>
+          <li>Under <strong>Redirect URLs</strong>, click <strong>Add URL</strong> and add these 3 patterns (allows localhost, Vercel previews, and live production):
+            <div class="code-box" style="margin: 6px 0;">
+              <span>https://qlico.app/**</span>
+              <button class="copy-btn" onclick="copyText('https://qlico.app/**')">Copy</button>
+            </div>
+            <div class="code-box" style="margin: 6px 0;">
+              <span>https://*.vercel.app/**</span>
+              <button class="copy-btn" onclick="copyText('https://*.vercel.app/**')">Copy</button>
+            </div>
+            <div class="code-box" style="margin: 6px 0;">
+              <span>http://localhost:3000/**</span>
+              <button class="copy-btn" onclick="copyText('http://localhost:3000/**')">Copy</button>
+            </div>
+          </li>
+          <li>Click <strong>Save</strong> at the bottom. Your magic links will now instantly redirect to your live app!</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Part B: Setting up Google OAuth -->
+    <div class="card" style="background: rgba(255,255,255,0.02); margin-top: 20px; border-color: rgba(255,255,255,0.1);">
+      <h3 style="color: var(--green); margin-top: 0;">🌐 2. How to Enable Google Sign-In (3 Minutes)</h3>
+      <p>Google OAuth requires registering your app in the Google Cloud Console and adding your Supabase callback URL.</p>
+
+      <div style="margin: 16px 0;">
+        <p><strong>Step A: Get your Supabase Callback URL</strong></p>
+        <ol style="margin-left: 20px; margin-top: 6px;">
+          <li>In Supabase, go to <strong>Authentication</strong> → <strong>Providers</strong> → Click <strong>Google</strong>.</li>
+          <li>Copy the <strong>Callback URL (for OAuth)</strong> shown in Supabase. It looks like:
+            <div class="code-box" style="margin: 8px 0; color: #a1a1aa;">
+              <span>https://[your-project-id].supabase.co/auth/v1/callback</span>
+            </div>
+          </li>
+        </ol>
+
+        <p style="margin-top: 14px;"><strong>Step B: Create OAuth Credentials in Google Cloud</strong></p>
+        <ol style="margin-left: 20px; margin-top: 6px;">
+          <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: var(--blue); text-decoration: underline;">Google Cloud Console → Credentials</a>.</li>
+          <li>Click <strong>+ CREATE CREDENTIALS</strong> → <strong>OAuth client ID</strong>.</li>
+          <li>Application type: select <strong>Web application</strong>.</li>
+          <li>Name: <code>QLICO Web Client</code></li>
+          <li>Under <strong>Authorized JavaScript origins</strong>, click <em>+ ADD URI</em> and enter:
+            <div class="code-box" style="margin: 6px 0;">
+              <span>https://[your-project-id].supabase.co</span>
+            </div>
+          </li>
+          <li>Under <strong>Authorized redirect URIs</strong>, click <em>+ ADD URI</em> and paste your Supabase Callback URL:
+            <div class="code-box" style="margin: 6px 0;">
+              <span>https://[your-project-id].supabase.co/auth/v1/callback</span>
+            </div>
+          </li>
+          <li>Click <strong>CREATE</strong>. Google will show you your <strong>Client ID</strong> and <strong>Client Secret</strong>.</li>
+        </ol>
+
+        <p style="margin-top: 14px;"><strong>Step C: Paste Keys into Supabase</strong></p>
+        <ol style="margin-left: 20px; margin-top: 6px;">
+          <li>Return to <strong>Supabase Dashboard → Authentication → Providers → Google</strong>.</li>
+          <li>Toggle <strong>Enable Sign in with Google</strong> to <strong style="color:var(--green);">ON</strong>.</li>
+          <li>Paste the <strong>Client ID</strong> and <strong>Client Secret</strong> from Google.</li>
+          <li>Click <strong>Save</strong>.</li>
+        </ol>
+      </div>
+
+      <div class="callout callout-green" style="margin-top: 16px;">
+        <strong>🎉 You're Done!</strong> Both Magic Links and Google 1-Click Sign-in will now work seamlessly across local development, Vercel preview URLs, and production.
+      </div>
+    </div>
+  </div>
+
   <!-- Step 2: Verification Checklist -->
   <div class="card card-full" id="checklist">
     <h2><span class="step-num">02</span> Pre-Launch Verification Checklist</h2>
