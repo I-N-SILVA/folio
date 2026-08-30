@@ -248,6 +248,18 @@ CREATE TABLE IF NOT EXISTS public.appsumo_licenses (
   updated_at        timestamptz NOT NULL DEFAULT now()
 );
 
+-- Ensure all columns exist even if table was created previously with older schema
+DO $$ BEGIN
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS prev_license_key text;
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS tier int NOT NULL DEFAULT 1;
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'ltd_tier1';
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS activation_email text;
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS invoice_item_uuid text;
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS redeemed_by uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+  ALTER TABLE public.appsumo_licenses ADD COLUMN IF NOT EXISTS redeemed_at timestamptz;
+END $$;
+
 CREATE INDEX IF NOT EXISTS appsumo_licenses_email ON public.appsumo_licenses (lower(activation_email));
 
 DROP TRIGGER IF EXISTS appsumo_licenses_updated_at ON public.appsumo_licenses;
