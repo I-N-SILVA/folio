@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
-import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Wand2 } from 'lucide-react'
+import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Wand2, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -82,8 +82,13 @@ interface SortablePageItemProps {
   bookId: string
   isSelected: boolean
   isOnly: boolean
+  canMovePrev: boolean
+  canMoveNext: boolean
   onSelect: () => void
   onDelete: () => void
+  onDuplicate: () => void
+  onMovePrev: () => void
+  onMoveNext: () => void
 }
 
 function SortablePageItem({
@@ -92,8 +97,13 @@ function SortablePageItem({
   bookId,
   isSelected,
   isOnly,
+  canMovePrev,
+  canMoveNext,
   onSelect,
   onDelete,
+  onDuplicate,
+  onMovePrev,
+  onMoveNext,
 }: SortablePageItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: page.id })
@@ -170,9 +180,8 @@ function SortablePageItem({
         </button>
       </div>
 
-      {/* Number and type sit under the page rather than beside it, so the
-          thumbnail gets the full column width. */}
-      <div className="mt-2 flex items-center gap-1.5 px-0.5">
+      {/* Number, type, and quick action toolbar */}
+      <div className="mt-2 flex items-center gap-1 px-0.5">
         <span
           className={twMerge(
             'min-w-[16px] text-center text-[11px] font-semibold tabular-nums transition-colors',
@@ -181,12 +190,11 @@ function SortablePageItem({
         >
           {page.page_number}
         </span>
-        {/* Only the non-default page types earn a badge — labelling every
-            middle page "CONTENT" is noise that competes with the previews. */}
+        {/* Page type badge */}
         {page.type !== 'content' && (
           <span
             className={twMerge(
-              'rounded px-1 text-[9px] font-bold uppercase leading-4',
+              'rounded px-1 text-[8px] font-bold uppercase leading-3.5',
               PAGE_TYPE_COLORS[page.type]
             )}
           >
@@ -194,30 +202,81 @@ function SortablePageItem({
           </span>
         )}
         <span className="flex-1" />
+
+        {/* Move Prev */}
+        {canMovePrev && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onMovePrev()
+            }}
+            title="Move page left"
+            className="text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
+          >
+            <ChevronLeft size={12} />
+          </button>
+        )}
+
+        {/* Move Next */}
+        {canMoveNext && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onMoveNext()
+            }}
+            title="Move page right"
+            className="text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
+          >
+            <ChevronRight size={12} />
+          </button>
+        )}
+
+        {/* Duplicate Page */}
         <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDuplicate()
+          }}
+          title="Duplicate page"
+          className="text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition"
+        >
+          <Copy size={11} />
+        </button>
+
+        {/* Drag handle */}
+        <button
+          type="button"
           {...listeners}
           {...attributes}
           onClick={(e) => e.stopPropagation()}
-          className="cursor-grab text-neutral-600 opacity-0 transition-opacity hover:text-neutral-300 group-hover:opacity-100 active:cursor-grabbing"
+          className="cursor-grab text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition active:cursor-grabbing"
           aria-label={`Drag page ${page.page_number} to reorder`}
+          title="Drag to reorder page"
         >
-          <GripVertical size={13} />
+          <GripVertical size={12} />
         </button>
+
+        {/* Delete */}
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation()
             onDelete()
           }}
           disabled={isOnly}
           className={twMerge(
-            'rounded transition-colors',
+            'p-0.5 rounded transition-colors',
             isOnly
-              ? 'cursor-not-allowed text-neutral-700'
-              : 'text-neutral-600 opacity-0 hover:text-red-400 group-hover:opacity-100'
+              ? 'cursor-not-allowed text-neutral-800'
+              : 'text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-red-400'
           )}
           aria-label={`Delete page ${page.page_number}`}
+          title="Delete page"
         >
-          <Trash2 size={13} />
+          <Trash2 size={11} />
         </button>
       </div>
     </div>
@@ -235,7 +294,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
   const [activeTab, setActiveTab] = useState<'pages' | 'layers' | 'library' | 'templates'>('pages')
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
@@ -252,6 +311,30 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
     if (fromIndex !== -1 && toIndex !== -1) {
       reorderPages(fromIndex, toIndex)
     }
+  }
+
+  const handleDuplicatePage = (page: Page, index: number) => {
+    const newPage: Page = {
+      ...JSON.parse(JSON.stringify(page)),
+      id: crypto.randomUUID(),
+      page_number: index + 2,
+      blocks: page.blocks.map((b) => ({ ...b, id: crypto.randomUUID() })),
+      hotspots: (page.hotspots ?? []).map((h) => ({ ...h, id: crypto.randomUUID() })),
+    }
+    const currentPages = [...pages]
+    currentPages.splice(index + 1, 0, newPage)
+    const renumbered = currentPages.map((p, i) => ({ ...p, page_number: i + 1 }))
+    useEditorStore.setState((s) => ({
+      isDirty: true,
+      book: s.book ? { ...s.book, pages: renumbered } : s.book,
+      currentPageIndex: index + 1,
+    }))
+    toast.success(`Duplicated Page ${page.page_number}`)
+  }
+
+  const handleMovePage = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= pages.length) return
+    reorderPages(fromIndex, toIndex)
   }
 
   return (
@@ -320,11 +403,16 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
                       bookId={book.id}
                       isSelected={currentPageIndex === index}
                       isOnly={pages.length === 1}
+                      canMovePrev={index > 0}
+                      canMoveNext={index < pages.length - 1}
                       onSelect={() => {
                         setCurrentPageIndex(index)
                         onPageSelected?.()
                       }}
                       onDelete={() => removePage(page.id)}
+                      onDuplicate={() => handleDuplicatePage(page, index)}
+                      onMovePrev={() => handleMovePage(index, index - 1)}
+                      onMoveNext={() => handleMovePage(index, index + 1)}
                     />
                   ))}
                 </div>

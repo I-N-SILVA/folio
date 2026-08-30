@@ -334,10 +334,10 @@ export function EditorClient({ book, entitlements }: Props) {
         <Link
           href="/dashboard"
           aria-label="QLICO dashboard"
-          className="grid h-7 w-7 place-items-center overflow-hidden rounded-md transition hover:brightness-110"
+          className="flex items-center gap-2 rounded-lg p-1 transition hover:bg-neutral-800"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/icon-192.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
+          <img src="/brand/icon.svg" alt="QLICO" width={28} height={28} className="h-7 w-7 rounded-md object-contain" />
         </Link>
         <Link
           href="/dashboard"

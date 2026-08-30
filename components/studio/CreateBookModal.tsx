@@ -321,7 +321,17 @@ export function CreateBookModal({ onClose }: Props) {
     )
   }
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('All')
+  const [previewingTemplate, setPreviewingTemplate] = useState<PublicationTemplate | null>(null)
+  const [previewPageIndex, setPreviewPageIndex] = useState<number>(0)
+
   if (step === 'templates') {
+    const categories = ['All', ...Array.from(new Set(TEMPLATES.map((t) => t.category)))]
+    const filteredTemplates =
+      selectedCategory === 'All'
+        ? TEMPLATES
+        : TEMPLATES.filter((t) => t.category === selectedCategory)
+
     return shell(
       <>
         <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
@@ -330,7 +340,7 @@ export function CreateBookModal({ onClose }: Props) {
               Choose a starter template
             </h2>
             <p className="mt-1 text-xs text-[var(--qlico-muted)]">
-              Curated pre-built layouts ready to customize with your own text and photos.
+              Curated editorial designs with bespoke typography, layouts, and interactive hotspots.
             </p>
           </div>
           <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)]">
@@ -338,45 +348,120 @@ export function CreateBookModal({ onClose }: Props) {
           </button>
         </div>
 
-        <div className="p-6 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {TEMPLATES.map((tmpl) => (
+        {/* Category Filters */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-[var(--qlico-border)]/60 px-6 py-3 bg-[var(--qlico-subtle)]/40">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition ${
+                selectedCategory === cat
+                  ? 'bg-[var(--qlico-ink)] text-[var(--qlico-paper)]'
+                  : 'bg-[var(--qlico-paper)]/70 text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)] border border-[var(--qlico-border)]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6 max-h-[65vh] overflow-y-auto">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {filteredTemplates.map((tmpl) => (
               <div
                 key={tmpl.id}
-                className="group relative flex flex-col justify-between rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 p-5 transition hover:border-[var(--qlico-ink)] hover:shadow-md"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 transition hover:border-[var(--accent)] hover:shadow-lg"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="rounded-full bg-[var(--tint-weak)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--qlico-muted)]">
-                      {tmpl.category}
+                {/* Visual Mockup Spread Header */}
+                <div
+                  className="relative h-36 w-full p-4 flex flex-col justify-between overflow-hidden border-b border-black/10 select-none"
+                  style={{
+                    backgroundColor: tmpl.previewMockup.bgHex,
+                    color: tmpl.previewMockup.textHex,
+                  }}
+                >
+                  <div className="flex items-center justify-between z-10">
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                      style={{
+                        backgroundColor: tmpl.previewMockup.accentHex + '22',
+                        color: tmpl.previewMockup.accentHex,
+                        border: `1px solid ${tmpl.previewMockup.accentHex}44`,
+                      }}
+                    >
+                      {tmpl.previewMockup.tag}
                     </span>
-                    <span className="text-[11px] font-medium text-[var(--qlico-muted)]">
-                      {tmpl.pagesCount} pages
+                    <span className="text-[10px] font-mono opacity-60">
+                      {tmpl.pagesCount} Spreads
                     </span>
                   </div>
 
-                  <h3 className="font-display text-lg font-semibold tracking-tight text-[var(--qlico-ink)]">
-                    {tmpl.title}
-                  </h3>
-                  <p className="mt-1 text-xs text-[var(--qlico-muted)] leading-relaxed">
-                    {tmpl.subtitle}
-                  </p>
+                  <div className="z-10">
+                    <h4 className="font-display text-xl font-bold tracking-tight leading-none mb-1">
+                      {tmpl.previewMockup.headline}
+                    </h4>
+                    <p className="text-[11px] opacity-75 line-clamp-1">
+                      {tmpl.previewMockup.subheadline}
+                    </p>
+                  </div>
+
+                  {/* Wireframe Mini Blocks Decoration */}
+                  <div className="absolute right-3 bottom-3 flex items-center gap-1.5 opacity-40">
+                    <div className="h-6 w-10 rounded border border-current" />
+                    <div className="h-6 w-6 rounded-full border border-current flex items-center justify-center text-[8px]">
+                      ●
+                    </div>
+                  </div>
+
+                  {/* Subtle Grain Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-[var(--qlico-border)]/60 flex items-center justify-between">
-                  <div
-                    className="h-4 w-4 rounded-full border border-black/10"
-                    style={{ backgroundColor: tmpl.coverColor }}
-                    title={`Theme color ${tmpl.coverColor}`}
-                  />
-                  <button
-                    disabled={loading}
-                    onClick={() => handleSelectTemplate(tmpl)}
-                    className="flex items-center gap-1.5 rounded-full bg-[var(--invert-surface)] px-4 py-1.5 text-xs font-semibold text-[var(--invert-text)] transition hover:opacity-90 disabled:opacity-50"
-                  >
-                    {loading ? 'Setting up…' : 'Use Template'}
-                    <ArrowRight size={12} />
-                  </button>
+                <div className="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h3 className="font-display text-base font-semibold tracking-tight text-[var(--qlico-ink)]">
+                        {tmpl.title}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-[var(--qlico-muted)] leading-relaxed mb-3">
+                      {tmpl.subtitle}
+                    </p>
+
+                    {/* Feature Badges */}
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {tmpl.badges.map((b) => (
+                        <span
+                          key={b}
+                          className="rounded-md bg-[var(--tint-weak)] px-2 py-0.5 text-[10px] font-medium text-[var(--qlico-muted)]"
+                        >
+                          {b}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-[var(--qlico-border)]/60 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewingTemplate(tmpl)
+                        setPreviewPageIndex(0)
+                      }}
+                      className="flex items-center gap-1 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold text-[var(--qlico-ink)] hover:bg-[var(--tint-weak)] transition"
+                    >
+                      <Sparkles size={12} className="text-[var(--accent-fg)]" />
+                      Preview Spread
+                    </button>
+                    <button
+                      disabled={loading}
+                      onClick={() => handleSelectTemplate(tmpl)}
+                      className="flex items-center gap-1.5 rounded-full bg-[var(--qlico-teal)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow transition hover:opacity-90 disabled:opacity-50"
+                    >
+                      {loading ? 'Setting up…' : 'Use Template'}
+                      <ArrowRight size={12} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -391,9 +476,132 @@ export function CreateBookModal({ onClose }: Props) {
             </button>
           </div>
         </div>
+
+        {/* Live Template Preview Modal */}
+        {previewingTemplate && (
+          <Modal
+            onClose={() => setPreviewingTemplate(null)}
+            title={previewingTemplate.title}
+            className="max-w-xl w-full rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-6 text-[var(--qlico-ink)]"
+          >
+            <div className="flex items-center justify-between mb-4 border-b border-[var(--qlico-border)] pb-3">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--qlico-muted)]">
+                  {previewingTemplate.category}
+                </span>
+                <h3 className="font-display text-lg font-semibold text-[var(--qlico-ink)]">
+                  {previewingTemplate.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setPreviewingTemplate(null)}
+                className="rounded-full p-1 text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Template Mockup Display */}
+            {(() => {
+              const dummyBook = previewingTemplate.generateBook('preview-id', 'user', 'preview')
+              const dummyPages = dummyBook.pages ?? []
+              const activePage = dummyPages[previewPageIndex] ?? dummyPages[0]
+
+              return (
+                <div className="space-y-4">
+                  {/* Page Indicator Tabs */}
+                  <div className="flex items-center justify-center gap-2">
+                    {dummyPages.map((p, idx) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setPreviewPageIndex(idx)}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                          previewPageIndex === idx
+                            ? 'bg-[var(--qlico-ink)] text-[var(--qlico-paper)]'
+                            : 'bg-[var(--tint-weak)] text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
+                        }`}
+                      >
+                        Page {idx + 1} ({p.type})
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Rendered Preview Spread Container */}
+                  <div
+                    className="relative w-full rounded-xl overflow-hidden p-6 shadow-inner border border-[var(--qlico-border)] flex flex-col justify-between min-h-[260px]"
+                    style={{
+                      backgroundColor: activePage?.background?.color || dummyBook.theme?.background || '#09090b',
+                      color: dummyBook.theme?.primary || '#ffffff',
+                    }}
+                  >
+                    <div className="space-y-3">
+                      {activePage?.blocks.map((block) => (
+                        <div key={block.id} className="text-left">
+                          {block.type === 'text' && (
+                            <p
+                              className={`${
+                                block.variant === 'title'
+                                  ? 'font-display text-2xl font-bold tracking-tight'
+                                  : block.variant === 'heading'
+                                    ? 'text-lg font-semibold'
+                                    : block.variant === 'quote'
+                                      ? 'italic border-l-2 border-current pl-3 opacity-90'
+                                      : block.variant === 'stat'
+                                        ? 'text-base font-bold opacity-90'
+                                        : block.variant === 'caption'
+                                          ? 'text-[10px] font-mono tracking-widest uppercase opacity-75'
+                                          : 'text-xs opacity-80 leading-relaxed'
+                              } ${block.align === 'center' ? 'text-center' : 'text-left'}`}
+                            >
+                              {block.content}
+                            </p>
+                          )}
+                          {block.type === 'divider' && (
+                            <hr className="my-2 border-current opacity-20" />
+                          )}
+                          {block.type === 'button' && (
+                            <div className="pt-2">
+                              <span className="inline-block rounded-full bg-white text-black px-4 py-1.5 text-xs font-bold shadow">
+                                {block.label}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Hotspot Pins Preview */}
+                    {activePage?.hotspots && activePage.hotspots.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-white/10 flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse" />
+                        <span className="text-[11px] font-semibold text-amber-300">
+                          {activePage.hotspots.length} Interactive Hotspot Pin: {activePage.hotspots[0]?.label}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-xs text-[var(--qlico-muted)]">
+                      Ready to customize with your own text, photos and links.
+                    </p>
+                    <button
+                      disabled={loading}
+                      onClick={() => handleSelectTemplate(previewingTemplate)}
+                      className="flex items-center gap-2 rounded-full bg-[var(--qlico-teal)] px-5 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition hover:scale-105"
+                    >
+                      {loading ? 'Creating…' : 'Use This Template'}
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
+          </Modal>
+        )}
       </>,
       'Starter Templates',
-      'max-w-2xl'
+      'max-w-3xl'
     )
   }
 

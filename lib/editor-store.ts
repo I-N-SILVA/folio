@@ -26,6 +26,8 @@ interface EditorStore {
   updatePage: (pageId: string, updates: Partial<Page>) => void
   updateBlock: (pageId: string, blockId: string, updates: Partial<Block>) => void
   addBlock: (pageId: string, block: Block) => void
+  insertBlockAt: (pageId: string, block: Block, index: number) => void
+  duplicateBlock: (pageId: string, blockId: string) => void
   removeBlock: (pageId: string, blockId: string) => void
   moveBlock: (pageId: string, blockId: string, direction: 'up' | 'down') => void
 
@@ -168,6 +170,45 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         pages: state.book.pages.map((p) =>
           p.id === pageId ? { ...p, blocks: [...p.blocks, block] } : p
         ),
+      },
+    }
+  }),
+
+  insertBlockAt: (pageId, block, index) => set((state) => {
+    if (!state.book?.pages) return state
+    const page = state.book.pages.find((p) => p.id === pageId)
+    if (!page) return state
+    const nextBlocks = [...page.blocks]
+    const clamped = Math.max(0, Math.min(nextBlocks.length, index))
+    nextBlocks.splice(clamped, 0, block)
+    return {
+      isDirty: true,
+      selectedBlockId: block.id,
+      ...snapshotHistory(state, state.book),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) => (p.id === pageId ? { ...p, blocks: nextBlocks } : p)),
+      },
+    }
+  }),
+
+  duplicateBlock: (pageId, blockId) => set((state) => {
+    if (!state.book?.pages) return state
+    const page = state.book.pages.find((p) => p.id === pageId)
+    if (!page) return state
+    const idx = page.blocks.findIndex((b) => b.id === blockId)
+    if (idx === -1) return state
+    const original = page.blocks[idx]
+    const cloned = { ...JSON.parse(JSON.stringify(original)), id: crypto.randomUUID() } as Block
+    const nextBlocks = [...page.blocks]
+    nextBlocks.splice(idx + 1, 0, cloned)
+    return {
+      isDirty: true,
+      selectedBlockId: cloned.id,
+      ...snapshotHistory(state, state.book),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) => (p.id === pageId ? { ...p, blocks: nextBlocks } : p)),
       },
     }
   }),

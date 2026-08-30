@@ -20,6 +20,10 @@ import {
   Grid3X3,
   Sparkles,
   Loader2,
+  ArrowUp,
+  ArrowDown,
+  Copy,
+  Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -52,6 +56,13 @@ function SortableBlock({
   id,
   label,
   isSelected,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onDelete,
+  onInsertAfter,
   onClick,
   children,
 }: {
@@ -59,6 +70,13 @@ function SortableBlock({
   /** Block type, surfaced on the selection so it's clear what's being edited. */
   label: string
   isSelected: boolean
+  canMoveUp?: boolean
+  canMoveDown?: boolean
+  onMoveUp?: () => void
+  onMoveDown?: () => void
+  onDuplicate?: () => void
+  onDelete?: () => void
+  onInsertAfter?: () => void
   onClick: (e: React.MouseEvent) => void
   children: React.ReactNode
 }) {
@@ -76,39 +94,116 @@ function SortableBlock({
       onClick={onClick}
       className={twMerge(
         'relative group/block transition-all outline-none rounded-lg',
-        isSelected ? 'ring-2 ring-inset ring-[var(--accent-vivid)]' : 'hover:ring-1 hover:ring-inset hover:ring-neutral-400',
-        isDragging && 'opacity-50 z-50 ring-2 ring-[var(--accent-vivid)] shadow-xl',
+        isSelected ? 'ring-2 ring-[var(--accent-vivid)] shadow-md' : 'hover:ring-1 hover:ring-neutral-400',
+        isDragging && 'opacity-40 z-50 ring-2 ring-[var(--accent-vivid)] shadow-2xl scale-[1.01]',
         !isSelected && 'cursor-pointer'
       )}
     >
-      {/* Drag handle — inside the block bounds so it survives the page
-          frame's overflow-hidden even near the left edge; visible on hover
-          so reordering is discoverable before a block is selected. */}
+      {/* In-Canvas Floating Action Bar */}
       <div
-        {...listeners}
-        {...attributes}
-        tabIndex={0}
-        aria-label="Drag to reorder block"
         className={twMerge(
-          'absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-vivid)] text-white shadow-lg transition-all cursor-grab active:cursor-grabbing hover:bg-[var(--accent-vivid-hover)] hover:scale-110 z-50',
+          'absolute -top-3.5 left-2 z-50 flex items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 py-0.5 text-white shadow-xl border border-neutral-700 transition-all select-none',
           isSelected
-            ? 'opacity-100'
-            : 'opacity-0 group-hover/block:opacity-100 focus-visible:opacity-100'
+            ? 'opacity-100 scale-100'
+            : 'opacity-0 scale-95 pointer-events-none group-hover/block:opacity-100 group-hover/block:scale-100 group-hover/block:pointer-events-auto'
         )}
       >
-        <GripVertical size={14} />
-      </div>
+        {/* Drag handle */}
+        <div
+          {...listeners}
+          {...attributes}
+          tabIndex={0}
+          aria-label="Drag to reorder block"
+          title="Drag to reorder block"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical size={12} />
+        </div>
 
-      {/* Names what's selected. The ring alone doesn't say whether you're about
-          to restyle a heading or a button. */}
-      {isSelected && (
-        <span className="pointer-events-none absolute -top-2 right-2 z-50 rounded-full bg-[var(--accent-vivid)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg">
+        <span className="h-3 w-px bg-neutral-700 mx-0.5" />
+
+        {/* Move Up */}
+        <button
+          type="button"
+          disabled={!canMoveUp}
+          onClick={(e) => {
+            e.stopPropagation()
+            onMoveUp?.()
+          }}
+          title="Move block up"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          <ArrowUp size={11} />
+        </button>
+
+        {/* Move Down */}
+        <button
+          type="button"
+          disabled={!canMoveDown}
+          onClick={(e) => {
+            e.stopPropagation()
+            onMoveDown?.()
+          }}
+          title="Move block down"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          <ArrowDown size={11} />
+        </button>
+
+        <span className="h-3 w-px bg-neutral-700 mx-0.5" />
+
+        {/* Duplicate */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDuplicate?.()
+          }}
+          title="Duplicate block"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800"
+        >
+          <Copy size={11} />
+        </button>
+
+        {/* Delete */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete?.()
+          }}
+          title="Delete block"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-red-400 hover:text-red-300 hover:bg-red-950/50"
+        >
+          <Trash2 size={11} />
+        </button>
+
+        <span className="h-3 w-px bg-neutral-700 mx-0.5" />
+
+        {/* Block Type Badge */}
+        <span className="px-1 text-[9px] font-bold uppercase tracking-wider text-[var(--accent-vivid)]">
           {label}
         </span>
-      )}
+      </div>
 
       <div className={twMerge(isSelected ? 'pointer-events-auto' : 'pointer-events-none')}>
         {children}
+      </div>
+
+      {/* Quick Add Block Below divider button */}
+      <div className="relative -bottom-2.5 z-40 flex justify-center opacity-0 group-hover/block:opacity-100 transition-opacity">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onInsertAfter?.()
+          }}
+          title="Insert block below"
+          className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold text-neutral-300 shadow-md border border-neutral-700 hover:bg-[var(--accent-vivid)] hover:text-white hover:border-transparent transition-all scale-90 hover:scale-100"
+        >
+          <Plus size={10} strokeWidth={2.5} />
+          Add below
+        </button>
       </div>
     </div>
   )
@@ -271,11 +366,16 @@ export function EditorCanvas() {
     setHotspotMode,
     selectBlock,
     addBlock,
+    insertBlockAt,
+    duplicateBlock,
+    removeBlock,
+    moveBlock,
     addHotspot,
     updateHotspot,
   } = useEditorStore()
 
   const [showBlockPicker, setShowBlockPicker] = useState(false)
+  const [insertIndex, setInsertIndex] = useState<number | null>(null)
   const [showGuides, setShowGuides] = useState(false)
   const [isDetecting, setIsDetecting] = useState(false)
   const [zoom, setZoom] = useState(1)
@@ -400,14 +500,19 @@ export function EditorCanvas() {
     (type: Block['type'], defaults: Omit<Block, 'id' | 'type'>) => {
       if (!currentPage) return
       const newBlock = { type, id: crypto.randomUUID(), ...defaults } as Block
-      addBlock(currentPage.id, newBlock)
+      if (insertIndex !== null) {
+        insertBlockAt(currentPage.id, newBlock, insertIndex)
+        setInsertIndex(null)
+      } else {
+        addBlock(currentPage.id, newBlock)
+      }
       setShowBlockPicker(false)
     },
-    [currentPage, addBlock]
+    [currentPage, addBlock, insertBlockAt, insertIndex]
   )
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
@@ -602,20 +707,33 @@ export function EditorCanvas() {
                   bookId={book.id} 
                   theme={book.theme} 
                   className="w-full h-full"
-                  renderBlockWrapper={(block, children) => (
-                    <SortableBlock
-                      key={block.id}
-                      id={block.id}
-                      label={block.type === 'text' ? (block.variant ?? 'text') : block.type}
-                      isSelected={selectedBlockId === block.id}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        selectBlock(block.id)
-                      }}
-                    >
-                      {children}
-                    </SortableBlock>
-                  )}
+                  renderBlockWrapper={(block, children) => {
+                    const blockIndex = currentPage.blocks.findIndex((b) => b.id === block.id)
+                    return (
+                      <SortableBlock
+                        key={block.id}
+                        id={block.id}
+                        label={block.type === 'text' ? (block.variant ?? 'text') : block.type}
+                        isSelected={selectedBlockId === block.id}
+                        canMoveUp={blockIndex > 0}
+                        canMoveDown={blockIndex < currentPage.blocks.length - 1}
+                        onMoveUp={() => moveBlock(currentPage.id, block.id, 'up')}
+                        onMoveDown={() => moveBlock(currentPage.id, block.id, 'down')}
+                        onDuplicate={() => duplicateBlock(currentPage.id, block.id)}
+                        onDelete={() => removeBlock(currentPage.id, block.id)}
+                        onInsertAfter={() => {
+                          setInsertIndex(blockIndex + 1)
+                          setShowBlockPicker(true)
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          selectBlock(block.id)
+                        }}
+                      >
+                        {children}
+                      </SortableBlock>
+                    )
+                  }}
                 />
               </SortableContext>
             </DndContext>
