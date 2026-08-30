@@ -9,6 +9,7 @@ import { ArrowLeft, Download, BookOpen, Users, CheckCircle, Clock, Lock } from '
 import Reveal from '@/components/landing/Reveal'
 import { NumberTicker } from '@/components/landing/NumberTicker'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
+import { SpreadHeatmap } from './SpreadHeatmap'
 import type { Book } from '@/lib/book-schema'
 
 type DateRange = '7d' | '30d' | '90d' | '365d'
@@ -468,6 +469,13 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                 </TableCard>
               )}
             </div>
+
+            {/* Visual Spread Attention Heatmap */}
+            {(book.pages?.length ?? 0) > 0 && (
+              <div className="mt-8">
+                <SpreadHeatmap pages={book.pages ?? []} />
+              </div>
+            )}
 
             {/* The most common first view of this screen, and it used to be a
                 dead end: two sentences telling the author to share, with nothing

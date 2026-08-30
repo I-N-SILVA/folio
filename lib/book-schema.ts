@@ -117,6 +117,13 @@ export const BackgroundSchema = z.object({
   overlay: z.string().optional(), // rgba color for image overlay
 })
 
+export const AmbientAudioSchema = z.object({
+  src: z.string().url(),
+  loop: z.boolean().default(true),
+  volume: z.number().min(0).max(1).default(0.5),
+  title: z.string().optional(),
+})
+
 export const PageSchema = z.object({
   id: z.string(),
   book_id: z.string(),
@@ -126,6 +133,7 @@ export const PageSchema = z.object({
   background: BackgroundSchema.optional(),
   blocks: z.array(BlockSchema).default([]),
   hotspots: z.array(HotspotSchema).default([]),
+  ambientAudio: AmbientAudioSchema.optional(),
 })
 
 // ─── Theme Schema ──────────────────────────────────────────────────────────────
@@ -136,6 +144,7 @@ export const ThemeSchema = z.object({
   primary: z.string().optional(),
   headingFont: z.string().optional(),
   bodyFont: z.string().optional(),
+  paperPhysics: z.enum(['magazine', 'hardcover', 'washi']).default('magazine').optional(),
 })
 
 // ─── Book Settings Schema ──────────────────────────────────────────────────────

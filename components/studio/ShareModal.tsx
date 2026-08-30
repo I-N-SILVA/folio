@@ -1,9 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2 } from 'lucide-react'
+import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2, Sparkles } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { trackProduct } from '@/lib/product-analytics'
+import { QRCodeStudioModal } from './QRCodeStudioModal'
 
 interface ShareModalProps {
   slug: string
@@ -13,6 +14,7 @@ interface ShareModalProps {
 
 export function ShareModal({ slug, published, onClose }: ShareModalProps) {
   const [tab, setTab] = useState<'links' | 'qr'>('links')
+  const [showStudio, setShowStudio] = useState(false)
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const url = `${origin}/book/${slug}`
   const embedCode = `<iframe src="${origin}/embed/${slug}" width="100%" height="600" style="border:0" allowfullscreen title="Interactive edition"></iframe>`
@@ -128,15 +130,34 @@ export function ShareModal({ slug, published, onClose }: ShareModalProps) {
           <p className="mt-3 text-xs text-[var(--qlico-muted)]">
             Scan with any phone camera to open the edition directly.
           </p>
-          <button
-            type="button"
-            onClick={downloadQr}
-            className="mt-4 flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-5 py-2.5 text-xs font-bold text-[var(--accent-contrast)] shadow-md transition hover:scale-105"
-          >
-            <Download size={14} />
-            Download QR Code (SVG)
-          </button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowStudio(true)}
+              className="flex items-center gap-1.5 rounded-full bg-[var(--invert-surface)] px-5 py-2.5 text-xs font-bold text-[var(--invert-text)] shadow-md transition hover:opacity-90"
+            >
+              <Sparkles size={14} />
+              Open Print QR Studio
+            </button>
+            <button
+              type="button"
+              onClick={downloadQr}
+              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)]"
+            >
+              <Download size={14} />
+              Quick SVG
+            </button>
+          </div>
         </div>
+      )}
+
+      {showStudio && (
+        <QRCodeStudioModal
+          isOpen={showStudio}
+          onClose={() => setShowStudio(false)}
+          bookTitle=""
+          bookSlug={slug}
+        />
       )}
 
       {published && (

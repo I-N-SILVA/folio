@@ -24,10 +24,11 @@ import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
 import { TableOfContents } from './TableOfContents'
+import { FilmstripScrubber } from './FilmstripScrubber'
 import { CartDrawer, type CartItem } from './CartDrawer'
 import { SearchModal } from './SearchModal'
 import { ReviewDrawer, type ReviewComment } from './ReviewDrawer'
-import { playPageFlipSound } from '@/lib/sound'
+import { playPageFlipSound, type PaperPhysics } from '@/lib/sound'
 import {
   isSpeechSupported,
   speakPageText,
@@ -118,7 +119,7 @@ export function ViewerChrome({
 
   const handleFlip = (pageIndex: number) => {
     if (pageIndex !== currentPage && soundEnabled) {
-      playPageFlipSound()
+      playPageFlipSound(0.22, (visibleBook.theme?.paperPhysics as PaperPhysics) || 'magazine')
     }
     setCurrentPage(pageIndex)
   }
@@ -264,6 +265,34 @@ export function ViewerChrome({
     })
   }, [narrating, currentPage, speechSpeed, visibleBook.pages, navigablePages])
 
+  // Handle spread ambient audio soundscape cross-fade
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null)
+  useEffect(() => {
+    const activePage = visibleBook.pages?.[currentPage]
+    const ambient = activePage?.ambientAudio
+
+    if (ambient?.src) {
+      if (!ambientAudioRef.current) {
+        ambientAudioRef.current = new Audio(ambient.src)
+      } else if (ambientAudioRef.current.src !== ambient.src) {
+        ambientAudioRef.current.src = ambient.src
+      }
+      ambientAudioRef.current.loop = ambient.loop ?? true
+      ambientAudioRef.current.volume = ambient.volume ?? 0.4
+      ambientAudioRef.current.play().catch(() => {})
+    } else {
+      if (ambientAudioRef.current && !ambientAudioRef.current.paused) {
+        ambientAudioRef.current.pause()
+      }
+    }
+
+    return () => {
+      if (ambientAudioRef.current && !ambientAudioRef.current.paused) {
+        ambientAudioRef.current.pause()
+      }
+    }
+  }, [currentPage, visibleBook.pages])
+
   return (
     // `relative` anchors the embed's absolutely-positioned control bar.
     <div className="relative flex w-full flex-col items-center gap-4">
@@ -299,6 +328,14 @@ export function ViewerChrome({
           onUnlocked={(pages) => setReleased(pages as Page[])}
         />
       </motion.div>
+
+      {!embed && (
+        <FilmstripScrubber
+          book={visibleBook}
+          currentPage={currentPage}
+          onSelectPage={(i) => engineRef.current?.goTo(i)}
+        />
+      )}
 
       {!embed && (
         <ForeEdge

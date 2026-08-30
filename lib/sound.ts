@@ -1,6 +1,6 @@
 /**
  * Zero-dependency procedural sound synthesizer for tactile page flips
- * Uses the Web Audio API to create a gentle, realistic paper rustle sound.
+ * Uses the Web Audio API to create gentle, physically-modeled paper rustle sounds.
  */
 
 let audioCtx: AudioContext | null = null
@@ -21,12 +21,18 @@ function getAudioContext(): AudioContext | null {
   return audioCtx
 }
 
-export function playPageFlipSound(volume = 0.22) {
+export type PaperPhysics = 'magazine' | 'hardcover' | 'washi'
+
+export function playPageFlipSound(volume = 0.22, physics: PaperPhysics = 'magazine') {
   try {
     const ctx = getAudioContext()
     if (!ctx) return
 
-    const bufferSize = Math.floor(ctx.sampleRate * 0.075) // 75ms duration
+    const duration = physics === 'hardcover' ? 0.12 : physics === 'washi' ? 0.09 : 0.075
+    const startFreq = physics === 'hardcover' ? 520 : physics === 'washi' ? 700 : 950
+    const endFreq = physics === 'hardcover' ? 180 : physics === 'washi' ? 220 : 320
+
+    const bufferSize = Math.floor(ctx.sampleRate * duration)
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
     const data = buffer.getChannelData(0)
 
@@ -48,15 +54,15 @@ export function playPageFlipSound(volume = 0.22) {
     const source = ctx.createBufferSource()
     source.buffer = buffer
 
-    // Low-pass filter for soft paper rustle texture
+    // Low-pass filter tuned to paper physics
     const filter = ctx.createBiquadFilter()
     filter.type = 'lowpass'
-    filter.frequency.setValueAtTime(950, ctx.currentTime)
-    filter.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.075)
+    filter.frequency.setValueAtTime(startFreq, ctx.currentTime)
+    filter.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + duration)
 
     const gainNode = ctx.createGain()
     gainNode.gain.setValueAtTime(volume, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.075)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
 
     source.connect(filter)
     filter.connect(gainNode)
