@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import { FolderOpen } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import type { Block, ImageBlock } from '@/lib/book-schema'
+import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
 import { Field, inputCls } from './shared'
 
 export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: string }) {
@@ -14,6 +16,7 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
   })
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [showAssetLibrary, setShowAssetLibrary] = useState(false)
 
   useEffect(() => {
     const sub = watch((values) => {
@@ -69,16 +72,36 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
             className="hidden"
             onChange={handleUpload}
           />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="w-full py-1.5 rounded border border-dashed border-neutral-600 text-xs text-neutral-400 hover:text-neutral-200 hover:border-neutral-400 transition-colors disabled:opacity-50"
-          >
-            {uploading ? 'Uploading…' : '↑ Upload image file'}
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="py-1.5 rounded-lg border border-neutral-700 bg-neutral-900/60 text-xs font-semibold text-neutral-300 hover:text-white hover:bg-neutral-800 transition disabled:opacity-50"
+            >
+              {uploading ? 'Uploading…' : '↑ Upload file'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAssetLibrary(true)}
+              className="flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-neutral-700 bg-neutral-800 text-xs font-semibold text-neutral-200 hover:bg-neutral-700 hover:text-white transition"
+            >
+              <FolderOpen size={12} className="text-neutral-400" />
+              <span>Asset Library</span>
+            </button>
+          </div>
         </div>
       </Field>
+
+      <AssetLibraryModal
+        isOpen={showAssetLibrary}
+        onClose={() => setShowAssetLibrary(false)}
+        onSelect={(url, alt) => {
+          setValue('src', url, { shouldDirty: true })
+          if (alt) setValue('alt', alt, { shouldDirty: true })
+          updateBlock(pageId, block.id, { src: url, alt: alt || block.alt } as Partial<Block>)
+        }}
+      />
       <Field label="Alt text">
         <input {...register('alt')} className={inputCls} placeholder="Describe the image" />
       </Field>

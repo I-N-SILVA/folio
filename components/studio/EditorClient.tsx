@@ -15,6 +15,8 @@ import {
   Undo2,
   Redo2,
   Keyboard,
+  Search,
+  FolderOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { trackProduct } from '@/lib/product-analytics'
@@ -26,6 +28,8 @@ import { PreviewModal } from '@/components/studio/PreviewModal'
 import { PageManagerModal } from '@/components/studio/PageManagerModal'
 import { ShareModal } from '@/components/studio/ShareModal'
 import { ShortcutsModal } from '@/components/studio/ShortcutsModal'
+import { CommandPalette } from '@/components/studio/CommandPalette'
+import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { EntitlementsProvider, type StudioEntitlements } from '@/components/studio/EntitlementsContext'
 import type { Book } from '@/lib/book-schema'
@@ -47,6 +51,8 @@ export function EditorClient({ book, entitlements }: Props) {
   const [showPageManager, setShowPageManager] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showCommandPalette, setShowCommandPalette] = useState(false)
+  const [showAssetLibrary, setShowAssetLibrary] = useState(false)
   const [publishing, setPublishing] = useState(false)
 
   // Warn about unsaved changes
@@ -217,6 +223,13 @@ export function EditorClient({ book, entitlements }: Props) {
         return
       }
 
+      // Cmd+K → Quick Action Command Palette
+      if (meta && e.key === 'k') {
+        e.preventDefault()
+        setShowCommandPalette((v) => !v)
+        return
+      }
+
       // Cmd+P → preview
       if (meta && e.key === 'p') {
         e.preventDefault()
@@ -229,6 +242,8 @@ export function EditorClient({ book, entitlements }: Props) {
         useEditorStore.getState().selectBlock(null)
         useEditorStore.getState().selectHotspot(null)
         setShowPreview(false)
+        setShowCommandPalette(false)
+        setShowAssetLibrary(false)
         return
       }
 
@@ -413,6 +428,27 @@ export function EditorClient({ book, entitlements }: Props) {
           </button>
         </div>
 
+        {/* Quick Action Command Palette Trigger */}
+        <button
+          onClick={() => setShowCommandPalette(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900/90 px-2.5 py-1 text-xs text-neutral-300 transition hover:border-neutral-700 hover:bg-neutral-800 hover:text-white"
+          title="Search actions (⌘K)"
+        >
+          <Search size={13} className="text-neutral-400" />
+          <span className="hidden md:inline font-medium">Quick Actions</span>
+          <kbd className="hidden md:inline rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400">⌘K</kbd>
+        </button>
+
+        {/* High-Res Asset & Texture Library Trigger */}
+        <button
+          onClick={() => setShowAssetLibrary(true)}
+          className="hidden sm:flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-neutral-200 transition hover:bg-neutral-800 hover:text-white"
+          title="Curated Asset & Texture Library"
+        >
+          <FolderOpen size={13} className="text-neutral-400" />
+          <span className="hidden lg:inline">Asset Library</span>
+        </button>
+
         {/* Shortcuts cheatsheet */}
         <button
           onClick={() => setShowShortcuts(true)}
@@ -525,6 +561,37 @@ export function EditorClient({ book, entitlements }: Props) {
           <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 py-0.5 text-neutral-300">⌘S</kbd> Save
         </div>
       </div>
+
+      {/* Command Palette (⌘K) */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onOpenPreview={() => setShowPreview(true)}
+        onOpenShare={() => setShowShare(true)}
+        onToggleGuides={() => {}}
+        onAutoDetectPins={() => {}}
+        onOpenAssetLibrary={() => setShowAssetLibrary(true)}
+      />
+
+      {/* Asset & Texture Library Modal */}
+      <AssetLibraryModal
+        isOpen={showAssetLibrary}
+        onClose={() => setShowAssetLibrary(false)}
+        onSelect={(url, alt) => {
+          const { book, currentPageIndex, addBlock } = useEditorStore.getState()
+          const currentPage = book?.pages?.[currentPageIndex]
+          if (currentPage) {
+            addBlock(currentPage.id, {
+              id: crypto.randomUUID(),
+              type: 'image',
+              src: url,
+              alt: alt || '',
+              lightbox: true,
+            })
+            toast.success(`Inserted "${alt || 'asset'}" into Page ${currentPage.page_number}`)
+          }
+        }}
+      />
 
       {/* Preview modal */}
       {showPreview && <PreviewModal onClose={() => setShowPreview(false)} />}

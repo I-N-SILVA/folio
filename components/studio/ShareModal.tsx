@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2, Sparkles, Video, Globe } from 'lucide-react'
+import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2, Video, Globe } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { trackProduct } from '@/lib/product-analytics'
 import { QRCodeStudioModal } from './QRCodeStudioModal'
@@ -178,9 +178,9 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
             <button
               type="button"
               onClick={() => setShowStudio(true)}
-              className="flex items-center gap-1.5 rounded-full bg-[var(--invert-surface)] px-5 py-2.5 text-xs font-bold text-[var(--invert-text)] shadow-md transition hover:opacity-90"
+              className="flex items-center gap-1.5 rounded-full bg-[var(--invert-surface)] px-5 py-2.5 text-xs font-bold text-[var(--invert-text)] border border-neutral-700 transition hover:bg-neutral-800"
             >
-              <Sparkles size={14} />
+              <QrCode size={14} />
               Open Print QR Studio
             </button>
             <button

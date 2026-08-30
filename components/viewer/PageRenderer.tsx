@@ -94,10 +94,18 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
           />
         )}
 
-        {/* Tactile paper grain texture overlay */}
+        {/* Tactile paper grain & finish texture overlay */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 z-[1] opacity-[0.035] mix-blend-multiply"
+          className={twMerge(
+            'pointer-events-none absolute inset-0 z-[1]',
+            (bg?.paperTexture === 'washi' || theme?.paperTexture === 'washi') && 'opacity-[0.08] mix-blend-multiply',
+            (bg?.paperTexture === 'linen' || theme?.paperTexture === 'linen') && 'opacity-[0.07] mix-blend-overlay',
+            (bg?.paperTexture === 'matte' || theme?.paperTexture === 'matte') && 'opacity-[0.05] mix-blend-multiply',
+            (bg?.paperTexture === 'carbon' || theme?.paperTexture === 'carbon') && 'opacity-[0.09] mix-blend-soft-light',
+            (bg?.paperTexture === 'gloss' || theme?.paperTexture === 'gloss') && 'opacity-[0.04] mix-blend-screen',
+            (!bg?.paperTexture || bg?.paperTexture === 'none') && (!theme?.paperTexture || theme?.paperTexture === 'none') && 'opacity-[0.035] mix-blend-multiply'
+          )}
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
           }}

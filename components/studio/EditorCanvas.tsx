@@ -18,7 +18,6 @@ import {
   Maximize2,
   Minimize2,
   Grid3X3,
-  Sparkles,
   Loader2,
   ArrowUp,
   ArrowDown,
@@ -599,26 +598,28 @@ export function EditorCanvas() {
           onClick={() => setHotspotMode(!hotspotMode)}
           aria-pressed={hotspotMode}
           className={twMerge(
-            'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors',
+            'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
             hotspotMode
-              ? 'bg-amber-400 text-amber-950 shadow-[0_0_0_1px_rgba(251,191,36,0.4),0_4px_12px_rgba(251,191,36,0.25)]'
-              : 'border border-neutral-800 bg-neutral-950/60 text-neutral-400 hover:text-neutral-100'
+              ? 'bg-amber-400 text-amber-950 font-bold border border-amber-500'
+              : 'border border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800 hover:text-white'
           )}
         >
           <Crosshair size={13} />
           {hotspotMode ? 'Click the page to place' : 'Add hotspot'}
         </button>
 
+        {/* AI Hotspot Detector */}
         <button
+          type="button"
           onClick={handleAutoDetect}
-          disabled={isDetecting || !currentPage}
-          title="Auto-detect interactive pins & products with AI"
-          className="flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950/60 px-2.5 py-1.5 text-xs font-medium text-purple-300 transition-colors hover:border-purple-500/40 hover:bg-purple-500/10 hover:text-purple-200 disabled:opacity-40"
+          disabled={isDetecting}
+          title="Auto-detect interactive product pins"
+          className="flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-800 hover:text-white disabled:opacity-40"
         >
           {isDetecting ? (
-            <Loader2 size={13} className="animate-spin text-purple-400" />
+            <Loader2 size={13} className="animate-spin text-neutral-400" />
           ) : (
-            <Sparkles size={13} className="text-purple-400" />
+            <Crosshair size={13} className="text-neutral-400" />
           )}
           {isDetecting ? 'Detecting…' : 'Auto-detect pins'}
         </button>

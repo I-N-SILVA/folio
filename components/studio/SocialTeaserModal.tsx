@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Video, Download, X, Play, Pause, Sparkles, Smartphone, Square, Tv, Check } from 'lucide-react'
+import { Video, Download, X, Play, Pause, ShoppingBag, Smartphone, Square, Tv, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Book } from '@/lib/book-schema'
 
@@ -143,7 +143,7 @@ export function SocialTeaserModal({ isOpen, onClose, book }: SocialTeaserModalPr
                     {/* Hotspot Pulse Cue */}
                     {activePage?.hotspots && activePage.hotspots.length > 0 && (
                       <div className="flex items-center gap-1 text-[9px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit">
-                        <Sparkles size={10} />
+                        <ShoppingBag size={10} />
                         <span>Shoppable Pin</span>
                       </div>
                     )}

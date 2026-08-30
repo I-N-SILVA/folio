@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { QrCode, Download, X, Copy, Check, Sparkles, Printer } from 'lucide-react'
+import { QrCode, Download, X, Copy, Check, Printer } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function QRCodeStudioModal({

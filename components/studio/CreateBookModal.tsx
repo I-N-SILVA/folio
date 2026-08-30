@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { X, FileText, Layout, Loader2, Crown, Sparkles, ArrowRight } from 'lucide-react'
+import { X, FileText, Layout, Loader2, Crown, BookOpen, Eye, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 const ImportPDFModal = dynamic(() => import('./ImportPDFModal').then(m => m.ImportPDFModal), { ssr: false })
@@ -448,15 +448,15 @@ export function CreateBookModal({ onClose }: Props) {
                         setPreviewingTemplate(tmpl)
                         setPreviewPageIndex(0)
                       }}
-                      className="flex items-center gap-1 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold text-[var(--qlico-ink)] hover:bg-[var(--tint-weak)] transition"
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold text-[var(--qlico-ink)] hover:bg-[var(--tint-weak)] transition"
                     >
-                      <Sparkles size={12} className="text-[var(--accent-fg)]" />
+                      <Eye size={12} className="text-neutral-500" />
                       Preview Spread
                     </button>
                     <button
                       disabled={loading}
                       onClick={() => handleSelectTemplate(tmpl)}
-                      className="flex items-center gap-1.5 rounded-full bg-[var(--qlico-teal)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white shadow transition hover:opacity-90 disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white transition hover:bg-neutral-800 disabled:opacity-50"
                     >
                       {loading ? 'Setting up…' : 'Use Template'}
                       <ArrowRight size={12} />
@@ -634,7 +634,7 @@ export function CreateBookModal({ onClose }: Props) {
             },
             {
               key: 'templates',
-              icon: Sparkles,
+              icon: BookOpen,
               title: 'From Template',
               desc: 'Curated lookbooks, portfolios, reports, and menus.',
               onClick: () => setStep('templates'),

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
-import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Wand2, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Crosshair, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -455,7 +455,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
                     selectedHotspotId === h.id ? "bg-[var(--accent-vivid)]/20 text-[var(--accent-vivid)]" : "hover:bg-neutral-800 text-neutral-300"
                   )}
                 >
-                  <Wand2 size={14} className="opacity-50" />
+                  <Crosshair size={14} className="opacity-50" />
                   <span className="truncate">{h.label || 'Unnamed Hotspot'}</span>
                 </button>
               ))}
@@ -514,7 +514,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-xs font-bold text-neutral-200">{tpl.label}</div>
-                    <Wand2 size={12} className="text-neutral-600 group-hover:text-[var(--accent-vivid)] transition-colors" />
+                    <LayoutIcon size={12} className="text-neutral-500 group-hover:text-neutral-300 transition-colors" />
                   </div>
                   <div className="text-[10px] text-neutral-500 leading-relaxed line-clamp-2 mb-3">
                     {tpl.description}

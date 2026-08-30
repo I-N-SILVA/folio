@@ -96,6 +96,9 @@ export const HotspotSchema = z.object({
   y: z.number().min(0).max(100),
   label: z.string(),
   icon: z.string().default('Info'),
+  beaconStyle: z.enum(['pulse', 'shopping', 'audio', 'step', 'minimal']).default('pulse').optional(),
+  stepNumber: z.number().int().min(1).max(99).optional(),
+  pinColor: z.string().optional(),
   modal: z.object({
     title: z.string(),
     body: z.string(), // markdown
@@ -115,6 +118,7 @@ export const BackgroundSchema = z.object({
   image: z.string().url().optional(),
   imagePosition: z.enum(['center', 'top', 'bottom', 'left', 'right']).optional(),
   overlay: z.string().optional(), // rgba color for image overlay
+  paperTexture: z.enum(['none', 'gloss', 'matte', 'washi', 'linen', 'carbon']).default('none').optional(),
 })
 
 export const AmbientAudioSchema = z.object({
@@ -145,6 +149,7 @@ export const ThemeSchema = z.object({
   headingFont: z.string().optional(),
   bodyFont: z.string().optional(),
   paperPhysics: z.enum(['magazine', 'hardcover', 'washi']).default('magazine').optional(),
+  paperTexture: z.enum(['none', 'gloss', 'matte', 'washi', 'linen', 'carbon']).default('none').optional(),
 })
 
 // ─── Book Settings Schema ──────────────────────────────────────────────────────

@@ -154,18 +154,61 @@ export function BookSettingsForm({ book }: { book: any }) {
       <FieldGroup title="Theme & typography">
         <Field label="Theme preset">
           <select {...register('themePreset')} className={selectCls}>
-            <option value="ivory">Ivory (Light)</option>
-            <option value="slate">Slate (Dark)</option>
-            <option value="cream">Cream (Warm)</option>
-            <option value="carbon">Carbon (Black)</option>
-            <option value="sage">Sage (Green)</option>
+            <option value="ivory">Ivory (Light Editorial)</option>
+            <option value="slate">Slate (Dark Architecture)</option>
+            <option value="cream">Cream (Warm Monograph)</option>
+            <option value="carbon">Carbon (Deep Obsidian)</option>
+            <option value="sage">Sage (Organic Botanical)</option>
           </select>
         </Field>
-        {/* These were free-text family names. Typing one you have installed
-            locally produced an edition that looked right to you and fell back to
-            something else for every reader — a difference the author had no way
-            to see. */}
-        <Field label="Heading font">
+
+        <Field label="Curated Editorial Font Pairings">
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {[
+              { heading: 'Playfair Display', body: 'Inter', name: 'Milan Luxury', tag: 'Vogue & Fashion' },
+              { heading: 'Cormorant Garamond', body: 'Outfit', name: 'Architectural', tag: 'Monograph' },
+              { heading: 'Syne', body: 'Space Grotesk', name: 'Avant-Garde', tag: 'Creative Studio' },
+              { heading: 'Cinzel', body: 'Plus Jakarta Sans', name: 'Executive', tag: 'Horology & Report' },
+            ].map((pair) => (
+              <button
+                key={pair.name}
+                type="button"
+                onClick={() => {
+                  setValue('headingFont', pair.heading, { shouldDirty: true })
+                  setValue('bodyFont', pair.body, { shouldDirty: true })
+                  updateTheme({ headingFont: pair.heading, bodyFont: pair.body })
+                }}
+                className={twMerge(
+                  'rounded-xl border p-2.5 text-left transition text-xs',
+                  watch('headingFont') === pair.heading
+                    ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/10 text-white font-bold'
+                    : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                )}
+              >
+                <div className="font-bold text-white text-xs">{pair.name}</div>
+                <div className="text-[10px] text-neutral-400 mt-0.5 font-serif italic truncate">{pair.heading}</div>
+                <div className="text-[9px] text-neutral-500 font-sans truncate">{pair.body} · {pair.tag}</div>
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <Field label="Tactile Paper Finish Overlay">
+          <select
+            value={book.theme?.paperTexture ?? 'none'}
+            onChange={(e) => updateTheme({ paperTexture: e.target.value as any })}
+            className={selectCls}
+          >
+            <option value="none">None (Standard Digital)</option>
+            <option value="gloss">Gloss (Heavy Art Magazine)</option>
+            <option value="matte">Matte (Recycled Cotton Paper)</option>
+            <option value="washi">Japanese Washi (Organic Fibers)</option>
+            <option value="linen">Charcoal Linen (Woven Textile)</option>
+            <option value="carbon">Carbon (Technical Graphite)</option>
+          </select>
+        </Field>
+
+        <Field label="Custom Heading font">
           <select {...register('headingFont')} className={selectCls}>
             {FONT_CHOICES.map((f) => (
               <option key={f.value || 'theme'} value={f.value}>
@@ -174,7 +217,7 @@ export function BookSettingsForm({ book }: { book: any }) {
             ))}
           </select>
         </Field>
-        <Field label="Body font">
+        <Field label="Custom Body font">
           <select {...register('bodyFont')} className={selectCls}>
             {FONT_CHOICES.map((f) => (
               <option key={f.value || 'theme'} value={f.value}>

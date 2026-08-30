@@ -18,6 +18,8 @@ export function HotspotSettingsForm({
   const { register, watch, setValue } = useForm<{
     label: string
     icon: string
+    beaconStyle: Hotspot['beaconStyle']
+    stepNumber: number
     modalTitle: string
     modalBody: string
     action: Hotspot['action']
@@ -29,6 +31,8 @@ export function HotspotSettingsForm({
     defaultValues: {
       label: hotspot.label,
       icon: hotspot.icon,
+      beaconStyle: hotspot.beaconStyle || 'pulse',
+      stepNumber: hotspot.stepNumber || 1,
       modalTitle: hotspot.modal.title,
       modalBody: hotspot.modal.body,
       action: hotspot.action || 'modal',
@@ -44,6 +48,8 @@ export function HotspotSettingsForm({
       updateHotspot(pageId, hotspot.id, {
         label: values.label ?? hotspot.label,
         icon: values.icon ?? hotspot.icon,
+        beaconStyle: values.beaconStyle,
+        stepNumber: values.stepNumber ? Number(values.stepNumber) : undefined,
         action: values.action,
         linkUrl: values.linkUrl,
         stripeUrl: values.stripeUrl,
@@ -60,6 +66,7 @@ export function HotspotSettingsForm({
   }, [watch, pageId, hotspot.id, updateHotspot]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const action = watch('action')
+  const beaconStyle = watch('beaconStyle')
 
   return (
     <div className="space-y-4">
@@ -117,13 +124,58 @@ export function HotspotSettingsForm({
         </div>
       </Field>
 
+      <Field label="Beacon Visual Treatment">
+        <div className="grid grid-cols-3 gap-1.5 pt-1">
+          {[
+            { id: 'pulse', label: 'Radar Pulse', desc: 'Glowing halo' },
+            { id: 'shopping', label: 'Price Pill', desc: 'Luxury tag' },
+            { id: 'audio', label: 'Soundwave', desc: 'Audio beacon' },
+            { id: 'step', label: 'Numbered', desc: 'Tour step' },
+            { id: 'minimal', label: 'Minimal Dot', desc: 'Clean point' },
+          ].map((style) => (
+            <button
+              key={style.id}
+              type="button"
+              onClick={() => {
+                setValue('beaconStyle', style.id as Hotspot['beaconStyle'], { shouldDirty: true })
+                updateHotspot(pageId, hotspot.id, { beaconStyle: style.id as Hotspot['beaconStyle'] })
+              }}
+              className={twMerge(
+                'rounded-lg border px-2 py-1.5 text-left transition text-xs',
+                beaconStyle === style.id
+                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/10 text-white font-bold'
+                  : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+              )}
+            >
+              <div className="font-semibold">{style.label}</div>
+              <div className="text-[9px] text-neutral-500 truncate">{style.desc}</div>
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      {beaconStyle === 'step' && (
+        <Field label="Step Number (1-99)">
+          <input
+            type="number"
+            min={1}
+            max={99}
+            {...register('stepNumber')}
+            className={inputCls}
+            placeholder="1"
+          />
+        </Field>
+      )}
+
       <Field label="Label">
         <input {...register('label')} className={inputCls} placeholder="Hotspot label" />
       </Field>
 
-      <Field label="Icon">
-        <IconPicker value={watch('icon')} onChange={(name) => setValue('icon', name, { shouldDirty: true })} />
-      </Field>
+      {beaconStyle !== 'shopping' && beaconStyle !== 'minimal' && (
+        <Field label="Icon">
+          <IconPicker value={watch('icon')} onChange={(name) => setValue('icon', name, { shouldDirty: true })} />
+        </Field>
+      )}
 
       <Field label="Action">
         <select {...register('action')} className={selectCls}>
