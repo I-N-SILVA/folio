@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QLICO — Luxury Brand Identity & Monogram Concepts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050505;
+      --surface: #0c0c0f;
+      --surface-card: #121217;
+      --border: #22222a;
+      --accent: #ffffff;
+      --text: #f4f4f6;
+      --muted: #a1a1aa;
+      --gold: #d4af37;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 60px 24px 120px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container { max-width: 1140px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 70px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 50px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Grid of Concepts */
+    .concepts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 36px;
+      margin-bottom: 60px;
+    }
+
+    @media (max-width: 768px) {
+      .concepts-grid { grid-template-columns: 1fr; }
+    }
+
+    .concept-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-col: column;
+      justify-content: space-between;
+    }
+
+    .concept-card:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .concept-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .concept-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .concept-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-top: 4px;
+    }
+
+    /* Specimen Stage */
+    .specimen-stage {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin: 24px 0;
+      min-height: 260px;
+    }
+
+    .specimen-stage-light {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    /* Size scaling strip */
+    .scale-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      width: 100%;
+    }
+
+    .scale-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .concept-desc {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .concept-traits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .trait-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #e4e4e7;
+    }
+
+    .select-btn {
+      width: 100%;
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: all 0.2s ease;
+    }
+
+    .select-btn:hover {
+      background: #e4e4e7;
+      transform: scale(1.02);
+    }
+
+    .footer {
+      text-align: center;
+      padding-top: 50px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="badge">Brand Design Studio</div>
+    <h1>QLICO Identity Design Specimen</h1>
+    <p class="subtitle">Four distinctive, luxury, minimalist brand marks engineered for high memory recall across favicons, apps, editorial covers, and physical packaging.</p>
+  </header>
+
+  <div class="concepts-grid">
+
+    <!-- CONCEPT 1: APERTURE FOLIO (Optical Geometric) -->
+    <div class="concept-card">
+      <div>
+        <div class="concept-header">
+          <div>
+            <span class="concept-tag">Concept 01 · Geometric Modernist</span>
+            <h2 class="concept-title">The Aperture Folio</h2>
+          </div>
+        </div>
+        <p class="concept-desc">
+          A precision optical circle bisected by a 45° diagonal folio fold that forms the structural tail of the <strong>Q</strong>. Features pure mathematical tension between the closed circle and the opened publication spread.
+        </p>
+
+        <!-- Dark & Light Specimen Stage -->
+        <div class="specimen-stage">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="120" height="120">
+            <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M 230 100 C 145 100 84 165 84 250 C 84 335 145 400 230 400 C 315 400 376 335 376 250 C 376 165 315 100 230 100 Z" stroke-width="36" />
+              <path d="M 230 100 C 230 180 290 240 376 240" stroke-width="36" />
+              <path d="M 290 310 L 410 430" stroke-width="40" />
+              <path d="M 340 430 Q 410 430 410 360" stroke-width="36" />
+              <circle cx="230" cy="250" r="14" fill="#ffffff" stroke="none" />
+            </g>
+          </svg>
+          <div class="scale-strip">
+            <span class="scale-label">512px</span>
+            <span class="scale-label">64px</span>
+            <span class="scale-label">32px</span>
+            <span class="scale-label">16px Favicon Ready</span>
+          </div>
+        </div>
+
+        <div class="concept-traits">
+          <span class="trait-pill">Architecture</span>
+          <span class="trait-pill">Modernist</span>
+          <span class="trait-pill">Linear UI Feel</span>
+          <span class="trait-pill">Precision Geometry</span>
+        </div>
+      </div>
+      <button class="select-btn" onclick="selectConcept('Aperture Folio')">Select Concept 01</button>
+    </div>
+
+    <!-- CONCEPT 2: SCULPTURAL MÖBIUS FOLIO (Fluid Haute Couture) -->
+    <div class="concept-card">
+      <div>
+        <div class="concept-header">
+          <div>
+            <span class="concept-tag">Concept 02 · Fluid Luxury</span>
+            <h2 class="concept-title">The Möbius Page Curl</h2>
+          </div>
+        </div>
+        <p class="concept-desc">
+          Inspired by high-fashion publication houses (Hermès, Celine). A continuous fluid ribbon that bends in 3D space, forming a complete letter <strong>Q</strong> through the tactile physics of a turning magazine page.
+        </p>
+
+        <!-- Specimen Stage -->
+        <div class="specimen-stage">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="120" height="120">
+            <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Outer Continuous Flow -->
+              <path d="M 256 90 C 150 90 90 160 90 256 C 90 352 150 422 256 422 C 320 422 380 380 400 310" stroke-width="40" />
+              <!-- Seamless 3D Page Curl Fold -->
+              <path d="M 400 310 C 420 240 370 170 300 170 C 230 170 190 220 190 280 C 190 350 250 410 320 410 C 370 410 420 370 430 330 L 440 430" stroke-width="36" />
+            </g>
+          </svg>
+          <div class="scale-strip">
+            <span class="scale-label">Haute Couture</span>
+            <span class="scale-label">3D Ribbon</span>
+            <span class="scale-label">Organic Tactile</span>
+          </div>
+        </div>
+
+        <div class="concept-traits">
+          <span class="trait-pill">Fluid Motion</span>
+          <span class="trait-pill">Editorial Fashion</span>
+          <span class="trait-pill">Sculptural</span>
+          <span class="trait-pill">High Art</span>
+        </div>
+      </div>
+      <button class="select-btn" onclick="selectConcept('Möbius Page Curl')">Select Concept 02</button>
+    </div>
+
+    <!-- CONCEPT 3: MONOLITH PRISM (Bold Bauhaus / Swiss International) -->
+    <div class="concept-card">
+      <div>
+        <div class="concept-header">
+          <div>
+            <span class="concept-tag">Concept 03 · Bauhaus Monolith</span>
+            <h2 class="concept-title">The Monolith Spread</h2>
+          </div>
+        </div>
+        <p class="concept-desc">
+          Raw authoritative presence. A solid, heavy architectural form carved by sharp, laser-clean negative space representing an open double-spread book facing the reader.
+        </p>
+
+        <!-- Specimen Stage -->
+        <div class="specimen-stage">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="120" height="120">
+            <!-- Left Solid Page -->
+            <path d="M 120 120 C 120 120 180 110 240 130 V 390 C 180 370 120 380 120 380 Z" fill="#ffffff" />
+            <!-- Right Solid Page with Q Tail Extension -->
+            <path d="M 272 130 C 332 110 392 120 392 120 V 380 C 392 380 332 370 272 390 Z" fill="#ffffff" />
+            <!-- Heavy Monograph Tail -->
+            <path d="M 330 340 L 430 440" stroke="#ffffff" stroke-width="48" stroke-linecap="round" />
+          </svg>
+          <div class="scale-strip">
+            <span class="scale-label">Swiss Style</span>
+            <span class="scale-label">High Contrast</span>
+            <span class="scale-label">Solid Silhouette</span>
+          </div>
+        </div>
+
+        <div class="concept-traits">
+          <span class="trait-pill">Authoritative</span>
+          <span class="trait-pill">Archival Weight</span>
+          <span class="trait-pill">Corporate Premium</span>
+          <span class="trait-pill">Vignelli Inspired</span>
+        </div>
+      </div>
+      <button class="select-btn" onclick="selectConcept('Monolith Spread')">Select Concept 03</button>
+    </div>
+
+    <!-- CONCEPT 4: INFINITE FOLIO (Interlocking Dual Arcs) -->
+    <div class="concept-card">
+      <div>
+        <div class="concept-header">
+          <div>
+            <span class="concept-tag">Concept 04 · Mathematical Elegance</span>
+            <h2 class="concept-title">The Infinite Folio</h2>
+          </div>
+        </div>
+        <p class="concept-desc">
+          Two interlocking geometric arcs forming the golden ratio infinity loop. Symbolizes the bridge between the physical book and endless digital distribution.
+        </p>
+
+        <!-- Specimen Stage -->
+        <div class="specimen-stage">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="120" height="120">
+            <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="210" cy="256" r="120" stroke-width="38" />
+              <circle cx="302" cy="256" r="120" stroke-width="38" stroke-dasharray="240 120" />
+              <path d="M 290 336 L 410 440" stroke-width="44" />
+              <path d="M 350 440 H 410 V 380" stroke-width="44" />
+            </g>
+          </svg>
+          <div class="scale-strip">
+            <span class="scale-label">Golden Ratio</span>
+            <span class="scale-label">Infinity Loop</span>
+            <span class="scale-label">Symmetrical</span>
+          </div>
+        </div>
+
+        <div class="concept-traits">
+          <span class="trait-pill">Infinity Concept</span>
+          <span class="trait-pill">Timeless</span>
+          <span class="trait-pill">App Store Icon Ready</span>
+          <span class="trait-pill">Universal Recognition</span>
+        </div>
+      </div>
+      <button class="select-btn" onclick="selectConcept('Infinite Folio')">Select Concept 04</button>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p>QLICO Brand Design Studio · Crafting Category-Defining Identity Systems</p>
+  </div>
+</div>
+
+<script>
+  function selectConcept(name) {
+    alert('You selected: ' + name + '!\nTell Antigravity which concept you love or want to refine.');
+  }
+</script>
+
+</body>
+</html>
