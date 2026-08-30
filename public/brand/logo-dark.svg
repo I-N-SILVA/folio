@@ -11,13 +11,12 @@
       }
     </style>
   </defs>
-  <!-- Creative Monogram Mark -->
+  <!-- Concept 06 Horizon Spread Monogram Mark -->
   <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" transform="translate(14, 14) scale(0.18)">
-    <path d="M 230 100 C 145 100 84 165 84 250 C 84 335 145 400 230 400 C 315 400 376 335 376 250 C 376 165 315 100 230 100 Z" stroke-width="36" />
-    <path d="M 230 100 C 230 180 290 240 376 240" stroke-width="36" />
-    <path d="M 290 310 L 410 430" stroke-width="40" />
-    <path d="M 340 430 Q 410 430 410 360" stroke-width="36" />
-    <circle cx="230" cy="250" r="14" fill="#ffffff" stroke="none" />
+    <path d="M 140 170 C 200 120 312 120 372 170" stroke-width="44" />
+    <path d="M 110 256 H 402" stroke-width="44" />
+    <path d="M 170 342 H 420" stroke-width="44" />
+    <circle cx="256" cy="256" r="14" fill="#000000" stroke="#ffffff" stroke-width="14" />
   </g>
   <text x="124" y="55%" dominant-baseline="middle" text-anchor="start" class="logo-text">QLICO</text>
 </svg>

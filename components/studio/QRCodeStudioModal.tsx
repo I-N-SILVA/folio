@@ -125,9 +125,10 @@ export function QRCodeStudioModal({
                         height="20"
                       >
                         <g fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="236" cy="236" r="132" strokeWidth="44" />
-                          <path d="M 296 296 L 396 396" strokeWidth="44" />
-                          <path d="M 326 396 H 396 V 326" strokeWidth="44" />
+                          <path d="M 140 170 C 200 120 312 120 372 170" strokeWidth="40" />
+                          <path d="M 110 256 H 402" strokeWidth="40" />
+                          <path d="M 170 342 H 420" strokeWidth="40" />
+                          <circle cx="256" cy="256" r="14" fill="#000000" stroke="#ffffff" strokeWidth="12" />
                         </g>
                       </svg>
                     </div>

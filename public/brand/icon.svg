@@ -1,15 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <rect width="512" height="512" rx="120" fill="#000000"/>
   <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Sculptural Continuous Q-Folio Form -->
-    <!-- Primary Outer Ring with Open Folio Spine Break -->
-    <path d="M 230 100 C 145 100 84 165 84 250 C 84 335 145 400 230 400 C 315 400 376 335 376 250 C 376 165 315 100 230 100 Z" stroke-width="36" />
-    <!-- Dynamic Inner Turned Leaf -->
-    <path d="M 230 100 C 230 180 290 240 376 240" stroke-width="36" />
-    <!-- Infinite Diagonal Folio Tail -->
-    <path d="M 290 310 L 410 430" stroke-width="40" />
-    <path d="M 340 430 Q 410 430 410 360" stroke-width="36" />
-    <!-- Architectural Folio Spine Dot -->
-    <circle cx="230" cy="250" r="14" fill="#ffffff" stroke="none" />
+    <!-- Concept 06: The Horizon Spread (Dieter Rams / Modernist Architecture) -->
+    <!-- Top Arched Page Foliage -->
+    <path d="M 140 170 C 200 120 312 120 372 170" stroke-width="40" />
+    <!-- Middle Spine Baseline -->
+    <path d="M 110 256 H 402" stroke-width="40" />
+    <!-- Bottom Dynamic Spread Offset (Futuristic Q-Base) -->
+    <path d="M 170 342 H 420" stroke-width="40" />
+    <!-- Central Spine Axis Core -->
+    <circle cx="256" cy="256" r="14" fill="#000000" stroke="#ffffff" stroke-width="12" />
   </g>
 </svg>
