@@ -13,11 +13,11 @@ export function StudioNav({ current }: { current?: 'library' | 'insights' | 'acc
     <header className="mb-8 flex items-center gap-4 border-b border-[var(--qlico-border)] pb-4">
       <Link href="/dashboard" className="flex items-center gap-2" aria-label="QLICO dashboard">
         <Image
-          src="/brand/icon-192.png"
+          src="/brand/icon.svg"
           alt=""
           width={28}
           height={28}
-          className="h-7 w-7 rounded-md"
+          className="h-7 w-7 rounded-md object-contain"
         />
         <span className="sr-only">QLICO</span>
       </Link>
