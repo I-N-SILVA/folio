@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QLICO — The Complete AppSumo Launch & GTM Master Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050505;
+      --surface: #0c0c0e;
+      --surface-card: #121216;
+      --surface-border: #222228;
+      --accent: #ffffff;
+      --accent-contrast: #000000;
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --gold: #fbbf24;
+      --green: #22c55e;
+      --blue: #38bdf8;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding: 40px 20px 100px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* Header & Branding */
+    header {
+      text-align: center;
+      padding: 40px 0 60px;
+      border-bottom: 1px solid var(--surface-border);
+      margin-bottom: 60px;
+    }
+
+    .monogram-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: #000;
+      border: 1px solid var(--surface-border);
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    /* Grid & Cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin: 32px 0;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 32px;
+      position: relative;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .card-full {
+      grid-column: 1 / -1;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 20px 0 10px;
+      color: #f4f4f5;
+    }
+
+    p, li {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-top: 8px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    /* Highlight box */
+    .callout {
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--accent);
+      padding: 16px 20px;
+      border-radius: 0 12px 12px 0;
+      margin: 20px 0;
+    }
+
+    .callout-gold {
+      border-left-color: var(--gold);
+      background: rgba(251, 191, 36, 0.05);
+    }
+
+    .callout-green {
+      border-left-color: var(--green);
+      background: rgba(34, 197, 94, 0.05);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    th {
+      color: #fff;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    td {
+      color: var(--text-muted);
+    }
+
+    /* Interactive Checklist */
+    .checklist {
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+    }
+
+    .checklist input[type="checkbox"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--surface-border);
+      border-radius: 5px;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+      margin-top: 2px;
+      position: relative;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .checklist input[type="checkbox"]:checked {
+      background: #fff;
+      border-color: #fff;
+    }
+
+    .checklist input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      color: #000;
+      font-size: 12px;
+      font-weight: 900;
+      left: 3px;
+      top: -1px;
+    }
+
+    /* Code & Copy Blocks */
+    .code-box {
+      background: #000;
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    /* Step numbers */
+    .step-num {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fff;
+      color: #000;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 80px;
+      padding-top: 40px;
+      border-top: 1px solid var(--surface-border);
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="monogram-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="34" height="34">
+        <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="236" cy="236" r="132" stroke-width="44" />
+          <path d="M 296 296 L 396 396" stroke-width="44" />
+          <path d="M 326 396 H 396 V 326" stroke-width="44" />
+        </g>
+      </svg>
+    </div>
+    <br/>
+    <div class="badge">Founder's Launch Manual</div>
+    <h1>The Dummy's Guide to Launching QLICO on AppSumo</h1>
+    <p class="subtitle">A step-by-step roadmap to launch, manage, and scale your Lifetime Deal (LTD) to $50,000+ in revenue and 5-Taco reviews.</p>
+  </header>
+
+  <!-- Overview Stats -->
+  <div class="grid">
+    <div class="card">
+      <span class="badge" style="color: var(--gold); border-color: rgba(251,191,36,0.3);">Expected Revenue</span>
+      <h2 style="font-size: 32px; margin-top: 8px;">$30K – $100K</h2>
+      <p>Typical first-launch revenue burst from AppSumo's 1.2M+ active buyers seeking content & publication tools.</p>
+    </div>
+    <div class="card">
+      <span class="badge" style="color: var(--green); border-color: rgba(34,197,94,0.3);">Target Taco Rating</span>
+      <h2 style="font-size: 32px; margin-top: 8px;">4.8 / 5.0 ★</h2>
+      <p>Maintain responsive support (< 2hr replies) during the first 7 days to get algorithmically pinned to the AppSumo homepage.</p>
+    </div>
+    <div class="card">
+      <span class="badge" style="color: var(--blue); border-color: rgba(56,189,248,0.3);">Code Integration</span>
+      <h2 style="font-size: 32px; margin-top: 8px;">100% Ready</h2>
+      <p>All webhook endpoints, signature checks, license redemption, and tier stacking are already coded and tested in this repository.</p>
+    </div>
+  </div>
+
+  <!-- Step 1: Technical Setup -->
+  <div class="card card-full">
+    <h2><span class="step-num">1</span> 5-Minute Technical Go-Live Checklist</h2>
+    <p>Everything in the codebase is already built. You only need to set your production environment variables in Vercel.</p>
+
+    <div class="callout callout-green">
+      <strong>Good News:</strong> The API handles code purchases (<code>activate</code>), code stacking (<code>enhance</code>), plan downgrades (<code>reduce</code>), and 60-day refunds (<code>refund</code>) automatically!
+    </div>
+
+    <ul class="checklist">
+      <li>
+        <input type="checkbox" id="c1" />
+        <label for="c1"><strong>Set Vercel Environment Variables:</strong> Go to Vercel Project Settings &rarr; Environment Variables and set:
+          <div class="code-box">
+            <span>APPSUMO_API_KEY=your_secret_from_appsumo_partner_portal</span>
+            <button class="copy-btn" onclick="copyText('APPSUMO_API_KEY')">Copy</button>
+          </div>
+          <div class="code-box">
+            <span>NEXT_PUBLIC_SITE_URL=https://qlico.app</span>
+            <button class="copy-btn" onclick="copyText('https://qlico.app')">Copy</button>
+          </div>
+        </label>
+      </li>
+      <li>
+        <input type="checkbox" id="c2" />
+        <label for="c2"><strong>Verify Supabase Migrations:</strong> Ensure database migrations 001 through 007 are active on your production Supabase database.</label>
+      </li>
+      <li>
+        <input type="checkbox" id="c3" />
+        <label for="c3"><strong>Test Verification Ping:</strong> AppSumo sends a test webhook upon listing creation. QLICO responds with <code>HTTP 200 OK</code> automatically.</label>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Step 2: AppSumo Partner Portal -->
+  <div class="card card-full">
+    <h2><span class="step-num">2</span> AppSumo Partner Portal Setup (Click-by-Click)</h2>
+    <p>Follow these exact steps when creating your listing on <a href="https://partners.appsumo.com" target="_blank" style="color: #fff; text-decoration: underline;">partners.appsumo.com</a>:</p>
+
+    <div class="grid" style="margin-top: 20px;">
+      <div class="card" style="background: rgba(255,255,255,0.02);">
+        <h3>Webhook / Notification URL</h3>
+        <p>Where AppSumo notifies your app when a user buys or refunds a license.</p>
+        <div class="code-box">
+          <span>https://qlico.app/api/appsumo/webhook</span>
+          <button class="copy-btn" onclick="copyText('https://qlico.app/api/appsumo/webhook')">Copy</button>
+        </div>
+      </div>
+
+      <div class="card" style="background: rgba(255,255,255,0.02);">
+        <h3>Redemption URL</h3>
+        <p>Where buyers are redirected after purchasing to paste their license key.</p>
+        <div class="code-box">
+          <span>https://qlico.app/redeem</span>
+          <button class="copy-btn" onclick="copyText('https://qlico.app/redeem')">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Tiers & Pricing -->
+  <div class="card card-full">
+    <h2><span class="step-num">3</span> The 3-Tier Deal Structure</h2>
+    <p>AppSumo buyers love stacking codes. This tier architecture encourages 70%+ of buyers to buy Tier 2 or Tier 3:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Tier</th>
+          <th>Price</th>
+          <th>Codes</th>
+          <th>Active Editions</th>
+          <th>Analytics</th>
+          <th>Custom Domains</th>
+          <th>White-Label</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:#fff;">Tier 1</strong></td>
+          <td>$59</td>
+          <td>1 Code</td>
+          <td>10 Editions</td>
+          <td>90 Days</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--gold);">Tier 2 (Sweet Spot)</strong></td>
+          <td>$119</td>
+          <td>2 Codes</td>
+          <td>50 Editions</td>
+          <td>180 Days</td>
+          <td>✅ Included</td>
+          <td>✅ Included</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--blue);">Tier 3 (Power / Agency)</strong></td>
+          <td>$239</td>
+          <td>3 Codes</td>
+          <td><strong>Unlimited</strong></td>
+          <td>365 Days</td>
+          <td>✅ Included</td>
+          <td>✅ Included</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size: 12px; color: var(--text-dim);">*All tiers include: Interactive flip physics, shoppable multi-product cart drawer, audio narration, lead capture webhooks, in-edition full-text search, and print QR studio.*</p>
+  </div>
+
+  <!-- Step 4: Copy-Paste Listing Assets -->
+  <div class="card card-full">
+    <h2><span class="step-num">4</span> Copy-Paste Listing Copy Templates</h2>
+    <p>Use this pre-tested, high-converting copy when filling out your AppSumo listing description:</p>
+
+    <h3>Deal Tagline (Hero One-Liner)</h3>
+    <div class="code-box" style="color: #fff;">
+      <span>Turn any static PDF into a luxury, shoppable interactive flipbook with audio narration.</span>
+      <button class="copy-btn" onclick="copyText('Turn any static PDF into a luxury, shoppable interactive flipbook with audio narration.')">Copy</button>
+    </div>
+
+    <h3>Key Value Points</h3>
+    <ul>
+      <li><strong>PDF in, Magic Out:</strong> Drop any catalog, lookbook, portfolio, or report into QLICO and get a tactile, high-resolution flipbook with zero coding.</li>
+      <li><strong>Shoppable Magazines:</strong> Add product pins with prices; readers can add items to an in-edition shopping bag and check out in 1 click.</li>
+      <li><strong>Audiobook Narration:</strong> Let readers listen with automatic speech synthesis narration that turns pages as it speaks.</li>
+      <li><strong>Print QR Code Studio:</strong> Download print-ready vector QR codes with your custom monogram to put on physical tags, packaging, and menus.</li>
+      <li><strong>Attention Heatmaps:</strong> See exactly where readers spent time and which products converted.</li>
+    </ul>
+
+    <h3>Pre-Written FAQ for AppSumo Buyers</h3>
+    <div class="callout">
+      <p><strong>Q: How do I redeem my license?</strong><br/>
+      A: Sign up for a free account at <code>qlico.app</code>, navigate to <code>qlico.app/redeem</code>, enter your AppSumo code, and your plan unlocks instantly.</p>
+      <br/>
+      <p><strong>Q: Can I stack codes to upgrade my plan?</strong><br/>
+      A: Yes! You can redeem additional codes at any time in your account settings to jump from Tier 1 to Tier 2 or Tier 3.</p>
+    </div>
+  </div>
+
+  <!-- Step 5: GTM Playbook & Taco Rating Hacks -->
+  <div class="card card-full">
+    <h2><span class="step-num">5</span> Go-To-Market (GTM) Launch Playbook</h2>
+    <p>Proven growth tactics to maximize your launch week velocity:</p>
+
+    <div class="grid">
+      <div class="card" style="background: rgba(255,255,255,0.02);">
+        <h3 style="color: var(--gold);">🌮 The 1-Hour Reply Rule</h3>
+        <p>AppSumo buyers test founders in the Q&A tab before buying. Replying within 60 minutes with friendly, confident answers triggers immediate purchases and locks in 5-star Taco ratings.</p>
+      </div>
+
+      <div class="card" style="background: rgba(255,255,255,0.02);">
+        <h3 style="color: var(--green);">💬 Community Activation</h3>
+        <p>Post authentic announcements on:
+        <br/>• <strong>Facebook Groups:</strong> "AppSumo Deals & Reviews", "MarTech LTD", "SaaS Lifetime Deals"
+        <br/>• <strong>Reddit:</strong> <code>r/SaaS</code>, <code>r/SideProject</code>, <code>r/digitalpublishing</code>
+        <br/>• <strong>Twitter/X:</strong> Tag <code>#AppSumo</code>, <code>#buildinpublic</code>, and share interactive flipbook screen recordings.
+        </p>
+      </div>
+
+      <div class="card" style="background: rgba(255,255,255,0.02);">
+        <h3 style="color: var(--blue);">⚡ The Fast Feature Drop</h3>
+        <p>During Days 3–5 of your launch, take 1 small feature requested by a buyer in the Q&A, build it in 24 hours, and post an update. This proves immense founder velocity and drives a second wave of sales.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 6: Post-Launch Growth -->
+  <div class="card card-full">
+    <h2><span class="step-num">6</span> Converting LTD Buyers into Recurring Revenue</h2>
+    <p>How to turn lifetime-deal users into long-term MRR growth:</p>
+    <ol>
+      <li><strong>Watermark Growth Engine:</strong> Free and Tier 1 editions feature a subtle "Powered by QLICO" badge in the corner. Every reader who reaches the last page of an edition sees a CTA to create their own.</li>
+      <li><strong>Agency Upsells:</strong> Pitch Tier 2/3 agency buyers on custom enterprise domain white-labeling, dedicated CDN hosting, and bespoke publishing templates.</li>
+      <li><strong>Zapier / CRM Lead Expansion:</strong> Market QLICO's lead capture webhooks to marketing teams who need instant HubSpot / Klaviyo syncing.</li>
+    </ol>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>QLICO Launch Engine · Generated for Production MVP Deployment · 2026</p>
+  </div>
+</div>
+
+<script>
+  function copyText(text) {
+    navigator.clipboard.writeText(text);
+    alert('Copied: ' + text);
+  }
+
+  // Persist interactive checklist in localStorage
+  document.querySelectorAll('.checklist input[type="checkbox"]').forEach(box => {
+    const saved = localStorage.getItem('qlico_chk_' + box.id);
+    if (saved === '1') box.checked = true;
+
+    box.addEventListener('change', () => {
+      localStorage.setItem('qlico_chk_' + box.id, box.checked ? '1' : '0');
+    });
+  });
+</script>
+
+</body>
+</html>
