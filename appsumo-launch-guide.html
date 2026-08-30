@@ -3,51 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QLICO — The Complete AppSumo Launch & GTM Master Guide</title>
+  <title>QLICO — Founder's Master Launch Manual & GTM Operating System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #050505;
-      --surface: #0c0c0e;
-      --surface-card: #121216;
-      --surface-border: #222228;
+      --bg: #050508;
+      --surface: #0c0c10;
+      --surface-card: #121218;
+      --surface-border: #22222d;
       --accent: #ffffff;
       --accent-contrast: #000000;
-      --text: #f4f4f5;
+      --text: #f4f4f6;
       --text-muted: #a1a1aa;
       --text-dim: #71717a;
       --gold: #fbbf24;
       --green: #22c55e;
       --blue: #38bdf8;
-      --radius: 16px;
+      --purple: #a855f7;
+      --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg);
       color: var(--text);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      line-height: 1.6;
+      line-height: 1.65;
       -webkit-font-smoothing: antialiased;
-      padding: 40px 20px 100px;
+      padding: 40px 20px 120px;
     }
 
     .container {
-      max-width: 1040px;
+      max-width: 1080px;
       margin: 0 auto;
     }
 
     /* Header & Branding */
     header {
       text-align: center;
-      padding: 40px 0 60px;
+      padding: 50px 0 60px;
       border-bottom: 1px solid var(--surface-border);
       margin-bottom: 60px;
     }
@@ -56,13 +53,13 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 72px;
-      height: 72px;
-      border-radius: 20px;
+      width: 76px;
+      height: 76px;
+      border-radius: 22px;
       background: #000;
       border: 1px solid var(--surface-border);
       margin-bottom: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.8), 0 0 40px rgba(255,255,255,0.05);
     }
 
     .badge {
@@ -71,20 +68,19 @@
       gap: 6px;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 4px 14px;
+      padding: 5px 16px;
       border-radius: 999px;
       font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.15em;
+      font-weight: 800;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     h1 {
-      font-family: 'Inter', sans-serif;
-      font-size: 44px;
-      font-weight: 800;
+      font-size: 46px;
+      font-weight: 900;
       letter-spacing: -0.04em;
       line-height: 1.15;
       margin-bottom: 16px;
@@ -94,15 +90,42 @@
     .subtitle {
       font-size: 18px;
       color: var(--text-muted);
-      max-width: 640px;
+      max-width: 720px;
       margin: 0 auto;
       font-weight: 400;
     }
 
-    /* Grid & Cards */
+    /* Navigation Quick Links */
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 32px;
+    }
+
+    .quick-nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      transition: all 0.2s ease;
+    }
+
+    .quick-nav a:hover {
+      color: #fff;
+      border-color: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* Cards & Grid */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 24px;
       margin: 32px 0;
     }
@@ -117,7 +140,7 @@
     }
 
     .card:hover {
-      border-color: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .card-full {
@@ -126,21 +149,21 @@
 
     h2 {
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: -0.03em;
       margin-bottom: 16px;
       color: #fff;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     h3 {
       font-size: 17px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: -0.02em;
       margin: 20px 0 10px;
-      color: #f4f4f5;
+      color: #f4f4f6;
     }
 
     p, li {
@@ -161,8 +184,8 @@
     .callout {
       background: rgba(255, 255, 255, 0.03);
       border-left: 3px solid var(--accent);
-      padding: 16px 20px;
-      border-radius: 0 12px 12px 0;
+      padding: 18px 22px;
+      border-radius: 0 14px 14px 0;
       margin: 20px 0;
     }
 
@@ -174,6 +197,11 @@
     .callout-green {
       border-left-color: var(--green);
       background: rgba(34, 197, 94, 0.05);
+    }
+
+    .callout-purple {
+      border-left-color: var(--purple);
+      background: rgba(168, 85, 247, 0.05);
     }
 
     table {
@@ -191,7 +219,7 @@
 
     th {
       color: #fff;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       font-size: 11px;
       letter-spacing: 0.1em;
@@ -211,17 +239,17 @@
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      padding: 10px 0;
+      padding: 12px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       cursor: pointer;
     }
 
     .checklist input[type="checkbox"] {
       appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       border: 2px solid var(--surface-border);
-      border-radius: 5px;
+      border-radius: 6px;
       background: transparent;
       outline: none;
       cursor: pointer;
@@ -240,9 +268,9 @@
       content: '✓';
       position: absolute;
       color: #000;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 900;
-      left: 3px;
+      left: 4px;
       top: -1px;
     }
 
@@ -268,10 +296,10 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       color: #a1a1aa;
-      max-height: 380px;
+      max-height: 400px;
       overflow-y: auto;
       white-space: pre;
-      line-height: 1.5;
+      line-height: 1.55;
       margin: 16px 0;
     }
 
@@ -279,10 +307,10 @@
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fff;
-      padding: 6px 14px;
+      padding: 8px 16px;
       border-radius: 8px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.2s ease;
       display: inline-flex;
@@ -298,19 +326,49 @@
     .step-num {
       display: inline-grid;
       place-items: center;
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background: #fff;
       color: #000;
-      font-weight: 800;
+      font-weight: 900;
       font-size: 13px;
+    }
+
+    .template-box {
+      background: #08080c;
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 13px;
+      color: #e4e4e7;
+      margin: 14px 0;
+      line-height: 1.6;
+    }
+
+    .template-box h4 {
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-weight: bold;
+      text-transform: uppercase;
     }
 
     .footer {
       text-align: center;
-      margin-top: 80px;
-      padding-top: 40px;
+      margin-top: 100px;
+      padding-top: 50px;
       border-top: 1px solid var(--surface-border);
       color: var(--text-dim);
       font-size: 12px;
@@ -323,7 +381,7 @@
   <!-- Header -->
   <header>
     <div class="monogram-logo">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="44" height="44">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="46" height="46">
         <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
           <path d="M 140 170 C 200 120 312 120 372 170" stroke-width="40" />
           <path d="M 110 256 H 402" stroke-width="40" />
@@ -333,20 +391,29 @@
       </svg>
     </div>
     <br/>
-    <div class="badge">Founder's Launch Manual</div>
-    <h1>The Dummy's Guide to Launching QLICO on AppSumo</h1>
-    <p class="subtitle">A step-by-step roadmap to launch, manage, and scale your Lifetime Deal (LTD) to $50,000+ in revenue and 5-Taco reviews.</p>
+    <div class="badge">Founder's Master Launch Operating System</div>
+    <h1>The Complete Blueprint to Launching QLICO</h1>
+    <p class="subtitle">Your end-to-end founder playbook: 1-click database migration, AppSumo launch mechanics, 30-day GTM calendar, copy-paste community outreach templates, and review growth loops.</p>
+
+    <div class="quick-nav">
+      <a href="#migration">⚡ Database Migration</a>
+      <a href="#checklist">📋 Verification Checklist</a>
+      <a href="#pricing">💰 AppSumo Pricing Matrix</a>
+      <a href="#gtm-calendar">📅 30-Day GTM Calendar</a>
+      <a href="#templates">📝 Copy-Paste Templates</a>
+      <a href="#growth-loops">📈 Virality Multipliers</a>
+    </div>
   </header>
 
   <!-- Complete SQL Master Migration Card -->
-  <div class="card card-full" style="border-color: rgba(255,255,255,0.25); background: #0e0e12;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: gap-4;">
+  <div class="card card-full" id="migration" style="border-color: rgba(255,255,255,0.25); background: #0e0e14;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
       <div>
-        <span class="badge" style="color: var(--gold); border-color: rgba(251,191,36,0.3);">One-Click Database Setup</span>
+        <span class="badge" style="color: var(--gold); border-color: rgba(251,191,36,0.3);">Step 01 · Backend Deployment</span>
         <h2 style="margin: 6px 0 2px;">⚡ Complete Master Supabase SQL Migration</h2>
-        <p>Run this single script in the <strong>Supabase SQL Editor</strong> to deploy the entire production backend (Books, Pages, Events, Profiles, AppSumo LTD, Stripe, and Triggers).</p>
+        <p>Run this single script in the <strong>Supabase SQL Editor</strong> to deploy the entire production database backend (Books, Pages, Events, Profiles, AppSumo LTD, Stripe, and Triggers).</p>
       </div>
-      <button class="copy-btn" style="background: #fff; color: #000; font-size: 13px; padding: 10px 20px;" onclick="copyMasterSql()">
+      <button class="copy-btn" style="background: #fff; color: #000; font-size: 13px; padding: 12px 24px;" onclick="copyMasterSql()">
         📋 Copy Complete SQL Script
       </button>
     </div>
@@ -450,44 +517,54 @@ CREATE TABLE IF NOT EXISTS public.events (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS events_book_type ON public.events (book_id, event_type);
-CREATE INDEX IF NOT EXISTS events_book_id ON public.events (book_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS events_page_number ON public.events (book_id, page_number) WHERE page_number IS NOT NULL;
+CREATE INDEX IF NOT EXISTS events_book_session ON public.events (book_id, session_id);
+CREATE INDEX IF NOT EXISTS events_book_time ON public.events (book_id, created_at);
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'events' AND policyname = 'anon_insert') THEN
-    CREATE POLICY "anon_insert" ON public.events FOR INSERT WITH CHECK (true);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'events' AND policyname = 'public_insert_events') THEN
+    CREATE POLICY "public_insert_events" ON public.events FOR INSERT WITH CHECK (true);
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'events' AND policyname = 'owner_read') THEN
-    CREATE POLICY "owner_read" ON public.events FOR SELECT USING (EXISTS (SELECT 1 FROM public.books WHERE books.id = events.book_id AND books.owner_id = auth.uid()));
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'events' AND policyname = 'owner_read_events') THEN
+    CREATE POLICY "owner_read_events" ON public.events FOR SELECT USING (EXISTS (SELECT 1 FROM public.books WHERE books.id = events.book_id AND books.owner_id = auth.uid()));
   END IF;
 END $$;
 
--- 4. PROFILES TABLE (Billing & Entitlements)
+-- 4. USER PROFILES TABLE
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id                   uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email                text,
-  plan                 text NOT NULL DEFAULT 'free',
-  status               text NOT NULL DEFAULT 'active',
-  appsumo_license_key  text UNIQUE,
-  appsumo_tier         int,
-  appsumo_invoice_uuid text,
-  stripe_customer_id   text UNIQUE,
-  stripe_subscription_id text,
-  stripe_status        text,
-  created_at           timestamptz NOT NULL DEFAULT now(),
-  updated_at           timestamptz NOT NULL DEFAULT now()
+  id                        uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  plan                      text NOT NULL DEFAULT 'free',
+  stripe_customer_id        text UNIQUE,
+  stripe_subscription_id    text,
+  billing_interval          text CHECK (billing_interval IN ('month', 'year')),
+  subscription_status       text,
+  current_period_end        timestamptz,
+  appsumo_plan_id           text,
+  appsumo_license_key       text,
+  appsumo_codes_count       int NOT NULL DEFAULT 0,
+  appsumo_synced_at         timestamptz,
+  created_at                timestamptz NOT NULL DEFAULT now(),
+  updated_at                timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS profiles_stripe_customer ON public.profiles (stripe_customer_id);
-DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
-CREATE TRIGGER profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'users_read_own_profile') THEN
+    CREATE POLICY "users_read_own_profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'users_update_own_profile') THEN
+    CREATE POLICY "users_update_own_profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+  END IF;
+END $$;
+
+-- Auto Create Profile Trigger on User Signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email) VALUES (NEW.id, NEW.email) ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (id, plan)
+  VALUES (NEW.id, 'free')
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -495,211 +572,258 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
-INSERT INTO public.profiles (id, email) SELECT id, email FROM auth.users ON CONFLICT (id) DO NOTHING;
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+-- 5. APPSUMO LICENSES & REDEMPTION SYSTEM
+CREATE TABLE IF NOT EXISTS public.appsumo_licenses (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  license_key    text UNIQUE NOT NULL,
+  plan_id        text NOT NULL,
+  status         text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'refunded', 'inactive')),
+  user_id        uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  redeemed_at    timestamptz,
+  invoice_item_id text,
+  metadata       jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  updated_at     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS appsumo_licenses_user_id ON public.appsumo_licenses (user_id);
+ALTER TABLE public.appsumo_licenses ENABLE ROW LEVEL SECURITY;
 
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'profiles_read_own') THEN
-    CREATE POLICY "profiles_read_own" ON public.profiles FOR SELECT USING (auth.uid() = id);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'appsumo_licenses' AND policyname = 'users_read_own_license') THEN
+    CREATE POLICY "users_read_own_license" ON public.appsumo_licenses FOR SELECT USING (auth.uid() = user_id);
   END IF;
 END $$;
 
--- 5. APPSUMO LICENSES TABLE
-CREATE TABLE IF NOT EXISTS public.appsumo_licenses (
-  license_key       text PRIMARY KEY,
-  prev_license_key  text,
-  tier              int  NOT NULL DEFAULT 1,
-  plan              text NOT NULL DEFAULT 'ltd_tier1',
-  status            text NOT NULL DEFAULT 'active',
-  activation_email  text,
-  invoice_item_uuid text,
-  redeemed_by       uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-  redeemed_at       timestamptz,
-  created_at        timestamptz NOT NULL DEFAULT now(),
-  updated_at        timestamptz NOT NULL DEFAULT now()
-);
+-- 6. STORAGE BUCKET INITIALIZATION
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('book-assets', 'book-assets', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
-CREATE INDEX IF NOT EXISTS appsumo_licenses_email ON public.appsumo_licenses (lower(activation_email));
-DROP TRIGGER IF EXISTS appsumo_licenses_updated_at ON public.appsumo_licenses;
-CREATE TRIGGER appsumo_licenses_updated_at BEFORE UPDATE ON public.appsumo_licenses FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
-ALTER TABLE public.appsumo_licenses ENABLE ROW LEVEL SECURITY;
-
--- 6. DEFENSE-IN-DEPTH BOOK QUOTA TRIGGER
-CREATE OR REPLACE FUNCTION public.book_limit_for_plan(p text)
-RETURNS int LANGUAGE sql IMMUTABLE AS $$
-  SELECT CASE p
-    WHEN 'pro'       THEN 2147483647
-    WHEN 'ltd_tier3' THEN 2147483647
-    WHEN 'ltd_tier2' THEN 50
-    WHEN 'ltd_tier1' THEN 10
-    ELSE 1
-  END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.enforce_book_limit()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
-DECLARE
-  v_plan   text;
-  v_status text;
-  v_limit  int;
-  v_count  int;
-BEGIN
-  SELECT plan, status INTO v_plan, v_status FROM public.profiles WHERE id = NEW.owner_id;
-  IF v_plan IS NULL THEN v_plan := 'free'; END IF;
-  IF v_status IS DISTINCT FROM 'active' THEN v_plan := 'free'; END IF;
-  v_limit := public.book_limit_for_plan(v_plan);
-  SELECT count(*) INTO v_count FROM public.books WHERE owner_id = NEW.owner_id;
-  IF v_count >= v_limit THEN
-    RAISE EXCEPTION 'BOOK_LIMIT_REACHED: plan % allows % book(s)', v_plan, v_limit USING ERRCODE = 'check_violation';
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Public Access to book-assets') THEN
+    CREATE POLICY "Public Access to book-assets" ON storage.objects FOR SELECT USING (bucket_id = 'book-assets');
   END IF;
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS books_enforce_limit ON public.books;
-CREATE TRIGGER books_enforce_limit BEFORE INSERT ON public.books FOR EACH ROW EXECUTE FUNCTION public.enforce_book_limit();</div>
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Authenticated users can upload to book-assets') THEN
+    CREATE POLICY "Authenticated users can upload to book-assets" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'book-assets' AND auth.role() = 'authenticated');
+  END IF;
+END $$;</div>
   </div>
 
-  <!-- Step 1: Technical Setup -->
-  <div class="card card-full">
-    <h2><span class="step-num">1</span> 5-Minute Technical Go-Live Checklist</h2>
-    <ul class="checklist">
+  <!-- Step 2: Verification Checklist -->
+  <div class="card card-full" id="checklist">
+    <h2><span class="step-num">02</span> Pre-Launch Verification Checklist</h2>
+    <p>Check off each critical item prior to submitting your listing to AppSumo QA:</p>
+    <ul class="checklist" style="margin-top: 16px;">
       <li>
-        <input type="checkbox" id="c1" />
-        <label for="c1"><strong>Set Vercel Environment Variables:</strong> Go to Vercel Project Settings &rarr; Environment Variables and set:
-          <div class="code-box">
-            <span>APPSUMO_API_KEY=your_secret_from_appsumo_partner_portal</span>
-            <button class="copy-btn" onclick="copyText('APPSUMO_API_KEY')">Copy</button>
-          </div>
-          <div class="code-box">
-            <span>NEXT_PUBLIC_SITE_URL=https://qlico.app</span>
-            <button class="copy-btn" onclick="copyText('https://qlico.app')">Copy</button>
-          </div>
-        </label>
+        <input type="checkbox" id="chk1" />
+        <label for="chk1"><strong>Run Master SQL Script:</strong> Paste the migration above into the Supabase SQL Editor and ensure 0 errors.</label>
       </li>
       <li>
-        <input type="checkbox" id="c2" />
-        <label for="c2"><strong>Run Supabase Master Migration:</strong> Copy the SQL block above and execute it in Supabase.</label>
+        <input type="checkbox" id="chk2" />
+        <label for="chk2"><strong>Vercel Environment Variables:</strong> Set <code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>APPSUMO_WEBHOOK_SECRET</code>, <code>GEMINI_API_KEY</code>, and <code>NEXT_PUBLIC_SITE_URL</code>.</label>
       </li>
       <li>
-        <input type="checkbox" id="c3" />
-        <label for="c3"><strong>AppSumo Test Verification Ping:</strong> AppSumo sends a test webhook upon listing creation. QLICO responds with <code>HTTP 200 OK</code> automatically.</label>
+        <input type="checkbox" id="chk3" />
+        <label for="chk3"><strong>AppSumo Webhook Validation:</strong> Test <code>/api/appsumo/webhook</code> with mock redemption, upgrade, and refund payloads.</label>
+      </li>
+      <li>
+        <input type="checkbox" id="chk4" />
+        <label for="chk4"><strong>AI Vision Auto-Tagger:</strong> Verify dropping a PDF or adding pages auto-detects pricing and creates clickable pins in 1 click.</label>
+      </li>
+      <li>
+        <input type="checkbox" id="chk5" />
+        <label for="chk5"><strong>Social Teaser & Video Studio:</strong> Export sample 9:16 and 1:1 animated flip videos to use as promo trailers.</label>
+      </li>
+      <li>
+        <input type="checkbox" id="chk6" />
+        <label for="chk6"><strong>Test Lead Capture & Webhooks:</strong> Create a gated book, unlock with test email, and verify lead notification delivery.</label>
       </li>
     </ul>
   </div>
 
-  <!-- Step 2: AppSumo Partner Portal -->
-  <div class="card card-full">
-    <h2><span class="step-num">2</span> AppSumo Partner Portal Setup (Click-by-Click)</h2>
-    <div class="grid" style="margin-top: 20px;">
-      <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3>Webhook / Notification URL</h3>
-        <p>Where AppSumo notifies your app when a user buys or refunds a license.</p>
-        <div class="code-box">
-          <span>https://qlico.app/api/appsumo/webhook</span>
-          <button class="copy-btn" onclick="copyText('https://qlico.app/api/appsumo/webhook')">Copy</button>
-        </div>
-      </div>
+  <!-- Step 3: AppSumo Tier Matrix -->
+  <div class="card card-full" id="pricing">
+    <h2><span class="step-num">03</span> AppSumo 3-Tier Pricing & Feature Stacking</h2>
+    <p>AppSumo buyers love stacking codes. This structure guarantees strong Tier 3 conversions:</p>
 
-      <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3>Redemption URL</h3>
-        <p>Where buyers are redirected after purchasing to paste their license key.</p>
-        <div class="code-box">
-          <span>https://qlico.app/redeem</span>
-          <button class="copy-btn" onclick="copyText('https://qlico.app/redeem')">Copy</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 3: Tiers & Pricing -->
-  <div class="card card-full">
-    <h2><span class="step-num">3</span> The 3-Tier Deal Structure</h2>
     <table>
       <thead>
         <tr>
-          <th>Tier</th>
-          <th>Price</th>
-          <th>Codes</th>
-          <th>Active Editions</th>
-          <th>Analytics</th>
-          <th>Custom Domains</th>
-          <th>White-Label</th>
+          <th>Tier / License</th>
+          <th>LTD Price</th>
+          <th>Codes Required</th>
+          <th>Published Books</th>
+          <th>Analytics History</th>
+          <th>Whitelabel & Audio</th>
+          <th>Lead Gate Webhooks</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong style="color:#fff;">Tier 1</strong></td>
-          <td>$59</td>
+          <td><strong style="color:var(--text);">Tier 1 (Starter)</strong></td>
+          <td>$49</td>
           <td>1 Code</td>
-          <td>10 Editions</td>
-          <td>90 Days</td>
-          <td>—</td>
-          <td>—</td>
+          <td>5 Books</td>
+          <td>30 Days</td>
+          <td>❌ QLICO Badge</td>
+          <td>❌ CSV Export</td>
         </tr>
         <tr>
-          <td><strong style="color:var(--gold);">Tier 2 (Sweet Spot)</strong></td>
+          <td><strong style="color:var(--gold);">Tier 2 (Pro Creator)</strong></td>
           <td>$119</td>
           <td>2 Codes</td>
-          <td>50 Editions</td>
-          <td>180 Days</td>
-          <td>✅ Included</td>
-          <td>✅ Included</td>
+          <td>25 Books</td>
+          <td>90 Days</td>
+          <td>✅ Whitelabel</td>
+          <td>✅ Zapier / Make</td>
         </tr>
         <tr>
-          <td><strong style="color:var(--blue);">Tier 3 (Power / Agency)</strong></td>
+          <td><strong style="color:var(--blue);">Tier 3 (Agency / Master)</strong></td>
           <td>$239</td>
           <td>3 Codes</td>
           <td><strong>Unlimited</strong></td>
           <td>365 Days</td>
-          <td>✅ Included</td>
-          <td>✅ Included</td>
+          <td>✅ Whitelabel + Audio</td>
+          <td>✅ Real-Time Webhooks</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Step 4: SEO & AEO -->
-  <div class="card card-full">
-    <h2><span class="step-num">4</span> SEO & AEO (AI Search Engine Optimization)</h2>
-    <p>QLICO includes built-in AEO & SEO indexing rules to rank on Google and get surfaced by AI agents (Perplexity, ChatGPT, Claude, Cursor):</p>
+  <!-- Step 4: 30-Day GTM Launch Calendar -->
+  <div class="card card-full" id="gtm-calendar">
+    <h2><span class="step-num">04</span> 30-Day GTM Launch Calendar & Growth Engine</h2>
     <div class="grid">
       <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3>Dynamic Robots Generator</h3>
-        <p>Configured in <code>app/robots.ts</code> with explicit indexing allowances for <code>GPTBot</code>, <code>ClaudeBot</code>, <code>PerplexityBot</code>, and <code>Googlebot</code>.</p>
+        <h3 style="color: var(--gold);">🚀 Day 1: The AppSumo Launch Blast</h3>
+        <p>• Post your Founder Welcome Message in the AppSumo discussion tab within 5 minutes of going live.</p>
+        <p>• Announce on LinkedIn, Twitter/X, and your private founder email list.</p>
+        <p>• Post a 9:16 vertical video teaser on TikTok and Instagram Reels showing the tactile 3D page flip.</p>
       </div>
+
       <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3>llms.txt AI Standard</h3>
-        <p>Exposed at <code>/llms.txt</code> allowing LLM search engines to understand QLICO's interactive flipbook features in milliseconds.</p>
+        <h3 style="color: var(--green);">💬 Days 2–5: The 60-Minute Q&A Blitz</h3>
+        <p>• Set up push notifications for every new question in the AppSumo discussion tab.</p>
+        <p>• Reply within 60 minutes. AppSumo buyers buy immediately when they see active, enthusiastic founders.</p>
+        <p>• Drop a fast feature update (e.g. new font or custom background preset) on Day 4 based on user requests.</p>
       </div>
+
       <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3>Schema.org JSON-LD</h3>
-        <p>Injected in <code>app/layout.tsx</code> declaring <code>SoftwareApplication</code>, <code>Organization</code>, and <code>WebSite</code> with 4.9/5 rating markup.</p>
+        <h3 style="color: var(--purple);">🐱 Days 7–10: Product Hunt & Reddit Co-Launch</h3>
+        <p>• Launch on Product Hunt: "QLICO — Turn static PDFs into interactive, shoppable digital publications."</p>
+        <p>• Post transparent build-in-public story on <code>r/SaaS</code> and <code>r/SideProject</code>.</p>
+        <p>• Share interactive demo links in design subreddits (<code>r/graphic_design</code>, <code>r/webdev</code>).</p>
+      </div>
+
+      <div class="card" style="background: rgba(255,255,255,0.02);">
+        <h3 style="color: var(--blue);">🎯 Weeks 2–4: Niche Cold Outreach & Final Surge</h3>
+        <p>• Cold email 50 fashion lookbook creators, architects, and fine dining restaurants with bespoke demo editions.</p>
+        <p>• Launch a 48-Hour "Tier 3 Price Increase Warning" email to push undecided buyers to stack 3 codes.</p>
+        <p>• Request 5-Taco reviews from your most active users who redeemed codes.</p>
       </div>
     </div>
   </div>
 
-  <!-- Step 5: GTM Playbook & Taco Rating Hacks -->
-  <div class="card card-full">
-    <h2><span class="step-num">5</span> Go-To-Market (GTM) Launch Playbook</h2>
+  <!-- Step 5: Copy-Paste Marketing Templates -->
+  <div class="card card-full" id="templates">
+    <h2><span class="step-num">05</span> High-Converting Copy-Paste Outreach Templates</h2>
+    
+    <!-- Template 1: AppSumo Founder Post -->
+    <div class="template-box">
+      <h4>
+        <span>1. AppSumo Founder Welcome Post (Pinned Discussion)</span>
+        <button class="copy-btn" onclick="copyText(document.getElementById('t1-text').innerText)">📋 Copy</button>
+      </h4>
+      <div id="t1-text">Hey Sumo-lings! 👋
+
+I'm Ian, founder of QLICO.
+
+We got tired of sending boring, flat PDFs that nobody reads. Whether you're sending a client proposal, fashion lookbook, annual report, or restaurant menu, your readers deserve an immersive, tactile reading experience.
+
+With QLICO, you can:
+📖 Turn static PDFs into tactile, interactive digital publications
+🛍️ Add shoppable hotspot pins with 1-click in-edition Stripe checkouts
+📊 Track visual attention heatmaps and dwell duration without cookies
+📱 Bridge print to digital with vector QR code studios
+🔒 Protect confidential decks with secret passcodes & domain whitelisting
+
+We're in this for the long haul. Ask me anything below—I'll be answering questions personally all day!
+
+To your digital publishing success,
+Ian · Founder of QLICO</div>
+    </div>
+
+    <!-- Template 2: Reddit Launch Post -->
+    <div class="template-box">
+      <h4>
+        <span>2. Reddit Post (r/SaaS & r/SideProject)</span>
+        <button class="copy-btn" onclick="copyText(document.getElementById('t2-text').innerText)">📋 Copy</button>
+      </h4>
+      <div id="t2-text">Title: I built a luxury interactive publication engine to replace boring PDFs (and launched on AppSumo)
+
+Hey everyone!
+
+Whenever I had to share lookbooks or portfolio proposals with clients, emailing a heavy 40MB PDF felt like 1995.
+
+So over the last few months, I built QLICO (https://qlico.app)—a Next.js 16 platform with:
+- Tactile WebGL/Canvas page-turn physics (magazine, hardcover, washi paper)
+- Shoppable in-edition cart drawers & Stripe checkout
+- Ambient background soundscapes and spatial audio narration
+- Visual click & dwell attention heatmaps
+- Print-to-digital vector QR code generators
+
+We just opened our Lifetime Deal on AppSumo and I’d love your brutal feedback on the reader feel and UX.
+
+Check out the live interactive demo: https://qlico.app/book/demo
+
+What features would make this a no-brainer for your business?</div>
+    </div>
+
+    <!-- Template 3: Cold Agency Outreach -->
+    <div class="template-box">
+      <h4>
+        <span>3. Cold Email to Design Agencies & Luxury Brands</span>
+        <button class="copy-btn" onclick="copyText(document.getElementById('t3-text').innerText)">📋 Copy</button>
+      </h4>
+      <div id="t3-text">Subject: Made an interactive lookbook for [Brand Name]
+
+Hi [First Name],
+
+I was looking at [Brand Name]'s latest collection and was blown away by the photography.
+
+However, viewing it as a static PDF download loses the luxury tactile feeling of a printed catalog.
+
+I took the liberty of turning 4 pages into an interactive digital monograph on QLICO:
+👉 [Custom Demo Link]
+
+Your readers can flip through the spreads, listen to ambient narration, and tap any product to add to cart directly on the page.
+
+Would you be open to a 5-minute chat on how we could power your digital lookbooks?
+
+Best,
+Ian
+Founder, QLICO · https://qlico.app</div>
+    </div>
+  </div>
+
+  <!-- Step 6: Virality Multipliers -->
+  <div class="card card-full" id="growth-loops">
+    <h2><span class="step-num">06</span> Built-In Virality & Revenue Multipliers</h2>
     <div class="grid">
       <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3 style="color: var(--gold);">🌮 The 1-Hour Reply Rule</h3>
-        <p>AppSumo buyers test founders in the Q&A tab before buying. Replying within 60 minutes with friendly, confident answers triggers immediate purchases and locks in 5-star Taco ratings.</p>
+        <h3 style="color: var(--gold);">🔄 The "Powered by QLICO" Growth Loop</h3>
+        <p>Every free and Tier 1 publication contains an elegant footer badge linked to <code>qlico.app?ref=[book-slug]</code>. Every reader is a prospective creator who can sign up in 1 click.</p>
       </div>
 
       <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3 style="color: var(--green);">💬 Community Activation</h3>
-        <p>Post authentic announcements on:
-        <br/>• <strong>Facebook Groups:</strong> "AppSumo Deals & Reviews", "MarTech LTD", "SaaS Lifetime Deals"
-        <br/>• <strong>Reddit:</strong> <code>r/SaaS</code>, <code>r/SideProject</code>, <code>r/digitalpublishing</code>
-        <br/>• <strong>Twitter/X:</strong> Tag <code>#AppSumo</code>, <code>#buildinpublic</code>, and share interactive flipbook screen recordings.
-        </p>
+        <h3 style="color: var(--green);">📱 Print-to-Digital Vector QR Codes</h3>
+        <p>Authors can download SVG QR badges with the QLICO Horizon Spread emblem for printed flyers, physical magazines, and luxury store tags.</p>
       </div>
 
       <div class="card" style="background: rgba(255,255,255,0.02);">
-        <h3 style="color: var(--blue);">⚡ The Fast Feature Drop</h3>
-        <p>During Days 3–5 of your launch, take 1 small feature requested by a buyer in the Q&A, build it in 24 hours, and post an update. This proves immense founder velocity and drives a second wave of sales.</p>
+        <h3 style="color: var(--blue);">📦 Standalone Offline Kiosk Bundles</h3>
+        <p>Pro & Tier 3 users can export a zero-dependency single-file HTML bundle to run offline on iPad kiosks at trade-shows and retail displays.</p>
       </div>
     </div>
   </div>
@@ -713,7 +837,7 @@ CREATE TRIGGER books_enforce_limit BEFORE INSERT ON public.books FOR EACH ROW EX
 <script>
   function copyText(text) {
     navigator.clipboard.writeText(text);
-    alert('Copied to clipboard: ' + text);
+    alert('Copied to clipboard!');
   }
 
   function copyMasterSql() {
