@@ -3,7 +3,19 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import Link from 'next/link'
 import { twMerge } from 'tailwind-merge'
-import { ArrowLeft, Globe, EyeOff, Loader2, Check, Eye, Share2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Globe,
+  EyeOff,
+  Loader2,
+  Check,
+  Eye,
+  Share2,
+  Grid,
+  Undo2,
+  Redo2,
+  Keyboard,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { trackProduct } from '@/lib/product-analytics'
 import { useEditorStore } from '@/lib/editor-store'
@@ -13,9 +25,9 @@ import { SettingsPanel } from '@/components/studio/settings'
 import { PreviewModal } from '@/components/studio/PreviewModal'
 import { PageManagerModal } from '@/components/studio/PageManagerModal'
 import { ShareModal } from '@/components/studio/ShareModal'
+import { ShortcutsModal } from '@/components/studio/ShortcutsModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { EntitlementsProvider, type StudioEntitlements } from '@/components/studio/EntitlementsContext'
-import { Grid } from 'lucide-react'
 import type { Book } from '@/lib/book-schema'
 
 interface Props {
@@ -25,6 +37,8 @@ interface Props {
 
 export function EditorClient({ book, entitlements }: Props) {
   const { book: storeBook, isDirty, setBook, setIsSaving } = useEditorStore()
+  const past = useEditorStore((s) => s.past)
+  const future = useEditorStore((s) => s.future)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [titleEditing, setTitleEditing] = useState(false)
@@ -32,6 +46,7 @@ export function EditorClient({ book, entitlements }: Props) {
   const [showPreview, setShowPreview] = useState(false)
   const [showPageManager, setShowPageManager] = useState(false)
   const [showShare, setShowShare] = useState(false)
+  const [showShortcuts, setShowShortcuts] = useState(false)
   const [publishing, setPublishing] = useState(false)
 
   // Warn about unsaved changes
@@ -236,6 +251,15 @@ export function EditorClient({ book, entitlements }: Props) {
         return
       }
 
+      // ? key → toggle shortcuts modal
+      if (e.key === '?' && !meta) {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        e.preventDefault()
+        setShowShortcuts((v) => !v)
+        return
+      }
+
       // Delete/Backspace → remove selected block
       if (e.key === 'Delete' || e.key === 'Backspace') {
         // Don't capture if user is typing in an input/textarea
@@ -369,6 +393,35 @@ export function EditorClient({ book, entitlements }: Props) {
           )}
         </div>
 
+        {/* Undo / Redo controls */}
+        <div className="hidden items-center gap-0.5 rounded-md border border-neutral-800 bg-neutral-900/80 p-0.5 sm:flex">
+          <button
+            onClick={() => useEditorStore.getState().undo()}
+            disabled={past.length === 0}
+            className="rounded p-1 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
+            title="Undo (⌘Z)"
+          >
+            <Undo2 size={14} />
+          </button>
+          <button
+            onClick={() => useEditorStore.getState().redo()}
+            disabled={future.length === 0}
+            className="rounded p-1 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
+            title="Redo (⇧⌘Z)"
+          >
+            <Redo2 size={14} />
+          </button>
+        </div>
+
+        {/* Shortcuts cheatsheet */}
+        <button
+          onClick={() => setShowShortcuts(true)}
+          className="hidden items-center rounded-md border border-neutral-800 bg-neutral-900/80 p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 sm:flex"
+          title="Keyboard shortcuts (?)"
+        >
+          <Keyboard size={14} />
+        </button>
+
         {/* Visual page manager */}
         <button
           onClick={() => setShowPageManager(true)}
@@ -478,6 +531,9 @@ export function EditorClient({ book, entitlements }: Props) {
 
       {/* Page Manager Modal */}
       {showPageManager && <PageManagerModal onClose={() => setShowPageManager(false)} />}
+
+      {/* Shortcuts Modal */}
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
 
       {showShare && storeBook?.slug && (
         <ShareModal

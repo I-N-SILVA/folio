@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Check, Copy, ExternalLink } from 'lucide-react'
+import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { trackProduct } from '@/lib/product-analytics'
 
@@ -11,17 +11,46 @@ interface ShareModalProps {
   onClose: () => void
 }
 
-/**
- * This existed but nothing imported it, so the app had no share surface at all:
- * no way to copy an edition's link, and no way to obtain the embed snippet —
- * a reader would have had to construct /embed/<slug> by hand. Rebuilt on the
- * shared dialog primitive (focus trap, Escape, scroll lock) and wired into the
- * editor and the library card.
- */
 export function ShareModal({ slug, published, onClose }: ShareModalProps) {
+  const [tab, setTab] = useState<'links' | 'qr'>('links')
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const url = `${origin}/book/${slug}`
   const embedCode = `<iframe src="${origin}/embed/${slug}" width="100%" height="600" style="border:0" allowfullscreen title="Interactive edition"></iframe>`
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&format=svg&margin=10`
+
+  const shareText = `Check out this interactive edition on QLICO:`
+
+  const socialLinks = [
+    {
+      name: 'X (Twitter)',
+      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(url)}`,
+    },
+    {
+      name: 'LinkedIn',
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+    },
+    {
+      name: 'WhatsApp',
+      href: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${url}`)}`,
+    },
+  ]
+
+  const downloadQr = async () => {
+    try {
+      const res = await fetch(qrUrl)
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = `${slug}-qr-code.svg`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      window.open(qrUrl, '_blank')
+    }
+  }
 
   return (
     <Modal
@@ -29,7 +58,35 @@ export function ShareModal({ slug, published, onClose }: ShareModalProps) {
       title="Share this edition"
       className="max-w-lg p-6 text-[var(--qlico-ink)]"
     >
-      <h2 className="font-display text-2xl font-semibold tracking-[-0.03em]">Share this edition</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl font-semibold tracking-[-0.03em]">Share edition</h2>
+        <div className="flex rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-0.5">
+          <button
+            type="button"
+            onClick={() => setTab('links')}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
+              tab === 'links'
+                ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
+                : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
+            }`}
+          >
+            <Link2 size={13} />
+            Links
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('qr')}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
+              tab === 'qr'
+                ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
+                : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
+            }`}
+          >
+            <QrCode size={13} />
+            QR Code
+          </button>
+        </div>
+      </div>
 
       {!published && (
         <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -37,19 +94,63 @@ export function ShareModal({ slug, published, onClose }: ShareModalProps) {
         </p>
       )}
 
-      <CopyField label="Direct link" value={url} kind="link" />
-      <CopyField label="Embed code" value={embedCode} multiline kind="embed" />
+      {tab === 'links' ? (
+        <div className="space-y-4">
+          <CopyField label="Direct link" value={url} kind="link" />
+          <CopyField label="Embed code" value={embedCode} multiline kind="embed" />
+
+          {/* Social share row */}
+          <div className="mt-5 border-t border-[var(--qlico-border)] pt-4">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--qlico-muted)]">
+              Broadcast
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {socialLinks.map((s) => (
+                <a
+                  key={s.name}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] px-3 py-1.5 text-xs font-medium text-[var(--qlico-ink)] transition-colors hover:bg-[var(--tint)]"
+                >
+                  {s.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-5 flex flex-col items-center justify-center p-4 text-center">
+          <div className="overflow-hidden rounded-2xl border-4 border-white bg-white p-3 shadow-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qrUrl} alt={`QR Code for ${slug}`} width={180} height={180} className="h-44 w-44" />
+          </div>
+          <p className="mt-3 text-xs text-[var(--qlico-muted)]">
+            Scan with any phone camera to open the edition directly.
+          </p>
+          <button
+            type="button"
+            onClick={downloadQr}
+            className="mt-4 flex items-center gap-1.5 rounded-full bg-[var(--accent)] px-5 py-2.5 text-xs font-bold text-[var(--accent-contrast)] shadow-md transition hover:scale-105"
+          >
+            <Download size={14} />
+            Download QR Code (SVG)
+          </button>
+        </div>
+      )}
 
       {published && (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-fg)] hover:underline"
-        >
-          Open the live edition
-          <ExternalLink size={14} />
-        </a>
+        <div className="mt-5 flex items-center justify-between border-t border-[var(--qlico-border)] pt-4">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-fg)] hover:underline"
+          >
+            Open live edition
+            <ExternalLink size={14} />
+          </a>
+        </div>
       )}
     </Modal>
   )
@@ -71,9 +172,6 @@ function CopyField({
   const fieldRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
 
   async function copy() {
-    // navigator.clipboard is undefined on insecure origins and in some
-    // in-app browsers. The previous version called it unguarded, so a copy
-    // there threw an unhandled rejection and appeared to do nothing at all.
     try {
       if (!navigator.clipboard) throw new Error('unavailable')
       await navigator.clipboard.writeText(value)
@@ -81,7 +179,6 @@ function CopyField({
       setState('copied')
       setTimeout(() => setState('idle'), 2000)
     } catch {
-      // Fall back to selecting the text so it can be copied by hand, and say so.
       fieldRef.current?.select()
       setState('manual')
     }
@@ -91,7 +188,7 @@ function CopyField({
     'w-full rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] px-3 py-2.5 font-mono text-xs text-[var(--qlico-ink)] outline-none focus:border-[var(--accent)]'
 
   return (
-    <div className="mt-5">
+    <div className="mt-4">
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--qlico-muted)]">
           {label}
@@ -115,8 +212,6 @@ function CopyField({
         </button>
       </div>
 
-      {/* A real field rather than a span: selectable, keyboard-reachable, and it
-          gives the clipboard fallback something to select. */}
       {multiline ? (
         <textarea
           ref={fieldRef}

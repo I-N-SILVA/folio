@@ -292,22 +292,38 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
               a React element". That took out the whole reader, not just the
               gated case. */}
           {[
-            ...pages.map((page, idx) => (
-              <div
-                key={page.id}
-                className="relative bg-white group cursor-pointer"
-                style={{ width: dims.w, height: dims.h }}
-                onClick={(e) => handlePageClick(e, idx)}
-              >
-                <PageRenderer page={page} bookId={book.id} theme={book.theme} hideGutter={isMobile} />
-                <HotspotLayer
-                  hotspots={page.hotspots}
-                  bookId={book.id}
-                  pageNumber={idx + 1}
-                  onModalOpenChange={setModalOpen}
-                />
-              </div>
-            )),
+            ...pages.map((page, idx) => {
+              const pageSide: 'single' | 'left' | 'right' = isMobile
+                ? 'single'
+                : idx === 0
+                  ? 'single'
+                  : idx % 2 === 1
+                    ? 'left'
+                    : 'right'
+
+              return (
+                <div
+                  key={page.id}
+                  className="relative bg-white group cursor-pointer"
+                  style={{ width: dims.w, height: dims.h }}
+                  onClick={(e) => handlePageClick(e, idx)}
+                >
+                  <PageRenderer
+                    page={page}
+                    bookId={book.id}
+                    theme={book.theme}
+                    hideGutter={isMobile}
+                    pageSide={pageSide}
+                  />
+                  <HotspotLayer
+                    hotspots={page.hotspots}
+                    bookId={book.id}
+                    pageNumber={idx + 1}
+                    onModalOpenChange={setModalOpen}
+                  />
+                </div>
+              )
+            }),
             // The gate stands in for the withheld pages rather than covering
             // pages that were sent anyway.
             ...(isLocked

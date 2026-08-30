@@ -1,10 +1,12 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
+import { Check } from 'lucide-react'
 
 export function Features() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const [addedToBag, setAddedToBag] = useState(false)
   
   // Track scroll progress within this container (which is 400vh tall)
   const { scrollYProgress } = useScroll({
@@ -93,16 +95,39 @@ export function Features() {
             {/* Shoppable Hotspot (F1) */}
             <motion.div 
               style={{ opacity: hotspotOpacity, scale: hotspotScale }}
-              className="absolute top-[40%] left-[10%] md:left-[30%] flex flex-col items-center gap-2"
+              className="absolute top-[40%] left-[10%] md:left-[30%] flex flex-col items-center gap-2 z-30"
             >
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center">
                 <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white animate-pulse" />
               </div>
-              <div className="bg-black/60 backdrop-blur-xl border border-white/20 rounded-lg p-2 md:p-3 w-32 md:w-48 shadow-2xl origin-top scale-75 md:scale-100">
-                <div className="w-full h-16 md:h-24 bg-zinc-800 rounded mb-2" />
+              <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg p-2 md:p-3 w-36 md:w-48 shadow-2xl origin-top scale-75 md:scale-100 transition-all">
+                <div className="w-full h-16 md:h-24 bg-zinc-800 rounded mb-2 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <span className="absolute bottom-1 left-2 text-[9px] font-mono text-zinc-300">Look 04</span>
+                </div>
                 <div className="text-white font-medium text-xs md:text-sm truncate">Oversized Trench</div>
                 <div className="text-zinc-400 text-[10px] md:text-xs">$450 • In Stock</div>
-                <div className="mt-2 w-full py-1.5 bg-white text-black text-center text-[10px] md:text-xs font-medium rounded">Add to Bag</div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddedToBag(true)
+                    setTimeout(() => setAddedToBag(false), 2500)
+                  }}
+                  className={`mt-2 w-full py-1.5 text-center text-[10px] md:text-xs font-semibold rounded flex items-center justify-center gap-1 transition-all ${
+                    addedToBag
+                      ? 'bg-emerald-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                      : 'bg-white text-black hover:bg-zinc-200 active:scale-95'
+                  }`}
+                >
+                  {addedToBag ? (
+                    <>
+                      <Check size={12} strokeWidth={3} />
+                      <span>Added to Bag!</span>
+                    </>
+                  ) : (
+                    <span>Add to Bag</span>
+                  )}
+                </button>
               </div>
             </motion.div>
 

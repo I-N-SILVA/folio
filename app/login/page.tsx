@@ -75,8 +75,8 @@ function LoginForm() {
           </p>
           <h1>
             <span className="sr-only">QLICO</span>
-            <Image src="/brand/logo-dark.svg" alt="" width={181} height={50} priority className="theme-light-only h-[50px] w-auto object-contain" />
-            <Image src="/brand/logo-light.svg" alt="" width={181} height={50} priority className="theme-dark-only h-[50px] w-auto object-contain" />
+            <Image src="/brand/logo-light.svg" alt="" width={181} height={50} priority className="theme-light-only h-[50px] w-auto object-contain" />
+            <Image src="/brand/logo-dark.svg" alt="" width={181} height={50} priority className="theme-dark-only h-[50px] w-auto object-contain" />
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
             {isResuming
@@ -166,7 +166,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-full bg-[var(--accent)] py-3.5 font-semibold uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(60,35,132,0.24)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:translate-y-0 disabled:opacity-50"
+                className="rounded-full bg-[var(--accent)] py-3.5 font-semibold uppercase tracking-[0.16em] text-[var(--accent-contrast)] shadow-md transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:translate-y-0 disabled:opacity-50"
               >
                 {loading ? 'Sending…' : 'Send magic link'}
               </button>

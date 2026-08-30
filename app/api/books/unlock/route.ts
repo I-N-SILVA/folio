@@ -5,6 +5,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { lockedPages } from '@/lib/gating'
 import { getOwnerEntitlements, readerPolicy } from '@/lib/entitlements'
 import { isEmailEnabled, sendLeadNotification } from '@/lib/email'
+import { dispatchLeadWebhook } from '@/lib/webhooks'
 import { getDemoBook } from '@/data/books'
 import type { Book } from '@/lib/book-schema'
 
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
   // into the response's success: the reader is owed their pages whether or not
   // an email provider is configured or reachable.
   notifyOwner(book, email).catch((err) => console.error('[unlock] notify failed:', err))
+  dispatchLeadWebhook(book, email, sessionId).catch((err) => console.error('[unlock] webhook dispatch failed:', err))
 
   return NextResponse.json({ pages: lockedPages(book, gateEnabled) })
 }

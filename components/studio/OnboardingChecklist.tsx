@@ -77,7 +77,7 @@ export function OnboardingChecklist({
               <span
                 className={`mb-3 grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${
                   step.done
-                    ? 'bg-[var(--accent)] text-white'
+                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
                     : 'border border-[var(--qlico-border)] text-[var(--qlico-muted)]'
                 }`}
               >

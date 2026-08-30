@@ -76,15 +76,43 @@ export function HotspotSettingsForm({
       </div>
 
       <Field
-        label="Position"
-        hint="Drag the pin on the page, or nudge it with the arrow keys — hold Shift for bigger steps."
+        label="Position (% of page)"
+        hint="Drag the pin on the page, nudge with arrow keys, or enter exact percentages."
       >
-        <div className="flex gap-2">
-          <div className={twMerge(inputCls, 'flex-1 text-neutral-500 cursor-default')}>
-            X: {hotspot.x.toFixed(1)}%
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-500">X</span>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              value={Number(hotspot.x.toFixed(1))}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                if (!isNaN(val)) {
+                  updateHotspot(pageId, hotspot.id, { x: Math.min(100, Math.max(0, val)) })
+                }
+              }}
+              className={twMerge(inputCls, 'pl-7 text-neutral-200')}
+            />
           </div>
-          <div className={twMerge(inputCls, 'flex-1 text-neutral-500 cursor-default')}>
-            Y: {hotspot.y.toFixed(1)}%
+          <div className="relative flex-1">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-500">Y</span>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={0.5}
+              value={Number(hotspot.y.toFixed(1))}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value)
+                if (!isNaN(val)) {
+                  updateHotspot(pageId, hotspot.id, { y: Math.min(100, Math.max(0, val)) })
+                }
+              }}
+              className={twMerge(inputCls, 'pl-7 text-neutral-200')}
+            />
           </div>
         </div>
       </Field>

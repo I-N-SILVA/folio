@@ -32,11 +32,13 @@ interface PageRendererProps {
   /** Hide the binding-gutter shadow — there's no facing page to bind against
    *  in single-page/mobile-portrait mode, so the inset shadow looks wrong. */
   hideGutter?: boolean
+  /** Position in a 2-page spread: 'left' has spine on the right, 'right' has spine on the left. */
+  pageSide?: 'left' | 'right' | 'single'
   renderBlockWrapper?: (block: import('@/lib/book-schema').Block, children: React.ReactNode) => React.ReactNode
 }
 
 export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
-  ({ page, bookId, theme, className, hideGutter, renderBlockWrapper }, ref) => {
+  ({ page, bookId, theme, className, hideGutter, pageSide = 'single', renderBlockWrapper }, ref) => {
     const bg = page.background
 
     // Resolve theme colors
@@ -78,7 +80,7 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
       <div
         ref={ref}
         className={twMerge(
-          'relative w-full h-full overflow-hidden',
+          'relative w-full h-full overflow-hidden select-none',
           layoutStyles[page.layout],
           className
         )}
@@ -92,14 +94,40 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
           />
         )}
 
-        {/* Printed-page depth — a soft gutter + curl shadow on the binding edges */}
-        {!hideGutter && (
+        {/* Tactile paper grain texture overlay */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-[1] opacity-[0.035] mix-blend-multiply"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          }}
+        />
+
+        {/* Authentic asymmetric spine binding shadow */}
+        {!hideGutter && pageSide !== 'single' && (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 z-[1]"
+            className="pointer-events-none absolute inset-0 z-[2]"
             style={{
+              background:
+                pageSide === 'left'
+                  ? 'linear-gradient(to left, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.04) 8%, transparent 22%)'
+                  : 'linear-gradient(to right, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.04) 8%, transparent 22%)',
               boxShadow:
-                'inset 18px 0 34px -24px rgba(0,0,0,0.45), inset -18px 0 34px -24px rgba(0,0,0,0.22)',
+                pageSide === 'left'
+                  ? 'inset -22px 0 32px -16px rgba(0,0,0,0.4), inset 1px 0 0 rgba(255,255,255,0.06)'
+                  : 'inset 22px 0 32px -16px rgba(0,0,0,0.4), inset -1px 0 0 rgba(255,255,255,0.06)',
+            }}
+          />
+        )}
+
+        {/* Soft edge vignette on single/mobile pages */}
+        {!hideGutter && pageSide === 'single' && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-[2]"
+            style={{
+              boxShadow: 'inset 0 0 40px -20px rgba(0,0,0,0.25)',
             }}
           />
         )}

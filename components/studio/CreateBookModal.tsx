@@ -330,7 +330,7 @@ export function CreateBookModal({ onClose }: Props) {
               <div
                 className={`grid h-12 w-12 place-items-center rounded-2xl transition-colors ${
                   primary
-                    ? 'bg-[var(--accent)] text-white'
+                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
                     : 'bg-[var(--invert-surface)] text-[var(--invert-text)]'
                 }`}
               >

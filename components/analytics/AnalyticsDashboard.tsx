@@ -152,7 +152,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                   key={r.value}
                   onClick={() => setRange(r.value)}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    range === r.value ? 'bg-[var(--accent)] text-white' : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
+                    range === r.value ? 'bg-[var(--accent)] text-[var(--accent-contrast)]' : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
                   }`}
                 >
                   {r.label}
@@ -310,7 +310,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                           key={p}
                           onClick={() => setHeatmapPage(p)}
                           className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${
-                            heatmapPage === p ? 'bg-[var(--accent)] text-white' : 'hover:bg-[var(--tint-weak)] text-[var(--qlico-ink)]'
+                            heatmapPage === p ? 'bg-[var(--accent)] text-[var(--accent-contrast)]' : 'hover:bg-[var(--tint-weak)] text-[var(--qlico-ink)]'
                           }`}
                         >
                           Page {p}

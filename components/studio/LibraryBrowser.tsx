@@ -115,7 +115,7 @@ export function LibraryBrowser({ books }: { books: LibraryBook[] }) {
                   aria-pressed={filter === option.value}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     filter === option.value
-                      ? 'bg-[var(--accent)] text-white'
+                      ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
                       : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
                   }`}
                 >

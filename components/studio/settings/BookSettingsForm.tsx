@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import Link from 'next/link'
-import { Lock } from 'lucide-react'
+import { Lock, Globe, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import { useEntitlements } from '@/components/studio/EntitlementsContext'
 import { Field, FieldGroup, Toggle, inputCls, selectCls } from './shared'
@@ -56,10 +56,15 @@ const FONT_CHOICES = [
 export function BookSettingsForm({ book }: { book: any }) {
   const { updateSettings, updateTheme } = useEditorStore()
   const entitlements = useEntitlements()
+  const [testingWebhook, setTestingWebhook] = useState(false)
+  const [webhookResult, setWebhookResult] = useState<{ ok?: boolean; message?: string } | null>(null)
+
   const { register, watch, setValue } = useForm({
     defaultValues: {
       unlisted: book.settings?.unlisted ?? false,
       whitelabel: book.settings?.whitelabel ?? false,
+      webhookUrl: book.settings?.webhookUrl ?? book.settings?.gating?.webhookUrl ?? '',
+      customDomain: book.settings?.customDomain ?? '',
       gatingEnabled: book.settings?.gating?.enabled ?? false,
       gatingPage: book.settings?.gating?.page_number ?? 3,
       gatingTitle: book.settings?.gating?.title ?? 'Unlock the full version',
@@ -70,18 +75,50 @@ export function BookSettingsForm({ book }: { book: any }) {
     },
   })
 
+  const currentWebhookUrl = watch('webhookUrl')
+
+  async function handleTestWebhook() {
+    if (!currentWebhookUrl) return
+    setTestingWebhook(true)
+    setWebhookResult(null)
+    try {
+      const res = await fetch('/api/webhooks/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: currentWebhookUrl,
+          title: book.title,
+          slug: book.slug,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setWebhookResult({ ok: true, message: `Delivered (HTTP ${data.status})` })
+      } else {
+        setWebhookResult({ ok: false, message: data.error || 'Failed to deliver payload' })
+      }
+    } catch (err: any) {
+      setWebhookResult({ ok: false, message: err?.message || 'Network error' })
+    } finally {
+      setTestingWebhook(false)
+    }
+  }
+
   useEffect(() => {
     const sub = watch((values) => {
       // Update book settings
       updateSettings({
         unlisted: values.unlisted,
         whitelabel: values.whitelabel,
+        webhookUrl: values.webhookUrl || undefined,
+        customDomain: values.customDomain || undefined,
         gating: {
           enabled: values.gatingEnabled ?? false,
           page_number: values.gatingPage ?? 3,
           type: 'email',
           title: values.gatingTitle ?? 'Unlock the full version',
           description: values.gatingDescription ?? 'Enter your email to continue reading.',
+          webhookUrl: values.webhookUrl || undefined,
         },
       })
 
@@ -208,8 +245,59 @@ export function BookSettingsForm({ book }: { book: any }) {
                 rows={2}
               />
             </Field>
+
+            <Field
+              label="Live Lead Webhook (Zapier, Make, HubSpot)"
+              hint="Forward every captured email to your CRM or automation pipeline instantly."
+            >
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  placeholder="https://hooks.zapier.com/hooks/catch/..."
+                  {...register('webhookUrl')}
+                  className={twMerge(inputCls, 'text-xs')}
+                />
+                <button
+                  type="button"
+                  onClick={handleTestWebhook}
+                  disabled={testingWebhook || !currentWebhookUrl}
+                  className="flex items-center gap-1 shrink-0 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white disabled:opacity-40"
+                >
+                  {testingWebhook ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                  Test
+                </button>
+              </div>
+              {webhookResult && (
+                <div
+                  className={twMerge(
+                    'mt-2 flex items-center gap-1.5 text-[11px]',
+                    webhookResult.ok ? 'text-green-400' : 'text-red-400'
+                  )}
+                >
+                  {webhookResult.ok ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                  {webhookResult.message}
+                </div>
+              )}
+            </Field>
           </div>
         )}
+      </FieldGroup>
+
+      <FieldGroup title="Custom domain (White-label)">
+        <Field
+          label="Domain or Subdomain"
+          hint="Point a CNAME record for your domain (e.g. catalog.brand.com) to cname.qlico.app"
+        >
+          <div className="relative">
+            <Globe size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+            <input
+              type="text"
+              placeholder="editions.yourbrand.com"
+              {...register('customDomain')}
+              className={twMerge(inputCls, 'pl-8 text-xs font-mono')}
+            />
+          </div>
+        </Field>
       </FieldGroup>
     </div>
   )

@@ -7,6 +7,7 @@ import {
   BarChart2,
   BookOpen,
   Check,
+  Copy,
   Edit2,
   ExternalLink,
   MoreHorizontal,
@@ -148,6 +149,7 @@ function CoverPreview({
 export function BookCard({ book: initialBook }: BookCardProps) {
   const [book, setBook] = useState(initialBook)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isDuplicating, setIsDuplicating] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -190,6 +192,24 @@ export function BookCard({ book: initialBook }: BookCardProps) {
     } catch (err: any) {
       toast.error(err.message)
       setIsDeleting(false)
+    }
+  }
+
+  const handleDuplicate = async () => {
+    setMenuOpen(false)
+    setIsDuplicating(true)
+    try {
+      const res = await fetch(`/api/books/${book.id}/duplicate`, { method: 'POST' })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Could not duplicate this edition')
+      }
+      toast.success('Edition duplicated!')
+      router.refresh()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setIsDuplicating(false)
     }
   }
 
@@ -346,6 +366,12 @@ export function BookCard({ book: initialBook }: BookCardProps) {
                 icon={<Edit2 size={15} />}
               >
                 Rename
+              </MenuButton>
+              <MenuButton
+                onClick={handleDuplicate}
+                icon={<Copy size={15} />}
+              >
+                Duplicate
               </MenuButton>
               <MenuButton
                 onClick={() => {

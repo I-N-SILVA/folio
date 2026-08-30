@@ -7,12 +7,12 @@ import { useEditorStore } from '@/lib/editor-store'
 import type { TextBlock as TextBlockType } from '@/lib/book-schema'
 
 const variantStyles: Record<TextBlockType['variant'], string> = {
-  title: 'text-4xl md:text-6xl font-bold leading-tight',
-  heading: 'text-2xl md:text-3xl font-semibold leading-snug',
-  body: 'text-base md:text-lg leading-relaxed',
-  caption: 'text-sm opacity-70 italic',
-  quote: 'text-xl md:text-2xl italic border-l-4 border-[var(--primary)] pl-4 opacity-90',
-  stat: 'text-5xl md:text-7xl font-bold tabular-nums',
+  title: 'font-display text-4xl md:text-6xl font-bold leading-[1.08] tracking-[-0.04em]',
+  heading: 'font-display text-2xl md:text-3xl font-semibold leading-snug tracking-[-0.025em]',
+  body: 'text-base md:text-lg leading-relaxed font-normal tracking-[-0.01em]',
+  caption: 'text-xs md:text-sm opacity-75 italic leading-normal tracking-wide',
+  quote: 'text-xl md:text-2xl italic border-l-3 border-[var(--primary)] pl-4 opacity-95 leading-relaxed tracking-[-0.01em]',
+  stat: 'font-display text-5xl md:text-7xl font-bold tabular-nums tracking-[-0.05em]',
 }
 
 const alignStyles: Record<string, string> = {

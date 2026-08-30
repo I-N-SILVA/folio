@@ -149,6 +149,7 @@ export const GatingSchema = z.object({
   type: z.literal('email').default('email'),
   title: z.string().default('Unlock the full version'),
   description: z.string().default('Enter your email to continue reading.'),
+  webhookUrl: z.string().optional(),
 })
 
 export const SEOSchema = z.object({
@@ -157,13 +158,6 @@ export const SEOSchema = z.object({
   keywords: z.string().optional(),
 })
 
-// `password` and `burn_after_reading` were removed from the editor because
-// nothing read either one: a "password-protected" edition served in full to
-// anyone with the link, and a "view once" edition could be reopened forever.
-// The fields lingered here so stored values would survive, which mostly meant
-// they stayed available for someone to wire a control back onto. Zod strips
-// unknown keys rather than rejecting them, so dropping them here reads old rows
-// fine and clears the values on the next write.
 export const BookSettingsSchema = z.object({
   published: z.boolean().default(false),
   unlisted: z.boolean().default(false),
@@ -176,6 +170,8 @@ export const BookSettingsSchema = z.object({
   }),
   seo: SEOSchema.optional(),
   whitelabel: z.boolean().default(false),
+  webhookUrl: z.string().optional(),
+  customDomain: z.string().optional(),
 })
 
 // ─── Book Schema ───────────────────────────────────────────────────────────────

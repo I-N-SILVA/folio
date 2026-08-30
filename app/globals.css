@@ -344,3 +344,29 @@ section[id] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Print / Press-Ready Export Engine */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Hide interactive screen chrome and floating controls during printing */
+  .fixed,
+  .sticky,
+  button,
+  nav,
+  header {
+    display: none !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+
+  .qlico-grain {
+    background: none !important;
+  }
+}

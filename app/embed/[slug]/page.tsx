@@ -66,7 +66,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
   const { book: visible, lockedCount } = applyGate(book, gateEnabled)
 
   return (
-    <main className="flex h-screen w-full items-center justify-center overflow-hidden bg-[var(--qlico-subtle)]">
+    <main className="flex h-screen w-full items-center justify-center overflow-hidden bg-transparent">
       <ViewerChrome book={visible} lockedCount={lockedCount} showBadge={showBadge} embed />
     </main>
   )

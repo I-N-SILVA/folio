@@ -57,6 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // view-once controls. Unlike those two this is genuinely a metadata
     // concern, so it's honoured rather than removed. Links still work; crawlers
     // are asked not to index or follow.
+    manifest: `/api/manifest/${slug}`,
     robots: book.settings?.unlisted
       ? { index: false, follow: false, googleBot: { index: false, follow: false } }
       : undefined,

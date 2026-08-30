@@ -17,7 +17,11 @@ import {
   RefreshCw,
   Maximize2,
   Minimize2,
+  Grid3X3,
+  Sparkles,
+  Loader2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   DndContext,
   closestCenter,
@@ -272,10 +276,37 @@ export function EditorCanvas() {
   } = useEditorStore()
 
   const [showBlockPicker, setShowBlockPicker] = useState(false)
+  const [showGuides, setShowGuides] = useState(false)
+  const [isDetecting, setIsDetecting] = useState(false)
   const [zoom, setZoom] = useState(1)
   const canvasRef = useRef<HTMLDivElement>(null)
 
   const currentPage = book?.pages?.[currentPageIndex]
+
+  const handleAutoDetect = async () => {
+    if (!currentPage) return
+    setIsDetecting(true)
+    try {
+      const res = await fetch('/api/ai/detect-hotspots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page: currentPage }),
+      })
+      const data = await res.json()
+      if (res.ok && data.detected?.length > 0) {
+        for (const spot of data.detected) {
+          addHotspot(currentPage.id, spot)
+        }
+        toast.success(`Auto-detected ${data.detected.length} interactive pin${data.detected.length === 1 ? '' : 's'}`)
+      } else {
+        toast.info('No new product callouts detected on this page.')
+      }
+    } catch {
+      toast.error('Failed to run AI hotspot detection.')
+    } finally {
+      setIsDetecting(false)
+    }
+  }
 
   const zoomIndex = ZOOM_STEPS.indexOf(zoom)
   const prevStep = ZOOM_STEPS[Math.max(0, (zoomIndex === -1 ? 2 : zoomIndex) - 1)]
@@ -294,8 +325,9 @@ export function EditorCanvas() {
     (x: number, y: number) => {
       if (!currentPage) return
       const isFirst = (currentPage.hotspots?.length ?? 0) === 0
+      const newHotspotId = crypto.randomUUID()
       addHotspot(currentPage.id, {
-        id: crypto.randomUUID(),
+        id: newHotspotId,
         x: Math.min(100, Math.max(0, Math.round(x * 10) / 10)),
         y: Math.min(100, Math.max(0, Math.round(y * 10) / 10)),
         label: 'New hotspot',
@@ -303,6 +335,8 @@ export function EditorCanvas() {
         action: 'modal',
         modal: { title: 'New hotspot', body: '' },
       })
+      useEditorStore.getState().selectHotspot(newHotspotId)
+      useEditorStore.getState().setHotspotMode(false)
       // Enrichment is the leading indicator of upgrade intent — an author who
       // adds a hotspot is using the edition as something other than a PDF.
       if (isFirst) trackProduct('edition_enriched', { kind: 'hotspot' })
@@ -439,6 +473,21 @@ export function EditorCanvas() {
           </button>
         </div>
 
+        {/* Alignment Guidelines Toggle */}
+        <button
+          onClick={() => setShowGuides((v) => !v)}
+          aria-pressed={showGuides}
+          title={showGuides ? 'Hide alignment guidelines' : 'Show alignment guidelines'}
+          className={twMerge(
+            'grid h-8 w-8 place-items-center rounded-lg border text-xs transition-colors',
+            showGuides
+              ? 'border-cyan-500/60 bg-cyan-500/10 text-cyan-400'
+              : 'border-neutral-800 bg-neutral-950/60 text-neutral-400 hover:text-neutral-100'
+          )}
+        >
+          <Grid3X3 size={14} />
+        </button>
+
         <span className="h-5 w-px bg-neutral-800" aria-hidden="true" />
 
         <button
@@ -453,6 +502,20 @@ export function EditorCanvas() {
         >
           <Crosshair size={13} />
           {hotspotMode ? 'Click the page to place' : 'Add hotspot'}
+        </button>
+
+        <button
+          onClick={handleAutoDetect}
+          disabled={isDetecting || !currentPage}
+          title="Auto-detect interactive pins & products with AI"
+          className="flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-950/60 px-2.5 py-1.5 text-xs font-medium text-purple-300 transition-colors hover:border-purple-500/40 hover:bg-purple-500/10 hover:text-purple-200 disabled:opacity-40"
+        >
+          {isDetecting ? (
+            <Loader2 size={13} className="animate-spin text-purple-400" />
+          ) : (
+            <Sparkles size={13} className="text-purple-400" />
+          )}
+          {isDetecting ? 'Detecting…' : 'Auto-detect pins'}
         </button>
       </div>
 
@@ -483,6 +546,18 @@ export function EditorCanvas() {
               : undefined
           }
         >
+          {/* Non-printing alignment guidelines */}
+          {showGuides && (
+            <div className="pointer-events-none absolute inset-0 z-30">
+              {/* Safe page margin boundary */}
+              <div className="absolute inset-6 rounded border border-dashed border-cyan-500/40" />
+              {/* Center vertical axis */}
+              <div className="absolute inset-y-0 left-1/2 w-px border-l border-dashed border-cyan-500/50" />
+              {/* Center horizontal axis */}
+              <div className="absolute inset-x-0 top-1/2 h-px border-t border-dashed border-cyan-500/50" />
+            </div>
+          )}
+
           {/* Placing a hotspot required knowing that the toolbar toggle armed a
               mode, and that the mode wanted a click on the page. Neither was
               stated anywhere, for the feature the product leads with. */}
@@ -548,7 +623,7 @@ export function EditorCanvas() {
 
           {/* Hotspot markers */}
           {!hotspotMode &&
-            currentPage.hotspots.map((hotspot) => (
+            (currentPage.hotspots ?? []).map((hotspot) => (
               <div
                 key={hotspot.id}
                 className="absolute group z-30"
@@ -561,15 +636,15 @@ export function EditorCanvas() {
                   }}
                   className={twMerge(
                     "w-5 h-5 rounded-full border-2 border-white shadow-md cursor-pointer -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform",
-                    selectedHotspotId === hotspot.id ? "bg-[var(--accent-vivid)] ring-2 ring-white" : "bg-amber-400"
+                    selectedHotspotId === hotspot.id ? "bg-white ring-2 ring-amber-400" : "bg-amber-400"
                   )}
                   title={hotspot.label}
                 />
                 
                 {/* Hover Peek */}
-                <div className="absolute left-1/2 bottom-full mb-3 -translate-x-1/2 w-48 p-3 bg-neutral-900 text-white rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all origin-bottom">
-                  <div className="text-xs font-bold mb-1 truncate">{hotspot.modal.title || 'Untitled Hotspot'}</div>
-                  <div className="text-[10px] text-neutral-400 line-clamp-2">{hotspot.modal.body || 'No description provided.'}</div>
+                <div className="absolute left-1/2 bottom-full mb-3 -translate-x-1/2 w-48 p-3 bg-neutral-900 text-white rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all origin-bottom z-40">
+                  <div className="text-xs font-bold mb-1 truncate">{hotspot.modal?.title || hotspot.label || 'Untitled Hotspot'}</div>
+                  <div className="text-[10px] text-neutral-400 line-clamp-2">{hotspot.modal?.body || 'No description provided.'}</div>
                   {/* Triangle pointer */}
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900" />
                 </div>
@@ -577,7 +652,7 @@ export function EditorCanvas() {
             ))}
 
           {hotspotMode &&
-            currentPage.hotspots.map((hotspot) => (
+            (currentPage.hotspots ?? []).map((hotspot) => (
               <div
                 key={hotspot.id}
                 className="absolute w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow pointer-events-none -translate-x-1/2 -translate-y-1/2"
@@ -591,9 +666,9 @@ export function EditorCanvas() {
       <div className="px-4 py-3 border-t border-neutral-800 shrink-0 flex justify-center">
         <button
           onClick={() => setShowBlockPicker(true)}
-          className="flex items-center gap-1.5 rounded-full bg-[var(--accent-vivid)] px-5 py-2 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(124,92,255,0.35)] transition-colors hover:bg-[var(--accent-vivid-hover)]"
+          className="flex items-center gap-2 rounded-full bg-white px-6 py-2 text-xs font-bold text-black shadow-lg transition-all hover:scale-105 hover:bg-neutral-200 active:scale-98"
         >
-          <Plus size={14} />
+          <Plus size={14} strokeWidth={2.5} />
           Add Block
         </button>
       </div>

@@ -3,10 +3,34 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { twMerge } from 'tailwind-merge'
-import { ChevronLeft, ChevronRight, Lock, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  Lock,
+  Maximize,
+  Minimize,
+  Volume2,
+  VolumeX,
+  ZoomIn,
+  ZoomOut,
+  Headphones,
+  Printer,
+  Pause,
+  Play,
+  Square,
+} from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
+import { TableOfContents } from './TableOfContents'
+import { playPageFlipSound } from '@/lib/sound'
+import {
+  isSpeechSupported,
+  speakPageText,
+  stopSpeech,
+  extractPageSpeechText,
+} from '@/lib/speech'
 import type { Book, Page } from '@/lib/book-schema'
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, roundZoom } from '@/lib/page-geometry'
 
@@ -55,7 +79,12 @@ function CoverOpen({ book }: { book: Book }) {
   const fg = dark ? '#ffffff' : '#1d1d1f'
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[9500]" style={{ perspective: 2200 }}>
+    <div
+      onClick={() => setShow(false)}
+      className="fixed inset-0 z-[9500] cursor-pointer pointer-events-auto"
+      style={{ perspective: 2200 }}
+      title="Click anywhere to open"
+    >
       <motion.div
         className="absolute inset-0 flex items-center justify-center origin-left"
         style={{ background: color, transformStyle: 'preserve-3d', backfaceVisibility: 'hidden', boxShadow: '0 0 120px rgba(0,0,0,0.45)' }}
@@ -65,9 +94,10 @@ function CoverOpen({ book }: { book: Book }) {
         onAnimationComplete={() => setShow(false)}
       >
         <span className="absolute left-0 top-0 h-full w-2.5" style={{ background: 'rgba(0,0,0,0.18)' }} />
-        <div className="text-center" style={{ color: fg }}>
+        <div className="text-center select-none" style={{ color: fg }}>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Vol. 01</p>
           <p className="font-display mt-3 text-5xl font-semibold tracking-[-0.02em] sm:text-6xl">{book.title}</p>
+          <p className="mt-4 text-[10px] font-semibold uppercase tracking-widest opacity-40">Tap to open</p>
         </div>
       </motion.div>
     </div>
@@ -96,7 +126,54 @@ export function ViewerChrome({
   const engineRef = useRef<ViewerEngineHandle>(null)
   const [currentPage, setCurrentPage] = useState(0)
   const [zoom, setZoom] = useState(1)
+  const [showToc, setShowToc] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(false)
   const reduce = useReducedMotion()
+
+  const [narrating, setNarrating] = useState(false)
+  const [speechSpeed, setSpeechSpeed] = useState<number>(1)
+  const [canSpeech, setCanSpeech] = useState(false)
+
+  useEffect(() => {
+    setCanSpeech(isSpeechSupported())
+    return () => {
+      stopSpeech()
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      setSoundEnabled(localStorage.getItem('qlico:sound_enabled') === '1')
+    } catch {
+      // localStorage unavailable
+    }
+  }, [])
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('qlico:sound_enabled', next ? '1' : '0')
+      } catch {}
+      if (next) playPageFlipSound(0.25)
+      return next
+    })
+  }
+
+  const handleFlip = (pageIndex: number) => {
+    if (pageIndex !== currentPage && soundEnabled) {
+      playPageFlipSound()
+    }
+    setCurrentPage(pageIndex)
+  }
+
+  const toggleNarration = () => {
+    setNarrating((prev) => !prev)
+  }
+
+  const cycleSpeed = () => {
+    setSpeechSpeed((curr) => (curr === 1 ? 1.25 : curr === 1.25 ? 1.5 : 1))
+  }
 
   // Pages released by the unlock endpoint are merged in here, which remounts
   // the flip engine with the full edition — react-pageflip fixes its page count
@@ -144,11 +221,33 @@ export function ViewerChrome({
         await document.exitFullscreen()
       }
     } catch {
-      // Rejected requests (permissions policy, no user gesture) fire no
-      // `fullscreenchange`, so there's nothing to re-sync — the subscribed
-      // value already reflects reality.
+      // Fullscreen denied by browser permission policy.
     }
   }
+
+  // Synchronize speech synthesis with current page
+  useEffect(() => {
+    if (!narrating) {
+      stopSpeech()
+      return
+    }
+
+    const activePage = visibleBook.pages?.[currentPage]
+    const textToRead = extractPageSpeechText(activePage)
+
+    if (!textToRead) return
+
+    speakPageText(textToRead, {
+      rate: speechSpeed,
+      onEnd: () => {
+        if (currentPage < navigablePages - 1) {
+          engineRef.current?.flipNext()
+        } else {
+          setNarrating(false)
+        }
+      },
+    })
+  }, [narrating, currentPage, speechSpeed, visibleBook.pages, navigablePages])
 
   return (
     // `relative` anchors the embed's absolutely-positioned control bar.
@@ -157,7 +256,7 @@ export function ViewerChrome({
       {/* Book settles in as the cover lifts away. Capped width keeps a
           comfortable margin around the spread instead of edge-to-edge zoom. */}
       <motion.div
-        className="mx-auto w-full"
+        className="relative mx-auto w-full"
         // The frame has to widen with the zoom, or the engine's own
         // `container / 2` clamp swallows anything past ~113%.
         style={{ maxWidth: Math.round(BASE_FRAME_WIDTH * zoom) }}
@@ -165,10 +264,20 @@ export function ViewerChrome({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: reduce ? 0 : 0.15, duration: reduce ? 0.3 : 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
+        {/* Ambient gallery backdrop aura */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -inset-8 -z-10 rounded-3xl opacity-60 blur-3xl"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.04) 45%, transparent 75%)',
+          }}
+        />
+
         <ViewerEngine
           ref={engineRef}
           book={visibleBook}
-          onFlip={setCurrentPage}
+          onFlip={handleFlip}
           embed={embed}
           zoom={zoom}
           lockedCount={stillLocked}
@@ -272,6 +381,72 @@ export function ViewerChrome({
             </button>
           </div>
 
+          {/* TOC / Overview drawer */}
+          {!embed && (
+            <button
+              onClick={() => setShowToc(true)}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)]"
+              aria-label="Table of Contents"
+              title="Table of Contents"
+            >
+              <Layers size={18} />
+            </button>
+          )}
+
+          {/* Tactile page turn sound toggle */}
+          {!embed && (
+            <button
+              onClick={toggleSound}
+              className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] ${
+                soundEnabled ? 'text-[var(--accent-fg)]' : 'text-[var(--qlico-muted)]'
+              }`}
+              aria-label={soundEnabled ? 'Mute page sound' : 'Enable tactile flip sound'}
+              title={soundEnabled ? 'Flip sound enabled' : 'Enable flip sound'}
+            >
+              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            </button>
+          )}
+
+          {/* Read-Aloud / Audiobook Narration toggle */}
+          {!embed && canSpeech && (
+            <div className="flex items-center">
+              <button
+                onClick={toggleNarration}
+                className={twMerge(
+                  'flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors',
+                  narrating
+                    ? 'bg-amber-400/20 text-amber-500 hover:bg-amber-400/30'
+                    : 'text-[var(--qlico-muted)] hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]'
+                )}
+                aria-label={narrating ? 'Stop audiobook narration' : 'Listen with Audiobook narration'}
+                title={narrating ? 'Stop narration' : 'Listen with Audiobook narration'}
+              >
+                <Headphones size={18} className={narrating ? 'animate-pulse' : ''} />
+              </button>
+              {narrating && (
+                <button
+                  onClick={cycleSpeed}
+                  className="rounded-md px-1.5 py-0.5 text-[10px] font-bold text-amber-500 hover:bg-amber-400/20"
+                  title="Speech speed"
+                >
+                  {speechSpeed}x
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Press / PDF Print button */}
+          {!embed && (
+            <button
+              onClick={() => window.print()}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+              aria-label="Print edition / Export PDF"
+              title="Print edition / Export PDF"
+            >
+              <Printer size={18} />
+            </button>
+          )}
+
           {canFullscreen && (
             <button
               onClick={toggleFullscreen}
@@ -322,11 +497,21 @@ export function ViewerChrome({
             href="https://qlico.app/?via=reader#try"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)]"
+            className="mt-1 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-contrast)] transition-colors hover:bg-[var(--accent-hover)]"
           >
             Try it with your PDF
           </a>
         </motion.div>
+      )}
+
+      {/* Table of Contents Drawer */}
+      {showToc && (
+        <TableOfContents
+          book={visibleBook}
+          currentPage={currentPage}
+          onSelectPage={(i) => engineRef.current?.goTo(i)}
+          onClose={() => setShowToc(false)}
+        />
       )}
 
       {/* Branding */}

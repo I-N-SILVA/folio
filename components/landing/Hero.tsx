@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
 import { savePendingImport } from '@/lib/pending-import'
 import { trackProduct } from '@/lib/product-analytics'
+import { DEMO_BOOKS } from '@/data/books'
 import type { Book, Page } from '@/lib/book-schema'
 
 const ViewerChrome = dynamic(
@@ -194,8 +195,39 @@ export function Hero() {
   return (
     <section 
       ref={containerRef}
+      onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+      onDragLeave={(e) => {
+        // Only set dragging to false if leaving the section container
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return
+        setDragging(false)
+      }}
+      onDrop={(e) => {
+        e.preventDefault()
+        setDragging(false)
+        handleFile(e.dataTransfer.files?.[0])
+      }}
       className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#050505] perspective-1000"
     >
+      {/* Dragging Overlay */}
+      <AnimatePresence>
+        {dragging && status !== 'rendering' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-6 pointer-events-none"
+          >
+            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-white bg-white/10 p-12 text-center shadow-2xl">
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-white text-black mb-4 animate-bounce">
+                <FileUp size={36} strokeWidth={2} />
+              </div>
+              <h3 className="font-display text-3xl font-semibold text-white">Drop your PDF here</h3>
+              <p className="mt-2 text-sm text-zinc-300">We'll instantly turn it into an interactive edition</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 3D Infinite Tunnel Scene */}
       <motion.div 
         className="absolute inset-0 pointer-events-none"
@@ -375,6 +407,20 @@ export function Hero() {
                     </p>
                   )}
                 </div>
+
+                {status === 'idle' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBook(DEMO_BOOKS.demo)
+                      setStatus('ready')
+                      trackProduct('demo_opened', { slug: 'demo' })
+                    }}
+                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors underline underline-offset-4"
+                  >
+                    Or explore sample interactive edition (Vol. 01) →
+                  </button>
+                )}
               </motion.div>
 
               {/* Scroll indicator */}
