@@ -392,6 +392,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         <ShareModal
           slug={book.slug}
           published={Boolean(published)}
+          book={book as any}
           onClose={() => setShowShare(false)}
         />
       )}

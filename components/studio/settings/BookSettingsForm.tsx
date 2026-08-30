@@ -67,8 +67,11 @@ export function BookSettingsForm({ book }: { book: any }) {
       customDomain: book.settings?.customDomain ?? '',
       gatingEnabled: book.settings?.gating?.enabled ?? false,
       gatingPage: book.settings?.gating?.page_number ?? 3,
+      gatingType: book.settings?.gating?.type ?? 'email',
       gatingTitle: book.settings?.gating?.title ?? 'Unlock the full version',
-      gatingDescription: book.settings?.gating?.description ?? 'Enter your email to continue reading.',
+      gatingDescription: book.settings?.gating?.description ?? 'Enter your credentials to continue reading.',
+      gatingPasscode: book.settings?.gating?.passcode ?? '',
+      gatingAllowedDomains: (book.settings?.gating?.allowedDomains ?? []).join(', '),
       headingFont: book.theme?.headingFont ?? '',
       bodyFont: book.theme?.bodyFont ?? '',
       themePreset: book.theme?.preset ?? 'ivory',
@@ -106,6 +109,10 @@ export function BookSettingsForm({ book }: { book: any }) {
 
   useEffect(() => {
     const sub = watch((values) => {
+      const domains = typeof values.gatingAllowedDomains === 'string'
+        ? values.gatingAllowedDomains.split(',').map((d: string) => d.trim()).filter(Boolean)
+        : undefined
+
       // Update book settings
       updateSettings({
         unlisted: values.unlisted,
@@ -115,9 +122,11 @@ export function BookSettingsForm({ book }: { book: any }) {
         gating: {
           enabled: values.gatingEnabled ?? false,
           page_number: values.gatingPage ?? 3,
-          type: 'email',
+          type: (values.gatingType as any) || 'email',
           title: values.gatingTitle ?? 'Unlock the full version',
-          description: values.gatingDescription ?? 'Enter your email to continue reading.',
+          description: values.gatingDescription ?? 'Enter your credentials to continue reading.',
+          passcode: values.gatingPasscode || undefined,
+          allowedDomains: domains,
           webhookUrl: values.webhookUrl || undefined,
         },
       })
@@ -207,26 +216,62 @@ export function BookSettingsForm({ book }: { book: any }) {
         )}
       </FieldGroup>
 
-      <FieldGroup title="Email capture">
+      <FieldGroup title="Access Control & Gating">
         {entitlements.leadGating ? (
           <Toggle
-            label="Ask for an email to keep reading"
+            label="Gate access to the edition"
             checked={watch('gatingEnabled')}
             onChange={(next) => setValue('gatingEnabled', next, { shouldDirty: true })}
           />
         ) : (
           <LockedFeature
-            label="Ask for an email to keep reading"
-            hint="Readers give you their address to unlock the rest of the edition. Captured addresses land in Insights."
+            label="Gate access to the edition"
+            hint="Require an email, passcode, or corporate domain to unlock the full publication."
             planName={entitlements.planName}
           />
         )}
 
         {entitlements.leadGating && watch('gatingEnabled') && (
           <div className="space-y-3 border-l border-neutral-800 pl-4">
+            <Field label="Security & Gating Mode">
+              <select {...register('gatingType')} className={selectCls}>
+                <option value="email">Email Lead Capture (Public)</option>
+                <option value="passcode">Secret Passcode (Confidential / NDA)</option>
+                <option value="domain">Corporate Domain Whitelist (Enterprise)</option>
+              </select>
+            </Field>
+
+            {watch('gatingType') === 'passcode' && (
+              <Field
+                label="Secret Passcode"
+                hint="Readers must enter this exact code to view locked pages."
+              >
+                <input
+                  type="text"
+                  placeholder="e.g. VIP2026 or CONFIDENTIAL"
+                  {...register('gatingPasscode')}
+                  className={twMerge(inputCls, 'font-mono')}
+                />
+              </Field>
+            )}
+
+            {watch('gatingType') === 'domain' && (
+              <Field
+                label="Allowed Corporate Domains"
+                hint="Comma-separated domains (e.g. apple.com, lvmh.com, vogue.com)"
+              >
+                <input
+                  type="text"
+                  placeholder="e.g. acme.com, agency.io"
+                  {...register('gatingAllowedDomains')}
+                  className={inputCls}
+                />
+              </Field>
+            )}
+
             <Field
               label="Gate at page"
-              hint={`Pages 1–${Math.max(0, (watch('gatingPage') || 3) - 1)} stay readable; the rest are withheld until an email is given.`}
+              hint={`Pages 1–${Math.max(0, (watch('gatingPage') || 3) - 1)} stay readable; the rest are withheld until verified.`}
             >
               <input
                 type="number"

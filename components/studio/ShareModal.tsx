@@ -1,20 +1,26 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2, Sparkles } from 'lucide-react'
+import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2, Sparkles, Video, Globe } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { trackProduct } from '@/lib/product-analytics'
 import { QRCodeStudioModal } from './QRCodeStudioModal'
+import { SocialTeaserModal } from './SocialTeaserModal'
+import { generateOfflineBundle } from '@/lib/offline-export'
+import { toast } from 'sonner'
+import type { Book } from '@/lib/book-schema'
 
 interface ShareModalProps {
   slug: string
   published: boolean
+  book?: Book
   onClose: () => void
 }
 
-export function ShareModal({ slug, published, onClose }: ShareModalProps) {
+export function ShareModal({ slug, published, book, onClose }: ShareModalProps) {
   const [tab, setTab] = useState<'links' | 'qr'>('links')
   const [showStudio, setShowStudio] = useState(false)
+  const [showTeaser, setShowTeaser] = useState(false)
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const url = `${origin}/book/${slug}`
   const embedCode = `<iframe src="${origin}/embed/${slug}" width="100%" height="600" style="border:0" allowfullscreen title="Interactive edition"></iframe>`
@@ -36,6 +42,24 @@ export function ShareModal({ slug, published, onClose }: ShareModalProps) {
       href: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${url}`)}`,
     },
   ]
+
+  const handleExportOfflineHtml = () => {
+    if (!book) {
+      toast.error('Book data not available for offline bundle export.')
+      return
+    }
+    const html = generateOfflineBundle(book)
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const blobUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = `${slug}-standalone-kiosk.html`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(blobUrl)
+    toast.success('Downloaded Standalone Offline Kiosk HTML bundle!')
+  }
 
   const downloadQr = async () => {
     try {
@@ -96,8 +120,28 @@ export function ShareModal({ slug, published, onClose }: ShareModalProps) {
         </p>
       )}
 
+      {/* Flagship Growth Actions Row */}
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => setShowTeaser(true)}
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)] shadow-sm"
+        >
+          <Video size={14} className="text-violet-600" />
+          Social Teaser Studio
+        </button>
+        <button
+          type="button"
+          onClick={handleExportOfflineHtml}
+          className="flex items-center justify-center gap-1.5 rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)] shadow-sm"
+        >
+          <Download size={14} className="text-emerald-600" />
+          Offline Kiosk HTML
+        </button>
+      </div>
+
       {tab === 'links' ? (
-        <div className="space-y-4">
+        <div className="space-y-4 mt-2">
           <CopyField label="Direct link" value={url} kind="link" />
           <CopyField label="Embed code" value={embedCode} multiline kind="embed" />
 
@@ -155,8 +199,16 @@ export function ShareModal({ slug, published, onClose }: ShareModalProps) {
         <QRCodeStudioModal
           isOpen={showStudio}
           onClose={() => setShowStudio(false)}
-          bookTitle=""
+          bookTitle={book?.title || ''}
           bookSlug={slug}
+        />
+      )}
+
+      {showTeaser && book && (
+        <SocialTeaserModal
+          isOpen={showTeaser}
+          onClose={() => setShowTeaser(false)}
+          book={book}
         />
       )}
 

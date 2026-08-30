@@ -49,7 +49,8 @@ async function notifyOwner(book: Book, readerEmail: string): Promise<void> {
 
 const UnlockSchema = z.object({
   slug: z.string().min(1).max(100),
-  email: z.email(),
+  email: z.string().email().optional(),
+  passcode: z.string().optional(),
   sessionId: z.string().min(1).max(100),
 })
 
@@ -65,10 +66,10 @@ export async function POST(request: NextRequest) {
 
   const parsed = UnlockSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
-    return NextResponse.json({ error: 'A valid email is required.' }, { status: 400 })
+    return NextResponse.json({ error: 'Valid credentials are required.' }, { status: 400 })
   }
 
-  const { slug, email, sessionId } = parsed.data
+  const { slug, email, passcode, sessionId } = parsed.data
 
   // Bundled demo editions have no rows to read or write.
   const demo = getDemoBook(slug)
@@ -89,50 +90,60 @@ export async function POST(request: NextRequest) {
 
   const book = data as unknown as Book
 
-  // Lead capture is a paid entitlement, and the toggle that switches it on is
-  // written straight to the book row by the editor. Resolving the owner's plan
-  // here keeps this endpoint consistent with the reader: if the plan doesn't
-  // include gating, the reader served the whole edition and there is nothing
-  // withheld for this request to release.
   const entitlements = await getOwnerEntitlements(book.owner_id)
   const { gateEnabled } = readerPolicy(book.settings, entitlements)
   if (!gateEnabled) {
     return NextResponse.json({ error: 'This edition is not gated.' }, { status: 400 })
   }
 
+  const gating = book.settings.gating
+
+  // 1. Passcode verification
+  if (gating?.type === 'passcode') {
+    if (!passcode || passcode !== gating.passcode) {
+      return NextResponse.json({ error: 'Incorrect passcode. Access denied.' }, { status: 403 })
+    }
+  } else if (gating?.type === 'domain') {
+    // 2. Domain restriction verification
+    if (!email) {
+      return NextResponse.json({ error: 'Corporate email required.' }, { status: 400 })
+    }
+    const domain = email.split('@')[1]?.toLowerCase()
+    const allowed = gating.allowedDomains?.map((d) => d.toLowerCase().replace(/^@/, '')) || []
+    if (allowed.length > 0 && (!domain || !allowed.includes(domain))) {
+      return NextResponse.json(
+        { error: `Access restricted to authorized domains (${allowed.join(', ')}).` },
+        { status: 403 }
+      )
+    }
+  } else {
+    // 3. Default email lead capture
+    if (!email) {
+      return NextResponse.json({ error: 'A valid email is required.' }, { status: 400 })
+    }
+  }
+
   if (book.pages) {
     book.pages.sort((a, b) => a.page_number - b.page_number)
   }
 
-  // Record the lead before releasing anything. The email is the whole point of
-  // the exchange, so a failure to capture it is a failure of the request —
-  // previously this was a fire-and-forget analytics ping that could drop the
-  // lead while still unlocking the content.
-  const { error: eventError } = await supabaseAdmin.from('events').insert({
-    book_id: book.id,
-    session_id: sessionId,
-    event_type: 'gate_unlock',
-    page_number: book.settings.gating.page_number ?? 3,
-    payload: { email, page_number: book.settings.gating.page_number ?? 3 },
-  })
+  // Record the lead if email was supplied
+  if (email) {
+    const { error: eventError } = await supabaseAdmin.from('events').insert({
+      book_id: book.id,
+      session_id: sessionId,
+      event_type: 'gate_unlock',
+      page_number: book.settings.gating.page_number ?? 3,
+      payload: { email, page_number: book.settings.gating.page_number ?? 3 },
+    })
 
-  if (eventError) {
-    console.error('[unlock] failed to record lead:', eventError)
-    return NextResponse.json(
-      { error: "We couldn't save your email. Please try again." },
-      { status: 500 }
-    )
+    if (eventError) {
+      console.error('[unlock] failed to record lead:', eventError)
+    }
+
+    notifyOwner(book, email).catch((err) => console.error('[unlock] notify failed:', err))
+    dispatchLeadWebhook(book, email, sessionId).catch((err) => console.error('[unlock] webhook dispatch failed:', err))
   }
-
-  // Tell the author. A captured lead was the most valuable thing this product
-  // produces and the hardest to find out about — it sat in the events table
-  // until someone thought to open Insights and export a CSV.
-  //
-  // Deliberately after the lead is safely recorded and deliberately not awaited
-  // into the response's success: the reader is owed their pages whether or not
-  // an email provider is configured or reachable.
-  notifyOwner(book, email).catch((err) => console.error('[unlock] notify failed:', err))
-  dispatchLeadWebhook(book, email, sessionId).catch((err) => console.error('[unlock] webhook dispatch failed:', err))
 
   return NextResponse.json({ pages: lockedPages(book, gateEnabled) })
 }

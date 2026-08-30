@@ -539,6 +539,7 @@ export function EditorClient({ book, entitlements }: Props) {
         <ShareModal
           slug={storeBook.slug}
           published={isPublished}
+          book={storeBook}
           onClose={() => setShowShare(false)}
         />
       )}

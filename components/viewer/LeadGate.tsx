@@ -33,12 +33,13 @@ export function LeadGate({
   onUnlocked,
 }: LeadGateProps) {
   const [email, setEmail] = useState('')
+  const [passcode, setPasscode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  // Unlocks were being counted with no denominator, so "12 leads" said nothing
-  // about whether the gate converts. Recorded once per mount — the gate is one
-  // page of a flipbook, so it mounts when the edition loads, not on every flip.
+  const isPasscode = gating?.type === 'passcode'
+  const isDomain = gating?.type === 'domain'
+
   const reported = useRef(false)
   useEffect(() => {
     if (reported.current) return
@@ -48,7 +49,9 @@ export function LeadGate({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim() || busy) return
+    if (busy) return
+    if (isPasscode && !passcode.trim()) return
+    if (!isPasscode && !email.trim()) return
 
     setBusy(true)
     setError('')
@@ -56,7 +59,12 @@ export function LeadGate({
       const res = await fetch('/api/books/unlock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, email: email.trim(), sessionId }),
+        body: JSON.stringify({
+          slug,
+          email: isPasscode ? undefined : email.trim(),
+          passcode: isPasscode ? passcode.trim() : undefined,
+          sessionId,
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -64,8 +72,6 @@ export function LeadGate({
       }
       onUnlocked(Array.isArray(data.pages) ? data.pages : [])
     } catch (err) {
-      // The email is the asset being exchanged, so a failure has to be visible
-      // and retryable rather than silently unlocking or silently dropping it.
       setError(err instanceof Error ? err.message : 'Something went wrong.')
       setBusy(false)
     }
@@ -77,20 +83,23 @@ export function LeadGate({
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-sm space-y-5 rounded-2xl border border-black/5 bg-white p-7 text-center shadow-xl"
+        className="w-full max-w-sm space-y-5 rounded-2xl border border-black/5 bg-white p-7 text-center shadow-xl text-gray-900"
       >
         <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-[var(--accent)]/10 text-[var(--accent)]">
           <Lock size={19} />
         </span>
 
-        {/* Both strings are optional in the schema, so an edition that switched
-            gating on without filling them in used to render a blank card. */}
         <div className="space-y-2">
           <h3 className="text-xl font-bold leading-tight text-gray-900">
-            {gating?.title || 'Read the rest of this edition'}
+            {gating?.title || (isPasscode ? 'Confidential Edition' : 'Unlock this edition')}
           </h3>
           <p className="text-sm leading-6 text-gray-600">
-            {gating?.description || 'Enter your email to unlock the remaining pages.'}
+            {gating?.description ||
+              (isPasscode
+                ? 'Enter the secret passcode to access this publication.'
+                : isDomain
+                ? 'Enter your corporate email address to unlock.'
+                : 'Enter your email to unlock the remaining pages.')}
           </p>
           {lockedCount > 0 && (
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
@@ -100,32 +109,49 @@ export function LeadGate({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            aria-label="Email address"
-            aria-invalid={Boolean(error)}
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              setError('')
-            }}
-            disabled={busy}
-            placeholder="your@email.com"
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-60"
-          />
-          {/* `bg-primary` was never a real utility — no --color-primary is
-              registered with Tailwind's theme — so this button rendered with a
-              transparent background under white text and was invisible. */}
+          {isPasscode ? (
+            <input
+              name="passcode"
+              type="password"
+              required
+              autoFocus
+              aria-label="Passcode"
+              aria-invalid={Boolean(error)}
+              value={passcode}
+              onChange={(e) => {
+                setPasscode(e.target.value)
+                setError('')
+              }}
+              disabled={busy}
+              placeholder="Enter passcode"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center tracking-widest font-mono text-sm outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-60"
+            />
+          ) : (
+            <input
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              aria-label="Email address"
+              aria-invalid={Boolean(error)}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setError('')
+              }}
+              disabled={busy}
+              placeholder={isDomain ? 'name@corporate-domain.com' : 'your@email.com'}
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-60"
+            />
+          )}
+
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-3 font-semibold text-white shadow-lg transition-all hover:bg-[var(--accent-hover)] active:scale-[0.98] disabled:opacity-70"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-3 font-semibold text-white shadow-lg transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-70"
           >
             {busy && <Loader2 size={15} className="animate-spin" />}
-            {busy ? 'Unlocking…' : 'Unlock full edition'}
+            {busy ? 'Unlocking…' : isPasscode ? 'Verify Passcode' : 'Unlock full edition'}
           </button>
         </form>
 

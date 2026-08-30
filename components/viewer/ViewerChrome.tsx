@@ -19,7 +19,9 @@ import {
   Search,
   ShoppingBag,
   MessageSquare,
+  Globe,
 } from 'lucide-react'
+import { LANGUAGES, type LanguageCode, getTranslation } from '@/lib/translate'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
@@ -131,6 +133,9 @@ export function ViewerChrome({
   const cycleSpeed = () => {
     setSpeechSpeed((curr) => (curr === 1 ? 1.25 : curr === 1.25 ? 1.5 : 1))
   }
+
+  const [currentLang, setCurrentLang] = useState<LanguageCode>('en')
+  const [showLangMenu, setShowLangMenu] = useState(false)
 
   // Pages released by the unlock endpoint are merged in here, which remounts
   // the flip engine with the full edition — react-pageflip fixes its page count
@@ -526,6 +531,48 @@ export function ViewerChrome({
                 >
                   {speechSpeed}x
                 </button>
+              )}
+            </div>
+          )}
+
+          {/* Multi-Language Instant Translation */}
+          {!embed && (
+            <div className="relative">
+              <button
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+                aria-label="Select Language"
+                title="Change Edition Language"
+              >
+                <Globe size={18} />
+              </button>
+
+              {showLangMenu && (
+                <div className="absolute top-12 right-0 z-50 w-44 rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-2 shadow-2xl backdrop-blur-xl">
+                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--qlico-muted)]">
+                    Select Language
+                  </div>
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => {
+                        setCurrentLang(l.code)
+                        setShowLangMenu(false)
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                        currentLang === l.code
+                          ? 'bg-[var(--accent)] text-white'
+                          : 'text-[var(--qlico-ink)] hover:bg-[var(--tint)]'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>{l.flag}</span>
+                        <span>{l.name}</span>
+                      </span>
+                      {currentLang === l.code && <span className="text-[10px]">✓</span>}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           )}

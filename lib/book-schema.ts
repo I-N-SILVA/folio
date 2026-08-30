@@ -149,15 +149,14 @@ export const ThemeSchema = z.object({
 
 // ─── Book Settings Schema ──────────────────────────────────────────────────────
 
-// `type` used to offer 'password' alongside 'email'. Only email was ever
-// implemented, so it was a live enum value with no behaviour behind it — the
-// kind of thing that gets wired to a UI control on the assumption it works.
 export const GatingSchema = z.object({
   enabled: z.boolean().default(false),
   page_number: z.number().default(3),
-  type: z.literal('email').default('email'),
+  type: z.enum(['email', 'passcode', 'domain']).default('email'),
   title: z.string().default('Unlock the full version'),
-  description: z.string().default('Enter your email to continue reading.'),
+  description: z.string().default('Enter your credentials to continue reading.'),
+  passcode: z.string().optional(),
+  allowedDomains: z.array(z.string()).optional(),
   webhookUrl: z.string().optional(),
 })
 
