@@ -15,10 +15,10 @@ export function Features() {
   })
 
   // Center Magazine animations
-  // It starts scaled down and rotated, then comes into focus
-  const magazineScale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.8, 1, 1, 0.8])
-  const magazineRotateX = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [30, 0, 0, 30])
-  const magazineY = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, -100])
+  // Pure, planar luxury elevation without perspective distortion
+  const magazineScale = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0.94, 1, 1, 0.94])
+  const magazineY = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [40, 0, 0, -40])
+  const magazineOpacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0.4, 1, 1, 0.4])
 
   // Feature 1: Shoppable (0.2 to 0.4)
   const f1Opacity = useTransform(scrollYProgress, [0.15, 0.25, 0.35, 0.45], [0, 1, 1, 0])
@@ -77,15 +77,14 @@ export function Features() {
           </motion.div>
         </div>
 
-        {/* --- CENTRAL 3D MAGAZINE --- */}
+        {/* --- CENTRAL LUXURY EDITORIAL SPREAD --- */}
         <motion.div 
           style={{ 
             scale: magazineScale, 
-            rotateX: magazineRotateX,
+            opacity: magazineOpacity,
             y: magazineY,
-            transformStyle: 'preserve-3d' 
           }}
-          className="relative z-10 w-[90vw] md:w-[800px] h-[60vw] md:h-[500px] flex shadow-[0_0_100px_rgba(255,255,255,0.1)] rounded-sm overflow-hidden"
+          className="relative z-10 w-[90vw] md:w-[840px] h-[60vw] md:h-[520px] flex shadow-[0_24px_80px_rgba(0,0,0,0.8),_0_0_120px_rgba(255,255,255,0.06)] rounded-lg overflow-hidden border border-white/10"
         >
           {/* Magazine Left Page */}
           <div className="w-1/2 h-full relative border-r border-black/10 bg-zinc-900">

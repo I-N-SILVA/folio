@@ -1,18 +1,27 @@
 {
   "id": "demo-book-id",
   "slug": "demo",
-  "title": "QLICO",
-  "description": "An interactive tour of everything QLICO can do",
+  "title": "QLICO Archives · Vol. 01",
+  "description": "An ultra-luxury interactive digital monograph showcasing shoppable lookbooks, architectural spreads, and spatial audio narration.",
   "owner_id": "demo",
   "theme": {
-    "preset": "custom",
-    "primary": "#3c2384",
-    "background": "#ffffff",
-    "headingFont": "Georgia"
+    "preset": "ivory",
+    "background": "#fcfbf9",
+    "primary": "#0d0d11",
+    "headingFont": "Bodoni Moda",
+    "paperPhysics": "magazine"
   },
   "settings": {
     "published": true,
-    "unlisted": false
+    "unlisted": false,
+    "whitelabel": true,
+    "gating": {
+      "enabled": false,
+      "page_number": 8,
+      "type": "email",
+      "title": "Unlock the Collector's Edition",
+      "description": "Enter your email to receive full high-res PDF downloads and exclusive archival footage."
+    }
   },
   "pages": [
     {
@@ -22,14 +31,14 @@
       "type": "cover",
       "layout": "hero",
       "background": {
-        "color": "#fbfbfd"
+        "color": "#0d0d11"
       },
       "blocks": [
         {
           "type": "text",
           "id": "b1-1",
           "variant": "caption",
-          "content": "VOL. 01 · INTERACTIVE PUBLISHING",
+          "content": "ARCHIVAL MONOGRAPH · ISSUE 01",
           "align": "center"
         },
         {
@@ -43,13 +52,13 @@
           "type": "text",
           "id": "b1-3",
           "variant": "body",
-          "content": "Flip through anything. This is a live edition — turn the pages.",
+          "content": "Tactile digital paper, shoppable haute lookbooks, and spatial audio narration. Turn the page to begin.",
           "align": "center"
         },
         {
           "type": "button",
           "id": "b1-4",
-          "label": "Start reading →",
+          "label": "Explore the Edition →",
           "href": "https://qlico.app",
           "variant": "primary",
           "target": "_blank"
@@ -62,7 +71,7 @@
       "book_id": "demo-book-id",
       "page_number": 2,
       "type": "content",
-      "layout": "text",
+      "layout": "split",
       "background": {
         "color": "#ffffff"
       },
@@ -70,33 +79,47 @@
         {
           "type": "text",
           "id": "b2-1",
-          "variant": "heading",
-          "content": "Typography that reads like print"
+          "variant": "caption",
+          "content": "LOOKBOOK · AUTUMN ATELIER"
         },
         {
           "type": "text",
           "id": "b2-2",
-          "variant": "body",
-          "content": "A complete type system — titles, headings, body, quotes, captions, and stats — so every page feels composed, not assembled."
+          "variant": "heading",
+          "content": "The Mulberry Silk Overcoat"
         },
         {
           "type": "text",
           "id": "b2-3",
-          "variant": "quote",
-          "content": "\"The best documents feel considered. QLICO makes interactive ones that genuinely are.\""
+          "variant": "body",
+          "content": "Tailored in Milan from double-faced mulberry silk with horn buttons and a lightweight waterproof membrane. Tap any pin to add to bag directly."
         },
         {
-          "type": "divider",
-          "id": "b2-4"
-        },
-        {
-          "type": "text",
-          "id": "b2-5",
-          "variant": "caption",
-          "content": "Title · Heading · Body · Quote · Caption · Stat"
+          "type": "image",
+          "id": "b2-4",
+          "src": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=85",
+          "alt": "Mulberry Silk Overcoat Model",
+          "caption": "Look 01 · Handcrafted in Milan",
+          "lightbox": true
         }
       ],
-      "hotspots": []
+      "hotspots": [
+        {
+          "id": "hs-coat",
+          "x": 48,
+          "y": 42,
+          "label": "Silk Overcoat ($480)",
+          "icon": "ShoppingBag",
+          "modal": {
+            "title": "Mulberry Silk Overcoat — Noir",
+            "body": "Woven with long-staple Italian silk. Features taped seams, horn buttons, and an unstructured fluid drape. Add to bag for seamless in-edition checkout."
+          },
+          "action": "checkout",
+          "stripeUrl": "https://buy.stripe.com/test_demo",
+          "price": "$480",
+          "ctaLabel": "Add to Cart"
+        }
+      ]
     },
     {
       "id": "page-3",
@@ -105,28 +128,34 @@
       "type": "content",
       "layout": "hero",
       "background": {
-        "color": "#f5f5f7"
+        "color": "#f9f8f5"
+      },
+      "ambientAudio": {
+        "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        "loop": true,
+        "volume": 0.35,
+        "title": "Atelier Ambient Lounge"
       },
       "blocks": [
         {
           "type": "text",
           "id": "b3-1",
           "variant": "heading",
-          "content": "Shoppable & always current",
+          "content": "Live Pricing & Real-Time Sync",
           "align": "center"
         },
         {
           "type": "image",
           "id": "b3-2",
-          "src": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1000&q=80",
-          "alt": "Stonewashed linen throw",
-          "caption": "Stonewashed linen — limited run",
+          "src": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1200&q=85",
+          "alt": "Organic Stonewashed Linen",
+          "caption": "Limited Artisan Production Run",
           "lightbox": true
         },
         {
           "type": "data",
           "id": "b3-4",
-          "label": "Live price · updates after publish",
+          "label": "Live Price (Auto-Synced)",
           "source": "/demo-live.json",
           "path": "product.price",
           "prefix": "$",
@@ -136,25 +165,25 @@
           "type": "text",
           "id": "b3-3",
           "variant": "caption",
-          "content": "Edit one value and every published edition updates — no re-export. Tap the pin to shop.",
+          "content": "Bind text blocks to live JSON endpoints. When your inventory or exchange rate shifts, every published edition updates worldwide without re-exporting.",
           "align": "center"
         }
       ],
       "hotspots": [
         {
-          "id": "hs-shop",
-          "x": 50,
-          "y": 38,
-          "label": "Shop the linen throw",
+          "id": "hs-throw",
+          "x": 52,
+          "y": 40,
+          "label": "Linen Throw ($68)",
           "icon": "ShoppingBag",
           "modal": {
-            "title": "Linen Throw — Sand",
-            "body": "Stonewashed linen, woven in Portugal. This hotspot is shoppable — checkout without ever leaving the page."
+            "title": "Stonewashed Linen Throw — Sand",
+            "body": "100% European flax linen woven on heritage looms in Guimarães, Portugal."
           },
           "action": "checkout",
           "stripeUrl": "https://buy.stripe.com/test_demo",
-          "price": "$48",
-          "ctaLabel": "Add to cart"
+          "price": "$68",
+          "ctaLabel": "Add to Cart"
         }
       ]
     },
@@ -163,35 +192,52 @@
       "book_id": "demo-book-id",
       "page_number": 4,
       "type": "content",
-      "layout": "hero",
+      "layout": "split",
       "background": {
-        "color": "#141a3a"
+        "color": "#ffffff"
       },
       "blocks": [
         {
           "type": "text",
           "id": "b4-1",
-          "variant": "heading",
-          "content": "Video, without the bloat",
-          "align": "center"
+          "variant": "caption",
+          "content": "ARCHITECTURE · MONOGRAPH"
         },
         {
-          "type": "video",
+          "type": "text",
           "id": "b4-2",
-          "src": "https://www.w3schools.com/html/mov_bbb.mp4",
-          "poster": "https://images.unsplash.com/photo-1536240478700-b869ad10e128?w=1000&q=80",
-          "autoplay": false,
-          "muted": true
+          "variant": "heading",
+          "content": "Pavilion IX — Kyoto"
         },
         {
           "type": "text",
           "id": "b4-3",
-          "variant": "caption",
-          "content": "Video stays out of the page DOM — tap the poster for a fullscreen player.",
-          "align": "center"
+          "variant": "quote",
+          "content": "\"Architecture is not about imposing new form, but allowing daylight and silence to converse with materials.\""
+        },
+        {
+          "type": "image",
+          "id": "b4-4",
+          "src": "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1200&q=85",
+          "alt": "Minimalist Japanese Concrete Pavilion",
+          "caption": "Photographed at Dawn by Hiroshi Tanaka",
+          "lightbox": true
         }
       ],
-      "hotspots": []
+      "hotspots": [
+        {
+          "id": "hs-cad",
+          "x": 62,
+          "y": 48,
+          "label": "Inspect CAD Details",
+          "icon": "Layers",
+          "modal": {
+            "title": "Structural Concrete Joinery",
+            "body": "Post-tensioned volcanic basalt aggregate with 18mm hidden expansion joints. Engineered for 100-year seismic durability."
+          },
+          "action": "modal"
+        }
+      ]
     },
     {
       "id": "page-5",
@@ -200,28 +246,49 @@
       "type": "content",
       "layout": "hero",
       "background": {
-        "color": "#ffffff"
+        "color": "#0d0d11"
       },
       "blocks": [
         {
           "type": "text",
           "id": "b5-1",
-          "variant": "heading",
-          "content": "Audio, beautifully controlled",
+          "variant": "caption",
+          "content": "ENGINEERING PERFORMANCE",
           "align": "center"
         },
         {
-          "type": "audio",
+          "type": "text",
           "id": "b5-2",
-          "src": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-          "title": "Ambient — Track 01",
-          "waveform": false
+          "variant": "heading",
+          "content": "Net-Zero Archival Precision",
+          "align": "center"
         },
         {
           "type": "text",
           "id": "b5-3",
-          "variant": "body",
-          "content": "Custom controls, no default browser chrome. Every play is measured automatically.",
+          "variant": "stat",
+          "content": "100%",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "b5-4",
+          "variant": "caption",
+          "content": "Solar & Geothermal Self-Sufficiency",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "b5-5",
+          "variant": "stat",
+          "content": "4,200 lm",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "b5-6",
+          "variant": "caption",
+          "content": "Passive Natural Daylight Aperture",
           "align": "center"
         }
       ],
@@ -234,51 +301,59 @@
       "type": "content",
       "layout": "blank",
       "background": {
-        "image": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1000&q=80",
-        "overlay": "rgba(0,0,0,0.45)"
+        "image": "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=1200&q=85",
+        "overlay": "rgba(0,0,0,0.55)"
       },
       "blocks": [
         {
           "type": "text",
           "id": "b6-1",
+          "variant": "caption",
+          "content": "CULINARY ANTHOLOGY",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "b6-2",
           "variant": "heading",
-          "content": "Interactive hotspots",
+          "content": "Nine-Course Autumn Menu",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "b6-3",
+          "variant": "body",
+          "content": "Tap the course pins to discover pairing notes from Chef Marcus Lindqvist and Head Sommelier Clara Vance.",
           "align": "center"
         }
       ],
       "hotspots": [
         {
-          "id": "hs-1",
-          "x": 25,
-          "y": 45,
-          "label": "Page turns",
-          "icon": "BookOpen",
+          "id": "hs-course-1",
+          "x": 30,
+          "y": 48,
+          "label": "Course IV: Hokkaido Scallop",
+          "icon": "Utensils",
           "modal": {
-            "title": "A real page-turn",
-            "body": "QLICO renders a fluid, tactile page-turn that feels like a printed object — not a scroll, not a slideshow."
-          }
+            "title": "Hokkaido Scallop · Fermented Apple",
+            "body": "Wild diver scallops seared over binchotan charcoal with fermented granny smith emulsion and sea truffle snow."
+          },
+          "action": "modal"
         },
         {
-          "id": "hs-2",
-          "x": 65,
-          "y": 60,
-          "label": "Analytics",
-          "icon": "BarChart2",
+          "id": "hs-wine",
+          "x": 70,
+          "y": 55,
+          "label": "Sommelier Pairing ($145)",
+          "icon": "ShoppingBag",
           "modal": {
-            "title": "Built-in analytics",
-            "body": "Opens, page views, dwell time, hotspot clicks, and completion are tracked automatically — captured into your own data layer."
-          }
-        },
-        {
-          "id": "hs-3",
-          "x": 50,
-          "y": 30,
-          "label": "Studio",
-          "icon": "Pencil",
-          "modal": {
-            "title": "A studio, not a codebase",
-            "body": "Anyone on the team can compose pages with simple forms — add a hotspot, drop in media, and publish. No code required."
-          }
+            "title": "Grand Cru Reserve Wine Pairing",
+            "body": "Curated selection of 6 vintage biodynamic wines from Burgundy, Wachau, and Priorat."
+          },
+          "action": "checkout",
+          "stripeUrl": "https://buy.stripe.com/test_demo",
+          "price": "$145",
+          "ctaLabel": "Reserve Pairing"
         }
       ]
     },
@@ -287,47 +362,42 @@
       "book_id": "demo-book-id",
       "page_number": 7,
       "type": "content",
-      "layout": "hero",
+      "layout": "split",
       "background": {
-        "color": "#f5f5f7"
+        "color": "#ffffff"
       },
       "blocks": [
         {
-          "type": "text",
+          "type": "image",
           "id": "b7-1",
-          "variant": "heading",
-          "content": "Calls to action",
-          "align": "center"
+          "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=85",
+          "alt": "QLICO Telemetry Dashboard",
+          "lightbox": false
         },
         {
           "type": "text",
           "id": "b7-2",
-          "variant": "body",
-          "content": "Three button styles — each click measured.",
-          "align": "center"
+          "variant": "caption",
+          "content": "ANALYTICS & CONVERSIONS"
         },
         {
-          "type": "button",
+          "type": "text",
           "id": "b7-3",
-          "label": "Primary action",
-          "href": "https://qlico.app",
-          "variant": "primary",
-          "target": "_blank"
+          "variant": "heading",
+          "content": "Visual Attention Intelligence"
         },
         {
-          "type": "button",
+          "type": "text",
           "id": "b7-4",
-          "label": "Secondary action",
-          "href": "https://qlico.app",
-          "variant": "secondary",
-          "target": "_blank"
+          "variant": "body",
+          "content": "Thermal dwell duration heatmaps, hotspot click conversion halos, and completion drop-off funnels — captured in real time with zero third-party trackers."
         },
         {
           "type": "button",
           "id": "b7-5",
-          "label": "Text link",
+          "label": "View Live Heatmaps →",
           "href": "https://qlico.app",
-          "variant": "ghost",
+          "variant": "primary",
           "target": "_blank"
         }
       ],
@@ -337,137 +407,35 @@
       "id": "page-8",
       "book_id": "demo-book-id",
       "page_number": 8,
-      "type": "content",
+      "type": "back",
       "layout": "hero",
       "background": {
-        "color": "#141a3a"
+        "color": "#0d0d11"
       },
       "blocks": [
         {
           "type": "text",
           "id": "b8-1",
-          "variant": "heading",
-          "content": "Numbers that land",
-          "align": "center"
-        },
-        {
-          "type": "text",
-          "id": "b8-2",
-          "variant": "stat",
-          "content": "10×",
-          "align": "center"
-        },
-        {
-          "type": "text",
-          "id": "b8-3",
-          "variant": "caption",
-          "content": "More engaging than a static PDF",
-          "align": "center"
-        },
-        {
-          "type": "text",
-          "id": "b8-4",
-          "variant": "stat",
-          "content": "100%",
-          "align": "center"
-        },
-        {
-          "type": "text",
-          "id": "b8-5",
-          "variant": "caption",
-          "content": "Your data, in your own infrastructure",
-          "align": "center"
-        },
-        {
-          "type": "text",
-          "id": "b8-6",
-          "variant": "stat",
-          "content": "Minutes",
-          "align": "center"
-        },
-        {
-          "type": "text",
-          "id": "b8-7",
-          "variant": "caption",
-          "content": "From PDF to published edition",
-          "align": "center"
-        }
-      ],
-      "hotspots": []
-    },
-    {
-      "id": "page-9",
-      "book_id": "demo-book-id",
-      "page_number": 9,
-      "type": "content",
-      "layout": "split",
-      "background": {
-        "color": "#ffffff"
-      },
-      "blocks": [
-        {
-          "type": "image",
-          "id": "b9-1",
-          "src": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
-          "alt": "Analytics dashboard on a laptop",
-          "lightbox": false
-        },
-        {
-          "type": "text",
-          "id": "b9-2",
-          "variant": "heading",
-          "content": "Analytics, built in"
-        },
-        {
-          "type": "text",
-          "id": "b9-3",
-          "variant": "body",
-          "content": "Per-edition dashboards show opens, dwell time, hotspot clicks, and completion funnels. Export raw events as CSV anytime."
-        },
-        {
-          "type": "button",
-          "id": "b9-4",
-          "label": "See the analytics →",
-          "href": "https://qlico.app",
-          "variant": "primary",
-          "target": "_blank"
-        }
-      ],
-      "hotspots": []
-    },
-    {
-      "id": "page-10",
-      "book_id": "demo-book-id",
-      "page_number": 10,
-      "type": "back",
-      "layout": "hero",
-      "background": {
-        "color": "#141a3a"
-      },
-      "blocks": [
-        {
-          "type": "text",
-          "id": "b10-1",
           "variant": "title",
           "content": "QLICO",
           "align": "center"
         },
         {
           "type": "text",
-          "id": "b10-2",
+          "id": "b8-2",
           "variant": "body",
-          "content": "Flip through anything. Publish on the web, embed anywhere, install as an app.",
+          "content": "Turn static PDFs into interactive, shoppable digital publications with spatial audio, lead webhooks, and vector QR codes.",
           "align": "center"
         },
         {
           "type": "divider",
-          "id": "b10-3"
+          "id": "b8-3"
         },
         {
           "type": "button",
-          "id": "b10-4",
-          "label": "Start for free →",
-          "href": "https://qlico.app",
+          "id": "b8-4",
+          "label": "Publish Your Edition on QLICO →",
+          "href": "https://qlico.app/create",
           "variant": "primary",
           "target": "_blank"
         }
