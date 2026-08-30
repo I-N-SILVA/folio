@@ -55,54 +55,7 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
-/** A one-time "open the book" moment — the closed cover swings away on entry. */
-function CoverOpen({ book }: { book: Book }) {
-  const reduce = useReducedMotion()
-  const [show, setShow] = useState(false)
 
-  useEffect(() => {
-    if (reduce) return
-    const key = `qlico:opened:${book.id}`
-    try {
-      if (sessionStorage.getItem(key)) return // already opened this session
-      sessionStorage.setItem(key, '1')
-    } catch {
-      // sessionStorage unavailable — still play once for this mount
-    }
-    setShow(true)
-  }, [book.id, reduce])
-
-  if (!show) return null
-
-  const color = book.pages?.[0]?.background?.color || book.theme?.background || '#1d1d1f'
-  const dark = /^#[0-9a-f]{6}$/i.test(color) ? luminance(color) < 0.5 : true
-  const fg = dark ? '#ffffff' : '#1d1d1f'
-
-  return (
-    <div
-      onClick={() => setShow(false)}
-      className="fixed inset-0 z-[9500] cursor-pointer pointer-events-auto"
-      style={{ perspective: 2200 }}
-      title="Click anywhere to open"
-    >
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center origin-left"
-        style={{ background: color, transformStyle: 'preserve-3d', backfaceVisibility: 'hidden', boxShadow: '0 0 120px rgba(0,0,0,0.45)' }}
-        initial={{ rotateY: 0 }}
-        animate={{ rotateY: -112 }}
-        transition={{ delay: 0.2, duration: 1, ease: [0.7, 0, 0.25, 1] }}
-        onAnimationComplete={() => setShow(false)}
-      >
-        <span className="absolute left-0 top-0 h-full w-2.5" style={{ background: 'rgba(0,0,0,0.18)' }} />
-        <div className="text-center select-none" style={{ color: fg }}>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] opacity-70">Vol. 01</p>
-          <p className="font-display mt-3 text-5xl font-semibold tracking-[-0.02em] sm:text-6xl">{book.title}</p>
-          <p className="mt-4 text-[10px] font-semibold uppercase tracking-widest opacity-40">Tap to open</p>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
 
 export function ViewerChrome({
   book,
@@ -252,17 +205,16 @@ export function ViewerChrome({
   return (
     // `relative` anchors the embed's absolutely-positioned control bar.
     <div className="relative flex w-full flex-col items-center gap-4">
-      {!embed && <CoverOpen book={book} />}
-      {/* Book settles in as the cover lifts away. Capped width keeps a
+      {/* Book settles in gracefully on the gallery surface. Capped width keeps a
           comfortable margin around the spread instead of edge-to-edge zoom. */}
       <motion.div
         className="relative mx-auto w-full"
         // The frame has to widen with the zoom, or the engine's own
         // `container / 2` clamp swallows anything past ~113%.
         style={{ maxWidth: Math.round(BASE_FRAME_WIDTH * zoom) }}
-        initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: reduce ? 0 : 0.15, duration: reduce ? 0.3 : 0.6, ease: [0.22, 1, 0.36, 1] }}
+        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         {/* Ambient gallery backdrop aura */}
         <div

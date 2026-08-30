@@ -1,11 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" fill="#000000" />
-  <g stroke="#ffffff" fill="none" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" transform="translate(0, -16)">
-    <!-- Lens / Eye -->
-    <circle cx="216" cy="216" r="112" />
-    <circle cx="216" cy="216" r="32" fill="#ffffff" stroke="none" />
-    <!-- Document forming the Q tail -->
-    <path d="M 304 304 h 64 l 48 48 v 64 h -112 z" />
-    <path d="M 368 304 v 48 h 48" stroke-linecap="square" />
+  <rect width="512" height="512" rx="112" fill="#000000"/>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Minimalist Monogram Q -->
+    <circle cx="236" cy="236" r="132" stroke-width="40" />
+    <!-- Folio Fold Tail -->
+    <path d="M 296 296 L 396 396" stroke-width="40" />
+    <path d="M 326 396 H 396 V 326" stroke-width="40" />
   </g>
 </svg>

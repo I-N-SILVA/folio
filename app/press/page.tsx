@@ -60,10 +60,10 @@ export default function PressPage() {
               panel and it vanished. */}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="flex h-40 items-center justify-center rounded-2xl bg-white p-8 sm:h-48">
-              <Image src="/brand/logo-dark.svg" alt="QLICO logo on white" width={217} height={60} className="h-[60px] w-auto object-contain" />
+              <Image src="/brand/logo-light.svg" alt="QLICO logo on white" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
             <div className="flex h-40 items-center justify-center rounded-2xl bg-[var(--qlico-ink)] p-8 sm:h-48">
-              <Image src="/brand/logo-light.svg" alt="QLICO logo on ink" width={217} height={60} className="h-[60px] w-auto object-contain" />
+              <Image src="/brand/logo-dark.svg" alt="QLICO logo on ink" width={217} height={60} className="h-[60px] w-auto object-contain" />
             </div>
           </div>
         </section>

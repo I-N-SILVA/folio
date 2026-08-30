@@ -152,20 +152,25 @@ export function Hero() {
   )
 
   const claim = useCallback(async () => {
-    if (!file) return
     setSaving(true)
     trackProduct('try_claim_clicked')
-    const stored = await savePendingImport(file)
-    router.push(`/login?next=${encodeURIComponent(stored ? '/dashboard?resume=1' : '/dashboard?new=1')}`)
+    if (file) {
+      const stored = await savePendingImport(file)
+      router.push(`/login?next=${encodeURIComponent(stored ? '/dashboard?resume=1' : '/dashboard?new=1')}`)
+    } else {
+      router.push('/login?next=/create')
+    }
   }, [file, router])
 
   const reset = useCallback(() => {
     revokeAll()
+    if (inputRef.current) inputRef.current.value = ''
     setBook(null)
     setFile(null)
     setStatus('idle')
     setError('')
     setIsFullscreen(false)
+    setSaving(false)
   }, [revokeAll])
   // --- END UPLOAD STATE ---
   
@@ -292,8 +297,8 @@ export function Hero() {
                 </div>
               </div>
 
-              <div className={isFullscreen ? 'flex-1 min-h-0 rounded-2xl overflow-hidden bg-black/40 border border-white/10' : 'h-[60vh] min-h-[420px] rounded-2xl overflow-hidden bg-black/40 border border-white/10'}>
-                <ViewerChrome book={book} showBadge={false} embed />
+              <div className={isFullscreen ? 'flex-1 min-h-0 rounded-2xl overflow-auto bg-black/40 border border-white/10 p-4' : 'w-full rounded-2xl bg-black/40 border border-white/10 p-4 sm:p-6 overflow-hidden'}>
+                <ViewerChrome book={book} showBadge={false} />
               </div>
               
               <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-[1.5rem] bg-white/5 border border-white/10 p-5">

@@ -18,15 +18,11 @@ export default function Icon() {
           borderRadius: '112px',
         }}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="384" height="384">
-          <g transform="translate(0, -12)">
-            {/* Eye / Lens */}
-            <path d="M128 240 C128 240 184 160 256 160 C328 160 384 240 384 240 C384 240 328 320 256 320 C184 320 128 240 128 240 Z" fill="none" stroke="#ffffff" strokeWidth="32" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="256" cy="240" r="36" fill="#ffffff"/>
-            
-            {/* Document Tail */}
-            <path d="M300 280 H380 L436 336 V416 H300 Z" fill="none" stroke="#ffffff" strokeWidth="32" strokeLinejoin="round"/>
-            <path d="M380 280 V336 H436" fill="none" stroke="#ffffff" strokeWidth="32" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="380" height="380">
+          <g fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="236" cy="236" r="132" strokeWidth="42" />
+            <path d="M 296 296 L 396 396" strokeWidth="42" />
+            <path d="M 326 396 H 396 V 326" strokeWidth="42" />
           </g>
         </svg>
       </div>
