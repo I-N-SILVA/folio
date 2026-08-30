@@ -16,14 +16,17 @@ import {
   ZoomOut,
   Headphones,
   Printer,
-  Pause,
-  Play,
-  Square,
+  Search,
+  ShoppingBag,
+  MessageSquare,
 } from 'lucide-react'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
 import { TableOfContents } from './TableOfContents'
+import { CartDrawer, type CartItem } from './CartDrawer'
+import { SearchModal } from './SearchModal'
+import { ReviewDrawer, type ReviewComment } from './ReviewDrawer'
 import { playPageFlipSound } from '@/lib/sound'
 import {
   isSpeechSupported,
@@ -176,6 +179,65 @@ export function ViewerChrome({
     } catch {
       // Fullscreen denied by browser permission policy.
     }
+  }
+
+  const [showSearch, setShowSearch] = useState(false)
+  const [showCart, setShowCart] = useState(false)
+  const [showReview, setShowReview] = useState(false)
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [reviewComments, setReviewComments] = useState<ReviewComment[]>([])
+
+  // Cmd+F shortcut for full-text search
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        setShowSearch(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const handleAddToCart = (item: Omit<CartItem, 'quantity'>) => {
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id)
+      if (existing) {
+        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i))
+      }
+      return [...prev, { ...item, quantity: 1 }]
+    })
+    setShowCart(true)
+  }
+
+  const handleUpdateCartQuantity = (id: string, qty: number) => {
+    if (qty <= 0) {
+      setCartItems((prev) => prev.filter((i) => i.id !== id))
+    } else {
+      setCartItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i)))
+    }
+  }
+
+  const handleRemoveCartItem = (id: string) => {
+    setCartItems((prev) => prev.filter((i) => i.id !== id))
+  }
+
+  const handleAddReviewComment = (c: { author: string; text: string; pageNumber: number }) => {
+    setReviewComments((prev) => [
+      ...prev,
+      {
+        id: `rev-${Date.now()}`,
+        author: c.author,
+        text: c.text,
+        pageNumber: c.pageNumber,
+        timestamp: 'Just now',
+        resolved: false,
+      },
+    ])
+  }
+
+  const handleResolveReviewComment = (id: string) => {
+    setReviewComments((prev) => prev.map((c) => (c.id === id ? { ...c, resolved: true } : c)))
   }
 
   // Synchronize speech synthesis with current page
@@ -333,6 +395,50 @@ export function ViewerChrome({
             </button>
           </div>
 
+          {/* In-Edition Full-Text Search */}
+          {!embed && (
+            <button
+              onClick={() => setShowSearch(true)}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+              aria-label="Search edition (Cmd+F)"
+              title="Search edition (Cmd+F)"
+            >
+              <Search size={18} />
+            </button>
+          )}
+
+          {/* Shoppable Bag Drawer */}
+          {!embed && (
+            <button
+              onClick={() => setShowCart(true)}
+              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+              aria-label="Shopping Bag"
+              title="Shopping Bag"
+            >
+              <ShoppingBag size={18} />
+              {cartItems.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 grid h-4 w-4 place-items-center rounded-full bg-white text-[9px] font-bold text-black shadow">
+                  {cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Client Feedback & Proofing Drawer */}
+          {!embed && (
+            <button
+              onClick={() => setShowReview(true)}
+              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+              aria-label="Feedback & Review"
+              title="Feedback & Review"
+            >
+              <MessageSquare size={18} />
+              {reviewComments.filter((c) => !c.resolved).length > 0 && (
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-400" />
+              )}
+            </button>
+          )}
+
           {/* TOC / Overview drawer */}
           {!embed && (
             <button
@@ -423,14 +529,7 @@ export function ViewerChrome({
           : `Page ${Math.min(currentPage + 1, editionPages)} of ${editionPages}`}
       </div>
 
-      {/* The second half of the growth loop.
-          A reader who reaches the last page of someone else's edition is the
-          best-qualified visitor this product ever gets: they have just spent
-          real attention on the format and know exactly what it is for. Until now
-          they were shown a badge in the corner and nothing else.
-          Shown only where the badge is — a paid, white-labelled edition is the
-          author's surface, not ours — and only at the end, so it can't interrupt
-          the reading it is arguing for. */}
+      {/* The second half of the growth loop */}
       {showBadge && !embed && atEnd && (
         <motion.div
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
@@ -454,6 +553,39 @@ export function ViewerChrome({
             Try it with your PDF
           </a>
         </motion.div>
+      )}
+
+      {/* In-Edition Search Modal */}
+      {showSearch && (
+        <SearchModal
+          isOpen={showSearch}
+          onClose={() => setShowSearch(false)}
+          book={visibleBook}
+          onSelectPage={(i) => engineRef.current?.goTo(i)}
+        />
+      )}
+
+      {/* Shoppable Cart Drawer */}
+      {showCart && (
+        <CartDrawer
+          isOpen={showCart}
+          onClose={() => setShowCart(false)}
+          items={cartItems}
+          onUpdateQuantity={handleUpdateCartQuantity}
+          onRemoveItem={handleRemoveCartItem}
+        />
+      )}
+
+      {/* Client Feedback & Review Drawer */}
+      {showReview && (
+        <ReviewDrawer
+          isOpen={showReview}
+          onClose={() => setShowReview(false)}
+          currentPageNumber={currentPage + 1}
+          comments={reviewComments}
+          onAddComment={handleAddReviewComment}
+          onResolveComment={handleResolveReviewComment}
+        />
       )}
 
       {/* Table of Contents Drawer */}

@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { X, FileText, Layout, Loader2, Crown } from 'lucide-react'
+import { X, FileText, Layout, Loader2, Crown, Sparkles, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 const ImportPDFModal = dynamic(() => import('./ImportPDFModal').then(m => m.ImportPDFModal), { ssr: false })
 import { Modal } from '@/components/ui/Modal'
 import { trackProduct } from '@/lib/product-analytics'
+import { TEMPLATES, type PublicationTemplate } from '@/data/templates'
 
 interface Props {
   onClose: () => void
@@ -30,7 +31,7 @@ function randomSuffix() {
 }
 
 export function CreateBookModal({ onClose }: Props) {
-  const [step, setStep] = useState<'choice' | 'pdf' | 'name-blank'>('choice')
+  const [step, setStep] = useState<'choice' | 'pdf' | 'name-blank' | 'templates'>('choice')
   const [newTitle, setNewTitle] = useState('')
   const [loading, setLoading] = useState(false)
   const [quota, setQuota] = useState<Quota | null>(null)
@@ -129,6 +130,49 @@ export function CreateBookModal({ onClose }: Props) {
     } catch (err: any) {
       if (guardLimit(err)) return
       toast.error(err.message || 'Failed to create edition')
+      setLoading(false)
+    }
+  }
+
+  const handleSelectTemplate = async (tmpl: PublicationTemplate) => {
+    setLoading(true)
+    try {
+      const initialSlug = `${tmpl.id}-${randomSuffix()}`
+      const res = await fetch('/api/books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: tmpl.title, slug: initialSlug }),
+      })
+
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        if (payload.code === 'plan_limit') {
+          setLimitHit(true)
+          setLoading(false)
+          return
+        }
+        throw new Error(payload.error || 'Failed to create template edition')
+      }
+
+      const created = await res.json()
+      const templateData = tmpl.generateBook(created.id, created.owner_id || '', created.slug)
+
+      // Save initial template pages & theme
+      await fetch(`/api/books/${created.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pages: templateData.pages,
+          theme: templateData.theme,
+          description: templateData.description,
+        }),
+      })
+
+      toast.success(`Created "${tmpl.title}" template!`)
+      router.push(`/editor/${created.id}`)
+    } catch (err: any) {
+      if (guardLimit(err)) return
+      toast.error(err.message || 'Failed to create template')
       setLoading(false)
     }
   }
@@ -277,6 +321,82 @@ export function CreateBookModal({ onClose }: Props) {
     )
   }
 
+  if (step === 'templates') {
+    return shell(
+      <>
+        <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
+          <div>
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.04em] text-[var(--qlico-ink)]">
+              Choose a starter template
+            </h2>
+            <p className="mt-1 text-xs text-[var(--qlico-muted)]">
+              Curated pre-built layouts ready to customize with your own text and photos.
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-full p-2 text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint-weak)]">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {TEMPLATES.map((tmpl) => (
+              <div
+                key={tmpl.id}
+                className="group relative flex flex-col justify-between rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 p-5 transition hover:border-[var(--qlico-ink)] hover:shadow-md"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="rounded-full bg-[var(--tint-weak)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--qlico-muted)]">
+                      {tmpl.category}
+                    </span>
+                    <span className="text-[11px] font-medium text-[var(--qlico-muted)]">
+                      {tmpl.pagesCount} pages
+                    </span>
+                  </div>
+
+                  <h3 className="font-display text-lg font-semibold tracking-tight text-[var(--qlico-ink)]">
+                    {tmpl.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[var(--qlico-muted)] leading-relaxed">
+                    {tmpl.subtitle}
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-[var(--qlico-border)]/60 flex items-center justify-between">
+                  <div
+                    className="h-4 w-4 rounded-full border border-black/10"
+                    style={{ backgroundColor: tmpl.coverColor }}
+                    title={`Theme color ${tmpl.coverColor}`}
+                  />
+                  <button
+                    disabled={loading}
+                    onClick={() => handleSelectTemplate(tmpl)}
+                    className="flex items-center gap-1.5 rounded-full bg-[var(--invert-surface)] px-4 py-1.5 text-xs font-semibold text-[var(--invert-text)] transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {loading ? 'Setting up…' : 'Use Template'}
+                    <ArrowRight size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex justify-start">
+            <button
+              onClick={() => setStep('choice')}
+              className="rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/60 px-4 py-2 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--qlico-paper)]"
+            >
+              ← Back to options
+            </button>
+          </div>
+        </div>
+      </>,
+      'Starter Templates',
+      'max-w-2xl'
+    )
+  }
+
   return shell(
     <>
       <div className="flex items-center justify-between border-b border-[var(--qlico-border)] p-6">
@@ -294,25 +414,29 @@ export function CreateBookModal({ onClose }: Props) {
       </div>
 
       <div className="p-8">
-        {/* Three ways in became two. The image path inserted straight from the
-            browser, skipping the API's validation and its friendly quota
-            message, and shipped two bugs of its own doing so — while covering a
-            job "PDF" and "Blank" already cover. */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
             {
               key: 'pdf',
               icon: FileText,
               title: 'Import a PDF',
-              desc: 'Every page becomes a spread you can add hotspots and links to.',
+              desc: 'Every page becomes a spread you can add hotspots to.',
               onClick: () => setStep('pdf'),
               primary: true,
             },
             {
+              key: 'templates',
+              icon: Sparkles,
+              title: 'From Template',
+              desc: 'Curated lookbooks, portfolios, reports, and menus.',
+              onClick: () => setStep('templates'),
+              primary: false,
+            },
+            {
               key: 'blank',
               icon: Layout,
-              title: 'Start blank',
-              desc: 'Build page by page from text, images, video and live data.',
+              title: 'Start Blank',
+              desc: 'Build page by page with text, photos, video & data.',
               onClick: () => setStep('name-blank'),
               primary: false,
             },
@@ -321,26 +445,26 @@ export function CreateBookModal({ onClose }: Props) {
               key={key}
               disabled={loading}
               onClick={onClick}
-              className={`group flex flex-col items-start gap-3 rounded-[1.5rem] border p-6 text-left transition-all hover:-translate-y-1 disabled:opacity-50 ${
+              className={`group flex flex-col items-start gap-3 rounded-[1.5rem] border p-5 text-left transition-all hover:-translate-y-1 disabled:opacity-50 ${
                 primary
                   ? 'border-[var(--accent)]/40 bg-[var(--accent)]/5 hover:border-[var(--accent)]'
                   : 'border-[var(--qlico-border)] bg-[var(--qlico-paper)]/55 hover:border-[var(--qlico-ink)]'
               }`}
             >
               <div
-                className={`grid h-12 w-12 place-items-center rounded-2xl transition-colors ${
+                className={`grid h-10 w-10 place-items-center rounded-xl transition-colors ${
                   primary
                     ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
                     : 'bg-[var(--invert-surface)] text-[var(--invert-text)]'
                 }`}
               >
-                <Icon size={22} />
+                <Icon size={18} />
               </div>
               <div>
-                <h3 className="font-display text-lg font-semibold tracking-[-0.03em] text-[var(--qlico-ink)]">
+                <h3 className="font-display text-base font-semibold tracking-[-0.03em] text-[var(--qlico-ink)]">
                   {title}
                 </h3>
-                <p className="mt-1 text-[13px] leading-5 text-[var(--qlico-muted)]">{desc}</p>
+                <p className="mt-1 text-xs leading-4 text-[var(--qlico-muted)]">{desc}</p>
               </div>
             </button>
           ))}

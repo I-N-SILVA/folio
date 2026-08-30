@@ -139,6 +139,26 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
             return renderBlockWrapper ? renderBlockWrapper(block, blockElement) : blockElement
           })}
         </div>
+
+        {/* Dynamic corner peel indicator cues on outer corners */}
+        {pageSide === 'right' && (
+          <div
+            aria-hidden
+            className="group/corner pointer-events-none absolute bottom-0 right-0 z-[15] h-12 w-12 overflow-hidden"
+          >
+            <div className="absolute -bottom-10 -right-10 h-16 w-16 -rotate-45 bg-gradient-to-tr from-black/20 via-black/5 to-transparent transition-all duration-300 group-hover/corner:-bottom-7 group-hover/corner:-right-7 group-hover/corner:opacity-100" />
+            <div className="absolute bottom-0 right-0 h-4 w-4 border-b-2 border-r-2 border-black/10 transition-all duration-300 group-hover/corner:h-6 group-hover/corner:w-6 group-hover/corner:border-black/30" />
+          </div>
+        )}
+        {pageSide === 'left' && (
+          <div
+            aria-hidden
+            className="group/corner pointer-events-none absolute bottom-0 left-0 z-[15] h-12 w-12 overflow-hidden"
+          >
+            <div className="absolute -bottom-10 -left-10 h-16 w-16 rotate-45 bg-gradient-to-tl from-black/20 via-black/5 to-transparent transition-all duration-300 group-hover/corner:-bottom-7 group-hover/corner:-left-7 group-hover/corner:opacity-100" />
+            <div className="absolute bottom-0 left-0 h-4 w-4 border-b-2 border-l-2 border-black/10 transition-all duration-300 group-hover/corner:h-6 group-hover/corner:w-6 group-hover/corner:border-black/30" />
+          </div>
+        )}
       </div>
     )
   }
