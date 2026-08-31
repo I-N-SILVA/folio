@@ -192,7 +192,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
             </p>
             <button
               onClick={() => setReloadKey((k) => k + 1)}
-              className="mt-5 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+              className="mt-5 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-contrast)] transition hover:bg-[var(--accent-hover)] shadow-sm"
             >
               Retry
             </button>
@@ -502,7 +502,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                     />
                     <button
                       onClick={copyLiveUrl}
-                      className="w-full shrink-0 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)] sm:w-auto"
+                      className="w-full shrink-0 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-contrast)] transition hover:bg-[var(--accent-hover)] shadow-sm sm:w-auto"
                     >
                       {copied ? 'Copied' : 'Copy link'}
                     </button>
@@ -512,7 +512,7 @@ export function AnalyticsDashboard({ book }: { book: Book }) {
                 {!published && (
                   <Link
                     href={`/editor/${book.id}`}
-                    className="mt-6 inline-block rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+                    className="mt-6 inline-block rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-contrast)] transition hover:bg-[var(--accent-hover)] shadow-sm"
                   >
                     Open the editor
                   </Link>

@@ -18,7 +18,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <div className="mt-7 flex justify-center gap-3">
           <button
             onClick={reset}
-            className="rounded-full bg-[var(--accent)] px-6 py-3 text-[15px] font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+            className="rounded-full bg-[var(--accent)] px-6 py-3 text-[15px] font-semibold text-[var(--accent-contrast)] transition hover:bg-[var(--accent-hover)] shadow-sm"
           >
             Try again
           </button>

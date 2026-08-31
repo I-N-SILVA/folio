@@ -1,7 +1,19 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Check, Copy, ExternalLink, QrCode, Share2, Download, Code, Link2, Video, Globe } from 'lucide-react'
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  QrCode,
+  Share2,
+  Download,
+  Link2,
+  Video,
+  Send,
+  Mail,
+  Smartphone,
+} from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { trackProduct } from '@/lib/product-analytics'
 import { QRCodeStudioModal } from './QRCodeStudioModal'
@@ -26,7 +38,8 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
   const embedCode = `<iframe src="${origin}/embed/${slug}" width="100%" height="600" style="border:0" allowfullscreen title="Interactive edition"></iframe>`
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&format=svg&margin=10`
 
-  const shareText = `Check out this interactive edition on QLICO:`
+  const shareTitle = book?.title || 'Interactive Edition'
+  const shareText = `Explore "${shareTitle}" — interactive digital edition on QLICO:`
 
   const socialLinks = [
     {
@@ -41,7 +54,49 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
       name: 'WhatsApp',
       href: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${url}`)}`,
     },
+    {
+      name: 'Telegram',
+      href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(shareText)}`,
+    },
+    {
+      name: 'Facebook',
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+    },
+    {
+      name: 'Email',
+      href: `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`${shareText}\n\n${url}`)}`,
+    },
   ]
+
+  const handleDeviceShare = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: url,
+        })
+        toast.success('Shared successfully!')
+        trackProduct('share_link_copied', { kind: 'link' })
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          copyToClipboard(url, 'link')
+        }
+      }
+    } else {
+      copyToClipboard(url, 'link')
+    }
+  }
+
+  const copyToClipboard = async (text: string, kind: 'link' | 'embed') => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success(kind === 'link' ? 'Link copied to clipboard!' : 'Embed code copied!')
+      trackProduct('share_link_copied', { kind })
+    } catch {
+      toast.error('Could not access clipboard.')
+    }
+  }
 
   const handleExportOfflineHtml = () => {
     if (!book) {
@@ -73,6 +128,7 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(blobUrl)
+      toast.success('QR Code SVG downloaded!')
     } catch {
       window.open(qrUrl, '_blank')
     }
@@ -92,7 +148,7 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
             onClick={() => setTab('links')}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
               tab === 'links'
-                ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
+                ? 'bg-[var(--accent)] text-[var(--accent-contrast)] shadow-sm'
                 : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
             }`}
           >
@@ -104,7 +160,7 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
             onClick={() => setTab('qr')}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
               tab === 'qr'
-                ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
+                ? 'bg-[var(--accent)] text-[var(--accent-contrast)] shadow-sm'
                 : 'text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]'
             }`}
           >
@@ -115,19 +171,19 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
       </div>
 
       {!published && (
-        <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          This edition is still a draft — these links only work once it&apos;s published.
+        <p className="mt-3 rounded-xl border border-amber-300/60 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-500">
+          This edition is currently in Draft mode. Publish it to make the public link live.
         </p>
       )}
 
-      {/* Flagship Growth Actions Row */}
+      {/* Flagship Sharing & Export Actions Row */}
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={() => setShowTeaser(true)}
           className="flex items-center justify-center gap-1.5 rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)] shadow-sm"
         >
-          <Video size={14} className="text-violet-600" />
+          <Video size={14} className="text-violet-500" />
           Social Teaser Studio
         </button>
         <button
@@ -135,7 +191,7 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
           onClick={handleExportOfflineHtml}
           className="flex items-center justify-center gap-1.5 rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)] shadow-sm"
         >
-          <Download size={14} className="text-emerald-600" />
+          <Download size={14} className="text-emerald-500" />
           Offline Kiosk HTML
         </button>
       </div>
@@ -143,12 +199,24 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
       {tab === 'links' ? (
         <div className="space-y-4 mt-2">
           <CopyField label="Direct link" value={url} kind="link" />
-          <CopyField label="Embed code" value={embedCode} multiline kind="embed" />
+          <CopyField label="Embed code (Responsive Iframe)" value={embedCode} multiline kind="embed" />
+
+          {/* Native Device Share */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleDeviceShare}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] py-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)] shadow-sm"
+            >
+              <Smartphone size={14} />
+              Share via Phone / Device Menu
+            </button>
+          </div>
 
           {/* Social share row */}
           <div className="mt-5 border-t border-[var(--qlico-border)] pt-4">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--qlico-muted)]">
-              Broadcast
+              Broadcast to Social
             </p>
             <div className="flex flex-wrap gap-2">
               {socialLinks.map((s) => (
@@ -172,13 +240,13 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
             <img src={qrUrl} alt={`QR Code for ${slug}`} width={180} height={180} className="h-44 w-44" />
           </div>
           <p className="mt-3 text-xs text-[var(--qlico-muted)]">
-            Scan with any phone camera to open the edition directly.
+            Scan with any smartphone camera to open the edition instantly.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2 justify-center">
             <button
               type="button"
               onClick={() => setShowStudio(true)}
-              className="flex items-center gap-1.5 rounded-full bg-[var(--invert-surface)] px-5 py-2.5 text-xs font-bold text-[var(--invert-text)] border border-neutral-700 transition hover:bg-neutral-800"
+              className="flex items-center gap-1.5 rounded-full bg-[var(--invert-surface)] px-5 py-2.5 text-xs font-bold text-[var(--invert-text)] border border-neutral-700 transition hover:opacity-90 shadow-md"
             >
               <QrCode size={14} />
               Open Print QR Studio
@@ -186,7 +254,7 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
             <button
               type="button"
               onClick={downloadQr}
-              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)]"
+              className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)] px-4 py-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)] shadow-sm"
             >
               <Download size={14} />
               Quick SVG
@@ -238,7 +306,6 @@ function CopyField({
   label: string
   value: string
   multiline?: boolean
-  /** Which artifact was taken — the step that turns a publish into a reader. */
   kind: 'link' | 'embed'
 }) {
   const [state, setState] = useState<'idle' | 'copied' | 'manual'>('idle')
@@ -250,6 +317,7 @@ function CopyField({
       await navigator.clipboard.writeText(value)
       trackProduct('share_link_copied', { kind })
       setState('copied')
+      toast.success(kind === 'link' ? 'Link copied!' : 'Embed snippet copied!')
       setTimeout(() => setState('idle'), 2000)
     } catch {
       fieldRef.current?.select()
@@ -269,11 +337,11 @@ function CopyField({
         <button
           type="button"
           onClick={copy}
-          className="flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-[var(--qlico-ink)] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] transition-colors hover:bg-[var(--tint)]"
         >
           {state === 'copied' ? (
             <>
-              <Check size={13} className="text-emerald-600" />
+              <Check size={13} className="text-emerald-500" />
               Copied
             </>
           ) : (
@@ -306,8 +374,7 @@ function CopyField({
 
       {state === 'manual' && (
         <p className="mt-1.5 text-[11px] text-[var(--qlico-muted)]" role="status">
-          Your browser blocked clipboard access — the text is selected, so copy it
-          with your keyboard.
+          Your browser blocked clipboard access — the text is selected, so copy it with your keyboard.
         </p>
       )}
     </div>

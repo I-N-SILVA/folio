@@ -108,7 +108,7 @@ export default async function InsightsPage() {
             </p>
             <Link
               href="/dashboard"
-              className="mt-6 inline-block rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-hover)]"
+              className="mt-6 inline-block rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-contrast)] transition hover:bg-[var(--accent-hover)] shadow-sm"
             >
               {books.length > 0 ? 'Go to your editions' : 'Create your first edition'}
             </Link>

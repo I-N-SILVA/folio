@@ -256,10 +256,10 @@ export function ConfirmDialog({
           onClick={onConfirm}
           disabled={busy}
           className={twMerge(
-            'rounded-full px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60',
+            'rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-60',
             destructive
-              ? 'bg-[#b3261e] hover:bg-[#8f1e18]'
-              : 'bg-[var(--accent)] hover:bg-[var(--accent-hover)]'
+              ? 'bg-[#b3261e] text-white hover:bg-[#8f1e18]'
+              : 'bg-[var(--accent)] text-[var(--accent-contrast)] hover:bg-[var(--accent-hover)] shadow-sm'
           )}
         >
           {busy ? 'Working…' : confirmLabel}

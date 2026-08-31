@@ -52,8 +52,8 @@ export function SettingsPanel() {
               className={twMerge(
                 'flex-1 rounded-md py-1.5 text-[11px] font-semibold tracking-wide transition-colors',
                 tab === key
-                  ? 'bg-[var(--accent-vivid)]/15 text-white ring-1 ring-inset ring-[var(--accent-vivid)]/30'
-                  : 'text-neutral-500 hover:text-neutral-300'
+                  ? 'bg-neutral-800 text-white ring-1 ring-inset ring-white/20 shadow-sm'
+                  : 'text-neutral-400 hover:text-neutral-200'
               )}
             >
               {key === 'selection' ? 'Selection' : 'Edition'}

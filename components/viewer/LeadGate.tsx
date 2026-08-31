@@ -148,7 +148,7 @@ export function LeadGate({
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] py-3 font-semibold text-white shadow-lg transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-70"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 py-3 font-semibold text-white shadow-lg transition-all hover:bg-black active:scale-[0.98] disabled:opacity-70"
           >
             {busy && <Loader2 size={15} className="animate-spin" />}
             {busy ? 'Unlocking…' : isPasscode ? 'Verify Passcode' : 'Unlock full edition'}

@@ -505,7 +505,7 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="flex flex-[2] items-center justify-center gap-2 rounded-full bg-[var(--accent)] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex flex-[2] items-center justify-center gap-2 rounded-full bg-[var(--accent)] py-2.5 text-sm font-semibold text-[var(--accent-contrast)] transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isWorking ? (
             <>

@@ -575,7 +575,7 @@ export function ViewerChrome({
                       }}
                       className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition ${
                         currentLang === l.code
-                          ? 'bg-[var(--accent)] text-white'
+                          ? 'bg-[var(--accent)] text-[var(--accent-contrast)] shadow-sm'
                           : 'text-[var(--qlico-ink)] hover:bg-[var(--tint)]'
                       }`}
                     >

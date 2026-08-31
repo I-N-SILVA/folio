@@ -138,7 +138,7 @@ export default async function AccountPage({
               </p>
               <Link
                 href="/redeem"
-                className="mt-5 inline-block rounded-full bg-[var(--qlico-paper)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#1d1d1f] transition hover:-translate-y-0.5 hover:bg-[var(--qlico-subtle)]"
+                className="mt-5 inline-block rounded-full bg-[var(--invert-text)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--invert-surface)] transition hover:-translate-y-0.5 hover:opacity-90 shadow-sm"
               >
                 Redeem a code
               </Link>
@@ -157,7 +157,7 @@ export default async function AccountPage({
                 ) : (
                   <Link
                     href="/#pricing"
-                    className="mt-5 inline-block rounded-full bg-[var(--qlico-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
+                    className="mt-5 inline-block rounded-full bg-[var(--qlico-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--accent-contrast)] transition hover:-translate-y-0.5 hover:opacity-90 shadow-sm"
                   >
                     See plans
                   </Link>
