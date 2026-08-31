@@ -73,9 +73,13 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
     }
     if (bg?.image) {
       backgroundStyle.backgroundImage = `url(${bg.image})`
-      backgroundStyle.backgroundSize = 'cover'
+      backgroundStyle.backgroundSize = bg.imageFit ?? 'cover'
       backgroundStyle.backgroundPosition = bg.imagePosition ?? 'center'
+      backgroundStyle.backgroundRepeat = 'no-repeat'
     }
+
+    const blurCls = bg?.blur === 'sm' ? 'backdrop-blur-sm' : bg?.blur === 'md' ? 'backdrop-blur-md' : bg?.blur === 'lg' ? 'backdrop-blur-xl' : ''
+    const overlayOpacity = typeof bg?.overlayOpacity === 'number' ? bg.overlayOpacity / 100 : (bg?.image ? 0.4 : 0)
 
     return (
       <div
@@ -87,11 +91,19 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
         )}
         style={backgroundStyle}
       >
-        {/* Overlay for image backgrounds */}
-        {bg?.overlay && (
+        {/* Blur backdrop layer if requested */}
+        {blurCls && (
+          <div className={twMerge('absolute inset-0 pointer-events-none z-0', blurCls)} />
+        )}
+
+        {/* Overlay for image backgrounds with adjustable opacity */}
+        {(bg?.overlay || (bg?.image && overlayOpacity > 0)) && (
           <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ backgroundColor: bg.overlay }}
+            className="absolute inset-0 pointer-events-none z-0 transition-opacity"
+            style={{
+              backgroundColor: bg?.overlay || '#000000',
+              opacity: overlayOpacity,
+            }}
           />
         )}
 

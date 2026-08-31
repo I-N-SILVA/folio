@@ -18,6 +18,9 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
       caption: block.caption,
       lightbox: block.lightbox,
       aspectRatio: block.aspectRatio ?? '16/9',
+      width: block.width ?? 'full',
+      align: block.align ?? 'center',
+      maxHeight: block.maxHeight ?? 'none',
       borderRadius: block.borderRadius ?? 'md',
       objectFit: block.objectFit ?? 'cover',
       shadow: block.shadow ?? 'none',
@@ -30,6 +33,9 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
 
   const currentAspect = watch('aspectRatio') ?? block.aspectRatio ?? '16/9'
+  const currentWidth = watch('width') ?? block.width ?? 'full'
+  const currentAlign = watch('align') ?? block.align ?? 'center'
+  const currentHeight = watch('maxHeight') ?? block.maxHeight ?? 'none'
   const currentRadius = watch('borderRadius') ?? block.borderRadius ?? 'md'
   const currentFit = watch('objectFit') ?? block.objectFit ?? 'cover'
   const currentShadow = watch('shadow') ?? block.shadow ?? 'none'
@@ -156,6 +162,71 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
           ))}
         </div>
       </Field>
+
+      {/* Sizing & Width */}
+      <Field label="Size / Width Scale">
+        <div className="grid grid-cols-5 gap-1">
+          {[
+            { id: 'full', label: '100% Full' },
+            { id: '3/4', label: '75% Wide' },
+            { id: '1/2', label: '50% Half' },
+            { id: '1/3', label: '33% 1/3' },
+            { id: '1/4', label: '25% 1/4' },
+          ].map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              onClick={() => {
+                setValue('width', w.id as any, { shouldDirty: true })
+                updateBlock(pageId, block.id, { width: w.id as any })
+              }}
+              className={`rounded-md border py-1 text-center text-[11px] font-medium transition ${
+                currentWidth === w.id
+                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/15 text-white font-bold'
+                  : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+              }`}
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      {/* Alignment & Max Height */}
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Alignment">
+          <select
+            value={currentAlign}
+            onChange={(e) => {
+              setValue('align', e.target.value as any, { shouldDirty: true })
+              updateBlock(pageId, block.id, { align: e.target.value as any })
+            }}
+            className={inputCls}
+          >
+            <option value="center">Center (Auto Margin)</option>
+            <option value="left">Left Aligned</option>
+            <option value="right">Right Aligned</option>
+          </select>
+        </Field>
+
+        <Field label="Max Height Limit">
+          <select
+            value={currentHeight}
+            onChange={(e) => {
+              setValue('maxHeight', e.target.value as any, { shouldDirty: true })
+              updateBlock(pageId, block.id, { maxHeight: e.target.value as any })
+            }}
+            className={inputCls}
+          >
+            <option value="none">Auto / Unconstrained</option>
+            <option value="xs">Compact (160px)</option>
+            <option value="sm">Standard (240px)</option>
+            <option value="md">Medium (340px)</option>
+            <option value="lg">Expansive (460px)</option>
+            <option value="xl">Grand (600px)</option>
+          </select>
+        </Field>
+      </div>
 
       {/* Border Radius & Shadow */}
       <div className="grid grid-cols-2 gap-3">

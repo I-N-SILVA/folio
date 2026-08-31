@@ -23,6 +23,9 @@ import {
   ArrowDown,
   Copy,
   Trash2,
+  Smartphone,
+  Monitor,
+  LayoutTemplate,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -377,6 +380,8 @@ export function EditorCanvas() {
   const [insertIndex, setInsertIndex] = useState<number | null>(null)
   const [showGuides, setShowGuides] = useState(false)
   const [isDetecting, setIsDetecting] = useState(false)
+  const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop')
+  const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null)
   const [zoom, setZoom] = useState(1)
   const canvasRef = useRef<HTMLDivElement>(null)
 
@@ -410,7 +415,108 @@ export function EditorCanvas() {
   const zoomIndex = ZOOM_STEPS.indexOf(zoom)
   const prevStep = ZOOM_STEPS[Math.max(0, (zoomIndex === -1 ? 2 : zoomIndex) - 1)]
   const nextStep = ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, (zoomIndex === -1 ? 2 : zoomIndex) + 1)]
-  const pageWidth = Math.round(PAGE_DESIGN_WIDTH * zoom)
+  const isMobile = viewportMode === 'mobile'
+  const pageWidth = isMobile ? 380 : Math.round(PAGE_DESIGN_WIDTH * zoom)
+  const pageHeight = isMobile ? 740 : Math.round(pageWidth * PAGE_RATIO)
+
+  const handleScaffoldSplit = useCallback(() => {
+    if (!currentPage) return
+    useEditorStore.getState().updatePage(currentPage.id, { layout: 'split' })
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'image',
+      src: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
+      alt: 'Luxury Silk Fabric Spread',
+      aspectRatio: '3/4',
+      borderRadius: 'lg',
+      shadow: 'md',
+    } as any)
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'text',
+      variant: 'heading',
+      content: 'Editorial Feature',
+    } as any)
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'text',
+      variant: 'body',
+      content: 'Describe the craftsmanship, materials, and provenance of this piece.',
+    } as any)
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'text',
+      variant: 'stat',
+      content: '$480 · Ready to Ship',
+      textColor: '#f59e0b',
+    } as any)
+    toast.success('Added 2-Column Split Feature Spread')
+  }, [currentPage, addBlock])
+
+  const handleScaffoldQuote = useCallback(() => {
+    if (!currentPage) return
+    useEditorStore.getState().updatePage(currentPage.id, { layout: 'hero' })
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'text',
+      variant: 'caption',
+      content: 'MONOGRAPH HIGHLIGHT',
+      letterSpacing: 'widest',
+      align: 'center',
+    } as any)
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'text',
+      variant: 'quote',
+      content: '"True craftsmanship is the precision of every unseen detail."',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      padding: 'lg',
+      borderRadius: 'lg',
+      align: 'center',
+    } as any)
+    toast.success('Added Monumental Quote & Hero Spread')
+  }, [currentPage, addBlock])
+
+  const handleScaffoldShoppable = useCallback(() => {
+    if (!currentPage) return
+    useEditorStore.getState().updatePage(currentPage.id, { layout: 'split' })
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'image',
+      src: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85',
+      alt: 'Runway Lookbook Item',
+      aspectRatio: '4/3',
+      borderRadius: 'lg',
+      shadow: 'lg',
+    } as any)
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'text',
+      variant: 'title',
+      content: 'The Milan Trench',
+    } as any)
+    addBlock(currentPage.id, {
+      id: crypto.randomUUID(),
+      type: 'button',
+      label: 'Instant Checkout ($480) →',
+      href: 'https://qlico.app',
+      variant: 'primary',
+      shape: 'pill',
+      size: 'lg',
+    } as any)
+    addHotspot(currentPage.id, {
+      id: crypto.randomUUID(),
+      x: 40,
+      y: 40,
+      label: 'Silk Trench ($480)',
+      icon: 'ShoppingBag',
+      beaconStyle: 'shopping',
+      price: '$480',
+      action: 'checkout',
+      modal: { title: 'Mulberry Silk Trench', body: 'Express worldwide shipping included.' },
+    })
+    toast.success('Added Shoppable Pin & Checkout Spread')
+  }, [currentPage, addBlock, addHotspot])
 
   /**
    * Place a hotspot at a percentage position on the page.
@@ -550,32 +656,66 @@ export function EditorCanvas() {
 
         <div className="flex-1" />
 
-        {/* Zoom */}
+        {/* Viewport Mode Switcher: Desktop vs Mobile */}
         <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
           <button
-            onClick={() => setZoom(prevStep)}
-            disabled={zoom <= ZOOM_STEPS[0]}
-            aria-label="Zoom out"
-            className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
+            onClick={() => setViewportMode('desktop')}
+            aria-pressed={viewportMode === 'desktop'}
+            title="Desktop / iPad Spread View"
+            className={twMerge(
+              'flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition',
+              viewportMode === 'desktop'
+                ? 'bg-neutral-800 text-white font-semibold shadow-sm'
+                : 'text-neutral-400 hover:text-neutral-200'
+            )}
           >
-            <Minimize2 size={13} />
+            <Monitor size={13} />
+            <span className="hidden sm:inline">Desktop</span>
           </button>
           <button
-            onClick={() => setZoom(1)}
-            aria-label={`Zoom ${Math.round(zoom * 100)} percent — reset to 100 percent`}
-            className="min-w-[46px] rounded-md px-1 py-1 text-[11px] font-semibold tabular-nums text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+            onClick={() => setViewportMode('mobile')}
+            aria-pressed={viewportMode === 'mobile'}
+            title="Mobile iPhone Viewport Simulation"
+            className={twMerge(
+              'flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition',
+              viewportMode === 'mobile'
+                ? 'bg-neutral-800 text-white font-semibold shadow-sm'
+                : 'text-neutral-400 hover:text-neutral-200'
+            )}
           >
-            {Math.round(zoom * 100)}%
-          </button>
-          <button
-            onClick={() => setZoom(nextStep)}
-            disabled={zoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]}
-            aria-label="Zoom in"
-            className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
-          >
-            <Maximize2 size={13} />
+            <Smartphone size={13} />
+            <span className="hidden sm:inline">Mobile</span>
           </button>
         </div>
+
+        {/* Zoom (Desktop only) */}
+        {!isMobile && (
+          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+            <button
+              onClick={() => setZoom(prevStep)}
+              disabled={zoom <= ZOOM_STEPS[0]}
+              aria-label="Zoom out"
+              className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <Minimize2 size={13} />
+            </button>
+            <button
+              onClick={() => setZoom(1)}
+              aria-label={`Zoom ${Math.round(zoom * 100)} percent — reset to 100 percent`}
+              className="min-w-[46px] rounded-md px-1 py-1 text-[11px] font-semibold tabular-nums text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              onClick={() => setZoom(nextStep)}
+              disabled={zoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]}
+              aria-label="Zoom in"
+              className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <Maximize2 size={13} />
+            </button>
+          </div>
+        )}
 
         {/* Alignment Guidelines Toggle */}
         <button
@@ -600,12 +740,12 @@ export function EditorCanvas() {
           className={twMerge(
             'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
             hotspotMode
-              ? 'bg-amber-400 text-amber-950 font-bold border border-amber-500'
+              ? 'bg-amber-400 text-amber-950 font-bold border border-amber-500 shadow-md'
               : 'border border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800 hover:text-white'
           )}
         >
           <Crosshair size={13} />
-          {hotspotMode ? 'Click the page to place' : 'Add hotspot'}
+          {hotspotMode ? 'Click page to place pin' : 'Add hotspot'}
         </button>
 
         {/* AI Hotspot Detector */}
@@ -626,72 +766,121 @@ export function EditorCanvas() {
       </div>
 
       {/* Canvas area */}
-      <div className="flex-1 overflow-auto bg-[radial-gradient(#232323_1px,transparent_1px)] p-8 [background-size:22px_22px]">
-        <div
-          ref={canvasRef}
-          style={{ width: pageWidth, height: Math.round(pageWidth * PAGE_RATIO) }}
-          className={twMerge(
-            // Layered elevation reads as a physical sheet lifted off the
-            // surface, rather than a div with a drop shadow.
-            'relative mx-auto overflow-hidden rounded-[3px] bg-white',
-            'shadow-[0_1px_2px_rgba(0,0,0,0.35),0_12px_28px_-8px_rgba(0,0,0,0.55),0_40px_80px_-32px_rgba(0,0,0,0.7)]',
-            'ring-1 ring-black/40',
-            hotspotMode && 'cursor-crosshair',
-            hotspotMode && 'ring-2 ring-amber-400/70 focus:outline-none focus-visible:ring-4'
-          )}
-          onClick={handleCanvasClick}
-          onKeyDown={handleCanvasKeyDown}
-          // Focusable only while placing, so tabbing through a normal editing
-          // session doesn't stop on the page itself. With it armed, the page is
-          // the control: Enter drops a hotspot, arrows move the selected one.
-          tabIndex={hotspotMode || selectedHotspotId ? 0 : -1}
-          role={hotspotMode ? 'application' : undefined}
-          aria-label={
-            hotspotMode
-              ? 'Page canvas. Press Enter to place a hotspot in the centre, then use the arrow keys to move it.'
-              : undefined
-          }
-        >
-          {/* Non-printing alignment guidelines */}
-          {showGuides && (
-            <div className="pointer-events-none absolute inset-0 z-30">
-              {/* Safe page margin boundary */}
-              <div className="absolute inset-6 rounded border border-dashed border-cyan-500/40" />
-              {/* Center vertical axis */}
-              <div className="absolute inset-y-0 left-1/2 w-px border-l border-dashed border-cyan-500/50" />
-              {/* Center horizontal axis */}
-              <div className="absolute inset-x-0 top-1/2 h-px border-t border-dashed border-cyan-500/50" />
+      <div className="flex-1 overflow-auto bg-[radial-gradient(#232323_1px,transparent_1px)] p-8 [background-size:22px_22px] flex items-center justify-center">
+        {/* Mobile Device Bezel Frame if in mobile mode */}
+        <div className={twMerge('transition-all duration-300', isMobile && 'p-3 bg-neutral-950 rounded-[44px] border-[6px] border-neutral-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] ring-1 ring-neutral-700/50')}>
+          {isMobile && (
+            <div className="w-24 h-4 bg-neutral-800 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <span className="w-2.5 h-2.5 bg-neutral-900 rounded-full" />
             </div>
           )}
 
-          {/* Placing a hotspot required knowing that the toolbar toggle armed a
-              mode, and that the mode wanted a click on the page. Neither was
-              stated anywhere, for the feature the product leads with. */}
-          {hotspotMode && (
-            <div className="pointer-events-none absolute inset-x-0 top-4 z-30 flex justify-center">
-              <p className="rounded-full bg-amber-400 px-3 py-1.5 text-[11px] font-semibold text-amber-950 shadow-lg">
-                Click anywhere on the page to pin a hotspot — or press Enter
-              </p>
-            </div>
-          )}
+          <div
+            ref={canvasRef}
+            style={{ width: pageWidth, height: pageHeight }}
+            className={twMerge(
+              'relative mx-auto overflow-hidden rounded-[3px] bg-white transition-all',
+              isMobile ? 'rounded-[32px]' : 'shadow-[0_1px_2px_rgba(0,0,0,0.35),0_12px_28px_-8px_rgba(0,0,0,0.55),0_40px_80px_-32px_rgba(0,0,0,0.7)] ring-1 ring-black/40',
+              hotspotMode && 'cursor-crosshair ring-2 ring-amber-400/70'
+            )}
+            onClick={handleCanvasClick}
+            onMouseMove={(e) => {
+              if (!hotspotMode || !canvasRef.current) return
+              const rect = canvasRef.current.getBoundingClientRect()
+              setCursorCoords({
+                x: Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10,
+                y: Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10,
+              })
+            }}
+            onMouseLeave={() => setCursorCoords(null)}
+            onKeyDown={handleCanvasKeyDown}
+            tabIndex={hotspotMode || selectedHotspotId ? 0 : -1}
+            role={hotspotMode ? 'application' : undefined}
+          >
+            {/* Non-printing alignment guidelines */}
+            {showGuides && (
+              <div className="pointer-events-none absolute inset-0 z-30">
+                <div className="absolute inset-6 rounded border border-dashed border-cyan-500/40" />
+                <div className="absolute inset-y-0 left-1/2 w-px border-l border-dashed border-cyan-500/50" />
+                <div className="absolute inset-x-0 top-1/2 h-px border-t border-dashed border-cyan-500/50" />
+              </div>
+            )}
 
-          {/* A blank page offered no hint about what to do next — the only
-              affordance was a button in the footer, below the fold of the
-              page itself. */}
-          {currentPage.blocks.length === 0 && !hotspotMode && (
-            <button
-              onClick={() => setShowBlockPicker(true)}
-              className="absolute inset-4 z-20 flex flex-col items-center justify-center gap-3 rounded-sm border border-dashed border-neutral-300 text-neutral-400 transition-colors hover:border-[var(--accent-vivid)]/60 hover:text-[var(--accent-vivid)]"
-            >
-              <span className="grid h-11 w-11 place-items-center rounded-full border border-current">
-                <Plus size={20} />
-              </span>
-              <span className="text-sm font-medium">Add your first block</span>
-              <span className="max-w-[220px] text-center text-xs text-neutral-400">
-                Text, images, video, buttons, or a live data field.
-              </span>
-            </button>
-          )}
+            {/* Precision Hotspot Crosshair Coordinates Badge */}
+            {hotspotMode && (
+              <div className="pointer-events-none absolute inset-x-0 top-3 z-30 flex flex-col items-center gap-1">
+                <p className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-bold text-amber-950 shadow-xl border border-amber-300">
+                  🎯 Click anywhere to drop beacon
+                </p>
+                {cursorCoords && (
+                  <span className="rounded bg-neutral-950/80 px-2 py-0.5 text-[10px] font-mono text-amber-300 shadow-md">
+                    X: {cursorCoords.x}% · Y: {cursorCoords.y}%
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Empty Page Starter Layouts Gallery */}
+            {currentPage.blocks.length === 0 && !hotspotMode && (
+              <div className="absolute inset-4 z-20 flex flex-col items-center justify-center p-6 text-center">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-neutral-900 border border-neutral-800 text-[var(--accent-vivid)] mb-3 shadow-md">
+                  <LayoutTemplate size={22} />
+                </div>
+                <h3 className="text-sm font-semibold text-neutral-200">Start crafting this spread</h3>
+                <p className="text-xs text-neutral-400 max-w-xs mt-1 mb-5">
+                  Choose an editorial starter layout or add individual custom blocks.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full max-w-md">
+                  <button
+                    type="button"
+                    onClick={handleScaffoldSplit}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
+                  >
+                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
+                      📸 2-Column Split
+                    </span>
+                    <span className="text-[10px] text-neutral-400 leading-tight">
+                      Photo & details spread
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleScaffoldQuote}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
+                  >
+                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
+                      💬 Hero Quote
+                    </span>
+                    <span className="text-[10px] text-neutral-400 leading-tight">
+                      Monumental typography
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleScaffoldShoppable}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
+                  >
+                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
+                      🛍️ Shoppable Pin
+                    </span>
+                    <span className="text-[10px] text-neutral-400 leading-tight">
+                      Product callout & CTA
+                    </span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowBlockPicker(true)}
+                  className="mt-4 text-xs text-neutral-400 hover:text-[var(--accent-vivid)] underline transition font-medium"
+                >
+                  + Or pick individual blocks from library
+                </button>
+              </div>
+            )}
 
           <div className={twMerge('absolute inset-0', hotspotMode && 'pointer-events-none')}>
             <DndContext
@@ -778,6 +967,7 @@ export function EditorCanvas() {
                 style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
               />
             ))}
+        </div>
         </div>
       </div>
 

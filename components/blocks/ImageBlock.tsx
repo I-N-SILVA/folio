@@ -43,6 +43,29 @@ const focalStyles: Record<string, string> = {
   right: 'object-right',
 }
 
+const widthStyles: Record<string, string> = {
+  full: 'w-full max-w-full',
+  '3/4': 'w-full max-w-[75%]',
+  '1/2': 'w-full max-w-[50%]',
+  '1/3': 'w-full max-w-[33.333%]',
+  '1/4': 'w-full max-w-[25%]',
+}
+
+const alignStyles: Record<string, string> = {
+  left: 'mr-auto ml-0',
+  center: 'mx-auto',
+  right: 'ml-auto mr-0',
+}
+
+const heightStyles: Record<string, string> = {
+  none: '',
+  xs: 'max-h-[160px]',
+  sm: 'max-h-[240px]',
+  md: 'max-h-[340px]',
+  lg: 'max-h-[460px]',
+  xl: 'max-h-[600px]',
+}
+
 export function ImageBlock({ block }: { block: ImageBlock }) {
   const [open, setOpen] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -52,19 +75,24 @@ export function ImageBlock({ block }: { block: ImageBlock }) {
   const shadowCls = block.shadow ? shadowStyles[block.shadow] ?? 'shadow-none' : 'shadow-none'
   const focalCls = block.focalPoint ? focalStyles[block.focalPoint] ?? 'object-center' : 'object-center'
   const fitCls = block.objectFit === 'contain' ? 'object-contain' : block.objectFit === 'fill' ? 'object-fill' : 'object-cover'
+  const widthCls = block.width ? widthStyles[block.width] ?? 'w-full' : 'w-full'
+  const alignCls = block.align ? alignStyles[block.align] ?? 'mx-auto' : 'mx-auto'
+  const heightCls = block.maxHeight ? heightStyles[block.maxHeight] ?? '' : ''
 
   return (
-    <>
+    <div className={twMerge('w-full flex', block.align === 'left' ? 'justify-start' : block.align === 'right' ? 'justify-end' : 'justify-center')}>
       <figure
         className={twMerge(
-          'relative w-full overflow-hidden transition-all',
+          'relative overflow-hidden transition-all',
+          widthCls,
+          alignCls,
           radiusCls,
           shadowCls,
           block.border ? 'border border-white/20 dark:border-white/10' : ''
         )}
         style={block.borderColor ? { borderColor: block.borderColor, borderWidth: 1, borderStyle: 'solid' } : undefined}
       >
-        <div className={twMerge('relative w-full overflow-hidden', aspectCls, radiusCls)}>
+        <div className={twMerge('relative w-full overflow-hidden', aspectCls, radiusCls, heightCls)}>
           {failed ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-current/5 text-current">
               <ImageOff size={20} className="opacity-45" />
@@ -103,6 +131,6 @@ export function ImageBlock({ block }: { block: ImageBlock }) {
           slides={[{ src: block.src, alt: block.alt }]}
         />
       )}
-    </>
+    </div>
   )
 }

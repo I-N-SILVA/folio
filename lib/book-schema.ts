@@ -19,11 +19,21 @@ export const TextBlockSchema = z.object({
 export const ImageBlockSchema = z.object({
   type: z.literal('image'),
   id: z.string(),
-  src: z.string().url(),
+  src: z.string().refine((s) => {
+    try {
+      const url = new URL(s)
+      return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'data:'
+    } catch {
+      return s.startsWith('/') || s.startsWith('data:')
+    }
+  }, { message: 'Must be a valid URL or data URI' }),
   alt: z.string(),
   caption: z.string().optional(),
   lightbox: z.boolean().optional(),
   aspectRatio: z.enum(['auto', '1/1', '16/9', '4/3', '3/4', '2/3', '21/9']).optional(),
+  width: z.enum(['full', '3/4', '1/2', '1/3', '1/4']).optional(),
+  align: z.enum(['left', 'center', 'right']).optional(),
+  maxHeight: z.enum(['none', 'xs', 'sm', 'md', 'lg', 'xl']).optional(),
   borderRadius: z.enum(['none', 'sm', 'md', 'lg', 'xl', 'full']).optional(),
   objectFit: z.enum(['cover', 'contain', 'fill']).optional(),
   shadow: z.enum(['none', 'sm', 'md', 'lg', '2xl']).optional(),
@@ -133,9 +143,12 @@ export const HotspotSchema = z.object({
 
 export const BackgroundSchema = z.object({
   color: z.string().optional(),
-  image: z.string().url().optional(),
+  image: z.string().optional(),
   imagePosition: z.enum(['center', 'top', 'bottom', 'left', 'right']).optional(),
-  overlay: z.string().optional(), // rgba color for image overlay
+  imageFit: z.enum(['cover', 'contain', 'auto']).optional(),
+  overlay: z.string().optional(), // rgba color or dark tint hex
+  overlayOpacity: z.number().min(0).max(100).optional(),
+  blur: z.enum(['none', 'sm', 'md', 'lg']).optional(),
   paperTexture: z.enum(['none', 'gloss', 'matte', 'washi', 'linen', 'carbon']).default('none').optional(),
 })
 
