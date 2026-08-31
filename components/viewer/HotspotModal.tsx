@@ -103,7 +103,7 @@ export function HotspotModal({ hotspot, bookId, pageNumber, onClose }: HotspotMo
           {hotspot.modal.body}
         </div>
 
-        {hotspot.action === 'checkout' && hotspot.stripeUrl && (
+        {hotspot.action === 'checkout' && (
           <div>
             {hotspot.price && (
               <div className="mb-4 flex items-baseline gap-2">
@@ -113,17 +113,51 @@ export function HotspotModal({ hotspot, bookId, pageNumber, onClose }: HotspotMo
                 <span className="text-sm text-gray-500">incl. taxes</span>
               </div>
             )}
-            <a
-              href={hotspot.stripeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'checkout' })
-              }
-              className="block w-full rounded-full bg-[var(--accent)] px-4 py-3 text-center font-semibold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
-            >
-              {hotspot.ctaLabel ?? 'Buy now'}
-            </a>
+
+            {hotspot.stripeUrl ? (
+              <a
+                href={hotspot.stripeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'checkout' })
+                }
+                className="block w-full rounded-full bg-neutral-900 px-4 py-3.5 text-center font-semibold text-white shadow-lg transition-all hover:bg-black hover:scale-[1.01] active:scale-[0.98]"
+              >
+                {hotspot.ctaLabel ?? 'Buy Now'}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  trackEvent(bookId, 'cta_click', { hotspot_id: hotspot.id, action: 'checkout' })
+                  const numeric = parseFloat((hotspot.price || '0').replace(/[^0-9.]/g, '')) || 0
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                      new CustomEvent('folio:add-to-cart', {
+                        detail: {
+                          id: hotspot.id,
+                          title: hotspot.modal.title || hotspot.label || 'Boutique Piece',
+                          price: hotspot.price || '$0',
+                          numericPrice: numeric,
+                          image: hotspot.modal.media?.type === 'image' ? hotspot.modal.media.src : undefined,
+                          pageNumber,
+                        },
+                      })
+                    )
+                  }
+                  onClose()
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 px-4 py-3.5 text-center font-semibold text-white shadow-lg transition-all hover:bg-black hover:scale-[1.01] active:scale-[0.98]"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                  <path d="M3 6h18" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                <span>{hotspot.ctaLabel ?? 'Add to Bag'}</span>
+              </button>
+            )}
           </div>
         )}
 

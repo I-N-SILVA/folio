@@ -28,6 +28,7 @@ import { ForeEdge } from './ForeEdge'
 import { TableOfContents } from './TableOfContents'
 import { FilmstripScrubber } from './FilmstripScrubber'
 import { CartDrawer, type CartItem } from './CartDrawer'
+import { CheckoutModal } from './CheckoutModal'
 import { SearchModal } from './SearchModal'
 import { ReviewDrawer, type ReviewComment } from './ReviewDrawer'
 import { playPageFlipSound, type PaperPhysics } from '@/lib/sound'
@@ -189,6 +190,7 @@ export function ViewerChrome({
 
   const [showSearch, setShowSearch] = useState(false)
   const [showCart, setShowCart] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [reviewComments, setReviewComments] = useState<ReviewComment[]>([])
@@ -669,6 +671,21 @@ export function ViewerChrome({
           items={cartItems}
           onUpdateQuantity={handleUpdateCartQuantity}
           onRemoveItem={handleRemoveCartItem}
+          onCheckout={() => {
+            setShowCart(false)
+            setShowCheckout(true)
+          }}
+        />
+      )}
+
+      {/* Shoppable Checkout Modal */}
+      {showCheckout && (
+        <CheckoutModal
+          isOpen={showCheckout}
+          onClose={() => setShowCheckout(false)}
+          items={cartItems}
+          onClearCart={() => setCartItems([])}
+          bookTitle={visibleBook.title}
         />
       )}
 
