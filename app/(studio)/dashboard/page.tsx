@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
-import { Sparkles, BookOpen } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { SignInTracker } from '@/components/studio/SignInTracker'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { DashboardActions } from '@/components/studio/DashboardActions'
@@ -87,7 +87,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--qlico-teal)]">
-                <Sparkles size={13} />
+                <BookOpen size={13} />
                 Creator Studio
               </div>
               <h1 className="font-display text-5xl font-semibold leading-none tracking-[-0.06em] sm:text-6xl">

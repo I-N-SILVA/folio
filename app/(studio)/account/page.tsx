@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Check, Crown, Gift, Minus, Sparkles } from 'lucide-react'
+import { Check, Crown, Gift, Minus, CreditCard } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getProfile, effectivePlan, countUserBooks } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
@@ -146,7 +146,7 @@ export default async function AccountPage({
 
             {!plan.lifetime && plan.id === 'free' && (
               <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/72 p-7 shadow-sm">
-                <Sparkles size={20} className="text-[var(--qlico-brass)]" />
+                <Crown size={20} className="text-[var(--qlico-brass)]" />
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Go Pro</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--qlico-muted)]">
                   Unlimited editions, email capture with lead export, and 12-month analytics —
@@ -167,7 +167,7 @@ export default async function AccountPage({
 
             {billingOn && isProSubscriber && (
               <div className="rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/72 p-7 shadow-sm">
-                <Sparkles size={20} className="text-[var(--qlico-brass)]" />
+                <CreditCard size={20} className="text-[var(--qlico-brass)]" />
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Billing</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--qlico-muted)]">
                   Update your card, view invoices, or cancel anytime.

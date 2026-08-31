@@ -53,7 +53,7 @@ describe('Offline Kiosk HTML Bundle Generator', () => {
             x: 50,
             y: 50,
             label: 'Detail Pin',
-            icon: 'Sparkles',
+            icon: 'Compass',
             action: 'modal',
             modal: { title: 'Detail Pin', body: 'Inspecting joinery' },
           },

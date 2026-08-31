@@ -385,26 +385,33 @@ export function EditorClient({ book, entitlements }: Props) {
 
         <div className="flex-1" />
 
-        {/* Save indicator. Always says something — an empty slot next to a
-            live document reads as "did my work save?" */}
+        {/* Live Autosave & Sync Status Badge */}
         <div
-          className="flex items-center gap-1.5 whitespace-nowrap text-xs text-neutral-400"
+          className="flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/90 px-3 py-1 text-xs text-neutral-300 select-none shadow-sm"
           aria-live="polite"
         >
           {saveStatus === 'saving' ? (
             <>
-              <Loader2 size={12} className="animate-spin" />
-              <span>Saving…</span>
+              <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <span className="text-amber-300 font-medium">Syncing changes…</span>
             </>
           ) : saveStatus === 'saved' ? (
             <>
-              <Check size={12} className="text-emerald-400" />
-              <span className="text-emerald-400">Saved</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
+              <span className="text-emerald-400 font-medium">Saved</span>
+            </>
+          ) : isDirty ? (
+            <>
+              <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+              <span className="text-neutral-300">Unsaved edits</span>
             </>
           ) : (
-            <span className="hidden sm:inline">
-              {isDirty ? 'Unsaved changes' : <SavedAgo at={lastSavedAt} />}
-            </span>
+            <>
+              <span className="h-2 w-2 rounded-full bg-emerald-500/80 shrink-0" />
+              <span className="hidden sm:inline text-neutral-400 font-normal">
+                <SavedAgo at={lastSavedAt} />
+              </span>
+            </>
           )}
         </div>
 

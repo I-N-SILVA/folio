@@ -72,7 +72,7 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
       label: heading,
       x: 50,
       y: 50,
-      icon: 'Sparkles',
+      icon: 'Compass',
       action: 'modal',
       modal: {
         title: heading,
