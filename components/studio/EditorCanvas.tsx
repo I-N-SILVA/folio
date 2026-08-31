@@ -26,6 +26,7 @@ import {
   Smartphone,
   Monitor,
   LayoutTemplate,
+  ShoppingBag,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -276,17 +277,47 @@ const BLOCK_TYPES: BlockChoice[] = [
     defaults: { html: '<div>Paste embed HTML here</div>', height: 300 },
   },
   {
-    type: 'data',
-    label: 'Live data',
-    hint: 'A field that refreshes after publish',
-    icon: <RefreshCw size={18} />,
-    defaults: { label: 'Live price', source: '/demo-live.json', path: 'product.price', prefix: '$', align: 'left' },
+    type: 'product-grid',
+    label: 'Product Grid',
+    hint: 'Side-by-side products with prices & Buy Now',
+    icon: <ShoppingBag size={18} />,
+    defaults: {
+      columns: '2',
+      cardStyle: 'bordered',
+      aspectRatio: '1/1',
+      items: [
+        {
+          id: 'p1',
+          name: 'Mulberry Silk Trench',
+          price: '$480',
+          originalPrice: '$620',
+          image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
+          description: 'Handcrafted mulberry heavy silk with horn buttons.',
+          badge: 'Best Seller',
+          action: 'cart',
+          ctaLabel: 'Add to Bag',
+          inStock: true,
+        },
+        {
+          id: 'p2',
+          name: 'Cashmere Ribbed Beanie',
+          price: '$120',
+          image: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=1200&q=85',
+          description: '100% Mongolian organic combed cashmere yarn.',
+          badge: 'New Season',
+          action: 'cart',
+          ctaLabel: 'Add to Bag',
+          inStock: true,
+        },
+      ],
+    },
   },
 ]
 
-/** Three intents rather than eight equivalent tiles. */
+/** Four categories for clarity and fast selection */
 const BLOCK_GROUPS: { title: string; types: Block['type'][] }[] = [
-  { title: 'Text', types: ['text', 'divider'] },
+  { title: 'Commerce & Products', types: ['product-grid'] },
+  { title: 'Text & Layout', types: ['text', 'divider'] },
   { title: 'Media', types: ['image', 'video', 'audio'] },
   { title: 'Interactive', types: ['button', 'data', 'embed'] },
 ]

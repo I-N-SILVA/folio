@@ -10,6 +10,7 @@ import { AudioBlockForm } from './AudioBlockForm'
 import { ButtonBlockForm } from './ButtonBlockForm'
 import { EmbedBlockForm } from './EmbedBlockForm'
 import { DataBlockForm } from './DataBlockForm'
+import { ProductGridBlockForm } from './ProductGridBlockForm'
 
 export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: string }) {
   const { removeBlock, duplicateBlock, moveBlock, book } = useEditorStore()
@@ -22,7 +23,7 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
     <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
         <span className="text-xs font-bold text-neutral-200 uppercase tracking-wider">
-          {block.type} block
+          {block.type === 'product-grid' ? 'Product Grid' : block.type} block
         </span>
         <div className="flex items-center gap-1">
           <button
@@ -72,6 +73,7 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
       )}
       {block.type === 'embed' && <EmbedBlockForm block={block} pageId={pageId} />}
       {block.type === 'data' && <DataBlockForm block={block} pageId={pageId} />}
+      {block.type === 'product-grid' && <ProductGridBlockForm block={block} pageId={pageId} />}
     </div>
   )
 }

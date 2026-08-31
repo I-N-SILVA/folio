@@ -216,6 +216,18 @@ export function ViewerChrome({
     setShowCart(true)
   }
 
+  // Global event listener for shoppable block cards and hotspot buttons
+  useEffect(() => {
+    const onAdd = (e: Event) => {
+      const customEvent = e as CustomEvent<Omit<CartItem, 'quantity'>>
+      if (customEvent.detail) {
+        handleAddToCart(customEvent.detail)
+      }
+    }
+    window.addEventListener('folio:add-to-cart', onAdd)
+    return () => window.removeEventListener('folio:add-to-cart', onAdd)
+  }, [])
+
   const handleUpdateCartQuantity = (id: string, qty: number) => {
     if (qty <= 0) {
       setCartItems((prev) => prev.filter((i) => i.id !== id))

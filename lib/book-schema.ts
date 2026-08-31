@@ -98,6 +98,31 @@ export const DataBlockSchema = z.object({
   align: z.enum(['left', 'center', 'right']).optional(),
 })
 
+// Shoppable product grid & multi-item row for lookbooks and catalogs.
+export const ProductItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  price: z.string(),
+  originalPrice: z.string().optional(),
+  image: z.string(),
+  alt: z.string().optional(),
+  description: z.string().optional(),
+  buyUrl: z.string().optional(),
+  ctaLabel: z.string().optional().default('Add to Bag'),
+  action: z.enum(['cart', 'checkout', 'link']).default('cart').optional(),
+  badge: z.string().optional(),
+  inStock: z.boolean().default(true).optional(),
+})
+
+export const ProductGridBlockSchema = z.object({
+  type: z.literal('product-grid'),
+  id: z.string(),
+  columns: z.enum(['2', '3', '4']).default('2'),
+  items: z.array(ProductItemSchema).default([]),
+  cardStyle: z.enum(['minimal', 'bordered', 'elevated', 'glass']).default('bordered').optional(),
+  aspectRatio: z.enum(['1/1', '3/4', '4/3', '16/9']).default('1/1').optional(),
+})
+
 export const BlockSchema = z.discriminatedUnion('type', [
   TextBlockSchema,
   ImageBlockSchema,
@@ -107,6 +132,7 @@ export const BlockSchema = z.discriminatedUnion('type', [
   DividerBlockSchema,
   EmbedBlockSchema,
   DataBlockSchema,
+  ProductGridBlockSchema,
 ])
 
 // ─── Hotspot Schema ────────────────────────────────────────────────────────────
@@ -254,6 +280,8 @@ export type ButtonBlock = z.infer<typeof ButtonBlockSchema>
 export type DividerBlock = z.infer<typeof DividerBlockSchema>
 export type EmbedBlock = z.infer<typeof EmbedBlockSchema>
 export type DataBlock = z.infer<typeof DataBlockSchema>
+export type ProductItem = z.infer<typeof ProductItemSchema>
+export type ProductGridBlock = z.infer<typeof ProductGridBlockSchema>
 export type Block = z.infer<typeof BlockSchema>
 export type Hotspot = z.infer<typeof HotspotSchema>
 export type Page = z.infer<typeof PageSchema>
