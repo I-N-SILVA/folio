@@ -13,23 +13,53 @@ const variantStyles: Record<ButtonBlock['variant'], string> = {
     'text-[var(--primary)] underline underline-offset-4 hover:opacity-70',
 }
 
+const sizeStyles: Record<string, string> = {
+  sm: 'px-4 py-1.5 text-xs min-h-[36px]',
+  md: 'px-7 py-3 text-sm min-h-[44px]',
+  lg: 'px-9 py-4 text-base min-h-[52px]',
+}
+
+const shapeStyles: Record<string, string> = {
+  pill: 'rounded-full',
+  rounded: 'rounded-xl',
+  square: 'rounded-none',
+}
+
 export function ButtonBlock({ block, bookId }: { block: ButtonBlock; bookId: string }) {
   function handleClick() {
     trackEvent(bookId, 'cta_click', { block_id: block.id, href: block.href })
   }
 
+  const shapeCls = block.shape ? shapeStyles[block.shape] ?? 'rounded-full' : 'rounded-full'
+  const sizeCls = block.size ? sizeStyles[block.size] ?? sizeStyles.md : sizeStyles.md
+
+  const customStyle: React.CSSProperties = {}
+  if (block.customColor && block.variant === 'primary') {
+    customStyle.backgroundColor = block.customColor
+    customStyle.borderColor = block.customColor
+  }
+  if (block.textColor) {
+    customStyle.color = block.textColor
+  }
+
   return (
-    <a
-      href={block.href}
-      target={block.target}
-      rel="noopener noreferrer"
-      onClick={handleClick}
-      className={twMerge(
-        'inline-flex items-center justify-center px-7 py-3 rounded-full text-sm font-semibold transition-all duration-200 min-h-[44px]',
-        variantStyles[block.variant]
-      )}
-    >
-      {block.label}
-    </a>
+    <div className={twMerge('w-full', block.fullWidth ? 'flex' : 'inline-block')}>
+      <a
+        href={block.href}
+        target={block.target}
+        rel="noopener noreferrer"
+        onClick={handleClick}
+        style={customStyle}
+        className={twMerge(
+          'inline-flex items-center justify-center font-semibold transition-all duration-200',
+          block.fullWidth ? 'w-full' : '',
+          shapeCls,
+          sizeCls,
+          variantStyles[block.variant]
+        )}
+      >
+        {block.label}
+      </a>
+    </div>
   )
 }

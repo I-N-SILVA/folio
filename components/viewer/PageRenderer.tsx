@@ -7,10 +7,11 @@ import type { Page, Theme } from '@/lib/book-schema'
 import { THEME_PRESETS } from '@/lib/book-schema'
 
 const layoutStyles: Record<Page['layout'], string> = {
-  hero: 'flex flex-col items-center justify-center text-center p-8',
-  split: 'grid grid-cols-2 gap-6 p-8 items-center',
-  text: 'flex flex-col gap-4 p-8 justify-center max-w-prose mx-auto',
-  blank: '',
+  hero: 'flex flex-col items-center justify-center text-center p-6 md:p-10',
+  split: 'flex flex-col justify-center p-6 md:p-10',
+  grid: 'flex flex-col justify-center p-6 md:p-8',
+  text: 'flex flex-col gap-4 p-6 md:p-10 justify-center max-w-prose mx-auto',
+  blank: 'p-6 md:p-8 flex flex-col justify-start',
 }
 
 /** Relative luminance of a hex color (0 = black, 1 = white). */
@@ -141,7 +142,16 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
         )}
 
         {/* Blocks */}
-        <div className={twMerge("relative z-10 w-full", page.layout !== 'split' && "flex flex-col gap-4")}>
+        <div
+          className={twMerge(
+            'relative z-10 w-full',
+            page.layout === 'split'
+              ? 'grid grid-cols-1 md:grid-cols-2 gap-6 items-center'
+              : page.layout === 'grid'
+              ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 items-start'
+              : 'flex flex-col gap-4'
+          )}
+        >
           {page.blocks.map((block) => {
             const blockElement = <BlockRenderer key={block.id} block={block} bookId={bookId} pageId={page.id} />
             return renderBlockWrapper ? renderBlockWrapper(block, blockElement) : blockElement

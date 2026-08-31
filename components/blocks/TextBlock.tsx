@@ -16,6 +16,40 @@ const variantStyles: Record<TextBlockType['variant'], string> = {
   stat: 'font-display text-5xl md:text-7xl font-bold tabular-nums tracking-[-0.05em]',
 }
 
+const fontSizeStyles: Record<string, string> = {
+  xs: 'text-xs md:text-xs',
+  sm: 'text-sm md:text-sm',
+  base: 'text-base md:text-base',
+  lg: 'text-lg md:text-lg',
+  xl: 'text-xl md:text-xl',
+  '2xl': 'text-2xl md:text-3xl',
+  '4xl': 'text-3xl md:text-5xl',
+  '6xl': 'text-5xl md:text-7xl',
+}
+
+const paddingStyles: Record<string, string> = {
+  none: 'p-0',
+  sm: 'p-3',
+  md: 'p-5',
+  lg: 'p-8',
+}
+
+const radiusStyles: Record<string, string> = {
+  none: 'rounded-none',
+  sm: 'rounded-md',
+  md: 'rounded-xl',
+  lg: 'rounded-2xl',
+  full: 'rounded-full',
+}
+
+const spacingStyles: Record<string, string> = {
+  tighter: 'tracking-tighter',
+  tight: 'tracking-tight',
+  normal: 'tracking-normal',
+  wide: 'tracking-wide',
+  widest: 'tracking-widest',
+}
+
 const alignStyles: Record<string, string> = {
   left: 'text-left',
   center: 'text-center',
@@ -81,12 +115,20 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
   const isHeading = ['title', 'heading', 'stat'].includes(block.variant)
 
   const containerClasses = twMerge(
-    variantStyles[block.variant],
+    block.fontSize ? fontSizeStyles[block.fontSize] : variantStyles[block.variant],
     alignStyles[block.align ?? 'left'],
+    block.padding ? paddingStyles[block.padding] : '',
+    block.borderRadius ? radiusStyles[block.borderRadius] : '',
+    block.letterSpacing ? spacingStyles[block.letterSpacing] : '',
+    block.backgroundColor ? 'border border-current/10' : '',
     'text-[var(--text-color)] transition-all'
   )
 
-  const fontStyle = { fontFamily: isHeading ? 'var(--heading-font)' : 'var(--body-font)' }
+  const customInlineStyle: React.CSSProperties = {
+    fontFamily: isHeading ? 'var(--heading-font)' : 'var(--body-font)',
+    ...(block.textColor ? { color: block.textColor } : {}),
+    ...(block.backgroundColor ? { backgroundColor: block.backgroundColor } : {}),
+  }
 
   if (isEditing && pageId) {
     return (
@@ -171,7 +213,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
             containerClasses,
             'w-full bg-black/5 dark:bg-white/5 border border-[var(--accent-vivid)] outline-none resize-none ring-2 ring-[var(--accent-vivid)]/30 rounded-lg p-2 shadow-inner'
           )}
-          style={{ minHeight: '1.5em', overflow: 'hidden', ...fontStyle }}
+          style={{ minHeight: '1.5em', overflow: 'hidden', ...customInlineStyle }}
           rows={Math.max(1, content.split('\n').length)}
         />
       </div>
@@ -186,7 +228,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
         containerClasses,
         'prose-a:text-[var(--primary)] prose-a:underline hover:prose-a:opacity-80 transition-all'
       )}
-      style={fontStyle}
+      style={customInlineStyle}
     >
       <ReactMarkdown>{block.content}</ReactMarkdown>
     </div>

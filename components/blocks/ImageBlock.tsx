@@ -3,21 +3,68 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { ImageOff } from 'lucide-react'
+import { twMerge } from 'tailwind-merge'
 import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
 import type { ImageBlock } from '@/lib/book-schema'
+
+const aspectStyles: Record<string, string> = {
+  auto: 'aspect-video',
+  '1/1': 'aspect-square',
+  '16/9': 'aspect-video',
+  '4/3': 'aspect-[4/3]',
+  '3/4': 'aspect-[3/4]',
+  '2/3': 'aspect-[2/3]',
+  '21/9': 'aspect-[21/9]',
+}
+
+const radiusStyles: Record<string, string> = {
+  none: 'rounded-none',
+  sm: 'rounded-md',
+  md: 'rounded-xl',
+  lg: 'rounded-2xl',
+  xl: 'rounded-3xl',
+  full: 'rounded-full',
+}
+
+const shadowStyles: Record<string, string> = {
+  none: 'shadow-none',
+  sm: 'shadow-sm',
+  md: 'shadow-md',
+  lg: 'shadow-lg',
+  '2xl': 'shadow-2xl',
+}
+
+const focalStyles: Record<string, string> = {
+  center: 'object-center',
+  top: 'object-top',
+  bottom: 'object-bottom',
+  left: 'object-left',
+  right: 'object-right',
+}
 
 export function ImageBlock({ block }: { block: ImageBlock }) {
   const [open, setOpen] = useState(false)
   const [failed, setFailed] = useState(false)
 
+  const aspectCls = block.aspectRatio ? aspectStyles[block.aspectRatio] ?? 'aspect-video' : 'aspect-video'
+  const radiusCls = block.borderRadius ? radiusStyles[block.borderRadius] ?? 'rounded-xl' : 'rounded-xl'
+  const shadowCls = block.shadow ? shadowStyles[block.shadow] ?? 'shadow-none' : 'shadow-none'
+  const focalCls = block.focalPoint ? focalStyles[block.focalPoint] ?? 'object-center' : 'object-center'
+  const fitCls = block.objectFit === 'contain' ? 'object-contain' : block.objectFit === 'fill' ? 'object-fill' : 'object-cover'
+
   return (
     <>
-      <figure className="relative w-full overflow-hidden rounded">
-        <div className="relative aspect-video w-full">
-          {/* A missing image used to render as an empty box, in the reader and
-              in every preview alike, so an author had no way to tell a broken
-              URL from an image that simply hadn't loaded yet. */}
+      <figure
+        className={twMerge(
+          'relative w-full overflow-hidden transition-all',
+          radiusCls,
+          shadowCls,
+          block.border ? 'border border-white/20 dark:border-white/10' : ''
+        )}
+        style={block.borderColor ? { borderColor: block.borderColor, borderWidth: 1, borderStyle: 'solid' } : undefined}
+      >
+        <div className={twMerge('relative w-full overflow-hidden', aspectCls, radiusCls)}>
           {failed ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-current/5 text-current">
               <ImageOff size={20} className="opacity-45" />
@@ -30,7 +77,12 @@ export function ImageBlock({ block }: { block: ImageBlock }) {
               src={block.src}
               alt={block.alt}
               fill
-              className={`object-cover ${block.lightbox ? 'cursor-zoom-in' : ''}`}
+              className={twMerge(
+                fitCls,
+                focalCls,
+                block.lightbox ? 'cursor-zoom-in' : '',
+                'transition-transform duration-300'
+              )}
               onClick={() => block.lightbox && setOpen(true)}
               onError={() => setFailed(true)}
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -38,7 +90,7 @@ export function ImageBlock({ block }: { block: ImageBlock }) {
           )}
         </div>
         {block.caption && (
-          <figcaption className="mt-2 text-sm text-center opacity-70 italic">
+          <figcaption className="mt-2 text-xs text-center opacity-70 italic">
             {block.caption}
           </figcaption>
         )}

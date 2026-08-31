@@ -8,6 +8,12 @@ export const TextBlockSchema = z.object({
   variant: z.enum(['title', 'heading', 'body', 'caption', 'quote', 'stat']),
   content: z.string(),
   align: z.enum(['left', 'center', 'right']).optional(),
+  textColor: z.string().optional(),
+  fontSize: z.enum(['xs', 'sm', 'base', 'lg', 'xl', '2xl', '4xl', '6xl']).optional(),
+  backgroundColor: z.string().optional(),
+  padding: z.enum(['none', 'sm', 'md', 'lg']).optional(),
+  borderRadius: z.enum(['none', 'sm', 'md', 'lg', 'full']).optional(),
+  letterSpacing: z.enum(['tighter', 'tight', 'normal', 'wide', 'widest']).optional(),
 })
 
 export const ImageBlockSchema = z.object({
@@ -16,7 +22,14 @@ export const ImageBlockSchema = z.object({
   src: z.string().url(),
   alt: z.string(),
   caption: z.string().optional(),
-  lightbox: z.boolean().optional().default(false),
+  lightbox: z.boolean().optional(),
+  aspectRatio: z.enum(['auto', '1/1', '16/9', '4/3', '3/4', '2/3', '21/9']).optional(),
+  borderRadius: z.enum(['none', 'sm', 'md', 'lg', 'xl', 'full']).optional(),
+  objectFit: z.enum(['cover', 'contain', 'fill']).optional(),
+  shadow: z.enum(['none', 'sm', 'md', 'lg', '2xl']).optional(),
+  border: z.boolean().optional(),
+  borderColor: z.string().optional(),
+  focalPoint: z.enum(['center', 'top', 'bottom', 'left', 'right']).optional(),
 })
 
 export const VideoBlockSchema = z.object({
@@ -42,6 +55,11 @@ export const ButtonBlockSchema = z.object({
   label: z.string(),
   href: z.string().url(),
   variant: z.enum(['primary', 'secondary', 'ghost']),
+  shape: z.enum(['pill', 'rounded', 'square']).optional(),
+  size: z.enum(['sm', 'md', 'lg']).optional(),
+  fullWidth: z.boolean().optional(),
+  customColor: z.string().optional(),
+  textColor: z.string().optional(),
   target: z.literal('_blank').optional().default('_blank'),
 })
 
@@ -133,7 +151,7 @@ export const PageSchema = z.object({
   book_id: z.string(),
   page_number: z.number().int().positive(),
   type: z.enum(['cover', 'content', 'back']),
-  layout: z.enum(['hero', 'split', 'text', 'blank']),
+  layout: z.enum(['hero', 'split', 'text', 'grid', 'blank']),
   background: BackgroundSchema.optional(),
   blocks: z.array(BlockSchema).default([]),
   hotspots: z.array(HotspotSchema).default([]),

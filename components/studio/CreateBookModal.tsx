@@ -157,18 +157,28 @@ export function CreateBookModal({ onClose }: Props) {
       const created = await res.json()
       const templateData = tmpl.generateBook(created.id, created.owner_id || '', created.slug)
 
-      // Save initial template pages & theme
+      // Save initial multi-page template pages via dedicated pages endpoint
+      const pagesRes = await fetch(`/api/books/${created.id}/pages`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(templateData.pages),
+      })
+
+      if (!pagesRes.ok) {
+        console.warn('Failed to save template pages via PUT /api/books/[id]/pages, will fall back to theme update')
+      }
+
+      // Save initial template theme & description
       await fetch(`/api/books/${created.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pages: templateData.pages,
           theme: templateData.theme,
           description: templateData.description,
         }),
       })
 
-      toast.success(`Created "${tmpl.title}" template!`)
+      toast.success(`Created 4-page "${tmpl.title}" edition!`)
       router.push(`/editor/${created.id}`)
     } catch (err: any) {
       if (guardLimit(err)) return

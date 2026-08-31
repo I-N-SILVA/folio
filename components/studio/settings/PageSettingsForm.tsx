@@ -48,12 +48,13 @@ export function PageSettingsForm({ page }: { page: Page }) {
         </div>
       </Field>
 
-      <Field label="Layout">
+      <Field label="Layout Structure">
         <select {...register('layout')} className={selectCls}>
-          <option value="hero">Hero</option>
-          <option value="split">Split</option>
-          <option value="text">Text</option>
-          <option value="blank">Blank</option>
+          <option value="hero">Hero (Centered Editorial)</option>
+          <option value="split">Split (2-Column Feature)</option>
+          <option value="grid">Grid (2x2 Multi-Card)</option>
+          <option value="text">Text (Longform Story)</option>
+          <option value="blank">Blank (Freeform Canvas)</option>
         </select>
       </Field>
 
