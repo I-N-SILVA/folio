@@ -17,7 +17,6 @@ import {
   Headphones,
   Printer,
   Search,
-  MessageSquare,
   Globe,
   MoreHorizontal,
 } from 'lucide-react'
@@ -27,7 +26,6 @@ import { ForeEdge } from './ForeEdge'
 import { TableOfContents } from './TableOfContents'
 import { FilmstripScrubber } from './FilmstripScrubber'
 import { SearchModal } from './SearchModal'
-import { ReviewDrawer, type ReviewComment } from './ReviewDrawer'
 import { playPageFlipSound, type PaperPhysics } from '@/lib/sound'
 import { trackEvent } from '@/lib/tracking'
 import {
@@ -229,26 +227,6 @@ export function ViewerChrome({
   }
 
   const [showSearch, setShowSearch] = useState(false)
-  const [showReview, setShowReview] = useState(false)
-  const [reviewComments, setReviewComments] = useState<ReviewComment[]>([])
-
-  const handleAddReviewComment = (c: { author: string; text: string; pageNumber: number }) => {
-    setReviewComments((prev) => [
-      ...prev,
-      {
-        id: `rev-${Date.now()}`,
-        author: c.author,
-        text: c.text,
-        pageNumber: c.pageNumber,
-        timestamp: 'Just now',
-        resolved: false,
-      },
-    ])
-  }
-
-  const handleResolveReviewComment = (id: string) => {
-    setReviewComments((prev) => prev.map((c) => (c.id === id ? { ...c, resolved: true } : c)))
-  }
 
   // Synchronize speech synthesis with current page
   useEffect(() => {
@@ -453,21 +431,6 @@ export function ViewerChrome({
             </button>
           )}
 
-          {/* Client Feedback & Proofing Drawer (Desktop / Tablet) */}
-          {!embed && (
-            <button
-              onClick={() => setShowReview(true)}
-              className="relative hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
-              aria-label="Feedback & Review"
-              title="Feedback & Review"
-            >
-              <MessageSquare size={18} />
-              {reviewComments.filter((c) => !c.resolved).length > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-400" />
-              )}
-            </button>
-          )}
-
           {/* TOC / Overview drawer */}
           {!embed && (
             <button
@@ -592,18 +555,6 @@ export function ViewerChrome({
           onClose={() => setShowSearch(false)}
           book={visibleBook}
           onSelectPage={(i) => engineRef.current?.goTo(i)}
-        />
-      )}
-
-      {/* Client Feedback & Review Drawer */}
-      {showReview && (
-        <ReviewDrawer
-          isOpen={showReview}
-          onClose={() => setShowReview(false)}
-          currentPageNumber={currentPage + 1}
-          comments={reviewComments}
-          onAddComment={handleAddReviewComment}
-          onResolveComment={handleResolveReviewComment}
         />
       )}
 
