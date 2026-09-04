@@ -14,7 +14,7 @@ import { PageRenderer } from './PageRenderer'
 import { HotspotLayer } from './HotspotLayer'
 import { getSessionId, trackEvent } from '@/lib/tracking'
 import type { Book } from '@/lib/book-schema'
-import { PAGE_DESIGN_WIDTH, PAGE_RATIO } from '@/lib/page-geometry'
+import { PAGE_DESIGN_WIDTH, PAGE_RATIO, pageSideFor } from '@/lib/page-geometry'
 
 export interface ViewerEngineHandle {
   flipNext: () => void
@@ -293,13 +293,8 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
               gated case. */}
           {[
             ...pages.map((page, idx) => {
-              const pageSide: 'single' | 'left' | 'right' = isMobile
-                ? 'single'
-                : idx === 0
-                  ? 'single'
-                  : idx % 2 === 1
-                    ? 'left'
-                    : 'right'
+              // Shared with the editor's spread view — see lib/page-geometry.
+              const pageSide = pageSideFor(idx, isMobile)
 
               return (
                 <div

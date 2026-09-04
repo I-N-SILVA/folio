@@ -27,6 +27,8 @@ import {
   Monitor,
   LayoutTemplate,
   ShoppingBag,
+  FileText,
+  BookOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -50,9 +52,9 @@ import { useEditorStore } from '@/lib/editor-store'
 import { trackProduct } from '@/lib/product-analytics'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
 import { InsertPanel } from '@/components/studio/InsertPanel'
-import type { Block } from '@/lib/book-schema'
+import type { Block, Book, Page } from '@/lib/book-schema'
 import type { PageTemplate } from '@/lib/templates'
-import { PAGE_DESIGN_WIDTH, PAGE_RATIO, ZOOM_STEPS } from '@/lib/page-geometry'
+import { PAGE_DESIGN_WIDTH, PAGE_RATIO, ZOOM_STEPS, pageSideFor, spreadFor } from '@/lib/page-geometry'
 
 // ─── Sortable Block Wrapper ───────────────────────────────────────────────────
 
@@ -238,6 +240,15 @@ export function EditorCanvas() {
   const [showGuides, setShowGuides] = useState(false)
   const [isDetecting, setIsDetecting] = useState(false)
   const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop')
+  /**
+   * Page or spread.
+   *
+   * The reader shows two facing pages on anything wider than a phone
+   * (`usePortrait={isMobile}` in ViewerEngine) while the editor only ever
+   * showed one, so an author composing page 12 never saw page 13, never saw
+   * the gutter, and could not tell which of their pages face each other.
+   */
+  const [viewMode, setViewMode] = useState<'page' | 'spread'>('page')
   const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null)
   const [zoom, setZoom] = useState(1)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -275,6 +286,19 @@ export function EditorCanvas() {
   const isMobile = viewportMode === 'mobile'
   const pageWidth = isMobile ? 380 : Math.round(PAGE_DESIGN_WIDTH * zoom)
   const pageHeight = isMobile ? 740 : Math.round(pageWidth * PAGE_RATIO)
+
+  // A phone reader gets one page at a time, so a spread there would be a lie.
+  const spreadView = viewMode === 'spread' && !isMobile
+  const pages = book?.pages ?? []
+  const spread = spreadFor(currentPageIndex, pages.length)
+  const facingIndex = spreadView
+    ? spread.left === currentPageIndex
+      ? spread.right
+      : spread.left
+    : null
+  const facingPage = facingIndex != null ? pages[facingIndex] : null
+  /** Which side the *current* page sits on, so the facing one goes opposite. */
+  const currentSide = pageSideFor(currentPageIndex, false)
 
   /**
    * Place a hotspot at a percentage position on the page.
@@ -544,6 +568,47 @@ export function EditorCanvas() {
           </button>
         </div>
 
+        {/* Page or spread. Sits beside the viewport switch because they answer
+            the same question — what am I looking at — and the reader's own
+            answer depends on both. */}
+        {!isMobile && (
+          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+            <button
+              onClick={() => setViewMode('page')}
+              aria-pressed={viewMode === 'page'}
+              title="One page at a time"
+              className={twMerge(
+                'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition',
+                viewMode === 'page'
+                  ? 'bg-neutral-800 font-semibold text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              )}
+            >
+              <FileText size={13} />
+              <span className="hidden sm:inline">Page</span>
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('spread')
+                // Two pages need roughly twice the width; dropping the zoom
+                // means the spread arrives whole instead of half off-screen.
+                setZoom((z) => Math.min(z, 0.75))
+              }}
+              aria-pressed={viewMode === 'spread'}
+              title="Both facing pages, as a reader sees them"
+              className={twMerge(
+                'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition',
+                viewMode === 'spread'
+                  ? 'bg-neutral-800 font-semibold text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              )}
+            >
+              <BookOpen size={13} />
+              <span className="hidden sm:inline">Spread</span>
+            </button>
+          </div>
+        )}
+
         {/* Zoom (Desktop only) */}
         {!isMobile && (
           <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
@@ -631,11 +696,27 @@ export function EditorCanvas() {
             </div>
           )}
 
+          {/* The spread. In page view this is a row of one, so the editable
+              page below is identical either way — only its neighbour appears. */}
+          <div className="flex items-start justify-center">
+          {spreadView && facingPage && currentSide === 'right' && (
+            <FacingPage
+              page={facingPage}
+              index={facingIndex!}
+              bookId={book.id}
+              theme={book.theme}
+              width={pageWidth}
+              height={pageHeight}
+              side="left"
+            />
+          )}
+
           <div
             ref={canvasRef}
             style={{ width: pageWidth, height: pageHeight }}
             className={twMerge(
-              'relative mx-auto overflow-hidden rounded-[3px] bg-white transition-all',
+              'relative overflow-hidden rounded-[3px] bg-white transition-all',
+              !spreadView && 'mx-auto',
               isMobile ? 'rounded-[32px]' : 'shadow-[0_1px_2px_rgba(0,0,0,0.35),0_12px_28px_-8px_rgba(0,0,0,0.55),0_40px_80px_-32px_rgba(0,0,0,0.7)] ring-1 ring-black/40',
               hotspotMode && 'cursor-crosshair ring-2 ring-amber-400/70'
             )}
@@ -796,6 +877,37 @@ export function EditorCanvas() {
               />
             ))}
         </div>
+
+          {spreadView && facingPage && currentSide !== 'right' && (
+            <FacingPage
+              page={facingPage}
+              index={facingIndex!}
+              bookId={book.id}
+              theme={book.theme}
+              width={pageWidth}
+              height={pageHeight}
+              side="right"
+            />
+          )}
+
+          {/* A cover, or a last page with nothing opposite it, is a half spread
+              in the reader too — showing the empty half is the honest thing. */}
+          {spreadView && !facingPage && (
+            <div
+              style={{ width: pageWidth, height: pageHeight }}
+              className={twMerge(
+                'grid place-items-center rounded-[3px] border border-dashed border-neutral-800 bg-neutral-950/40 text-center',
+                currentSide === 'right' ? 'order-first' : ''
+              )}
+            >
+              <p className="max-w-[70%] text-[11px] leading-4 text-neutral-600">
+                {currentPageIndex === 0
+                  ? 'The cover stands alone — readers see it by itself before the first spread.'
+                  : 'Nothing faces this page yet. Add one and it will pair up here.'}
+              </p>
+            </div>
+          )}
+          </div>
         </div>
       </div>
 
@@ -826,5 +938,65 @@ export function EditorCanvas() {
         />
       )}
     </div>
+  )
+}
+
+/**
+ * The page opposite the one being edited.
+ *
+ * Read-only on purpose: the sortable context, the hotspot handlers and the
+ * insert index are all bound to the current page, and making both halves live
+ * would mean two of each. What the author needs first is simply to *see* what
+ * faces what and where the gutter falls — one click makes this the live page.
+ */
+function FacingPage({
+  page,
+  index,
+  bookId,
+  theme,
+  width,
+  height,
+  side,
+}: {
+  page: Page
+  index: number
+  bookId: string
+  theme: Book['theme']
+  width: number
+  height: number
+  side: 'left' | 'right'
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => useEditorStore.getState().setCurrentPageIndex(index)}
+      style={{ width, height }}
+      title={`Edit page ${page.page_number}`}
+      aria-label={`Page ${page.page_number} — click to edit it`}
+      className={twMerge(
+        'group relative shrink-0 overflow-hidden bg-white text-left ring-1 ring-black/40 transition',
+        side === 'left'
+          ? 'order-first rounded-l-[3px] shadow-[inset_-14px_0_20px_-16px_rgba(0,0,0,0.55)]'
+          : 'rounded-r-[3px] shadow-[inset_14px_0_20px_-16px_rgba(0,0,0,0.55)]'
+      )}
+    >
+      <div className="pointer-events-none absolute inset-0">
+        <PageRenderer
+          page={page}
+          bookId={bookId}
+          theme={theme}
+          className="h-full w-full"
+          pageSide={side}
+        />
+      </div>
+
+      {/* Dimmed until hovered, so the eye stays on the page being edited while
+          the composition of the whole spread is still readable. */}
+      <span className="pointer-events-none absolute inset-0 bg-neutral-950/25 transition-colors group-hover:bg-neutral-950/5" />
+
+      <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-900/90 px-2.5 py-1 text-[10px] font-semibold text-neutral-300 opacity-0 shadow transition-opacity group-hover:opacity-100">
+        Page {page.page_number} — click to edit
+      </span>
+    </button>
   )
 }
