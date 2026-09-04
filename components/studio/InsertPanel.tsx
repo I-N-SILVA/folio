@@ -66,7 +66,13 @@ export const BLOCK_CHOICES: BlockChoice[] = [
     hint: 'A section title',
     icon: <Heading1 size={17} />,
     keywords: 'title h1 h2',
-    make: () => ({ id: uid(), type: 'text', variant: 'heading', content: 'New heading', align: 'left' }),
+    make: () => ({
+      id: uid(),
+      type: 'text',
+      variant: 'heading',
+      content: 'New heading',
+      align: 'left',
+    }),
   },
   {
     id: 'body',
@@ -154,7 +160,14 @@ export const BLOCK_CHOICES: BlockChoice[] = [
     hint: 'One measured call to action',
     icon: <MousePointerClick size={17} />,
     keywords: 'cta link action',
-    make: () => ({ id: uid(), type: 'button', label: 'Do the thing', href: '', variant: 'primary', target: '_blank' }),
+    make: () => ({
+      id: uid(),
+      type: 'button',
+      label: 'Do the thing',
+      href: '',
+      variant: 'primary',
+      target: '_blank',
+    }),
   },
   {
     id: 'product-grid',
@@ -163,7 +176,14 @@ export const BLOCK_CHOICES: BlockChoice[] = [
     hint: 'Products with prices and a buy link',
     icon: <ShoppingBag size={17} />,
     keywords: 'shop commerce store catalogue',
-    make: () => ({ id: uid(), type: 'product-grid', columns: '2', cardStyle: 'bordered', aspectRatio: '1/1', items: [] }),
+    make: () => ({
+      id: uid(),
+      type: 'product-grid',
+      columns: '2',
+      cardStyle: 'bordered',
+      aspectRatio: '1/1',
+      items: [],
+    }),
   },
   {
     id: 'embed',
@@ -236,9 +256,7 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
       if (!active.length) return
       const next = (cursorIndex + (e.key === 'ArrowDown' ? 1 : -1) + active.length) % active.length
       setCursor(next)
-      listRef.current
-        ?.querySelectorAll('[data-row]')
-        [next]?.scrollIntoView({ block: 'nearest' })
+      listRef.current?.querySelectorAll('[data-row]')[next]?.scrollIntoView({ block: 'nearest' })
       return
     }
     if (e.key === 'Enter') {
@@ -406,7 +424,9 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
           <Key>tab</Key> switch
         </span>
         <span className="ml-auto">
-          {activeTab === 'layouts' ? 'Layouts add a page — yours is untouched' : 'Media blocks start empty'}
+          {activeTab === 'layouts'
+            ? 'Layouts add a page — yours is untouched'
+            : 'Media blocks start empty'}
         </span>
       </div>
     </Modal>

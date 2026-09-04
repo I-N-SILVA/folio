@@ -30,6 +30,7 @@ import { ShareModal } from '@/components/studio/ShareModal'
 import { ShortcutsModal } from '@/components/studio/ShortcutsModal'
 import { CommandPalette } from '@/components/studio/CommandPalette'
 import { PublishChecklistModal } from '@/components/studio/PublishChecklistModal'
+import { PostImportModal } from '@/components/studio/PostImportModal'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { EntitlementsProvider, type StudioEntitlements } from '@/components/studio/EntitlementsContext'
@@ -57,6 +58,20 @@ export function EditorClient({ book, entitlements }: Props) {
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [pendingChecks, setPendingChecks] = useState<PublishIssue[] | null>(null)
+
+  /**
+   * A fresh import lands here with `?imported=1`. Read once on mount and the
+   * parameter stripped, so a refresh doesn't re-offer a step the author already
+   * answered, and a shared editor link never opens it at all.
+   */
+  const [showPostImport, setShowPostImport] = useState(false)
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('imported') !== '1') return
+    url.searchParams.delete('imported')
+    window.history.replaceState(null, '', url.toString())
+    setShowPostImport(true)
+  }, [])
 
   // Warn about unsaved changes
   useEffect(() => {
@@ -612,6 +627,8 @@ export function EditorClient({ book, entitlements }: Props) {
 
       {/* Shortcuts Modal */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+
+      {showPostImport && <PostImportModal onClose={() => setShowPostImport(false)} />}
 
       {pendingChecks !== null && (
         <PublishChecklistModal

@@ -32,6 +32,8 @@ interface EditorStore {
   moveBlock: (pageId: string, blockId: string, direction: 'up' | 'down') => void
 
   addHotspot: (pageId: string, hotspot: Hotspot) => void
+  /** Add hotspots across many pages as a single undoable step. */
+  addHotspotsBatch: (byPage: { pageId: string; hotspots: Hotspot[] }[]) => void
   updateHotspot: (pageId: string, hotspotId: string, updates: Partial<Hotspot>) => void
   removeHotspot: (pageId: string, hotspotId: string) => void
 
@@ -260,6 +262,30 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         pages: state.book.pages.map((p) =>
           p.id === pageId ? { ...p, hotspots: [...p.hotspots, hotspot] } : p
         ),
+      },
+    }
+  }),
+
+  /**
+   * Everything the detector found, in one step.
+   *
+   * `addHotspot` snapshots history per call, so accepting 21 detected pins
+   * across 24 pages would have cost 21 presses of ⌘Z to undo. The post-import
+   * step promises "you can undo the whole thing" — this is what makes that
+   * true.
+   */
+  addHotspotsBatch: (byPage) => set((state) => {
+    if (!state.book?.pages) return state
+    const found = new Map(byPage.map((entry) => [entry.pageId, entry.hotspots]))
+    return {
+      isDirty: true,
+      ...snapshotHistory(state, state.book),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) => {
+          const extra = found.get(p.id)
+          return extra?.length ? { ...p, hotspots: [...p.hotspots, ...extra] } : p
+        }),
       },
     }
   }),

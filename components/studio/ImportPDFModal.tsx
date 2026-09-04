@@ -278,7 +278,9 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
 
       setTimeout(() => {
         onClose()
-        router.push(`/editor/${data.bookId}`)
+        // `?imported=1` is what makes the editor offer the post-import step
+        // instead of dropping the author on a bare canvas.
+        router.push(`/editor/${data.bookId}?imported=1`)
       }, 800)
     } catch (err) {
       // Give the slug and the quota slot back, so retrying doesn't collide with

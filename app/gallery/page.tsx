@@ -30,7 +30,10 @@ export default function GalleryPage() {
     <main className="qlico-grain min-h-screen bg-[var(--background)] px-5 py-10 text-[var(--qlico-ink)] sm:px-8">
       <div className="mx-auto max-w-6xl">
         <header className="mb-10 flex flex-wrap items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--qlico-muted)] transition-colors hover:text-[var(--qlico-ink)]">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-semibold text-[var(--qlico-muted)] transition-colors hover:text-[var(--qlico-ink)]"
+          >
             <BookOpen size={16} />
             QLICO
           </Link>
@@ -68,7 +71,10 @@ export default function GalleryPage() {
                 href={`/gallery/${tmpl.id}`}
                 aria-label={`Read ${tmpl.title}`}
                 className="relative flex aspect-[4/3] flex-col justify-between overflow-hidden p-5"
-                style={{ backgroundColor: tmpl.previewMockup.bgHex, color: tmpl.previewMockup.textHex }}
+                style={{
+                  backgroundColor: tmpl.previewMockup.bgHex,
+                  color: tmpl.previewMockup.textHex,
+                }}
               >
                 <div className="flex items-center justify-between">
                   <span

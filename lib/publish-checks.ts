@@ -226,7 +226,9 @@ export function publishChecks(book: Book): PublishIssue[] {
   // A cart with no checkout destination. Not a blocker — an author may want the
   // bag as a wishlist — but they should know before the link goes out.
   const hasCart = pages.some((p) =>
-    p.blocks.some((b) => b.type === 'product-grid' && b.items.some((i) => (i.action ?? 'cart') === 'cart'))
+    p.blocks.some(
+      (b) => b.type === 'product-grid' && b.items.some((i) => (i.action ?? 'cart') === 'cart')
+    )
   )
   if (hasCart && !book.settings?.checkoutUrl) {
     issues.push({

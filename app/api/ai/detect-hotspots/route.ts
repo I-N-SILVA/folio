@@ -5,9 +5,18 @@ import { isAiEnabled, detectHotspots } from '@/lib/ai'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import type { Hotspot, Page } from '@/lib/book-schema'
 
-const DetectSchema = z.object({
-  page: z.custom<Page>(),
-})
+/**
+ * One page or many.
+ *
+ * The editor only ever asked about the page the author was looking at, so after
+ * importing a 24-page PDF the offer was "find the products on this one page" —
+ * repeated 24 times, by hand. `pages` lets the post-import step ask once.
+ * `page` is kept so the existing single-page button keeps working.
+ */
+const DetectSchema = z.union([
+  z.object({ page: z.custom<Page>() }),
+  z.object({ pages: z.array(z.custom<Page>()).min(1).max(120) }),
+])
 
 /**
  * Heuristic fallback hotspot generator if Gemini AI is not configured.
@@ -84,6 +93,25 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
   return hotspots
 }
 
+/** Whatever we can find on one page, AI first and structure as the fallback. */
+async function detectForPage(page: Page): Promise<Hotspot[]> {
+  let detected: Hotspot[] = []
+
+  if (isAiEnabled() && page.background?.image) {
+    try {
+      const imgRes = await fetch(page.background.image)
+      if (imgRes.ok) {
+        const buffer = Buffer.from(await imgRes.arrayBuffer())
+        detected = await detectHotspots(buffer, page.page_number)
+      }
+    } catch (e) {
+      console.error('[AI] Vision detection fallback:', e)
+    }
+  }
+
+  return detected.length > 0 ? detected : extractHeuristicHotspots(page)
+}
+
 export async function POST(request: NextRequest) {
   const limit = rateLimit(`ai-detect:${clientIp(request)}`, 15, 60_000)
   if (!limit.ok) {
@@ -100,27 +128,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Page data is required.' }, { status: 400 })
   }
 
-  const { page } = parsed.data
-
-  let detected: Hotspot[] = []
-
-  // If image background URL exists and AI is enabled, we could fetch and analyze
-  if (isAiEnabled() && page.background?.image) {
-    try {
-      const imgRes = await fetch(page.background.image)
-      if (imgRes.ok) {
-        const buffer = Buffer.from(await imgRes.arrayBuffer())
-        detected = await detectHotspots(buffer, page.page_number)
-      }
-    } catch (e) {
-      console.error('[AI] Vision detection fallback:', e)
-    }
+  if ('page' in parsed.data) {
+    const detected = await detectForPage(parsed.data.page)
+    return NextResponse.json({ detected, count: detected.length })
   }
 
-  // Fallback to structural heuristic extraction
-  if (detected.length === 0) {
-    detected = extractHeuristicHotspots(page)
+  // Sequential, not Promise.all: each page may fetch and hand an image to
+  // Gemini, and firing 24 of those at once is how you get rate-limited by the
+  // provider rather than by us.
+  const byPage: { pageId: string; pageNumber: number; hotspots: Hotspot[] }[] = []
+  for (const page of parsed.data.pages) {
+    byPage.push({
+      pageId: page.id,
+      pageNumber: page.page_number,
+      hotspots: await detectForPage(page),
+    })
   }
 
-  return NextResponse.json({ detected, count: detected.length })
+  return NextResponse.json({
+    byPage,
+    count: byPage.reduce((total, p) => total + p.hotspots.length, 0),
+  })
 }
