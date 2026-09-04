@@ -383,10 +383,11 @@ Written after the implementation pass, so it is the accurate list.
    the publish check stops one going live without a source, but binding it to a
    Google Sheet or a webhook and refreshing it is not built.
 8. **Draft comments for the author's reviewers** (§6).
-9. **Commerce: Stripe Connect, orders, a Sales tab, and an entry in
-   `lib/plans.ts`.** The fake checkout is gone and a cart hands off to the
-   author's own checkout link, which is the honest interim. The strategic
-   decision — own it or cut it — is still the owner's.
+9. ~~**Commerce: Stripe Connect, orders, a Sales tab.**~~ **Decided: cut.** For
+   the MVP, QLICO handles no payments at all — a product links to the author's
+   own shop. The cart, the drawer and all four add-to-bag paths are gone. If it
+   is ever revisited it is Stripe Connect against the author's account, and it
+   needs an entry in `lib/plans.ts` on the way in.
 10. **Send the weekly digest by hand and read the email.** Needs a deployed
     environment with `CRON_SECRET`; it cannot be done from a sandbox.
 

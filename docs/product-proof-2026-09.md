@@ -46,7 +46,25 @@ author supplies. That is a single new field on `ProductGridBlockForm` —
 *author's* account, orders in the database, and a Sales tab in Insights. If it
 isn't, cut the cart and keep Product Grid as a linkable catalogue block.
 
-### Commerce has no entitlement
+### Decided: the cart is cut (4 September 2026)
+
+The owner's call, for the MVP: **QLICO handles no payments.** A product in an
+edition is a listing that links to wherever the author already sells it. That
+removes payouts, the processor integration, PCI scope and the Stripe Connect
+project in one move, and it makes the entitlement question below moot — there is
+nothing to meter because there is nothing being sold *through* QLICO.
+
+Built: the cart, the drawer and all four add-to-bag paths are gone; Product Grid
+is a catalogue with a per-item link; `settings.checkoutUrl` is removed; the
+publish check now warns about products with no buy link rather than a bag with
+no checkout; and the landing page, FAQ, pricing and lookbook template no longer
+claim a checkout the product does not run.
+
+Left open deliberately: if commerce ever becomes a real bet, it is Stripe
+Connect against the *author's* account, orders in the database and a Sales tab
+in Insights — and at that point it needs an entry in `lib/plans.ts`, per below.
+
+### Commerce has no entitlement — *resolved by cutting it*
 
 Commerce is the largest thing built since the last audit and appears nowhere in
 `lib/plans.ts`. That file opens with a rule the team wrote for itself — every
