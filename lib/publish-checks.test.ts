@@ -132,7 +132,7 @@ describe('publishChecks', () => {
     expect(issues.find((i) => i.id === 'gate:past-end')).toBeUndefined()
   })
 
-  it('warns when readers can fill a bag the edition cannot check out', () => {
+  it('warns about a product with no link to buy it', () => {
     const issues = publishChecks(
       book([
         page([
@@ -146,44 +146,42 @@ describe('publishChecks', () => {
                 name: 'A thing',
                 price: '$10',
                 image: 'https://cdn.test/p.jpg',
-                action: 'cart',
-                ctaLabel: 'Add to Bag',
+                action: 'link',
+                ctaLabel: 'View',
               },
             ],
           },
         ]),
       ])
     )
-    const commerce = issues.find((i) => i.id === 'commerce:no-checkout')
+    const commerce = issues.find((i) => i.id === 'commerce:no-buy-links')
     expect(commerce?.severity).toBe('warning')
   })
 
-  it('stays quiet about the bag once a checkout link exists', () => {
+  it('stays quiet once every product links somewhere', () => {
     const issues = publishChecks(
-      book(
-        [
-          page([
-            {
-              id: 'g',
-              type: 'product-grid',
-              columns: '2',
-              items: [
-                {
-                  id: 'p1',
-                  name: 'A thing',
-                  price: '$10',
-                  image: 'https://cdn.test/p.jpg',
-                  action: 'cart',
-                  ctaLabel: 'Add to Bag',
-                },
-              ],
-            },
-          ]),
-        ],
-        { checkoutUrl: 'https://shop.test/cart' }
-      )
+      book([
+        page([
+          {
+            id: 'g',
+            type: 'product-grid',
+            columns: '2',
+            items: [
+              {
+                id: 'p1',
+                name: 'A thing',
+                price: '$10',
+                image: 'https://cdn.test/p.jpg',
+                buyUrl: 'https://shop.test/a-thing',
+                action: 'link',
+                ctaLabel: 'View',
+              },
+            ],
+          },
+        ]),
+      ])
     )
-    expect(issues.find((i) => i.id === 'commerce:no-checkout')).toBeUndefined()
+    expect(issues.find((i) => i.id === 'commerce:no-buy-links')).toBeUndefined()
   })
 
   it('reports blockers before warnings so the list reads top-down', () => {

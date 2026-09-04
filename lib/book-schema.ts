@@ -154,9 +154,20 @@ export const ProductItemSchema = z.object({
   image: z.string(),
   alt: z.string().optional(),
   description: z.string().optional(),
+  /** Where the author actually sells this. Without one, no button is shown. */
   buyUrl: z.string().optional(),
-  ctaLabel: z.string().optional().default('Add to Bag'),
-  action: z.enum(['cart', 'checkout', 'link']).default('cart').optional(),
+  ctaLabel: z.string().optional().default('View'),
+  /**
+   * Every product is a link out now.
+   *
+   * QLICO takes no payment, so it holds no cart. 'cart' and 'checkout' are
+   * still accepted here because rows saved before that decision must keep
+   * parsing — they are read as the link they always should have been.
+   */
+  action: z
+    .enum(['cart', 'checkout', 'link'])
+    .optional()
+    .transform(() => 'link' as const),
   badge: z.string().optional(),
   inStock: z.boolean().default(true).optional(),
 })
@@ -207,6 +218,9 @@ export const HotspotSchema = z.object({
     media: HotspotMediaSchema.optional(),
   }),
   action: z.enum(['modal', 'link', 'checkout']).default('modal'),
+  // 'checkout' shows a price and sends the reader to `stripeUrl`. Without one
+  // it shows the price and no button — it never adds to a cart, because there
+  // is no cart.
   linkUrl: z.string().url().optional(),
   stripeUrl: z.string().url().optional(),
   price: z.string().optional(),
@@ -290,17 +304,6 @@ export const BookSettingsSchema = z.object({
   whitelabel: z.boolean().default(false),
   webhookUrl: z.string().optional(),
   customDomain: z.string().optional(),
-  /**
-   * Where the cart's checkout button sends a reader.
-   *
-   * QLICO does not process payments and must not pretend to. The reader used to
-   * mount a checkout that collected a card number, waited 1.8s, invented an
-   * order number and told the reader their order was confirmed — no request was
-   * made and no money moved. That is gone. A cart now hands off to a real
-   * checkout the author owns (Stripe Payment Link, Shopify, Gumroad), and an
-   * edition without one shows no checkout button at all.
-   */
-  checkoutUrl: z.string().optional(),
 })
 
 // ─── Book Schema ───────────────────────────────────────────────────────────────

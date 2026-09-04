@@ -30,7 +30,6 @@ const PLANS = [
       'Unlimited Editions',
       '365 Days Analytics',
       'Remove QLICO Badge',
-      'Shoppable Hotspots (Stripe)',
       'Live Data Binding',
       'CSV Leads & Events Export',
     ],

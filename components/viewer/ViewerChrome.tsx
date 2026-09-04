@@ -17,7 +17,6 @@ import {
   Headphones,
   Printer,
   Search,
-  ShoppingBag,
   MessageSquare,
   Globe,
   MoreHorizontal,
@@ -28,7 +27,6 @@ import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
 import { TableOfContents } from './TableOfContents'
 import { FilmstripScrubber } from './FilmstripScrubber'
-import { CartDrawer, type CartItem } from './CartDrawer'
 import { SearchModal } from './SearchModal'
 import { ReviewDrawer, type ReviewComment } from './ReviewDrawer'
 import { playPageFlipSound, type PaperPhysics } from '@/lib/sound'
@@ -215,57 +213,8 @@ export function ViewerChrome({
   }
 
   const [showSearch, setShowSearch] = useState(false)
-  const [showCart, setShowCart] = useState(false)
   const [showReview, setShowReview] = useState(false)
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [reviewComments, setReviewComments] = useState<ReviewComment[]>([])
-
-  // Cmd+F shortcut for full-text search
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
-        e.preventDefault()
-        setShowSearch(true)
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
-  const handleAddToCart = (item: Omit<CartItem, 'quantity'>) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id)
-      if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i))
-      }
-      return [...prev, { ...item, quantity: 1 }]
-    })
-    setShowCart(true)
-  }
-
-  // Global event listener for shoppable block cards and hotspot buttons
-  useEffect(() => {
-    const onAdd = (e: Event) => {
-      const customEvent = e as CustomEvent<Omit<CartItem, 'quantity'>>
-      if (customEvent.detail) {
-        handleAddToCart(customEvent.detail)
-      }
-    }
-    window.addEventListener('folio:add-to-cart', onAdd)
-    return () => window.removeEventListener('folio:add-to-cart', onAdd)
-  }, [])
-
-  const handleUpdateCartQuantity = (id: string, qty: number) => {
-    if (qty <= 0) {
-      setCartItems((prev) => prev.filter((i) => i.id !== id))
-    } else {
-      setCartItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i)))
-    }
-  }
-
-  const handleRemoveCartItem = (id: string) => {
-    setCartItems((prev) => prev.filter((i) => i.id !== id))
-  }
 
   const handleAddReviewComment = (c: { author: string; text: string; pageNumber: number }) => {
     setReviewComments((prev) => [
@@ -488,23 +437,6 @@ export function ViewerChrome({
             </button>
           )}
 
-          {/* Shoppable Bag Drawer */}
-          {!embed && (
-            <button
-              onClick={() => setShowCart(true)}
-              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
-              aria-label="Shopping Bag"
-              title="Shopping Bag"
-            >
-              <ShoppingBag size={18} />
-              {cartItems.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 grid h-4 w-4 place-items-center rounded-full bg-white text-[9px] font-bold text-black shadow">
-                  {cartItems.reduce((acc, i) => acc + i.quantity, 0)}
-                </span>
-              )}
-            </button>
-          )}
-
           {/* Client Feedback & Proofing Drawer (Desktop / Tablet) */}
           {!embed && (
             <button
@@ -662,22 +594,6 @@ export function ViewerChrome({
           onClose={() => setShowSearch(false)}
           book={visibleBook}
           onSelectPage={(i) => engineRef.current?.goTo(i)}
-        />
-      )}
-
-      {/* Shoppable Cart Drawer */}
-      {showCart && (
-        <CartDrawer
-          isOpen={showCart}
-          onClose={() => setShowCart(false)}
-          items={cartItems}
-          onUpdateQuantity={handleUpdateCartQuantity}
-          onRemoveItem={handleRemoveCartItem}
-          checkoutUrl={book.settings.checkoutUrl}
-          onCheckout={() => {
-            trackEvent(book.id, 'cta_click', { action: 'checkout', items: cartItems.length })
-            setShowCart(false)
-          }}
         />
       )}
 

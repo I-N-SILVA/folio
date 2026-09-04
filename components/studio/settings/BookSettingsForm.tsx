@@ -65,7 +65,6 @@ export function BookSettingsForm({ book }: { book: any }) {
       whitelabel: book.settings?.whitelabel ?? false,
       webhookUrl: book.settings?.webhookUrl ?? book.settings?.gating?.webhookUrl ?? '',
       customDomain: book.settings?.customDomain ?? '',
-      checkoutUrl: book.settings?.checkoutUrl ?? '',
       gatingEnabled: book.settings?.gating?.enabled ?? false,
       gatingPage: book.settings?.gating?.page_number ?? 3,
       gatingType: book.settings?.gating?.type ?? 'email',
@@ -120,7 +119,6 @@ export function BookSettingsForm({ book }: { book: any }) {
         whitelabel: values.whitelabel,
         webhookUrl: values.webhookUrl || undefined,
         customDomain: values.customDomain || undefined,
-        checkoutUrl: values.checkoutUrl || undefined,
         gating: {
           enabled: values.gatingEnabled ?? false,
           page_number: values.gatingPage ?? 3,
@@ -259,28 +257,6 @@ export function BookSettingsForm({ book }: { book: any }) {
             planName={entitlements.planName}
           />
         )}
-      </FieldGroup>
-
-      {/* QLICO does not process payments, so it must not host a checkout. The
-          reader used to show one that took a card number and invented an order
-          confirmation without making a single request. A cart now hands off
-          here, or shows no checkout button at all. */}
-      <FieldGroup title="Checkout">
-        <Field label="Checkout link">
-          <input
-            type="text"
-            inputMode="url"
-            placeholder="https://your-shop.com/checkout"
-            {...register('checkoutUrl')}
-            className={twMerge(inputCls, 'text-xs')}
-          />
-        </Field>
-        <p className="text-[11px] leading-4 text-neutral-500">
-          Where the shopping bag sends a reader — your Stripe Payment Link, Shopify cart or
-          Gumroad page. QLICO doesn&apos;t take payment itself. Leave this empty and the bag
-          shows no checkout button, which is the honest thing for an edition that can&apos;t
-          complete a sale.
-        </p>
       </FieldGroup>
 
       <FieldGroup title="Access Control & Gating">

@@ -35,12 +35,12 @@ export const TEMPLATES: PublicationTemplate[] = [
   {
     id: 'fashion-lookbook',
     title: 'Haute Couture & Luxury Lookbook',
-    subtitle: 'Full-bleed editorial runway spreads, shoppable checkout pins, and Milanese luxury typography.',
+    subtitle: 'Full-bleed editorial runway spreads, shoppable product pins, and Milanese luxury typography.',
     category: 'Fashion & Luxury',
     coverColor: '#09090b',
     accentColor: '#e2e8f0',
     pagesCount: 4,
-    badges: ['Shoppable Hotspots', 'Editorial Layout', 'Instant Checkout'],
+    badges: ['Shoppable Pins', 'Editorial Layout', 'Links to Your Shop'],
     previewMockup: {
       type: 'fashion',
       headline: 'MONOCHROME',
@@ -149,11 +149,17 @@ export const TEMPLATES: PublicationTemplate[] = [
               label: 'Silk Trench ($480)',
               icon: 'ShoppingBag',
               beaconStyle: 'shopping',
-              action: 'checkout',
+              // A product callout, not a purchase. A template must not ship a
+              // buy link pointing at a shop that doesn't exist — that is the
+              // placeholder problem in another costume. The author adds their
+              // own link, and the publish checklist reminds them to.
+              action: 'modal',
               price: '$480',
               modal: {
                 title: 'Mulberry Silk Trench',
-                body: 'Instant checkout. Complimentary worldwide express shipping.',
+                body:
+                  '$480 · Hand-tailored in Milan from 100% heavy mulberry silk.\n\n' +
+                  'Add your own shop link to this pin to let readers buy it.',
               },
             },
           ],
@@ -189,8 +195,8 @@ export const TEMPLATES: PublicationTemplate[] = [
                   image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
                   description: 'Hand-tailored 100% heavy mulberry silk.',
                   badge: 'Best Seller',
-                  action: 'cart',
-                  ctaLabel: 'Add to Bag',
+                  action: 'link',
+                  ctaLabel: 'View',
                   inStock: true,
                 },
                 {
@@ -201,8 +207,8 @@ export const TEMPLATES: PublicationTemplate[] = [
                   image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85',
                   description: 'Double-breasted virgin wool silhouette.',
                   badge: 'New Season',
-                  action: 'cart',
-                  ctaLabel: 'Add to Bag',
+                  action: 'link',
+                  ctaLabel: 'View',
                   inStock: true,
                 },
               ],

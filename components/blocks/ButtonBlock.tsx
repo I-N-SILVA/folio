@@ -26,25 +26,11 @@ const shapeStyles: Record<string, string> = {
 }
 
 export function ButtonBlock({ block, bookId }: { block: ButtonBlock; bookId: string }) {
-  function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
+  function handleClick() {
+    // A button used to be able to open an in-reader cart through a magic href
+    // (#cart, #buy, #checkout) and add an item at an invented $120. Both the
+    // cart and the invention are gone; a button goes where it says it goes.
     trackEvent(bookId, 'cta_click', { block_id: block.id, href: block.href })
-
-    const href = (block.href || '').trim().toLowerCase()
-    if (href === '#cart' || href === '#buy' || href === '#checkout' || href === 'cart:open') {
-      e.preventDefault()
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('folio:add-to-cart', {
-            detail: {
-              id: block.id,
-              title: block.label || 'Featured Item',
-              price: '$120',
-              numericPrice: 120,
-            },
-          })
-        )
-      }
-    }
   }
 
   const shapeCls = block.shape ? shapeStyles[block.shape] ?? 'rounded-full' : 'rounded-full'

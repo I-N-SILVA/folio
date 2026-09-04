@@ -223,19 +223,23 @@ export function publishChecks(book: Book): PublishIssue[] {
     })
   }
 
-  // A cart with no checkout destination. Not a blocker — an author may want the
-  // bag as a wishlist — but they should know before the link goes out.
-  const hasCart = pages.some((p) =>
-    p.blocks.some(
-      (b) => b.type === 'product-grid' && b.items.some((i) => (i.action ?? 'cart') === 'cart')
+  // A product nobody can buy. Not a blocker — a lookbook may deliberately be a
+  // catalogue with no shop behind it — but an author who meant to sell should
+  // know before the link goes out. QLICO takes no payment itself, so the buy
+  // link is the whole of the purchase path.
+  const unbuyable = pages.flatMap((p) =>
+    p.blocks.flatMap((b) =>
+      b.type === 'product-grid' ? b.items.filter((i) => !i.buyUrl).map((i) => ({ page: p.page_number, item: i })) : []
     )
   )
-  if (hasCart && !book.settings?.checkoutUrl) {
+  if (unbuyable.length > 0) {
     issues.push({
-      id: 'commerce:no-checkout',
+      id: 'commerce:no-buy-links',
       severity: 'warning',
-      title: 'Readers can add to the bag but not check out',
-      detail: 'Add a checkout link in Edition settings, or point each product at its own buy URL.',
+      title: `${unbuyable.length} product${unbuyable.length === 1 ? ' has' : 's have'} no link to buy`,
+      detail:
+        'Add the product page or payment link for each one, or leave them as a catalogue — they will show with prices but no button.',
+      pageNumber: unbuyable[0].page,
     })
   }
 

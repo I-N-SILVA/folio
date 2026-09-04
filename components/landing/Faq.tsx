@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react'
 import Reveal from './Reveal'
 
 const FAQS = [
-  { q: 'How is this different from a flipbook tool?', a: 'QLICO makes editions, not exports. Pages can be shoppable (checkout in place), bound to live data (prices, stock, dates that update after publish), and read with a tactile fore-edge you browse to navigate. A PDF can’t do any of that.' },
+  { q: 'How is this different from a flipbook tool?', a: 'QLICO makes editions, not exports. Pages can be shoppable (tag a product, link it to your shop), bound to live data (prices, stock, dates that update after publish), and read with a tactile fore-edge you browse to navigate. A PDF can’t do any of that.' },
   { q: 'Do readers need an account or app?', a: 'No. Every edition is a hosted link that opens instantly in any browser, and embeds anywhere with one line of code.' },
   { q: 'Can I import an existing PDF?', a: 'Yes. Drop in a PDF and QLICO turns each page into an interactive spread you can enrich with hotspots, links, and media.' },
   { q: 'Who owns the reader data?', a: 'You do. Opens, dwell time, completion and hotspot clicks are recorded against your edition, and you can export every event and every captured email as CSV at any time. We never sell it or use it to market to your readers.' },
