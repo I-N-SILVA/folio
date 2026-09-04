@@ -140,6 +140,41 @@
   --studio-stop: #ff7c6f;
 }
 
+
+/* ─── Canvas pages ────────────────────────────────────────────────────────
+   A page laid out as a canvas positions each block itself, from the `frame`
+   on the block. The rule that matters is the fallback: below a page width
+   that can hold a composition, blocks stack in paint order instead, because
+   a layout composed at A4 is unreadable at 380px and half a reader's
+   audience is on a phone.
+
+   It is a *container* query, not a viewport one, so the same rule is obeyed by
+   the reader, the embed, the page thumbnails and — the reason it has to be a
+   container query — the editor's own mobile simulator, which is a narrow page
+   inside a wide window. One rule, every surface, exactly as with
+   lib/page-geometry. */
+.qlico-canvas {
+  container-type: inline-size;
+  position: relative;
+}
+
+/* Stacked by default: the narrow case is the safe one. */
+.qlico-canvas-block {
+  position: static;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+@container (min-width: 400px) {
+  .qlico-canvas-block {
+    position: absolute;
+    left: var(--fx);
+    top: var(--fy);
+    width: var(--fw);
+    margin-bottom: 0;
+  }
+}
+
 /* Registering the brand colours with Tailwind's theme gives them real
    utilities — bg-accent, text-muted, border-hairline — instead of every call
    site spelling out bg-[var(--accent)]. This matters beyond tidiness: a colour

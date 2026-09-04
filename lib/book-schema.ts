@@ -27,9 +27,31 @@ const draftableUrl = z
 
 // ─── Block Schemas ─────────────────────────────────────────────────────────────
 
+
+/**
+ * Where a block sits, when its page is laid out as a canvas.
+ *
+ * The editor draws an A4 page with a paper shadow, zoom steps, alignment guides
+ * and a live X/Y readout — every signal says free composition — while blocks
+ * rendered into a flex column with no position at all. An author dragged a photo
+ * where they wanted it and it snapped back into the stack.
+ *
+ * `frame` is honoured only when `page.layout === 'canvas'`, so every existing
+ * page keeps flowing and no migration is needed. Units are percentages of the
+ * page, not pixels, so a frame survives zoom and any render width.
+ */
+export const FrameSchema = z.object({
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+  w: z.number().min(5).max(100),
+  /** Paint order, and the order blocks stack in on a phone. */
+  z: z.number().int().default(0),
+})
+
 export const TextBlockSchema = z.object({
   type: z.literal('text'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   variant: z.enum(['title', 'heading', 'body', 'caption', 'quote', 'stat']),
   content: z.string(),
   align: z.enum(['left', 'center', 'right']).optional(),
@@ -44,6 +66,7 @@ export const TextBlockSchema = z.object({
 export const ImageBlockSchema = z.object({
   type: z.literal('image'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   src: draftableUrl,
   alt: z.string(),
   caption: z.string().optional(),
@@ -63,6 +86,7 @@ export const ImageBlockSchema = z.object({
 export const VideoBlockSchema = z.object({
   type: z.literal('video'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   src: draftableUrl,
   poster: draftableUrl.optional(),
   autoplay: z.literal(false).default(false),
@@ -72,6 +96,7 @@ export const VideoBlockSchema = z.object({
 export const AudioBlockSchema = z.object({
   type: z.literal('audio'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   src: draftableUrl,
   title: z.string(),
   waveform: z.boolean().optional().default(false),
@@ -80,6 +105,7 @@ export const AudioBlockSchema = z.object({
 export const ButtonBlockSchema = z.object({
   type: z.literal('button'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   label: z.string(),
   href: draftableUrl,
   variant: z.enum(['primary', 'secondary', 'ghost']),
@@ -94,11 +120,13 @@ export const ButtonBlockSchema = z.object({
 export const DividerBlockSchema = z.object({
   type: z.literal('divider'),
   id: z.string(),
+  frame: FrameSchema.optional(),
 })
 
 export const EmbedBlockSchema = z.object({
   type: z.literal('embed'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   html: z.string(),
   height: z.number(),
 })
@@ -107,6 +135,7 @@ export const EmbedBlockSchema = z.object({
 export const DataBlockSchema = z.object({
   type: z.literal('data'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   label: z.string(),
   source: z.string().default(''), // JSON endpoint (absolute URL or same-origin path)
   path: z.string().default(''), // dot-path into the JSON, e.g. "product.price"
@@ -135,6 +164,7 @@ export const ProductItemSchema = z.object({
 export const ProductGridBlockSchema = z.object({
   type: z.literal('product-grid'),
   id: z.string(),
+  frame: FrameSchema.optional(),
   columns: z.enum(['2', '3', '4']).default('2'),
   items: z.array(ProductItemSchema).default([]),
   cardStyle: z.enum(['minimal', 'bordered', 'elevated', 'glass']).default('bordered').optional(),
@@ -208,7 +238,7 @@ export const PageSchema = z.object({
   book_id: z.string(),
   page_number: z.number().int().positive(),
   type: z.enum(['cover', 'content', 'back']),
-  layout: z.enum(['hero', 'split', 'text', 'grid', 'blank']),
+  layout: z.enum(['hero', 'split', 'text', 'grid', 'blank', 'canvas']),
   background: BackgroundSchema.optional(),
   blocks: z.array(BlockSchema).default([]),
   hotspots: z.array(HotspotSchema).default([]),
@@ -309,6 +339,7 @@ export type ButtonBlock = z.infer<typeof ButtonBlockSchema>
 export type DividerBlock = z.infer<typeof DividerBlockSchema>
 export type EmbedBlock = z.infer<typeof EmbedBlockSchema>
 export type DataBlock = z.infer<typeof DataBlockSchema>
+export type Frame = z.infer<typeof FrameSchema>
 export type ProductItem = z.infer<typeof ProductItemSchema>
 export type ProductGridBlock = z.infer<typeof ProductGridBlockSchema>
 export type Block = z.infer<typeof BlockSchema>

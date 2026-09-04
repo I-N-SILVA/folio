@@ -29,6 +29,8 @@ import {
   ShoppingBag,
   FileText,
   BookOpen,
+  Move,
+  Rows3,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -50,9 +52,9 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
 import { trackProduct } from '@/lib/product-analytics'
-import { PageRenderer } from '@/components/viewer/PageRenderer'
+import { PageRenderer, defaultFrame } from '@/components/viewer/PageRenderer'
 import { InsertPanel } from '@/components/studio/InsertPanel'
-import type { Block, Book, Page } from '@/lib/book-schema'
+import type { Block, Book, Page, Frame } from '@/lib/book-schema'
 import type { PageTemplate } from '@/lib/templates'
 import { PAGE_DESIGN_WIDTH, PAGE_RATIO, ZOOM_STEPS, pageSideFor, spreadFor } from '@/lib/page-geometry'
 
@@ -70,6 +72,7 @@ function SortableBlock({
   onDelete,
   onInsertAfter,
   onClick,
+  onCanvasDragStart,
   children,
 }: {
   id: string
@@ -83,6 +86,8 @@ function SortableBlock({
   onDuplicate?: () => void
   onDelete?: () => void
   onInsertAfter?: () => void
+  /** Set on a canvas page: the handle moves the block rather than reordering it. */
+  onCanvasDragStart?: (e: React.PointerEvent) => void
   onClick: (e: React.MouseEvent) => void
   children: React.ReactNode
 }) {
@@ -97,6 +102,7 @@ function SortableBlock({
     <div
       ref={setNodeRef}
       style={style}
+      data-block-id={id}
       onClick={onClick}
       className={twMerge(
         'relative group/block transition-all outline-none rounded-lg',
@@ -114,13 +120,14 @@ function SortableBlock({
             : 'opacity-0 scale-95 pointer-events-none group-hover/block:opacity-100 group-hover/block:scale-100 group-hover/block:pointer-events-auto'
         )}
       >
-        {/* Drag handle */}
+        {/* Drag handle. On a flow page it reorders; on a canvas page it moves. */}
         <div
-          {...listeners}
-          {...attributes}
+          {...(onCanvasDragStart ? {} : listeners)}
+          {...(onCanvasDragStart ? {} : attributes)}
+          onPointerDown={onCanvasDragStart}
           tabIndex={0}
-          aria-label="Drag to reorder block"
-          title="Drag to reorder block"
+          aria-label={onCanvasDragStart ? 'Drag to move block' : 'Drag to reorder block'}
+          title={onCanvasDragStart ? 'Drag to move — hold shift to ignore snapping' : 'Drag to reorder block'}
           className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 cursor-grab active:cursor-grabbing"
         >
           <GripVertical size={12} />
@@ -370,6 +377,24 @@ export function EditorCanvas() {
                 ? { x: 0, y: nudge }
                 : null
 
+      // On a canvas page a selected block nudges the same way a hotspot does —
+      // the only precise way to place either, since the inspector shows no
+      // coordinate fields.
+      if (delta && selectedBlockId && currentPage.layout === 'canvas') {
+        const block = currentPage.blocks.find((b) => b.id === selectedBlockId)
+        if (block) {
+          e.preventDefault()
+          const frame =
+            block.frame ?? defaultFrame(currentPage.blocks.findIndex((b) => b.id === selectedBlockId))
+          useEditorStore.getState().setBlockFrame(currentPage.id, selectedBlockId, {
+            ...frame,
+            x: Math.min(100 - frame.w, Math.max(0, Math.round((frame.x + delta.x) * 10) / 10)),
+            y: Math.min(96, Math.max(0, Math.round((frame.y + delta.y) * 10) / 10)),
+          })
+          return
+        }
+      }
+
       if (!delta || !selectedHotspotId) return
       const hotspot = currentPage.hotspots?.find((h) => h.id === selectedHotspotId)
       if (!hotspot) return
@@ -380,7 +405,124 @@ export function EditorCanvas() {
         y: Math.min(100, Math.max(0, Math.round((hotspot.y + delta.y) * 10) / 10)),
       })
     },
-    [hotspotMode, currentPage, selectedHotspotId, placeHotspot, updateHotspot]
+    [hotspotMode, currentPage, selectedHotspotId, selectedBlockId, placeHotspot, updateHotspot]
+  )
+
+  /**
+   * Flow ⇄ canvas.
+   *
+   * Going to canvas, the blocks' current positions are measured off the live
+   * flow layout first and handed over as the seed. A frame derived from index
+   * alone cannot know that a heading is 40px and a pull quote 200px, so it
+   * overlaps them — and an author whose page rearranges itself the moment they
+   * switch will not switch again.
+   */
+  const switchLayoutMode = useCallback(
+    (mode: 'flow' | 'canvas') => {
+      if (!currentPage) return
+      if (mode !== 'canvas') {
+        useEditorStore.getState().setPageLayoutMode(currentPage.id, 'text')
+        return
+      }
+
+      const host = canvasRef.current
+      const seed: Record<string, Frame> = {}
+      if (host) {
+        const page = host.getBoundingClientRect()
+        currentPage.blocks.forEach((block, i) => {
+          const el = host.querySelector<HTMLElement>(`[data-block-id="${block.id}"]`)
+          if (!el) return
+          const r = el.getBoundingClientRect()
+          seed[block.id] = {
+            x: Math.round(((r.left - page.left) / page.width) * 1000) / 10,
+            y: Math.round(((r.top - page.top) / page.height) * 1000) / 10,
+            w: Math.round(((r.width / page.width) * 1000)) / 10,
+            z: i,
+          }
+        })
+      }
+      useEditorStore.getState().setPageLayoutMode(currentPage.id, 'canvas', seed)
+      toast.success('Canvas layout — drag any block to place it. Phones still stack.')
+    },
+    [currentPage]
+  )
+
+  const isCanvasPage = currentPage?.layout === 'canvas'
+  const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null)
+  const [snapLines, setSnapLines] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] })
+
+  /**
+   * Drag a block to position it, on a canvas page.
+   *
+   * Snaps to the page margin, the centre line and the edges of its siblings at
+   * a 1.5% tolerance — the guides the canvas already drew but that nothing
+   * attracted to. The lines that actually caught are drawn while dragging, so
+   * a snap is visible rather than merely felt.
+   */
+  const beginBlockDrag = useCallback(
+    (e: React.PointerEvent, blockId: string) => {
+      if (!currentPage || !canvasRef.current) return
+      const block = currentPage.blocks.find((b) => b.id === blockId)
+      if (!block) return
+      const start = block.frame ?? defaultFrame(currentPage.blocks.findIndex((b) => b.id === blockId))
+      const rect = canvasRef.current.getBoundingClientRect()
+      const target = e.currentTarget as HTMLElement
+      const originX = e.clientX
+      const originY = e.clientY
+
+      // Every edge a sibling offers, plus the margin and the centre.
+      const others = currentPage.blocks
+        .filter((b) => b.id !== blockId)
+        .map((b, i) => b.frame ?? defaultFrame(i))
+      const vTargets = [8, 92 - start.w, (100 - start.w) / 2, ...others.map((f) => f.x), ...others.map((f) => f.x + f.w - start.w)]
+      const hTargets = [8, ...others.map((f) => f.y)]
+
+      const SNAP = 1.5
+      const nearest = (value: number, targets: number[]) => {
+        let best: number | null = null
+        for (const t of targets) {
+          if (Math.abs(value - t) <= SNAP && (best === null || Math.abs(value - t) < Math.abs(value - best))) {
+            best = t
+          }
+        }
+        return best
+      }
+
+      const onMove = (ev: PointerEvent) => {
+        setDraggingBlockId(blockId)
+        const dx = ((ev.clientX - originX) / rect.width) * 100
+        const dy = ((ev.clientY - originY) / rect.height) * 100
+        let x = Math.min(100 - start.w, Math.max(0, start.x + dx))
+        let y = Math.min(96, Math.max(0, start.y + dy))
+
+        const snapX = ev.shiftKey ? null : nearest(x, vTargets)
+        const snapY = ev.shiftKey ? null : nearest(y, hTargets)
+        if (snapX !== null) x = snapX
+        if (snapY !== null) y = snapY
+
+        setSnapLines({ v: snapX !== null ? [x] : [], h: snapY !== null ? [y] : [] })
+        useEditorStore.getState().setBlockFrame(currentPage.id, blockId, {
+          ...start,
+          x: Math.round(x * 10) / 10,
+          y: Math.round(y * 10) / 10,
+        })
+      }
+
+      const onUp = () => {
+        setDraggingBlockId(null)
+        setSnapLines({ v: [], h: [] })
+        target.removeEventListener('pointermove', onMove)
+        target.removeEventListener('pointerup', onUp)
+        target.removeEventListener('pointercancel', onUp)
+      }
+
+      target.setPointerCapture(e.pointerId)
+      target.addEventListener('pointermove', onMove)
+      target.addEventListener('pointerup', onUp)
+      target.addEventListener('pointercancel', onUp)
+      useEditorStore.getState().selectBlock(blockId)
+    },
+    [currentPage]
   )
 
   const [draggingHotspotId, setDraggingHotspotId] = useState<string | null>(null)
@@ -568,6 +710,39 @@ export function EditorCanvas() {
           </button>
         </div>
 
+        {/* Flow or canvas. The canvas the editor draws — paper shadow, zoom,
+            guides, a live X/Y readout — promised free composition while blocks
+            rendered into a flex column with no position at all. This is the
+            page saying which of the two it actually is. */}
+        {!isMobile && currentPage && (
+          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+            {(['flow', 'canvas'] as const).map((mode) => {
+              const active = mode === 'canvas' ? isCanvasPage : !isCanvasPage
+              return (
+                <button
+                  key={mode}
+                  onClick={() => switchLayoutMode(mode)}
+                  aria-pressed={active}
+                  title={
+                    mode === 'canvas'
+                      ? 'Place blocks anywhere — stacks in order on a phone'
+                      : 'Blocks stack in order and reflow everywhere'
+                  }
+                  className={twMerge(
+                    'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium capitalize transition',
+                    active
+                      ? 'bg-neutral-800 font-semibold text-white shadow-sm'
+                      : 'text-neutral-400 hover:text-neutral-200'
+                  )}
+                >
+                  {mode === 'canvas' ? <Move size={13} /> : <Rows3 size={13} />}
+                  <span className="hidden sm:inline">{mode}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {/* Page or spread. Sits beside the viewport switch because they answer
             the same question — what am I looking at — and the reader's own
             answer depends on both. */}
@@ -731,9 +906,30 @@ export function EditorCanvas() {
             }}
             onMouseLeave={() => setCursorCoords(null)}
             onKeyDown={handleCanvasKeyDown}
-            tabIndex={hotspotMode || selectedHotspotId ? 0 : -1}
+            tabIndex={hotspotMode || selectedHotspotId || (isCanvasPage && selectedBlockId) ? 0 : -1}
             role={hotspotMode ? 'application' : undefined}
           >
+            {/* The lines that actually caught, so a snap is seen and not just
+                felt. Drawn above the page, cleared when the drag ends. */}
+            {draggingBlockId && (snapLines.v.length > 0 || snapLines.h.length > 0) && (
+              <div className="pointer-events-none absolute inset-0 z-40">
+                {snapLines.v.map((x) => (
+                  <div
+                    key={`v${x}`}
+                    className="absolute inset-y-0 w-px bg-[var(--studio-select)]"
+                    style={{ left: `${x}%` }}
+                  />
+                ))}
+                {snapLines.h.map((y) => (
+                  <div
+                    key={`h${y}`}
+                    className="absolute inset-x-0 h-px bg-[var(--studio-select)]"
+                    style={{ top: `${y}%` }}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* Non-printing alignment guidelines */}
             {showGuides && (
               <div className="pointer-events-none absolute inset-0 z-30">
@@ -814,6 +1010,9 @@ export function EditorCanvas() {
                         onMoveDown={() => moveBlock(currentPage.id, block.id, 'down')}
                         onDuplicate={() => duplicateBlock(currentPage.id, block.id)}
                         onDelete={() => removeBlock(currentPage.id, block.id)}
+                        onCanvasDragStart={
+                          isCanvasPage ? (e) => beginBlockDrag(e, block.id) : undefined
+                        }
                         onInsertAfter={() => {
                           setInsertIndex(blockIndex + 1)
                           setShowBlockPicker(true)

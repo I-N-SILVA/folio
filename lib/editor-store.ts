@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Book, Page, Block, Hotspot } from './book-schema'
+import type { Book, Page, Block, Hotspot, Frame } from './book-schema'
 
 interface EditorStore {
   book: Book | null
@@ -25,6 +25,13 @@ interface EditorStore {
 
   updatePage: (pageId: string, updates: Partial<Page>) => void
   updateBlock: (pageId: string, blockId: string, updates: Partial<Block>) => void
+  /** Move or resize a block on a canvas page. */
+  setBlockFrame: (pageId: string, blockId: string, frame: Frame) => void
+  /**
+   * Switch a page between flow and canvas, seeding frames on the way in so the
+   * page never scatters.
+   */
+  setPageLayoutMode: (pageId: string, layout: Page['layout'], seed?: Record<string, Frame>) => void
   addBlock: (pageId: string, block: Block) => void
   insertBlockAt: (pageId: string, block: Block, index: number) => void
   duplicateBlock: (pageId: string, blockId: string) => void
@@ -159,6 +166,60 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
             ? { ...p, blocks: p.blocks.map((b) => b.id === blockId ? { ...b, ...updates } as Block : b) }
             : p
         ),
+      },
+    }
+  }),
+
+  setBlockFrame: (pageId, blockId, frame) => set((state) => {
+    if (!state.book?.pages) return state
+    // Keyed history: a drag is hundreds of updates, and each one landing its own
+    // snapshot would bury every earlier edit under a single gesture.
+    return {
+      isDirty: true,
+      ...coalescedHistory(state, state.book, `frame:${blockId}`),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) =>
+          p.id === pageId
+            ? {
+                ...p,
+                blocks: p.blocks.map((b) => (b.id === blockId ? ({ ...b, frame } as Block) : b)),
+              }
+            : p
+        ),
+      },
+    }
+  }),
+
+  setPageLayoutMode: (pageId, layout, seed) => set((state) => {
+    if (!state.book?.pages) return state
+    return {
+      isDirty: true,
+      ...snapshotHistory(state, state.book),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) => {
+          if (p.id !== pageId) return p
+          if (layout !== 'canvas') return { ...p, layout }
+          // Seed from where the blocks actually are, so switching to canvas
+          // shows the same page rather than a pile in the corner. `seed` is
+          // measured off the live flow layout by the editor; the index-derived
+          // fallback is for callers with no DOM to measure. A block that already
+          // has a frame keeps it — switching back and forth is lossless, because
+          // flow simply ignores `frame` rather than the canvas destroying it.
+          return {
+            ...p,
+            layout,
+            blocks: p.blocks.map((b, i) =>
+              b.frame
+                ? b
+                : ({
+                    ...b,
+                    frame: seed?.[b.id] ?? { x: 8, y: Math.min(92, 8 + i * 15), w: 84, z: i },
+                  } as Block)
+            ),
+          }
+        }),
       },
     }
   }),
