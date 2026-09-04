@@ -1,5 +1,10 @@
 # QLICO — Editor & flow redesign spec
 
+> **Status, 4 September 2026.** Most of this is now built and on
+> `claude/product-analysis-ux-m6irp4`. Each section below is marked
+> **[SHIPPED]**, **[PARTIAL]** or **[NOT STARTED]**. What remains is listed in
+> §9 at the bottom.
+
 Follow-on to `docs/product-proof-2026-09.md`. That document marks what is wrong;
 this one says what to build. Written to be picked up and implemented without
 re-deriving the reasoning.
@@ -11,7 +16,9 @@ link if it isn't to hand.
 
 ---
 
-## §1 — Fix the tokens first, because three UI bugs fall out of one line
+## §1 — Fix the tokens first — **[SHIPPED]**
+
+*Six* controls were invisible, not three: the two reader-facing ones below were found after this was written. `--studio-*` and `--studio-select` are in `app/globals.css`; all 48 `--accent-vivid` usages in studio code moved to `--studio-select`, and the two reader ones took explicit colours. The remaining work is cosmetic: the editor still hardcodes `neutral-*` rather than reading `--studio-*` for its surfaces — see §9.
 
 `app/globals.css` sets `--accent`, `--accent-vivid`, `--qlico-teal` and
 `--qlico-oxblood` to `#000000` in light and **`#ffffff` in dark**. The names
@@ -50,7 +57,9 @@ trap for every future call site.
 
 ---
 
-## §2 — One insert surface
+## §2 — One insert surface — **[SHIPPED]**
+
+`components/studio/InsertPanel.tsx`. `BLOCK_LIBRARY`, the three canvas scaffolds and the sidebar's Blocks and Layouts tabs are deleted. Media blocks start empty (`draftableUrl` in the schema, `EmptyBlock` in the renderer), with `lib/publish-checks.ts` catching them at publish.
 
 Today there are six ways to add content (`product-proof` §2.2), four of which
 insert blocks, two of which insert the same block with different defaults.
@@ -104,7 +113,9 @@ defaults neutral generally and let templates carry the verticals.
 
 ---
 
-## §3 — Decide what the canvas is
+## §3 — Decide what the canvas is — **[SHIPPED]**
+
+The canvas, scoped, as recommended. One change from the plan below: frames are seeded by **measuring the live flow layout**, not from the block index — an index guess overlaps blocks of different heights, and a page that rearranges itself on switch is a page nobody switches twice. The phone fallback is a CSS *container* query so the reader, embed, thumbnails and the editor's mobile simulator all obey one rule.
 
 The canvas draws an A4 page with a paper shadow, zoom steps, alignment guides, a
 device bezel and a live `X: 42.1% · Y: 63.8%` readout. Blocks render into a flex
@@ -151,7 +162,9 @@ is not defensible is today's state, which promises one and delivers the other.
 
 ---
 
-## §4 — Edit the spread, not the page
+## §4 — Edit the spread, not the page — **[SHIPPED]**
+
+A Page | Spread switch; the pairing lives in `lib/page-geometry` as `pageSideFor` / `spreadFor` and the reader now calls it too, so the two cannot drift. The facing page is read-only and one click makes it live.
 
 `ViewerEngine.tsx:280` passes `usePortrait={isMobile}`, so **on desktop the
 reader shows two facing pages** with `pageSide: 'left' | 'right'`
@@ -174,7 +187,9 @@ and it needs no schema change.
 
 ---
 
-## §5 — The post-import moment
+## §5 — The post-import moment — **[SHIPPED]**
+
+`components/studio/PostImportModal.tsx`, reached via `?imported=1`. `POST /api/ai/detect-hotspots` takes `pages` as well as `page`. `addHotspotsBatch` makes accepting one undo step, which is what lets the modal honestly offer "add all".
 
 `ImportPDFModal.tsx:281` pushes straight to `/editor/:id`, where the author is
 looking at pictures of their PDF with nothing changed and no next step. The
@@ -204,7 +219,9 @@ imported edition ever became interactive at all.
 
 ---
 
-## §6 — What makes the editor feel rich rather than busy
+## §6 — What makes the editor feel rich rather than busy — **[PARTIAL]**
+
+Everything under *Cheap, and people notice immediately* is shipped, except copy/paste and multi-select. Of the sprint-sized items only the publish checklist is built. The bigger bets are untouched — see §9.
 
 Ordered by ratio of felt quality to effort. None of these are new surfaces —
 several *remove* one.
@@ -284,7 +301,9 @@ several *remove* one.
 
 ---
 
-## §7 — The flow, end to end
+## §7 — The flow, end to end — **[PARTIAL]**
+
+Shipped: the headline, the post-import moment, the publish checklist, `/gallery`. Not done: sending the weekly digest by hand, which needs a deployed environment and `CRON_SECRET`.
 
 Where each stage leaks and the smallest change that closes it.
 
@@ -306,7 +325,7 @@ and a button.
 
 ---
 
-## §8 — Sequencing
+## §8 — Sequencing *(original plan, kept for the reasoning)*
 
 **Week 1 — nothing here is bigger than a day**
 
@@ -337,3 +356,49 @@ and a button.
 17. Live data with a real source (§6) — and the pricing decision that goes with
     it.
 18. Commerce: own it or cut it, per `product-proof` §1.
+
+
+---
+
+## §9 — What is still outstanding
+
+Written after the implementation pass, so it is the accurate list.
+
+**Not done, and each is a real piece of work**
+
+1. **The editor's surfaces still hardcode `neutral-*`.** The tokens exist and the
+   bugs are fixed, but a wholesale class sweep across ~2,000 lines of editor JSX
+   is a cosmetic change with real regression risk and no test to catch a
+   mistake. New components (`InsertPanel`, `PublishChecklistModal`,
+   `PostImportModal`) use the tokens. Do the sweep with a screenshot diff, not
+   by hand.
+2. **Edition styles** (§6) — a named type set per edition rather than per-block
+   overrides. The single largest remaining quality item, and the difference
+   between a page builder and a publishing tool.
+3. **Image crop and focal point** (§6).
+4. **Save as template** (§6) — the strongest retention mechanic available.
+5. **Version history** (§6).
+6. **Copy/paste and multi-select blocks** (§6).
+7. **Live data with a real source** (§6) — the block can now be *inserted*, and
+   the publish check stops one going live without a source, but binding it to a
+   Google Sheet or a webhook and refreshing it is not built.
+8. **Draft comments for the author's reviewers** (§6).
+9. **Commerce: Stripe Connect, orders, a Sales tab, and an entry in
+   `lib/plans.ts`.** The fake checkout is gone and a cart hands off to the
+   author's own checkout link, which is the honest interim. The strategic
+   decision — own it or cut it — is still the owner's.
+10. **Send the weekly digest by hand and read the email.** Needs a deployed
+    environment with `CRON_SECRET`; it cannot be done from a sandbox.
+
+**Worth knowing before the next change**
+
+- `page.layout` now has a sixth value, `'canvas'`. Anything that switches on
+  layout needs a branch for it — `PageRenderer` and the editor have one.
+- Media and link targets may legitimately be empty strings now
+  (`draftableUrl`). Anything that assumes a `src` or `href` is present must
+  handle the draft state; `lib/publish-checks.ts` is where "not empty" is
+  enforced, and it runs at publish, not on save.
+- `--studio-select` is the interaction colour. Do not reach for `--accent`,
+  `--accent-vivid` or `--qlico-teal` for selection, focus or drag state: they
+  are `#000` in light and `#fff` in dark, and that is how six controls became
+  invisible.
