@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import {
   Plus,
@@ -49,8 +49,9 @@ import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
 import { trackProduct } from '@/lib/product-analytics'
 import { PageRenderer } from '@/components/viewer/PageRenderer'
-import { Modal } from '@/components/ui/Modal'
+import { InsertPanel } from '@/components/studio/InsertPanel'
 import type { Block } from '@/lib/book-schema'
+import type { PageTemplate } from '@/lib/templates'
 import { PAGE_DESIGN_WIDTH, PAGE_RATIO, ZOOM_STEPS } from '@/lib/page-geometry'
 
 // ─── Sortable Block Wrapper ───────────────────────────────────────────────────
@@ -97,8 +98,8 @@ function SortableBlock({
       onClick={onClick}
       className={twMerge(
         'relative group/block transition-all outline-none rounded-lg',
-        isSelected ? 'ring-2 ring-[var(--accent-vivid)] shadow-md' : 'hover:ring-1 hover:ring-neutral-400',
-        isDragging && 'opacity-40 z-50 ring-2 ring-[var(--accent-vivid)] shadow-2xl scale-[1.01]',
+        isSelected ? 'ring-2 ring-[var(--studio-select)] shadow-md' : 'hover:ring-1 hover:ring-neutral-400',
+        isDragging && 'opacity-40 z-50 ring-2 ring-[var(--studio-select)] shadow-2xl scale-[1.01]',
         !isSelected && 'cursor-pointer'
       )}
     >
@@ -184,7 +185,7 @@ function SortableBlock({
         <span className="h-3 w-px bg-neutral-700 mx-0.5" />
 
         {/* Block Type Badge */}
-        <span className="px-1 text-[9px] font-bold uppercase tracking-wider text-[var(--accent-vivid)]">
+        <span className="px-1 text-[9px] font-bold uppercase tracking-wider text-[var(--studio-select)]">
           {label}
         </span>
       </div>
@@ -202,188 +203,13 @@ function SortableBlock({
             onInsertAfter?.()
           }}
           title="Insert block below"
-          className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold text-neutral-300 shadow-md border border-neutral-700 hover:bg-[var(--accent-vivid)] hover:text-white hover:border-transparent transition-all scale-90 hover:scale-100"
+          className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold text-neutral-300 shadow-md border border-neutral-700 hover:bg-[var(--studio-select)] hover:text-white hover:border-transparent transition-all scale-90 hover:scale-100"
         >
           <Plus size={10} strokeWidth={2.5} />
           Add below
         </button>
       </div>
     </div>
-  )
-}
-
-// ─── Block Picker Modal ───────────────────────────────────────────────────────
-
-interface BlockChoice {
-  type: Block['type']
-  label: string
-  /** What it's for, so the picker doesn't rely on an icon carrying the meaning. */
-  hint: string
-  icon: React.ReactNode
-  defaults: Omit<Block, 'id' | 'type'>
-}
-
-const BLOCK_TYPES: BlockChoice[] = [
-  {
-    type: 'text',
-    label: 'Text',
-    hint: 'Headings, body, quotes',
-    icon: <Type size={18} />,
-    defaults: { variant: 'body', content: 'New text block', align: 'left' },
-  },
-  {
-    type: 'image',
-    label: 'Image',
-    hint: 'Photo or illustration',
-    icon: <Image size={18} />,
-    defaults: { src: 'https://placehold.co/800x450', alt: '', lightbox: false },
-  },
-  {
-    type: 'video',
-    label: 'Video',
-    hint: 'Inline player with poster',
-    icon: <Video size={18} />,
-    defaults: {
-      src: 'https://www.w3schools.com/html/mov_bbb.mp4',
-      poster: 'https://placehold.co/800x450',
-    },
-  },
-  {
-    type: 'audio',
-    label: 'Audio',
-    hint: 'Narration or a track',
-    icon: <Music size={18} />,
-    defaults: { src: 'https://www.w3schools.com/html/horse.ogg', title: 'Audio' },
-  },
-  {
-    type: 'button',
-    label: 'Button',
-    hint: 'A measured call to action',
-    icon: <MousePointerClick size={18} />,
-    defaults: { label: 'Click me', href: 'https://example.com', variant: 'primary' },
-  },
-  {
-    type: 'divider',
-    label: 'Divider',
-    hint: 'A rule between sections',
-    icon: <Minus size={18} />,
-    defaults: {},
-  },
-  {
-    type: 'embed',
-    label: 'Embed',
-    hint: 'Paste third-party HTML',
-    icon: <Code2 size={18} />,
-    defaults: { html: '<div>Paste embed HTML here</div>', height: 300 },
-  },
-  {
-    type: 'product-grid',
-    label: 'Product Grid',
-    hint: 'Side-by-side products with prices & Buy Now',
-    icon: <ShoppingBag size={18} />,
-    defaults: {
-      columns: '2',
-      cardStyle: 'bordered',
-      aspectRatio: '1/1',
-      items: [
-        {
-          id: 'p1',
-          name: 'Mulberry Silk Trench',
-          price: '$480',
-          originalPrice: '$620',
-          image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
-          description: 'Handcrafted mulberry heavy silk with horn buttons.',
-          badge: 'Best Seller',
-          action: 'cart',
-          ctaLabel: 'Add to Bag',
-          inStock: true,
-        },
-        {
-          id: 'p2',
-          name: 'Cashmere Ribbed Beanie',
-          price: '$120',
-          image: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=1200&q=85',
-          description: '100% Mongolian organic combed cashmere yarn.',
-          badge: 'New Season',
-          action: 'cart',
-          ctaLabel: 'Add to Bag',
-          inStock: true,
-        },
-      ],
-    },
-  },
-]
-
-/** Four categories for clarity and fast selection */
-const BLOCK_GROUPS: { title: string; types: Block['type'][] }[] = [
-  { title: 'Commerce & Products', types: ['product-grid'] },
-  { title: 'Text & Layout', types: ['text', 'divider'] },
-  { title: 'Media', types: ['image', 'video', 'audio'] },
-  { title: 'Interactive', types: ['button', 'data', 'embed'] },
-]
-
-interface BlockPickerModalProps {
-  onPick: (type: Block['type'], defaults: Omit<Block, 'id' | 'type'>) => void
-  onClose: () => void
-}
-
-function BlockPickerModal({ onPick, onClose }: BlockPickerModalProps) {
-  return (
-    <Modal
-      onClose={onClose}
-      title="Add block"
-      hideCloseButton
-      className="w-80 max-w-[calc(100vw-2rem)] border border-neutral-700 bg-neutral-900 p-4"
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-semibold text-neutral-100">Add a block</span>
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="text-neutral-400 transition-colors hover:text-neutral-100"
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      {/* Grouped, with a line on what each one is for. Eight identical tiles
-          made the reader work out the difference between Embed and Live data
-          from a pair of icons. */}
-      <div className="space-y-4">
-        {BLOCK_GROUPS.map((group) => (
-          <section key={group.title}>
-            <h3 className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">
-              {group.title}
-            </h3>
-            <div className="space-y-1">
-              {group.types.map((type) => {
-                const choice = BLOCK_TYPES.find((b) => b.type === type)
-                if (!choice) return null
-                return (
-                  <button
-                    key={choice.label}
-                    onClick={() => onPick(choice.type, choice.defaults)}
-                    className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition-colors hover:border-neutral-700 hover:bg-neutral-800"
-                  >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-neutral-800 text-neutral-300">
-                      {choice.icon}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium text-neutral-100">
-                        {choice.label}
-                      </span>
-                      <span className="block truncate text-[11px] text-neutral-500">
-                        {choice.hint}
-                      </span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
-    </Modal>
   )
 }
 
@@ -449,105 +275,6 @@ export function EditorCanvas() {
   const isMobile = viewportMode === 'mobile'
   const pageWidth = isMobile ? 380 : Math.round(PAGE_DESIGN_WIDTH * zoom)
   const pageHeight = isMobile ? 740 : Math.round(pageWidth * PAGE_RATIO)
-
-  const handleScaffoldSplit = useCallback(() => {
-    if (!currentPage) return
-    useEditorStore.getState().updatePage(currentPage.id, { layout: 'split' })
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'image',
-      src: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
-      alt: 'Luxury Silk Fabric Spread',
-      aspectRatio: '3/4',
-      borderRadius: 'lg',
-      shadow: 'md',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'heading',
-      content: 'Editorial Feature',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'body',
-      content: 'Describe the craftsmanship, materials, and provenance of this piece.',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'stat',
-      content: '$480 · Ready to Ship',
-      textColor: '#f59e0b',
-    } as any)
-    toast.success('Added 2-Column Split Feature Spread')
-  }, [currentPage, addBlock])
-
-  const handleScaffoldQuote = useCallback(() => {
-    if (!currentPage) return
-    useEditorStore.getState().updatePage(currentPage.id, { layout: 'hero' })
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'caption',
-      content: 'MONOGRAPH HIGHLIGHT',
-      letterSpacing: 'widest',
-      align: 'center',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'quote',
-      content: '"True craftsmanship is the precision of every unseen detail."',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      padding: 'lg',
-      borderRadius: 'lg',
-      align: 'center',
-    } as any)
-    toast.success('Added Monumental Quote & Hero Spread')
-  }, [currentPage, addBlock])
-
-  const handleScaffoldShoppable = useCallback(() => {
-    if (!currentPage) return
-    useEditorStore.getState().updatePage(currentPage.id, { layout: 'split' })
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'image',
-      src: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85',
-      alt: 'Runway Lookbook Item',
-      aspectRatio: '4/3',
-      borderRadius: 'lg',
-      shadow: 'lg',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'title',
-      content: 'The Milan Trench',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'button',
-      label: 'Instant Checkout ($480) →',
-      href: 'https://qlico.app',
-      variant: 'primary',
-      shape: 'pill',
-      size: 'lg',
-    } as any)
-    addHotspot(currentPage.id, {
-      id: crypto.randomUUID(),
-      x: 40,
-      y: 40,
-      label: 'Silk Trench ($480)',
-      icon: 'ShoppingBag',
-      beaconStyle: 'shopping',
-      price: '$480',
-      action: 'checkout',
-      modal: { title: 'Mulberry Silk Trench', body: 'Express worldwide shipping included.' },
-    })
-    toast.success('Added Shoppable Pin & Checkout Spread')
-  }, [currentPage, addBlock, addHotspot])
 
   /**
    * Place a hotspot at a percentage position on the page.
@@ -632,20 +359,118 @@ export function EditorCanvas() {
     [hotspotMode, currentPage, selectedHotspotId, placeHotspot, updateHotspot]
   )
 
-  const handleBlockPick = useCallback(
-    (type: Block['type'], defaults: Omit<Block, 'id' | 'type'>) => {
+  const [draggingHotspotId, setDraggingHotspotId] = useState<string | null>(null)
+
+  /**
+   * Drag a hotspot to move it.
+   *
+   * A hotspot is the only thing on a page with real coordinates, and until now
+   * the only way to change them was to select the marker and hold an arrow key —
+   * the inspector renders X/Y read-only. Pointer capture keeps the drag alive
+   * when the cursor leaves the 5px marker, which is most of the time.
+   */
+  const beginHotspotDrag = useCallback(
+    (e: React.PointerEvent, hotspotId: string) => {
+      if (!currentPage || !canvasRef.current) return
+      const rect = canvasRef.current.getBoundingClientRect()
+      const target = e.currentTarget as HTMLElement
+      let moved = false
+
+      const onMove = (ev: PointerEvent) => {
+        if (!moved) {
+          moved = true
+          setDraggingHotspotId(hotspotId)
+        }
+        updateHotspot(currentPage.id, hotspotId, {
+          x: Math.min(100, Math.max(0, Math.round(((ev.clientX - rect.left) / rect.width) * 1000) / 10)),
+          y: Math.min(100, Math.max(0, Math.round(((ev.clientY - rect.top) / rect.height) * 1000) / 10)),
+        })
+      }
+      const onUp = () => {
+        setDraggingHotspotId(null)
+        target.removeEventListener('pointermove', onMove)
+        target.removeEventListener('pointerup', onUp)
+        target.removeEventListener('pointercancel', onUp)
+      }
+
+      target.setPointerCapture(e.pointerId)
+      target.addEventListener('pointermove', onMove)
+      target.addEventListener('pointerup', onUp)
+      target.addEventListener('pointercancel', onUp)
+    },
+    [currentPage, updateHotspot]
+  )
+
+  const handleInsertBlock = useCallback(
+    (newBlock: Block) => {
       if (!currentPage) return
-      const newBlock = { type, id: crypto.randomUUID(), ...defaults } as Block
       if (insertIndex !== null) {
         insertBlockAt(currentPage.id, newBlock, insertIndex)
         setInsertIndex(null)
       } else {
         addBlock(currentPage.id, newBlock)
       }
+      useEditorStore.getState().selectBlock(newBlock.id)
       setShowBlockPicker(false)
     },
     [currentPage, addBlock, insertBlockAt, insertIndex]
   )
+
+  /**
+   * A layout adds a page. It used to call `setPageBlocks` on the page the author
+   * was looking at — destroying their work and apologising in a toast afterwards.
+   */
+  const handleInsertLayout = useCallback(
+    (tpl: PageTemplate) => {
+      const index = useEditorStore.getState().currentPageIndex
+      useEditorStore.getState().insertPage(index, {
+        layout: tpl.layout,
+        blocks: tpl.blocks.map((b) => ({ ...b, id: crypto.randomUUID() })) as Block[],
+      })
+      setInsertIndex(null)
+      setShowBlockPicker(false)
+      toast.success(`Added “${tpl.label}” as page ${index + 2} — your page is untouched`)
+    },
+    []
+  )
+
+  /**
+   * The command palette's two formerly-dead actions land here.
+   *
+   * `onToggleGuides` and `onAutoDetectPins` were both passed as `() => {}` —
+   * the state they need lives in this component, and rather than lift it just
+   * for the palette, the palette asks and the canvas answers.
+   */
+  useEffect(() => {
+    const guides = () => setShowGuides((v) => !v)
+    const detect = () => { void handleAutoDetect() }
+    window.addEventListener('qlico:toggle-guides', guides)
+    window.addEventListener('qlico:detect-pins', detect)
+    return () => {
+      window.removeEventListener('qlico:toggle-guides', guides)
+      window.removeEventListener('qlico:detect-pins', detect)
+    }
+  })
+
+  /**
+   * `/` opens the insert panel — the second of its two entry points, the other
+   * being the `+` between blocks. Handled here rather than in EditorClient
+   * because the panel's open state lives with the canvas that owns the page.
+   */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
+      const el = e.target as HTMLElement | null
+      if (el?.isContentEditable) return
+      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return
+      if (showBlockPicker) return
+      e.preventDefault()
+      setInsertIndex(null)
+      setShowBlockPicker(true)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showBlockPicker])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -851,64 +676,30 @@ export function EditorCanvas() {
               </div>
             )}
 
-            {/* Empty Page Starter Layouts Gallery */}
+            {/* An empty page offers exactly one thing, and it is the same
+                thing `/` and `+` offer. There used to be three hardcoded
+                scaffolds here with luxury-fashion copy baked in, plus a link to
+                a fourth surface. */}
             {currentPage.blocks.length === 0 && !hotspotMode && (
               <div className="absolute inset-4 z-20 flex flex-col items-center justify-center p-6 text-center">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-neutral-900 border border-neutral-800 text-[var(--accent-vivid)] mb-3 shadow-md">
+                <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-neutral-800 bg-neutral-900 text-[var(--studio-select)] shadow-md">
                   <LayoutTemplate size={22} />
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-200">Start crafting this spread</h3>
-                <p className="text-xs text-neutral-400 max-w-xs mt-1 mb-5">
-                  Choose an editorial starter layout or add individual custom blocks.
+                <h3 className="text-sm font-semibold text-neutral-200">This page is empty</h3>
+                <p className="mt-1 mb-5 max-w-xs text-xs text-neutral-400">
+                  Add a block, or start from a layout.
                 </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full max-w-md">
-                  <button
-                    type="button"
-                    onClick={handleScaffoldSplit}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
-                  >
-                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
-                      📸 2-Column Split
-                    </span>
-                    <span className="text-[10px] text-neutral-400 leading-tight">
-                      Photo & details spread
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleScaffoldQuote}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
-                  >
-                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
-                      💬 Hero Quote
-                    </span>
-                    <span className="text-[10px] text-neutral-400 leading-tight">
-                      Monumental typography
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleScaffoldShoppable}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
-                  >
-                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
-                      🛍️ Shoppable Pin
-                    </span>
-                    <span className="text-[10px] text-neutral-400 leading-tight">
-                      Product callout & CTA
-                    </span>
-                  </button>
-                </div>
-
                 <button
                   type="button"
-                  onClick={() => setShowBlockPicker(true)}
-                  className="mt-4 text-xs text-neutral-400 hover:text-[var(--accent-vivid)] underline transition font-medium"
+                  onClick={() => {
+                    setInsertIndex(null)
+                    setShowBlockPicker(true)
+                  }}
+                  className="flex items-center gap-2 rounded-full bg-white px-5 py-2 text-xs font-bold text-black shadow-lg transition-transform hover:scale-105"
                 >
-                  + Or pick individual blocks from library
+                  <Plus size={14} strokeWidth={2.5} />
+                  Insert
+                  <kbd className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] font-semibold">/</kbd>
                 </button>
               </div>
             )}
@@ -969,15 +760,21 @@ export function EditorCanvas() {
                 style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
               >
                 <button
-                  onClick={(e) => {
+                  onPointerDown={(e) => {
                     e.stopPropagation()
                     useEditorStore.getState().selectHotspot(hotspot.id)
+                    beginHotspotDrag(e, hotspot.id)
                   }}
                   className={twMerge(
-                    "w-5 h-5 rounded-full border-2 border-white shadow-md cursor-pointer -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform",
-                    selectedHotspotId === hotspot.id ? "bg-white ring-2 ring-amber-400" : "bg-amber-400"
+                    'h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110',
+                    draggingHotspotId === hotspot.id
+                      ? 'scale-110 cursor-grabbing bg-white ring-2 ring-amber-400'
+                      : selectedHotspotId === hotspot.id
+                        ? 'cursor-grab bg-white ring-2 ring-amber-400'
+                        : 'cursor-grab bg-amber-400'
                   )}
-                  title={hotspot.label}
+                  title={`${hotspot.label} — drag to move, arrow keys to nudge`}
+                  aria-label={`Hotspot: ${hotspot.label || 'untitled'}. Drag to move.`}
                 />
                 
                 {/* Hover Peek */}
@@ -1002,21 +799,30 @@ export function EditorCanvas() {
         </div>
       </div>
 
-      {/* Add Block button */}
-      <div className="px-4 py-3 border-t border-neutral-800 shrink-0 flex justify-center">
+      {/* Add block */}
+      <div className="flex shrink-0 justify-center border-t border-neutral-800 px-4 py-3">
         <button
-          onClick={() => setShowBlockPicker(true)}
+          onClick={() => {
+            setInsertIndex(null)
+            setShowBlockPicker(true)
+          }}
+          title="Insert a block or a layout (/)"
           className="flex items-center gap-2 rounded-full bg-white px-6 py-2 text-xs font-bold text-black shadow-lg transition-all hover:scale-105 hover:bg-neutral-200 active:scale-98"
         >
           <Plus size={14} strokeWidth={2.5} />
-          Add Block
+          Insert
+          <kbd className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] font-semibold">/</kbd>
         </button>
       </div>
 
       {showBlockPicker && (
-        <BlockPickerModal
-          onPick={handleBlockPick}
-          onClose={() => setShowBlockPicker(false)}
+        <InsertPanel
+          onInsertBlock={handleInsertBlock}
+          onInsertLayout={handleInsertLayout}
+          onClose={() => {
+            setInsertIndex(null)
+            setShowBlockPicker(false)
+          }}
         />
       )}
     </div>

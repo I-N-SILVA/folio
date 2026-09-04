@@ -105,6 +105,41 @@
   }
 }
 
+/* ─── Studio (editor) palette ──────────────────────────────────────────────
+   The editor is dark in both themes — that decision is recorded above. What it
+   never had was its own tokens, so it hardcoded `neutral-*` and reached into
+   the brand tokens for interface state. That is how four controls became
+   invisible: `--accent-vivid` is #000 in light and #fff in dark, and the editor
+   used it to ring a selected block *on a white page*. With dark theme on, the
+   selection ring was white on white; the block-type label was black on
+   near-black in light mode.
+
+   Two rules keep that from recurring:
+
+   1. Studio chrome reads from `--studio-*`, never from the author-facing brand
+      tokens. These are fixed values, not theme-dependent ones, because the
+      editor does not follow the theme.
+   2. `--studio-select` is a *functional* colour, used for selection, drag
+      targets, insert affordances and focus rings, and used nowhere in author
+      content. A monochrome brand accent cannot mark a selection on a white
+      page — that is not a bug to fix but a job the accent can never do. */
+:root {
+  --studio-ground: #0b0c0f;
+  --studio-panel: #131519;
+  --studio-raised: #1b1e24;
+  --studio-raised-2: #23272f;
+  --studio-line: #2a2f38;
+  --studio-line-soft: #1e222a;
+  --studio-ink: #edeff3;
+  --studio-ink-soft: #99a1ad;
+  --studio-ink-faint: #69707c;
+  --studio-select: #5590ff;
+  --studio-select-soft: rgba(85, 144, 255, 0.15);
+  --studio-ok: #4ed8a0;
+  --studio-warn: #f0b44c;
+  --studio-stop: #ff7c6f;
+}
+
 /* Registering the brand colours with Tailwind's theme gives them real
    utilities — bg-accent, text-muted, border-hairline — instead of every call
    site spelling out bg-[var(--accent)]. This matters beyond tidiness: a colour
@@ -124,6 +159,12 @@
   --color-vellum: var(--qlico-vellum);
   --color-subtle: var(--qlico-subtle);
   --color-hairline: var(--qlico-border);
+  --color-studio-ground: var(--studio-ground);
+  --color-studio-panel: var(--studio-panel);
+  --color-studio-raised: var(--studio-raised);
+  --color-studio-line: var(--studio-line);
+  --color-studio-ink: var(--studio-ink);
+  --color-studio-select: var(--studio-select);
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }

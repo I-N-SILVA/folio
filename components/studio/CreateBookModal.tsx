@@ -13,6 +13,12 @@ import { TEMPLATES, type PublicationTemplate } from '@/data/templates'
 
 interface Props {
   onClose: () => void
+  /**
+   * A template id from the gallery's "Start from this" link. Opens straight on
+   * that template's preview — a visitor who has just read an edition should not
+   * be handed a chooser and asked to find it again.
+   */
+  initialTemplateId?: string
 }
 
 type Quota = { used: number; limit: number | null; allowed: boolean; planName: string }
@@ -30,8 +36,10 @@ function randomSuffix() {
   return Math.random().toString(36).slice(2, 8).padEnd(6, '0')
 }
 
-export function CreateBookModal({ onClose }: Props) {
-  const [step, setStep] = useState<'choice' | 'pdf' | 'name-blank' | 'templates'>('choice')
+export function CreateBookModal({ onClose, initialTemplateId }: Props) {
+  const [step, setStep] = useState<'choice' | 'pdf' | 'name-blank' | 'templates'>(
+    initialTemplateId ? 'templates' : 'choice'
+  )
   const [newTitle, setNewTitle] = useState('')
   const [loading, setLoading] = useState(false)
   const [quota, setQuota] = useState<Quota | null>(null)
@@ -39,6 +47,14 @@ export function CreateBookModal({ onClose }: Props) {
   const [slug, setSlug] = useState('')
   const [slugEdited, setSlugEdited] = useState(false)
   const [slugError, setSlugError] = useState('')
+
+  // These sat below the `step === 'name-blank'` early return, so the hook order
+  // changed the moment the author moved between steps — React throws on that.
+  const [selectedCategory, setSelectedCategory] = useState<string>('All')
+  const [previewingTemplate, setPreviewingTemplate] = useState<PublicationTemplate | null>(
+    initialTemplateId ? (TEMPLATES.find((t) => t.id === initialTemplateId) ?? null) : null
+  )
+  const [previewPageIndex, setPreviewPageIndex] = useState<number>(0)
   const router = useRouter()
 
   // The slug is the public URL and nothing in the app can change it later, so
@@ -331,9 +347,6 @@ export function CreateBookModal({ onClose }: Props) {
     )
   }
 
-  const [selectedCategory, setSelectedCategory] = useState<string>('All')
-  const [previewingTemplate, setPreviewingTemplate] = useState<PublicationTemplate | null>(null)
-  const [previewPageIndex, setPreviewPageIndex] = useState<number>(0)
 
   if (step === 'templates') {
     const categories = ['All', ...Array.from(new Set(TEMPLATES.map((t) => t.category)))]

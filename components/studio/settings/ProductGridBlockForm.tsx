@@ -175,7 +175,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                 inStock: true,
               })
             }}
-            className="flex items-center gap-1 text-xs font-semibold text-[var(--accent-vivid)] hover:underline"
+            className="flex items-center gap-1 text-xs font-semibold text-[var(--studio-select)] hover:underline"
           >
             <Plus size={13} />
             Add Product

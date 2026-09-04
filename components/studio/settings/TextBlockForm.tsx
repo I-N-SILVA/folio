@@ -65,7 +65,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
               className={twMerge(
                 'rounded-lg border px-2 py-1.5 text-left transition text-xs',
                 currentVariant === v.id
-                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/10 text-white font-bold'
+                  ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10 text-white font-bold'
                   : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
               )}
             >
@@ -150,7 +150,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
               className={twMerge(
                 'px-2.5 py-1 rounded-md text-[11px] font-semibold border transition',
                 currentColor === c.color
-                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/20 text-white'
+                  ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/20 text-white'
                   : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
               )}
             >

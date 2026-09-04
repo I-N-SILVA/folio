@@ -153,7 +153,7 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
               }}
               className={`rounded-lg border px-2 py-1.5 text-center text-xs transition ${
                 currentAspect === asp.id
-                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/10 text-white font-bold'
+                  ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10 text-white font-bold'
                   : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
               }`}
             >
@@ -182,7 +182,7 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
               }}
               className={`rounded-md border py-1 text-center text-[11px] font-medium transition ${
                 currentWidth === w.id
-                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/15 text-white font-bold'
+                  ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/15 text-white font-bold'
                   : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
               }`}
             >
@@ -321,11 +321,11 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
 
       <div className="flex items-center justify-between pt-1">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('lightbox')} className="accent-[var(--accent-vivid)]" />
+          <input type="checkbox" {...register('lightbox')} className="accent-[var(--studio-select)]" />
           <span className="text-xs text-neutral-300">Click to expand Lightbox</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('border')} className="accent-[var(--accent-vivid)]" />
+          <input type="checkbox" {...register('border')} className="accent-[var(--studio-select)]" />
           <span className="text-xs text-neutral-300">Border Outline</span>
         </label>
       </div>

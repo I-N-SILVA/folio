@@ -20,6 +20,7 @@ export function CartDrawer({
   onUpdateQuantity,
   onRemoveItem,
   onCheckout,
+  checkoutUrl,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -27,6 +28,12 @@ export function CartDrawer({
   onUpdateQuantity: (id: string, qty: number) => void
   onRemoveItem: (id: string) => void
   onCheckout?: () => void
+  /**
+   * The author's own checkout, from `book.settings.checkoutUrl`. QLICO takes no
+   * payment itself, so without one there is no checkout button — an edition that
+   * cannot complete a sale must not offer to.
+   */
+  checkoutUrl?: string
 }) {
   const subtotal = items.reduce((acc, item) => acc + item.numericPrice * item.quantity, 0)
   const currencySymbol = items[0]?.price.match(/[$€£¥]/)?.[0] || '$'
@@ -134,14 +141,30 @@ export function CartDrawer({
                     {currencySymbol}{subtotal.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-[11px] text-zinc-500">Taxes & shipping calculated at checkout.</p>
-                <button
-                  onClick={onCheckout || onClose}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3.5 text-sm font-semibold text-black transition-all hover:bg-zinc-200 active:scale-[0.99]"
-                >
-                  Proceed to Checkout
-                  <ArrowRight size={15} />
-                </button>
+                {checkoutUrl ? (
+                  <>
+                    <p className="text-[11px] text-zinc-500">
+                      Taxes and shipping are calculated by the seller at checkout.
+                    </p>
+                    <a
+                      href={checkoutUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onCheckout}
+                      className="flex w-full items-center justify-center gap-2 rounded-full bg-white py-3.5 text-sm font-semibold text-black transition-all hover:bg-zinc-200 active:scale-[0.99]"
+                    >
+                      Continue to checkout
+                      <ArrowRight size={15} />
+                    </a>
+                  </>
+                ) : (
+                  /* No pretend checkout. Say what is true and leave the reader a
+                     way to reach a person, rather than taking a card number. */
+                  <p className="rounded-xl border border-neutral-800 bg-neutral-900/60 px-3.5 py-3 text-[12px] leading-5 text-zinc-400">
+                    This edition doesn&apos;t take payment here yet. Note what you&apos;d like and
+                    get in touch with the seller to order it.
+                  </p>
+                )}
               </div>
             )}
           </motion.aside>

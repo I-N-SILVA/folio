@@ -1,5 +1,30 @@
 import { z } from 'zod'
 
+/**
+ * A media or link target that may not have been chosen yet.
+ *
+ * Blocks used to arrive pre-filled so they would validate: a new Video block
+ * held `w3schools.com/html/mov_bbb.mp4`, Audio a w3schools horse sample, a
+ * Button `https://example.com`. On a long import nobody notices, and it
+ * publishes under the author's name. Blocks start empty instead, and an empty
+ * target is a valid *draft* — `lib/publish-checks.ts` is what stops an edition
+ * going live with one, which is where that check belongs.
+ */
+const draftableUrl = z
+  .string()
+  .refine(
+    (s) => {
+      if (s === '') return true
+      try {
+        const url = new URL(s)
+        return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'data:'
+      } catch {
+        return s.startsWith('/') || s.startsWith('data:')
+      }
+    },
+    { message: 'Must be a valid URL, or empty while you are still drafting' }
+  )
+
 // ─── Block Schemas ─────────────────────────────────────────────────────────────
 
 export const TextBlockSchema = z.object({
@@ -19,14 +44,7 @@ export const TextBlockSchema = z.object({
 export const ImageBlockSchema = z.object({
   type: z.literal('image'),
   id: z.string(),
-  src: z.string().refine((s) => {
-    try {
-      const url = new URL(s)
-      return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'data:'
-    } catch {
-      return s.startsWith('/') || s.startsWith('data:')
-    }
-  }, { message: 'Must be a valid URL or data URI' }),
+  src: draftableUrl,
   alt: z.string(),
   caption: z.string().optional(),
   lightbox: z.boolean().optional(),
@@ -45,8 +63,8 @@ export const ImageBlockSchema = z.object({
 export const VideoBlockSchema = z.object({
   type: z.literal('video'),
   id: z.string(),
-  src: z.string().url(),
-  poster: z.string().url(),
+  src: draftableUrl,
+  poster: draftableUrl.optional(),
   autoplay: z.literal(false).default(false),
   muted: z.literal(true).default(true),
 })
@@ -54,7 +72,7 @@ export const VideoBlockSchema = z.object({
 export const AudioBlockSchema = z.object({
   type: z.literal('audio'),
   id: z.string(),
-  src: z.string().url(),
+  src: draftableUrl,
   title: z.string(),
   waveform: z.boolean().optional().default(false),
 })
@@ -63,7 +81,7 @@ export const ButtonBlockSchema = z.object({
   type: z.literal('button'),
   id: z.string(),
   label: z.string(),
-  href: z.string().url(),
+  href: draftableUrl,
   variant: z.enum(['primary', 'secondary', 'ghost']),
   shape: z.enum(['pill', 'rounded', 'square']).optional(),
   size: z.enum(['sm', 'md', 'lg']).optional(),
@@ -90,8 +108,8 @@ export const DataBlockSchema = z.object({
   type: z.literal('data'),
   id: z.string(),
   label: z.string(),
-  source: z.string(), // JSON endpoint (absolute URL or same-origin path)
-  path: z.string(), // dot-path into the JSON, e.g. "product.price"
+  source: z.string().default(''), // JSON endpoint (absolute URL or same-origin path)
+  path: z.string().default(''), // dot-path into the JSON, e.g. "product.price"
   prefix: z.string().optional(),
   suffix: z.string().optional(),
   fallback: z.string().optional(),
@@ -242,6 +260,17 @@ export const BookSettingsSchema = z.object({
   whitelabel: z.boolean().default(false),
   webhookUrl: z.string().optional(),
   customDomain: z.string().optional(),
+  /**
+   * Where the cart's checkout button sends a reader.
+   *
+   * QLICO does not process payments and must not pretend to. The reader used to
+   * mount a checkout that collected a card number, waited 1.8s, invented an
+   * order number and told the reader their order was confirmed — no request was
+   * made and no money moved. That is gone. A cart now hands off to a real
+   * checkout the author owns (Stripe Payment Link, Shopify, Gumroad), and an
+   * edition without one shows no checkout button at all.
+   */
+  checkoutUrl: z.string().optional(),
 })
 
 // ─── Book Schema ───────────────────────────────────────────────────────────────

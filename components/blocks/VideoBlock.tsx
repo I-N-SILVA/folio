@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import Image from 'next/image'
-import { Play, X } from 'lucide-react'
+import { Play, X, Film } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { trackEvent } from '@/lib/tracking'
 import type { VideoBlock } from '@/lib/book-schema'
+import { EmptyBlock } from './EmptyBlock'
 
 function VideoModal({
   src,
@@ -79,6 +80,12 @@ function VideoModal({
 export function VideoBlock({ block, bookId }: { block: VideoBlock; bookId: string }) {
   const [modalOpen, setModalOpen] = useState(false)
 
+  // A block starts empty rather than holding a sample file off a third-party
+  // host, so it has to render that state rather than assume a source exists.
+  if (!block.src) {
+    return <EmptyBlock label="Choose a video" icon={<Film size={20} />} />
+  }
+
   return (
     <>
       <div
@@ -87,13 +94,17 @@ export function VideoBlock({ block, bookId }: { block: VideoBlock; bookId: strin
         role="button"
         aria-label={`Play video`}
       >
-        <Image
-          src={block.poster}
-          alt="Video thumbnail"
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 768px) 100vw, 50vw"
-        />
+        {block.poster ? (
+          <Image
+            src={block.poster}
+            alt="Video thumbnail"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-neutral-900" />
+        )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
           <div className="bg-white/90 rounded-full p-4 shadow-lg group-hover:scale-110 transition-transform">
             <Play size={32} className="text-gray-900 ml-1" fill="currentColor" />

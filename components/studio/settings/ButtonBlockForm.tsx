@@ -103,7 +103,7 @@ export function ButtonBlockForm({ block, pageId }: { block: ButtonBlock; pageId:
               }}
               className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition ${
                 currentColor === c.color
-                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/20 text-white'
+                  ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/20 text-white'
                   : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
               }`}
             >
@@ -115,7 +115,7 @@ export function ButtonBlockForm({ block, pageId }: { block: ButtonBlock; pageId:
 
       <div className="pt-1">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" {...register('fullWidth')} className="accent-[var(--accent-vivid)]" />
+          <input type="checkbox" {...register('fullWidth')} className="accent-[var(--studio-select)]" />
           <span className="text-xs text-neutral-300">Stretch Full Width (100%)</span>
         </label>
       </div>

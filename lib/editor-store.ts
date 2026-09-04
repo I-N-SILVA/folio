@@ -36,6 +36,8 @@ interface EditorStore {
   removeHotspot: (pageId: string, hotspotId: string) => void
 
   addPage: () => void
+  /** Insert a page directly after `afterIndex`, optionally pre-filled. */
+  insertPage: (afterIndex: number, page?: Partial<Pick<Page, 'layout' | 'blocks'>>) => void
   removePage: (pageId: string) => void
   reorderPages: (fromIndex: number, toIndex: number) => void
   setPageBlocks: (pageId: string, blocks: Block[]) => void
@@ -310,6 +312,39 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       ...snapshotHistory(state, state.book),
       book: { ...state.book, pages: [...pages, newPage] },
       currentPageIndex: pages.length,
+    }
+  }),
+
+  /**
+   * Insert a page where the author is, rather than at the end.
+   *
+   * `addPage` only appends, so adding a page after page 3 of 20 meant appending
+   * and then dragging it back seventeen places. This is also what the Layouts
+   * tab uses: applying a layout used to overwrite the current page's blocks and
+   * apologise in a toast afterwards.
+   */
+  insertPage: (afterIndex, seed) => set((state) => {
+    if (!state.book) return state
+    const pages = state.book.pages ?? []
+    const at = Math.min(Math.max(afterIndex + 1, 0), pages.length)
+    const newPage: Page = {
+      id: crypto.randomUUID(),
+      book_id: state.book.id,
+      page_number: at + 1,
+      type: 'content',
+      layout: seed?.layout ?? 'text',
+      blocks: seed?.blocks ?? [],
+      hotspots: [],
+    }
+    const next = [...pages.slice(0, at), newPage, ...pages.slice(at)]
+      .map((p, i) => ({ ...p, page_number: i + 1 }))
+    return {
+      isDirty: true,
+      ...snapshotHistory(state, state.book),
+      book: { ...state.book, pages: next },
+      currentPageIndex: at,
+      selectedBlockId: null,
+      selectedHotspotId: null,
     }
   }),
 

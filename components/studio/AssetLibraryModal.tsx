@@ -247,7 +247,7 @@ export function AssetLibraryModal({
                   onSelect(asset.url, asset.title)
                   onClose()
                 }}
-                className="group relative cursor-pointer overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60 transition hover:border-[var(--accent-vivid)] hover:shadow-xl flex flex-col"
+                className="group relative cursor-pointer overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60 transition hover:border-[var(--studio-select)] hover:shadow-xl flex flex-col"
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-950">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

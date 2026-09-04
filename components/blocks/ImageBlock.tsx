@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ImageOff } from 'lucide-react'
+import { ImageOff, ImagePlus } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import Lightbox from 'yet-another-react-lightbox'
 import 'yet-another-react-lightbox/styles.css'
 import type { ImageBlock } from '@/lib/book-schema'
+import { EmptyBlock } from './EmptyBlock'
 
 const aspectStyles: Record<string, string> = {
   auto: 'aspect-video',
@@ -69,6 +70,11 @@ const heightStyles: Record<string, string> = {
 export function ImageBlock({ block }: { block: ImageBlock }) {
   const [open, setOpen] = useState(false)
   const [failed, setFailed] = useState(false)
+
+  // Empty is a valid draft state — see the note on `draftableUrl` in the schema.
+  if (!block.src) {
+    return <EmptyBlock label="Choose an image" icon={<ImagePlus size={20} />} />
+  }
 
   const aspectCls = block.aspectRatio ? aspectStyles[block.aspectRatio] ?? 'aspect-video' : 'aspect-video'
   const radiusCls = block.borderRadius ? radiusStyles[block.borderRadius] ?? 'rounded-xl' : 'rounded-xl'

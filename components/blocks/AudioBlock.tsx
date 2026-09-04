@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Play, Pause, Volume2 } from 'lucide-react'
+import { Play, Pause, Volume2, Music } from 'lucide-react'
 import { trackEvent } from '@/lib/tracking'
 import type { AudioBlock } from '@/lib/book-schema'
+import { EmptyBlock } from './EmptyBlock'
 
 export function AudioBlock({ block, bookId }: { block: AudioBlock; bookId: string }) {
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -60,6 +61,11 @@ export function AudioBlock({ block, bookId }: { block: AudioBlock; bookId: strin
     const m = Math.floor(s / 60)
     const sec = Math.floor(s % 60)
     return `${m}:${sec.toString().padStart(2, '0')}`
+  }
+
+  // Empty is a valid draft state — the publish checks stop it going live.
+  if (!block.src) {
+    return <EmptyBlock label="Choose an audio file" icon={<Music size={20} />} aspect="aspect-auto" />
   }
 
   return (
