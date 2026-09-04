@@ -335,8 +335,14 @@ export function EditorClient({ book, entitlements }: Props) {
   const handlePublishToggle = async () => {
     if (!storeBook) return
     if (!storeBook.settings.published) {
-      setPendingChecks(publishChecks(storeBook))
-      return
+      const issues = publishChecks(storeBook)
+      // Nothing to say, so say nothing. A dialog that reads "all clear" on every
+      // publish is a speed bump on the one path that should be fastest — the
+      // share sheet that follows is confirmation enough.
+      if (issues.length > 0) {
+        setPendingChecks(issues)
+        return
+      }
     }
     await applyPublish()
   }

@@ -5,12 +5,10 @@ import type { ButtonBlock } from '@/lib/book-schema'
 import { twMerge } from 'tailwind-merge'
 
 const variantStyles: Record<ButtonBlock['variant'], string> = {
-  primary:
-    'bg-[var(--primary)] text-white hover:opacity-90 shadow-md',
+  primary: 'bg-[var(--primary)] text-white hover:opacity-90 shadow-md',
   secondary:
     'border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white',
-  ghost:
-    'text-[var(--primary)] underline underline-offset-4 hover:opacity-70',
+  ghost: 'text-[var(--primary)] underline underline-offset-4 hover:opacity-70',
 }
 
 const sizeStyles: Record<string, string> = {
@@ -33,8 +31,8 @@ export function ButtonBlock({ block, bookId }: { block: ButtonBlock; bookId: str
     trackEvent(bookId, 'cta_click', { block_id: block.id, href: block.href })
   }
 
-  const shapeCls = block.shape ? shapeStyles[block.shape] ?? 'rounded-full' : 'rounded-full'
-  const sizeCls = block.size ? sizeStyles[block.size] ?? sizeStyles.md : sizeStyles.md
+  const shapeCls = block.shape ? (shapeStyles[block.shape] ?? 'rounded-full') : 'rounded-full'
+  const sizeCls = block.size ? (sizeStyles[block.size] ?? sizeStyles.md) : sizeStyles.md
 
   const customStyle: React.CSSProperties = {}
   if (block.customColor && block.variant === 'primary') {
@@ -45,6 +43,32 @@ export function ButtonBlock({ block, bookId }: { block: ButtonBlock; bookId: str
     customStyle.color = block.textColor
   }
 
+  const buttonCls = twMerge(
+    'inline-flex items-center justify-center font-semibold transition-all duration-200',
+    block.fullWidth ? 'w-full' : '',
+    shapeCls,
+    sizeCls,
+    variantStyles[block.variant]
+  )
+
+  // A button with no destination is not a link. `<a href="">` resolves to the
+  // current page, so an unfinished button silently reloaded the edition — and
+  // blocks start empty now, which makes that reachable rather than theoretical.
+  // The publish checklist stops one going live; until then it renders inert.
+  if (!block.href) {
+    return (
+      <div className={twMerge('w-full', block.fullWidth ? 'flex' : 'inline-block')}>
+        <span
+          style={customStyle}
+          title="This button has no destination yet"
+          className={twMerge(buttonCls, 'cursor-default opacity-50')}
+        >
+          {block.label}
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className={twMerge('w-full', block.fullWidth ? 'flex' : 'inline-block')}>
       <a
@@ -53,13 +77,7 @@ export function ButtonBlock({ block, bookId }: { block: ButtonBlock; bookId: str
         rel="noopener noreferrer"
         onClick={handleClick}
         style={customStyle}
-        className={twMerge(
-          'inline-flex items-center justify-center font-semibold transition-all duration-200',
-          block.fullWidth ? 'w-full' : '',
-          shapeCls,
-          sizeCls,
-          variantStyles[block.variant]
-        )}
+        className={buttonCls}
       >
         {block.label}
       </a>

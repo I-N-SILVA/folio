@@ -21,7 +21,6 @@ import {
   Globe,
   MoreHorizontal,
 } from 'lucide-react'
-import { LANGUAGES, type LanguageCode, getTranslation } from '@/lib/translate'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
@@ -134,6 +133,24 @@ export function ViewerChrome({
     }
   }, [])
 
+  // A menu that only closes by pressing the same button again is a menu people
+  // leave open over the page they are trying to read.
+  useEffect(() => {
+    if (!showMore) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMore(false)
+    }
+    const onDown = (e: PointerEvent) => {
+      if (!(e.target as HTMLElement)?.closest?.('[data-more-menu]')) setShowMore(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onDown)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onDown)
+    }
+  }, [showMore])
+
   const toggleSound = () => {
     setSoundEnabled((prev) => {
       const next = !prev
@@ -160,7 +177,6 @@ export function ViewerChrome({
     setSpeechSpeed((curr) => (curr === 1 ? 1.25 : curr === 1.25 ? 1.5 : 1))
   }
 
-  const [currentLang, setCurrentLang] = useState<LanguageCode>('en')
 
   // Pages released by the unlock endpoint are merged in here, which remounts
   // the flip engine with the full edition — react-pageflip fixes its page count
@@ -469,7 +485,7 @@ export function ViewerChrome({
               narration, translation and print move behind one menu where they
               can carry a name instead of an icon. */}
           {!embed && (
-            <div className="relative">
+            <div className="relative" data-more-menu>
               <button
                 onClick={() => setShowMore((v) => !v)}
                 aria-expanded={showMore}
@@ -514,24 +530,6 @@ export function ViewerChrome({
                     }}
                   />
 
-                  <div className="my-1 h-px bg-[var(--qlico-border)]" />
-                  <div className="px-3 pb-1 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--qlico-muted)]">
-                    Language
-                  </div>
-                  <div className="max-h-44 overflow-y-auto">
-                    {LANGUAGES.map((l) => (
-                      <MenuRow
-                        key={l.code}
-                        icon={<span aria-hidden="true">{l.flag}</span>}
-                        label={l.name}
-                        value={currentLang === l.code ? '✓' : undefined}
-                        onClick={() => {
-                          setCurrentLang(l.code)
-                          setShowMore(false)
-                        }}
-                      />
-                    ))}
-                  </div>
                 </div>
               )}
             </div>
