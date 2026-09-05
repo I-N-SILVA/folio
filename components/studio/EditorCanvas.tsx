@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { twMerge } from 'tailwind-merge'
 import {
   Plus,
@@ -27,6 +27,10 @@ import {
   Monitor,
   LayoutTemplate,
   ShoppingBag,
+  FileText,
+  BookOpen,
+  Move,
+  Rows3,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -48,10 +52,11 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore } from '@/lib/editor-store'
 import { trackProduct } from '@/lib/product-analytics'
-import { PageRenderer } from '@/components/viewer/PageRenderer'
-import { Modal } from '@/components/ui/Modal'
-import type { Block } from '@/lib/book-schema'
-import { PAGE_DESIGN_WIDTH, PAGE_RATIO, ZOOM_STEPS } from '@/lib/page-geometry'
+import { PageRenderer, defaultFrame } from '@/components/viewer/PageRenderer'
+import { InsertPanel } from '@/components/studio/InsertPanel'
+import type { Block, Book, Page, Frame } from '@/lib/book-schema'
+import type { PageTemplate } from '@/lib/templates'
+import { PAGE_DESIGN_WIDTH, PAGE_RATIO, ZOOM_STEPS, pageSideFor, spreadFor } from '@/lib/page-geometry'
 
 // ─── Sortable Block Wrapper ───────────────────────────────────────────────────
 
@@ -67,6 +72,7 @@ function SortableBlock({
   onDelete,
   onInsertAfter,
   onClick,
+  onCanvasDragStart,
   children,
 }: {
   id: string
@@ -80,6 +86,8 @@ function SortableBlock({
   onDuplicate?: () => void
   onDelete?: () => void
   onInsertAfter?: () => void
+  /** Set on a canvas page: the handle moves the block rather than reordering it. */
+  onCanvasDragStart?: (e: React.PointerEvent) => void
   onClick: (e: React.MouseEvent) => void
   children: React.ReactNode
 }) {
@@ -94,11 +102,12 @@ function SortableBlock({
     <div
       ref={setNodeRef}
       style={style}
+      data-block-id={id}
       onClick={onClick}
       className={twMerge(
         'relative group/block transition-all outline-none rounded-lg',
-        isSelected ? 'ring-2 ring-[var(--accent-vivid)] shadow-md' : 'hover:ring-1 hover:ring-neutral-400',
-        isDragging && 'opacity-40 z-50 ring-2 ring-[var(--accent-vivid)] shadow-2xl scale-[1.01]',
+        isSelected ? 'ring-2 ring-[var(--studio-select)] shadow-md' : 'hover:ring-1 hover:ring-neutral-400',
+        isDragging && 'opacity-40 z-50 ring-2 ring-[var(--studio-select)] shadow-2xl scale-[1.01]',
         !isSelected && 'cursor-pointer'
       )}
     >
@@ -111,13 +120,14 @@ function SortableBlock({
             : 'opacity-0 scale-95 pointer-events-none group-hover/block:opacity-100 group-hover/block:scale-100 group-hover/block:pointer-events-auto'
         )}
       >
-        {/* Drag handle */}
+        {/* Drag handle. On a flow page it reorders; on a canvas page it moves. */}
         <div
-          {...listeners}
-          {...attributes}
+          {...(onCanvasDragStart ? {} : listeners)}
+          {...(onCanvasDragStart ? {} : attributes)}
+          onPointerDown={onCanvasDragStart}
           tabIndex={0}
-          aria-label="Drag to reorder block"
-          title="Drag to reorder block"
+          aria-label={onCanvasDragStart ? 'Drag to move block' : 'Drag to reorder block'}
+          title={onCanvasDragStart ? 'Drag to move — hold shift to ignore snapping' : 'Drag to reorder block'}
           className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 cursor-grab active:cursor-grabbing"
         >
           <GripVertical size={12} />
@@ -184,7 +194,7 @@ function SortableBlock({
         <span className="h-3 w-px bg-neutral-700 mx-0.5" />
 
         {/* Block Type Badge */}
-        <span className="px-1 text-[9px] font-bold uppercase tracking-wider text-[var(--accent-vivid)]">
+        <span className="px-1 text-[9px] font-bold uppercase tracking-wider text-[var(--studio-select)]">
           {label}
         </span>
       </div>
@@ -202,188 +212,13 @@ function SortableBlock({
             onInsertAfter?.()
           }}
           title="Insert block below"
-          className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold text-neutral-300 shadow-md border border-neutral-700 hover:bg-[var(--accent-vivid)] hover:text-white hover:border-transparent transition-all scale-90 hover:scale-100"
+          className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold text-neutral-300 shadow-md border border-neutral-700 hover:bg-[var(--studio-select)] hover:text-white hover:border-transparent transition-all scale-90 hover:scale-100"
         >
           <Plus size={10} strokeWidth={2.5} />
           Add below
         </button>
       </div>
     </div>
-  )
-}
-
-// ─── Block Picker Modal ───────────────────────────────────────────────────────
-
-interface BlockChoice {
-  type: Block['type']
-  label: string
-  /** What it's for, so the picker doesn't rely on an icon carrying the meaning. */
-  hint: string
-  icon: React.ReactNode
-  defaults: Omit<Block, 'id' | 'type'>
-}
-
-const BLOCK_TYPES: BlockChoice[] = [
-  {
-    type: 'text',
-    label: 'Text',
-    hint: 'Headings, body, quotes',
-    icon: <Type size={18} />,
-    defaults: { variant: 'body', content: 'New text block', align: 'left' },
-  },
-  {
-    type: 'image',
-    label: 'Image',
-    hint: 'Photo or illustration',
-    icon: <Image size={18} />,
-    defaults: { src: 'https://placehold.co/800x450', alt: '', lightbox: false },
-  },
-  {
-    type: 'video',
-    label: 'Video',
-    hint: 'Inline player with poster',
-    icon: <Video size={18} />,
-    defaults: {
-      src: 'https://www.w3schools.com/html/mov_bbb.mp4',
-      poster: 'https://placehold.co/800x450',
-    },
-  },
-  {
-    type: 'audio',
-    label: 'Audio',
-    hint: 'Narration or a track',
-    icon: <Music size={18} />,
-    defaults: { src: 'https://www.w3schools.com/html/horse.ogg', title: 'Audio' },
-  },
-  {
-    type: 'button',
-    label: 'Button',
-    hint: 'A measured call to action',
-    icon: <MousePointerClick size={18} />,
-    defaults: { label: 'Click me', href: 'https://example.com', variant: 'primary' },
-  },
-  {
-    type: 'divider',
-    label: 'Divider',
-    hint: 'A rule between sections',
-    icon: <Minus size={18} />,
-    defaults: {},
-  },
-  {
-    type: 'embed',
-    label: 'Embed',
-    hint: 'Paste third-party HTML',
-    icon: <Code2 size={18} />,
-    defaults: { html: '<div>Paste embed HTML here</div>', height: 300 },
-  },
-  {
-    type: 'product-grid',
-    label: 'Product Grid',
-    hint: 'Side-by-side products with prices & Buy Now',
-    icon: <ShoppingBag size={18} />,
-    defaults: {
-      columns: '2',
-      cardStyle: 'bordered',
-      aspectRatio: '1/1',
-      items: [
-        {
-          id: 'p1',
-          name: 'Mulberry Silk Trench',
-          price: '$480',
-          originalPrice: '$620',
-          image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
-          description: 'Handcrafted mulberry heavy silk with horn buttons.',
-          badge: 'Best Seller',
-          action: 'cart',
-          ctaLabel: 'Add to Bag',
-          inStock: true,
-        },
-        {
-          id: 'p2',
-          name: 'Cashmere Ribbed Beanie',
-          price: '$120',
-          image: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=1200&q=85',
-          description: '100% Mongolian organic combed cashmere yarn.',
-          badge: 'New Season',
-          action: 'cart',
-          ctaLabel: 'Add to Bag',
-          inStock: true,
-        },
-      ],
-    },
-  },
-]
-
-/** Four categories for clarity and fast selection */
-const BLOCK_GROUPS: { title: string; types: Block['type'][] }[] = [
-  { title: 'Commerce & Products', types: ['product-grid'] },
-  { title: 'Text & Layout', types: ['text', 'divider'] },
-  { title: 'Media', types: ['image', 'video', 'audio'] },
-  { title: 'Interactive', types: ['button', 'data', 'embed'] },
-]
-
-interface BlockPickerModalProps {
-  onPick: (type: Block['type'], defaults: Omit<Block, 'id' | 'type'>) => void
-  onClose: () => void
-}
-
-function BlockPickerModal({ onPick, onClose }: BlockPickerModalProps) {
-  return (
-    <Modal
-      onClose={onClose}
-      title="Add block"
-      hideCloseButton
-      className="w-80 max-w-[calc(100vw-2rem)] border border-neutral-700 bg-neutral-900 p-4"
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-semibold text-neutral-100">Add a block</span>
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="text-neutral-400 transition-colors hover:text-neutral-100"
-        >
-          <X size={16} />
-        </button>
-      </div>
-
-      {/* Grouped, with a line on what each one is for. Eight identical tiles
-          made the reader work out the difference between Embed and Live data
-          from a pair of icons. */}
-      <div className="space-y-4">
-        {BLOCK_GROUPS.map((group) => (
-          <section key={group.title}>
-            <h3 className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">
-              {group.title}
-            </h3>
-            <div className="space-y-1">
-              {group.types.map((type) => {
-                const choice = BLOCK_TYPES.find((b) => b.type === type)
-                if (!choice) return null
-                return (
-                  <button
-                    key={choice.label}
-                    onClick={() => onPick(choice.type, choice.defaults)}
-                    className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition-colors hover:border-neutral-700 hover:bg-neutral-800"
-                  >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-neutral-800 text-neutral-300">
-                      {choice.icon}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium text-neutral-100">
-                        {choice.label}
-                      </span>
-                      <span className="block truncate text-[11px] text-neutral-500">
-                        {choice.hint}
-                      </span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
-    </Modal>
   )
 }
 
@@ -412,6 +247,15 @@ export function EditorCanvas() {
   const [showGuides, setShowGuides] = useState(false)
   const [isDetecting, setIsDetecting] = useState(false)
   const [viewportMode, setViewportMode] = useState<'desktop' | 'mobile'>('desktop')
+  /**
+   * Page or spread.
+   *
+   * The reader shows two facing pages on anything wider than a phone
+   * (`usePortrait={isMobile}` in ViewerEngine) while the editor only ever
+   * showed one, so an author composing page 12 never saw page 13, never saw
+   * the gutter, and could not tell which of their pages face each other.
+   */
+  const [viewMode, setViewMode] = useState<'page' | 'spread'>('page')
   const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null)
   const [zoom, setZoom] = useState(1)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -450,104 +294,18 @@ export function EditorCanvas() {
   const pageWidth = isMobile ? 380 : Math.round(PAGE_DESIGN_WIDTH * zoom)
   const pageHeight = isMobile ? 740 : Math.round(pageWidth * PAGE_RATIO)
 
-  const handleScaffoldSplit = useCallback(() => {
-    if (!currentPage) return
-    useEditorStore.getState().updatePage(currentPage.id, { layout: 'split' })
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'image',
-      src: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
-      alt: 'Luxury Silk Fabric Spread',
-      aspectRatio: '3/4',
-      borderRadius: 'lg',
-      shadow: 'md',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'heading',
-      content: 'Editorial Feature',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'body',
-      content: 'Describe the craftsmanship, materials, and provenance of this piece.',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'stat',
-      content: '$480 · Ready to Ship',
-      textColor: '#f59e0b',
-    } as any)
-    toast.success('Added 2-Column Split Feature Spread')
-  }, [currentPage, addBlock])
-
-  const handleScaffoldQuote = useCallback(() => {
-    if (!currentPage) return
-    useEditorStore.getState().updatePage(currentPage.id, { layout: 'hero' })
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'caption',
-      content: 'MONOGRAPH HIGHLIGHT',
-      letterSpacing: 'widest',
-      align: 'center',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'quote',
-      content: '"True craftsmanship is the precision of every unseen detail."',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      padding: 'lg',
-      borderRadius: 'lg',
-      align: 'center',
-    } as any)
-    toast.success('Added Monumental Quote & Hero Spread')
-  }, [currentPage, addBlock])
-
-  const handleScaffoldShoppable = useCallback(() => {
-    if (!currentPage) return
-    useEditorStore.getState().updatePage(currentPage.id, { layout: 'split' })
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'image',
-      src: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85',
-      alt: 'Runway Lookbook Item',
-      aspectRatio: '4/3',
-      borderRadius: 'lg',
-      shadow: 'lg',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'text',
-      variant: 'title',
-      content: 'The Milan Trench',
-    } as any)
-    addBlock(currentPage.id, {
-      id: crypto.randomUUID(),
-      type: 'button',
-      label: 'Instant Checkout ($480) →',
-      href: 'https://qlico.app',
-      variant: 'primary',
-      shape: 'pill',
-      size: 'lg',
-    } as any)
-    addHotspot(currentPage.id, {
-      id: crypto.randomUUID(),
-      x: 40,
-      y: 40,
-      label: 'Silk Trench ($480)',
-      icon: 'ShoppingBag',
-      beaconStyle: 'shopping',
-      price: '$480',
-      action: 'checkout',
-      modal: { title: 'Mulberry Silk Trench', body: 'Express worldwide shipping included.' },
-    })
-    toast.success('Added Shoppable Pin & Checkout Spread')
-  }, [currentPage, addBlock, addHotspot])
+  // A phone reader gets one page at a time, so a spread there would be a lie.
+  const spreadView = viewMode === 'spread' && !isMobile
+  const pages = book?.pages ?? []
+  const spread = spreadFor(currentPageIndex, pages.length)
+  const facingIndex = spreadView
+    ? spread.left === currentPageIndex
+      ? spread.right
+      : spread.left
+    : null
+  const facingPage = facingIndex != null ? pages[facingIndex] : null
+  /** Which side the *current* page sits on, so the facing one goes opposite. */
+  const currentSide = pageSideFor(currentPageIndex, false)
 
   /**
    * Place a hotspot at a percentage position on the page.
@@ -619,6 +377,24 @@ export function EditorCanvas() {
                 ? { x: 0, y: nudge }
                 : null
 
+      // On a canvas page a selected block nudges the same way a hotspot does —
+      // the only precise way to place either, since the inspector shows no
+      // coordinate fields.
+      if (delta && selectedBlockId && currentPage.layout === 'canvas') {
+        const block = currentPage.blocks.find((b) => b.id === selectedBlockId)
+        if (block) {
+          e.preventDefault()
+          const frame =
+            block.frame ?? defaultFrame(currentPage.blocks.findIndex((b) => b.id === selectedBlockId))
+          useEditorStore.getState().setBlockFrame(currentPage.id, selectedBlockId, {
+            ...frame,
+            x: Math.min(100 - frame.w, Math.max(0, Math.round((frame.x + delta.x) * 10) / 10)),
+            y: Math.min(96, Math.max(0, Math.round((frame.y + delta.y) * 10) / 10)),
+          })
+          return
+        }
+      }
+
       if (!delta || !selectedHotspotId) return
       const hotspot = currentPage.hotspots?.find((h) => h.id === selectedHotspotId)
       if (!hotspot) return
@@ -629,23 +405,238 @@ export function EditorCanvas() {
         y: Math.min(100, Math.max(0, Math.round((hotspot.y + delta.y) * 10) / 10)),
       })
     },
-    [hotspotMode, currentPage, selectedHotspotId, placeHotspot, updateHotspot]
+    [hotspotMode, currentPage, selectedHotspotId, selectedBlockId, placeHotspot, updateHotspot]
   )
 
-  const handleBlockPick = useCallback(
-    (type: Block['type'], defaults: Omit<Block, 'id' | 'type'>) => {
+  /**
+   * Flow ⇄ canvas.
+   *
+   * Going to canvas, the blocks' current positions are measured off the live
+   * flow layout first and handed over as the seed. A frame derived from index
+   * alone cannot know that a heading is 40px and a pull quote 200px, so it
+   * overlaps them — and an author whose page rearranges itself the moment they
+   * switch will not switch again.
+   */
+  const switchLayoutMode = useCallback(
+    (mode: 'flow' | 'canvas') => {
       if (!currentPage) return
-      const newBlock = { type, id: crypto.randomUUID(), ...defaults } as Block
+      if (mode !== 'canvas') {
+        useEditorStore.getState().setPageLayoutMode(currentPage.id, 'text')
+        return
+      }
+
+      const host = canvasRef.current
+      const seed: Record<string, Frame> = {}
+      if (host) {
+        const page = host.getBoundingClientRect()
+        currentPage.blocks.forEach((block, i) => {
+          const el = host.querySelector<HTMLElement>(`[data-block-id="${block.id}"]`)
+          if (!el) return
+          const r = el.getBoundingClientRect()
+          seed[block.id] = {
+            x: Math.round(((r.left - page.left) / page.width) * 1000) / 10,
+            y: Math.round(((r.top - page.top) / page.height) * 1000) / 10,
+            w: Math.round(((r.width / page.width) * 1000)) / 10,
+            z: i,
+          }
+        })
+      }
+      useEditorStore.getState().setPageLayoutMode(currentPage.id, 'canvas', seed)
+      toast.success('Canvas layout — drag any block to place it. Phones still stack.')
+    },
+    [currentPage]
+  )
+
+  const isCanvasPage = currentPage?.layout === 'canvas'
+  const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null)
+  const [snapLines, setSnapLines] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] })
+
+  /**
+   * Drag a block to position it, on a canvas page.
+   *
+   * Snaps to the page margin, the centre line and the edges of its siblings at
+   * a 1.5% tolerance — the guides the canvas already drew but that nothing
+   * attracted to. The lines that actually caught are drawn while dragging, so
+   * a snap is visible rather than merely felt.
+   */
+  const beginBlockDrag = useCallback(
+    (e: React.PointerEvent, blockId: string) => {
+      if (!currentPage || !canvasRef.current) return
+      const block = currentPage.blocks.find((b) => b.id === blockId)
+      if (!block) return
+      const start = block.frame ?? defaultFrame(currentPage.blocks.findIndex((b) => b.id === blockId))
+      const rect = canvasRef.current.getBoundingClientRect()
+      const target = e.currentTarget as HTMLElement
+      const originX = e.clientX
+      const originY = e.clientY
+
+      // Every edge a sibling offers, plus the margin and the centre.
+      const others = currentPage.blocks
+        .filter((b) => b.id !== blockId)
+        .map((b, i) => b.frame ?? defaultFrame(i))
+      const vTargets = [8, 92 - start.w, (100 - start.w) / 2, ...others.map((f) => f.x), ...others.map((f) => f.x + f.w - start.w)]
+      const hTargets = [8, ...others.map((f) => f.y)]
+
+      const SNAP = 1.5
+      const nearest = (value: number, targets: number[]) => {
+        let best: number | null = null
+        for (const t of targets) {
+          if (Math.abs(value - t) <= SNAP && (best === null || Math.abs(value - t) < Math.abs(value - best))) {
+            best = t
+          }
+        }
+        return best
+      }
+
+      const onMove = (ev: PointerEvent) => {
+        setDraggingBlockId(blockId)
+        const dx = ((ev.clientX - originX) / rect.width) * 100
+        const dy = ((ev.clientY - originY) / rect.height) * 100
+        let x = Math.min(100 - start.w, Math.max(0, start.x + dx))
+        let y = Math.min(96, Math.max(0, start.y + dy))
+
+        const snapX = ev.shiftKey ? null : nearest(x, vTargets)
+        const snapY = ev.shiftKey ? null : nearest(y, hTargets)
+        if (snapX !== null) x = snapX
+        if (snapY !== null) y = snapY
+
+        setSnapLines({ v: snapX !== null ? [x] : [], h: snapY !== null ? [y] : [] })
+        useEditorStore.getState().setBlockFrame(currentPage.id, blockId, {
+          ...start,
+          x: Math.round(x * 10) / 10,
+          y: Math.round(y * 10) / 10,
+        })
+      }
+
+      const onUp = () => {
+        setDraggingBlockId(null)
+        setSnapLines({ v: [], h: [] })
+        target.removeEventListener('pointermove', onMove)
+        target.removeEventListener('pointerup', onUp)
+        target.removeEventListener('pointercancel', onUp)
+      }
+
+      target.setPointerCapture(e.pointerId)
+      target.addEventListener('pointermove', onMove)
+      target.addEventListener('pointerup', onUp)
+      target.addEventListener('pointercancel', onUp)
+      useEditorStore.getState().selectBlock(blockId)
+    },
+    [currentPage]
+  )
+
+  const [draggingHotspotId, setDraggingHotspotId] = useState<string | null>(null)
+
+  /**
+   * Drag a hotspot to move it.
+   *
+   * A hotspot is the only thing on a page with real coordinates, and until now
+   * the only way to change them was to select the marker and hold an arrow key —
+   * the inspector renders X/Y read-only. Pointer capture keeps the drag alive
+   * when the cursor leaves the 5px marker, which is most of the time.
+   */
+  const beginHotspotDrag = useCallback(
+    (e: React.PointerEvent, hotspotId: string) => {
+      if (!currentPage || !canvasRef.current) return
+      const rect = canvasRef.current.getBoundingClientRect()
+      const target = e.currentTarget as HTMLElement
+      let moved = false
+
+      const onMove = (ev: PointerEvent) => {
+        if (!moved) {
+          moved = true
+          setDraggingHotspotId(hotspotId)
+        }
+        updateHotspot(currentPage.id, hotspotId, {
+          x: Math.min(100, Math.max(0, Math.round(((ev.clientX - rect.left) / rect.width) * 1000) / 10)),
+          y: Math.min(100, Math.max(0, Math.round(((ev.clientY - rect.top) / rect.height) * 1000) / 10)),
+        })
+      }
+      const onUp = () => {
+        setDraggingHotspotId(null)
+        target.removeEventListener('pointermove', onMove)
+        target.removeEventListener('pointerup', onUp)
+        target.removeEventListener('pointercancel', onUp)
+      }
+
+      target.setPointerCapture(e.pointerId)
+      target.addEventListener('pointermove', onMove)
+      target.addEventListener('pointerup', onUp)
+      target.addEventListener('pointercancel', onUp)
+    },
+    [currentPage, updateHotspot]
+  )
+
+  const handleInsertBlock = useCallback(
+    (newBlock: Block) => {
+      if (!currentPage) return
       if (insertIndex !== null) {
         insertBlockAt(currentPage.id, newBlock, insertIndex)
         setInsertIndex(null)
       } else {
         addBlock(currentPage.id, newBlock)
       }
+      useEditorStore.getState().selectBlock(newBlock.id)
       setShowBlockPicker(false)
     },
     [currentPage, addBlock, insertBlockAt, insertIndex]
   )
+
+  /**
+   * A layout adds a page. It used to call `setPageBlocks` on the page the author
+   * was looking at — destroying their work and apologising in a toast afterwards.
+   */
+  const handleInsertLayout = useCallback(
+    (tpl: PageTemplate) => {
+      const index = useEditorStore.getState().currentPageIndex
+      useEditorStore.getState().insertPage(index, {
+        layout: tpl.layout,
+        blocks: tpl.blocks.map((b) => ({ ...b, id: crypto.randomUUID() })) as Block[],
+      })
+      setInsertIndex(null)
+      setShowBlockPicker(false)
+      toast.success(`Added “${tpl.label}” as page ${index + 2} — your page is untouched`)
+    },
+    []
+  )
+
+  /**
+   * The command palette's two formerly-dead actions land here.
+   *
+   * `onToggleGuides` and `onAutoDetectPins` were both passed as `() => {}` —
+   * the state they need lives in this component, and rather than lift it just
+   * for the palette, the palette asks and the canvas answers.
+   */
+  useEffect(() => {
+    const guides = () => setShowGuides((v) => !v)
+    const detect = () => { void handleAutoDetect() }
+    window.addEventListener('qlico:toggle-guides', guides)
+    window.addEventListener('qlico:detect-pins', detect)
+    return () => {
+      window.removeEventListener('qlico:toggle-guides', guides)
+      window.removeEventListener('qlico:detect-pins', detect)
+    }
+  })
+
+  /**
+   * `/` opens the insert panel — the second of its two entry points, the other
+   * being the `+` between blocks. Handled here rather than in EditorClient
+   * because the panel's open state lives with the canvas that owns the page.
+   */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
+      const el = e.target as HTMLElement | null
+      if (el?.isContentEditable) return
+      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return
+      if (showBlockPicker) return
+      e.preventDefault()
+      setInsertIndex(null)
+      setShowBlockPicker(true)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showBlockPicker])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -718,6 +709,80 @@ export function EditorCanvas() {
             <span className="hidden sm:inline">Mobile</span>
           </button>
         </div>
+
+        {/* Flow or canvas. The canvas the editor draws — paper shadow, zoom,
+            guides, a live X/Y readout — promised free composition while blocks
+            rendered into a flex column with no position at all. This is the
+            page saying which of the two it actually is. */}
+        {!isMobile && currentPage && (
+          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+            {(['flow', 'canvas'] as const).map((mode) => {
+              const active = mode === 'canvas' ? isCanvasPage : !isCanvasPage
+              return (
+                <button
+                  key={mode}
+                  onClick={() => switchLayoutMode(mode)}
+                  aria-pressed={active}
+                  title={
+                    mode === 'canvas'
+                      ? 'Place blocks anywhere — stacks in order on a phone'
+                      : 'Blocks stack in order and reflow everywhere'
+                  }
+                  className={twMerge(
+                    'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium capitalize transition',
+                    active
+                      ? 'bg-neutral-800 font-semibold text-white shadow-sm'
+                      : 'text-neutral-400 hover:text-neutral-200'
+                  )}
+                >
+                  {mode === 'canvas' ? <Move size={13} /> : <Rows3 size={13} />}
+                  <span className="hidden sm:inline">{mode}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Page or spread. Sits beside the viewport switch because they answer
+            the same question — what am I looking at — and the reader's own
+            answer depends on both. */}
+        {!isMobile && (
+          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+            <button
+              onClick={() => setViewMode('page')}
+              aria-pressed={viewMode === 'page'}
+              title="One page at a time"
+              className={twMerge(
+                'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition',
+                viewMode === 'page'
+                  ? 'bg-neutral-800 font-semibold text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              )}
+            >
+              <FileText size={13} />
+              <span className="hidden sm:inline">Page</span>
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('spread')
+                // Two pages need roughly twice the width; dropping the zoom
+                // means the spread arrives whole instead of half off-screen.
+                setZoom((z) => Math.min(z, 0.75))
+              }}
+              aria-pressed={viewMode === 'spread'}
+              title="Both facing pages, as a reader sees them"
+              className={twMerge(
+                'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition',
+                viewMode === 'spread'
+                  ? 'bg-neutral-800 font-semibold text-white shadow-sm'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              )}
+            >
+              <BookOpen size={13} />
+              <span className="hidden sm:inline">Spread</span>
+            </button>
+          </div>
+        )}
 
         {/* Zoom (Desktop only) */}
         {!isMobile && (
@@ -806,11 +871,27 @@ export function EditorCanvas() {
             </div>
           )}
 
+          {/* The spread. In page view this is a row of one, so the editable
+              page below is identical either way — only its neighbour appears. */}
+          <div className="flex items-start justify-center">
+          {spreadView && facingPage && currentSide === 'right' && (
+            <FacingPage
+              page={facingPage}
+              index={facingIndex!}
+              bookId={book.id}
+              theme={book.theme}
+              width={pageWidth}
+              height={pageHeight}
+              side="left"
+            />
+          )}
+
           <div
             ref={canvasRef}
             style={{ width: pageWidth, height: pageHeight }}
             className={twMerge(
-              'relative mx-auto overflow-hidden rounded-[3px] bg-white transition-all',
+              'relative overflow-hidden rounded-[3px] bg-white transition-all',
+              !spreadView && 'mx-auto',
               isMobile ? 'rounded-[32px]' : 'shadow-[0_1px_2px_rgba(0,0,0,0.35),0_12px_28px_-8px_rgba(0,0,0,0.55),0_40px_80px_-32px_rgba(0,0,0,0.7)] ring-1 ring-black/40',
               hotspotMode && 'cursor-crosshair ring-2 ring-amber-400/70'
             )}
@@ -825,9 +906,30 @@ export function EditorCanvas() {
             }}
             onMouseLeave={() => setCursorCoords(null)}
             onKeyDown={handleCanvasKeyDown}
-            tabIndex={hotspotMode || selectedHotspotId ? 0 : -1}
+            tabIndex={hotspotMode || selectedHotspotId || (isCanvasPage && selectedBlockId) ? 0 : -1}
             role={hotspotMode ? 'application' : undefined}
           >
+            {/* The lines that actually caught, so a snap is seen and not just
+                felt. Drawn above the page, cleared when the drag ends. */}
+            {draggingBlockId && (snapLines.v.length > 0 || snapLines.h.length > 0) && (
+              <div className="pointer-events-none absolute inset-0 z-40">
+                {snapLines.v.map((x) => (
+                  <div
+                    key={`v${x}`}
+                    className="absolute inset-y-0 w-px bg-[var(--studio-select)]"
+                    style={{ left: `${x}%` }}
+                  />
+                ))}
+                {snapLines.h.map((y) => (
+                  <div
+                    key={`h${y}`}
+                    className="absolute inset-x-0 h-px bg-[var(--studio-select)]"
+                    style={{ top: `${y}%` }}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* Non-printing alignment guidelines */}
             {showGuides && (
               <div className="pointer-events-none absolute inset-0 z-30">
@@ -851,64 +953,30 @@ export function EditorCanvas() {
               </div>
             )}
 
-            {/* Empty Page Starter Layouts Gallery */}
+            {/* An empty page offers exactly one thing, and it is the same
+                thing `/` and `+` offer. There used to be three hardcoded
+                scaffolds here with luxury-fashion copy baked in, plus a link to
+                a fourth surface. */}
             {currentPage.blocks.length === 0 && !hotspotMode && (
               <div className="absolute inset-4 z-20 flex flex-col items-center justify-center p-6 text-center">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-neutral-900 border border-neutral-800 text-[var(--accent-vivid)] mb-3 shadow-md">
+                <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-neutral-800 bg-neutral-900 text-[var(--studio-select)] shadow-md">
                   <LayoutTemplate size={22} />
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-200">Start crafting this spread</h3>
-                <p className="text-xs text-neutral-400 max-w-xs mt-1 mb-5">
-                  Choose an editorial starter layout or add individual custom blocks.
+                <h3 className="text-sm font-semibold text-neutral-200">This page is empty</h3>
+                <p className="mt-1 mb-5 max-w-xs text-xs text-neutral-400">
+                  Add a block, or start from a layout.
                 </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full max-w-md">
-                  <button
-                    type="button"
-                    onClick={handleScaffoldSplit}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
-                  >
-                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
-                      📸 2-Column Split
-                    </span>
-                    <span className="text-[10px] text-neutral-400 leading-tight">
-                      Photo & details spread
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleScaffoldQuote}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
-                  >
-                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
-                      💬 Hero Quote
-                    </span>
-                    <span className="text-[10px] text-neutral-400 leading-tight">
-                      Monumental typography
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleScaffoldShoppable}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/90 text-neutral-300 hover:border-[var(--accent-vivid)] hover:text-white transition group shadow-sm text-left"
-                  >
-                    <span className="text-[11px] font-bold text-neutral-200 group-hover:text-[var(--accent-vivid)]">
-                      🛍️ Shoppable Pin
-                    </span>
-                    <span className="text-[10px] text-neutral-400 leading-tight">
-                      Product callout & CTA
-                    </span>
-                  </button>
-                </div>
-
                 <button
                   type="button"
-                  onClick={() => setShowBlockPicker(true)}
-                  className="mt-4 text-xs text-neutral-400 hover:text-[var(--accent-vivid)] underline transition font-medium"
+                  onClick={() => {
+                    setInsertIndex(null)
+                    setShowBlockPicker(true)
+                  }}
+                  className="flex items-center gap-2 rounded-full bg-white px-5 py-2 text-xs font-bold text-black shadow-lg transition-transform hover:scale-105"
                 >
-                  + Or pick individual blocks from library
+                  <Plus size={14} strokeWidth={2.5} />
+                  Insert
+                  <kbd className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] font-semibold">/</kbd>
                 </button>
               </div>
             )}
@@ -942,6 +1010,9 @@ export function EditorCanvas() {
                         onMoveDown={() => moveBlock(currentPage.id, block.id, 'down')}
                         onDuplicate={() => duplicateBlock(currentPage.id, block.id)}
                         onDelete={() => removeBlock(currentPage.id, block.id)}
+                        onCanvasDragStart={
+                          isCanvasPage ? (e) => beginBlockDrag(e, block.id) : undefined
+                        }
                         onInsertAfter={() => {
                           setInsertIndex(blockIndex + 1)
                           setShowBlockPicker(true)
@@ -969,15 +1040,21 @@ export function EditorCanvas() {
                 style={{ left: `${hotspot.x}%`, top: `${hotspot.y}%` }}
               >
                 <button
-                  onClick={(e) => {
+                  onPointerDown={(e) => {
                     e.stopPropagation()
                     useEditorStore.getState().selectHotspot(hotspot.id)
+                    beginHotspotDrag(e, hotspot.id)
                   }}
                   className={twMerge(
-                    "w-5 h-5 rounded-full border-2 border-white shadow-md cursor-pointer -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform",
-                    selectedHotspotId === hotspot.id ? "bg-white ring-2 ring-amber-400" : "bg-amber-400"
+                    'h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110',
+                    draggingHotspotId === hotspot.id
+                      ? 'scale-110 cursor-grabbing bg-white ring-2 ring-amber-400'
+                      : selectedHotspotId === hotspot.id
+                        ? 'cursor-grab bg-white ring-2 ring-amber-400'
+                        : 'cursor-grab bg-amber-400'
                   )}
-                  title={hotspot.label}
+                  title={`${hotspot.label} — drag to move, arrow keys to nudge`}
+                  aria-label={`Hotspot: ${hotspot.label || 'untitled'}. Drag to move.`}
                 />
                 
                 {/* Hover Peek */}
@@ -999,26 +1076,126 @@ export function EditorCanvas() {
               />
             ))}
         </div>
+
+          {spreadView && facingPage && currentSide !== 'right' && (
+            <FacingPage
+              page={facingPage}
+              index={facingIndex!}
+              bookId={book.id}
+              theme={book.theme}
+              width={pageWidth}
+              height={pageHeight}
+              side="right"
+            />
+          )}
+
+          {/* A cover, or a last page with nothing opposite it, is a half spread
+              in the reader too — showing the empty half is the honest thing. */}
+          {spreadView && !facingPage && (
+            <div
+              style={{ width: pageWidth, height: pageHeight }}
+              className={twMerge(
+                'grid place-items-center rounded-[3px] border border-dashed border-neutral-800 bg-neutral-950/40 text-center',
+                currentSide === 'right' ? 'order-first' : ''
+              )}
+            >
+              <p className="max-w-[70%] text-[11px] leading-4 text-neutral-600">
+                {currentPageIndex === 0
+                  ? 'The cover stands alone — readers see it by itself before the first spread.'
+                  : 'Nothing faces this page yet. Add one and it will pair up here.'}
+              </p>
+            </div>
+          )}
+          </div>
         </div>
       </div>
 
-      {/* Add Block button */}
-      <div className="px-4 py-3 border-t border-neutral-800 shrink-0 flex justify-center">
+      {/* Add block */}
+      <div className="flex shrink-0 justify-center border-t border-neutral-800 px-4 py-3">
         <button
-          onClick={() => setShowBlockPicker(true)}
+          onClick={() => {
+            setInsertIndex(null)
+            setShowBlockPicker(true)
+          }}
+          title="Insert a block or a layout (/)"
           className="flex items-center gap-2 rounded-full bg-white px-6 py-2 text-xs font-bold text-black shadow-lg transition-all hover:scale-105 hover:bg-neutral-200 active:scale-98"
         >
           <Plus size={14} strokeWidth={2.5} />
-          Add Block
+          Insert
+          <kbd className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] font-semibold">/</kbd>
         </button>
       </div>
 
       {showBlockPicker && (
-        <BlockPickerModal
-          onPick={handleBlockPick}
-          onClose={() => setShowBlockPicker(false)}
+        <InsertPanel
+          onInsertBlock={handleInsertBlock}
+          onInsertLayout={handleInsertLayout}
+          onClose={() => {
+            setInsertIndex(null)
+            setShowBlockPicker(false)
+          }}
         />
       )}
     </div>
+  )
+}
+
+/**
+ * The page opposite the one being edited.
+ *
+ * Read-only on purpose: the sortable context, the hotspot handlers and the
+ * insert index are all bound to the current page, and making both halves live
+ * would mean two of each. What the author needs first is simply to *see* what
+ * faces what and where the gutter falls — one click makes this the live page.
+ */
+function FacingPage({
+  page,
+  index,
+  bookId,
+  theme,
+  width,
+  height,
+  side,
+}: {
+  page: Page
+  index: number
+  bookId: string
+  theme: Book['theme']
+  width: number
+  height: number
+  side: 'left' | 'right'
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => useEditorStore.getState().setCurrentPageIndex(index)}
+      style={{ width, height }}
+      title={`Edit page ${page.page_number}`}
+      aria-label={`Page ${page.page_number} — click to edit it`}
+      className={twMerge(
+        'group relative shrink-0 overflow-hidden bg-white text-left ring-1 ring-black/40 transition',
+        side === 'left'
+          ? 'order-first rounded-l-[3px] shadow-[inset_-14px_0_20px_-16px_rgba(0,0,0,0.55)]'
+          : 'rounded-r-[3px] shadow-[inset_14px_0_20px_-16px_rgba(0,0,0,0.55)]'
+      )}
+    >
+      <div className="pointer-events-none absolute inset-0">
+        <PageRenderer
+          page={page}
+          bookId={bookId}
+          theme={theme}
+          className="h-full w-full"
+          pageSide={side}
+        />
+      </div>
+
+      {/* Dimmed until hovered, so the eye stays on the page being edited while
+          the composition of the whole spread is still readable. */}
+      <span className="pointer-events-none absolute inset-0 bg-neutral-950/25 transition-colors group-hover:bg-neutral-950/5" />
+
+      <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-900/90 px-2.5 py-1 text-[10px] font-semibold text-neutral-300 opacity-0 shadow transition-opacity group-hover:opacity-100">
+        Page {page.page_number} — click to edit
+      </span>
+    </button>
   )
 }

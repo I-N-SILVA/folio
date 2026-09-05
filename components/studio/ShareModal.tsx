@@ -9,7 +9,6 @@ import {
   Share2,
   Download,
   Link2,
-  Video,
   Send,
   Mail,
   Smartphone,
@@ -17,7 +16,6 @@ import {
 import { Modal } from '@/components/ui/Modal'
 import { trackProduct } from '@/lib/product-analytics'
 import { QRCodeStudioModal } from './QRCodeStudioModal'
-import { SocialTeaserModal } from './SocialTeaserModal'
 import { generateOfflineBundle } from '@/lib/offline-export'
 import { toast } from 'sonner'
 import type { Book } from '@/lib/book-schema'
@@ -32,7 +30,6 @@ interface ShareModalProps {
 export function ShareModal({ slug, published, book, onClose }: ShareModalProps) {
   const [tab, setTab] = useState<'links' | 'qr'>('links')
   const [showStudio, setShowStudio] = useState(false)
-  const [showTeaser, setShowTeaser] = useState(false)
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const url = `${origin}/book/${slug}`
   const embedCode = `<iframe src="${origin}/embed/${slug}" width="100%" height="600" style="border:0" allowfullscreen title="Interactive edition"></iframe>`
@@ -177,15 +174,7 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
       )}
 
       {/* Flagship Sharing & Export Actions Row */}
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => setShowTeaser(true)}
-          className="flex items-center justify-center gap-1.5 rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-subtle)] p-2.5 text-xs font-bold text-[var(--qlico-ink)] transition hover:bg-[var(--tint)] shadow-sm"
-        >
-          <Video size={14} className="text-violet-500" />
-          Social Teaser Studio
-        </button>
+      <div className="mt-4 grid grid-cols-1 gap-2">
         <button
           type="button"
           onClick={handleExportOfflineHtml}
@@ -269,14 +258,6 @@ export function ShareModal({ slug, published, book, onClose }: ShareModalProps) 
           onClose={() => setShowStudio(false)}
           bookTitle={book?.title || ''}
           bookSlug={slug}
-        />
-      )}
-
-      {showTeaser && book && (
-        <SocialTeaserModal
-          isOpen={showTeaser}
-          onClose={() => setShowTeaser(false)}
-          book={book}
         />
       )}
 

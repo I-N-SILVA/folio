@@ -105,6 +105,76 @@
   }
 }
 
+/* ─── Studio (editor) palette ──────────────────────────────────────────────
+   The editor is dark in both themes — that decision is recorded above. What it
+   never had was its own tokens, so it hardcoded `neutral-*` and reached into
+   the brand tokens for interface state. That is how four controls became
+   invisible: `--accent-vivid` is #000 in light and #fff in dark, and the editor
+   used it to ring a selected block *on a white page*. With dark theme on, the
+   selection ring was white on white; the block-type label was black on
+   near-black in light mode.
+
+   Two rules keep that from recurring:
+
+   1. Studio chrome reads from `--studio-*`, never from the author-facing brand
+      tokens. These are fixed values, not theme-dependent ones, because the
+      editor does not follow the theme.
+   2. `--studio-select` is a *functional* colour, used for selection, drag
+      targets, insert affordances and focus rings, and used nowhere in author
+      content. A monochrome brand accent cannot mark a selection on a white
+      page — that is not a bug to fix but a job the accent can never do. */
+:root {
+  --studio-ground: #0b0c0f;
+  --studio-panel: #131519;
+  --studio-raised: #1b1e24;
+  --studio-raised-2: #23272f;
+  --studio-line: #2a2f38;
+  --studio-line-soft: #1e222a;
+  --studio-ink: #edeff3;
+  --studio-ink-soft: #99a1ad;
+  --studio-ink-faint: #69707c;
+  --studio-select: #5590ff;
+  --studio-select-soft: rgba(85, 144, 255, 0.15);
+  --studio-ok: #4ed8a0;
+  --studio-warn: #f0b44c;
+  --studio-stop: #ff7c6f;
+}
+
+
+/* ─── Canvas pages ────────────────────────────────────────────────────────
+   A page laid out as a canvas positions each block itself, from the `frame`
+   on the block. The rule that matters is the fallback: below a page width
+   that can hold a composition, blocks stack in paint order instead, because
+   a layout composed at A4 is unreadable at 380px and half a reader's
+   audience is on a phone.
+
+   It is a *container* query, not a viewport one, so the same rule is obeyed by
+   the reader, the embed, the page thumbnails and — the reason it has to be a
+   container query — the editor's own mobile simulator, which is a narrow page
+   inside a wide window. One rule, every surface, exactly as with
+   lib/page-geometry. */
+.qlico-canvas {
+  container-type: inline-size;
+  position: relative;
+}
+
+/* Stacked by default: the narrow case is the safe one. */
+.qlico-canvas-block {
+  position: static;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+@container (min-width: 400px) {
+  .qlico-canvas-block {
+    position: absolute;
+    left: var(--fx);
+    top: var(--fy);
+    width: var(--fw);
+    margin-bottom: 0;
+  }
+}
+
 /* Registering the brand colours with Tailwind's theme gives them real
    utilities — bg-accent, text-muted, border-hairline — instead of every call
    site spelling out bg-[var(--accent)]. This matters beyond tidiness: a colour
@@ -124,6 +194,12 @@
   --color-vellum: var(--qlico-vellum);
   --color-subtle: var(--qlico-subtle);
   --color-hairline: var(--qlico-border);
+  --color-studio-ground: var(--studio-ground);
+  --color-studio-panel: var(--studio-panel);
+  --color-studio-raised: var(--studio-raised);
+  --color-studio-line: var(--studio-line);
+  --color-studio-ink: var(--studio-ink);
+  --color-studio-select: var(--studio-select);
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }

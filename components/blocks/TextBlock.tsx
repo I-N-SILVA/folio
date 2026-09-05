@@ -61,6 +61,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
   const [content, setContent] = useState(block.content)
   const { selectedBlockId, updateBlock } = useEditorStore()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const isSelected = selectedBlockId === block.id
 
   useEffect(() => {
     setContent(block.content)
@@ -196,7 +197,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
             type="button"
             onClick={handleSave}
             title="Done editing (Enter / Blur)"
-            className="flex items-center gap-1 rounded-full bg-[var(--accent-vivid)] px-2 py-0.5 text-[10px] font-bold text-white shadow hover:opacity-90 transition"
+            className="flex items-center gap-1 rounded-full bg-[var(--studio-select)] px-2 py-0.5 text-[10px] font-bold text-white shadow hover:opacity-90 transition"
           >
             <Check size={11} strokeWidth={3} />
             Done
@@ -211,7 +212,7 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
           onKeyDown={handleKeyDown}
           className={twMerge(
             containerClasses,
-            'w-full bg-black/5 dark:bg-white/5 border border-[var(--accent-vivid)] outline-none resize-none ring-2 ring-[var(--accent-vivid)]/30 rounded-lg p-2 shadow-inner'
+            'w-full bg-black/5 dark:bg-white/5 border border-[var(--studio-select)] outline-none resize-none ring-2 ring-[var(--studio-select)]/30 rounded-lg p-2 shadow-inner'
           )}
           style={{ minHeight: '1.5em', overflow: 'hidden', ...customInlineStyle }}
           rows={Math.max(1, content.split('\n').length)}
@@ -221,9 +222,20 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
   }
 
   return (
+    /*
+     * Click selects, a second click edits — the convention every other editor
+     * uses. This used to need a double-click, advertised only through a `title`
+     * attribute, so most authors never found inline editing at all. The block
+     * wrapper handles the first click (selection); by the time a click reaches
+     * here on an already-selected block, the author means to type.
+     */
     <div
+      onClick={() => {
+        if (!pageId) return
+        if (isSelected) setIsEditing(true)
+      }}
       onDoubleClick={() => pageId && setIsEditing(true)}
-      title={pageId ? 'Double-click to edit text directly on canvas' : undefined}
+      title={pageId ? (isSelected ? 'Click again to edit' : undefined) : undefined}
       className={twMerge(
         containerClasses,
         'prose-a:text-[var(--primary)] prose-a:underline hover:prose-a:opacity-80 transition-all'

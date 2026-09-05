@@ -12,6 +12,25 @@ const layoutStyles: Record<Page['layout'], string> = {
   grid: 'flex flex-col justify-center p-6 md:p-8',
   text: 'flex flex-col gap-4 p-6 md:p-10 justify-center max-w-prose mx-auto',
   blank: 'p-6 md:p-8 flex flex-col justify-start',
+  // A canvas page owns its own edges: blocks carry their own position and
+  // padding here would shift every one of them.
+  canvas: 'p-0',
+}
+
+/**
+ * A frame for a block that has never been positioned.
+ *
+ * Switching a page to canvas seeds every block from its order, so the page the
+ * author was looking at is still recognisable the instant they switch — and
+ * switching back is lossless, because the flow layout ignores `frame` rather
+ * than the canvas destroying it.
+ */
+export function defaultFrame(index: number) {
+  return { x: 8, y: Math.min(92, 8 + index * 15), w: 84, z: index }
+}
+
+function byPaintOrder(a: { frame?: { z: number } }, b: { frame?: { z: number } }) {
+  return (a.frame?.z ?? 0) - (b.frame?.z ?? 0)
 }
 
 /** Relative luminance of a hex color (0 = black, 1 = white). */
@@ -40,6 +59,7 @@ interface PageRendererProps {
 
 export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
   ({ page, bookId, theme, className, hideGutter, pageSide = 'single', renderBlockWrapper }, ref) => {
+    const isCanvas = page.layout === 'canvas'
     const bg = page.background
 
     // Resolve theme colors
@@ -157,16 +177,42 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
         <div
           className={twMerge(
             'relative z-10 w-full',
-            page.layout === 'split'
+            isCanvas
+              ? 'qlico-canvas h-full'
+              : page.layout === 'split'
               ? 'grid grid-cols-1 md:grid-cols-2 gap-6 items-center'
               : page.layout === 'grid'
               ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 items-start'
               : 'flex flex-col gap-4'
           )}
         >
-          {page.blocks.map((block) => {
+          {/*
+            On a canvas page, DOM order is paint order, so blocks are sorted by
+            `z` — which is also the order they stack in when the page is too
+            narrow to hold a composition (see `.qlico-canvas` in globals.css).
+            A block that has never been positioned falls back to a frame derived
+            from its index, so switching a page to canvas never scatters it.
+          */}
+          {(isCanvas ? [...page.blocks].sort(byPaintOrder) : page.blocks).map((block, index) => {
             const blockElement = <BlockRenderer key={block.id} block={block} bookId={bookId} pageId={page.id} />
-            return renderBlockWrapper ? renderBlockWrapper(block, blockElement) : blockElement
+            const wrapped = renderBlockWrapper ? renderBlockWrapper(block, blockElement) : blockElement
+            if (!isCanvas) return wrapped
+            const frame = block.frame ?? defaultFrame(index)
+            return (
+              <div
+                key={block.id}
+                className="qlico-canvas-block"
+                style={
+                  {
+                    '--fx': `${frame.x}%`,
+                    '--fy': `${frame.y}%`,
+                    '--fw': `${frame.w}%`,
+                  } as React.CSSProperties
+                }
+              >
+                {wrapped}
+              </div>
+            )
           })}
         </div>
 

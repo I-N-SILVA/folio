@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
-import { ShoppingBag, ExternalLink, Check, ImageOff, Tag } from 'lucide-react'
+import { ShoppingBag, ExternalLink, ImageOff, Tag } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
-import { toast } from 'sonner'
 import type { ProductGridBlock as ProductGridBlockType, ProductItem } from '@/lib/book-schema'
 
 const aspectStyles: Record<string, string> = {
@@ -28,47 +26,25 @@ const cardStyles: Record<string, string> = {
 }
 
 export function ProductGridBlock({ block }: { block: ProductGridBlockType }) {
-  const [addedIds, setAddedIds] = useState<Record<string, boolean>>({})
 
   const cols = block.columns ?? '2'
   const colCls = colStyles[cols] ?? 'grid-cols-1 sm:grid-cols-2'
   const aspectCls = aspectStyles[block.aspectRatio ?? '1/1'] ?? 'aspect-square'
   const cardCls = cardStyles[block.cardStyle ?? 'bordered'] ?? cardStyles.bordered
 
+  /**
+   * Every product links out to wherever the author actually sells it.
+   *
+   * There used to be a third path: an "Add to Bag" that filled an in-reader cart
+   * ending at a checkout which collected a card number and confirmed an order
+   * that never existed. QLICO takes no payment, so it holds no cart — a product
+   * is a link to the author's own shop, which is the only honest thing it can be
+   * and the only one with no payouts to arrange.
+   */
   const handleAction = (item: ProductItem, e: React.MouseEvent) => {
     e.stopPropagation()
-
-    if (item.action === 'checkout' && item.buyUrl) {
-      window.open(item.buyUrl, '_blank')
-      return
-    }
-
-    if (item.action === 'link' && item.buyUrl) {
-      window.open(item.buyUrl, '_blank')
-      return
-    }
-
-    // Default 'cart' action: dispatch live event to magazine's CartDrawer
-    const numeric = parseFloat(item.price.replace(/[^0-9.]/g, '')) || 0
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('folio:add-to-cart', {
-          detail: {
-            id: item.id,
-            title: item.name,
-            price: item.price,
-            numericPrice: numeric,
-            image: item.image,
-          },
-        })
-      )
-    }
-
-    setAddedIds((prev) => ({ ...prev, [item.id]: true }))
-    toast.success(`Added ${item.name} to your shopping bag!`)
-    setTimeout(() => {
-      setAddedIds((prev) => ({ ...prev, [item.id]: false }))
-    }, 2000)
+    if (!item.buyUrl) return
+    window.open(item.buyUrl, '_blank', 'noopener,noreferrer')
   }
 
   const items = block.items ?? []
@@ -88,7 +64,6 @@ export function ProductGridBlock({ block }: { block: ProductGridBlockType }) {
   return (
     <div className={twMerge('w-full grid gap-4 items-stretch', colCls)}>
       {items.map((item) => {
-        const isAdded = Boolean(addedIds[item.id])
 
         return (
           <div
@@ -153,33 +128,19 @@ export function ProductGridBlock({ block }: { block: ProductGridBlockType }) {
                 )}
               </div>
 
-              <button
-                type="button"
-                onClick={(e) => handleAction(item, e)}
-                className={twMerge(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 select-none shadow-md',
-                  isAdded
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-white text-black hover:bg-neutral-200 active:scale-95'
-                )}
-              >
-                {isAdded ? (
-                  <>
-                    <Check size={12} strokeWidth={3} />
-                    <span>Added</span>
-                  </>
-                ) : item.action === 'checkout' ? (
-                  <>
-                    <ExternalLink size={12} />
-                    <span>{item.ctaLabel || 'Buy Now'}</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag size={12} />
-                    <span>{item.ctaLabel || 'Add to Bag'}</span>
-                  </>
-                )}
-              </button>
+              {/* A product with nowhere to buy it shows no button. The grid is
+                  a catalogue: it can list, price and describe, and it links to
+                  the author's own shop — it cannot take the money. */}
+              {item.buyUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => handleAction(item, e)}
+                  className="flex shrink-0 select-none items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-md transition-all hover:bg-neutral-200 active:scale-95"
+                >
+                  <ExternalLink size={12} />
+                  <span>{item.ctaLabel || 'View'}</span>
+                </button>
+              )}
             </div>
           </div>
         )

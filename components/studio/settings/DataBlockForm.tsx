@@ -55,7 +55,7 @@ export function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: str
 
   return (
     <div className="space-y-3">
-      <p className="rounded-md bg-[var(--accent-vivid)]/10 px-2.5 py-2 text-[11px] leading-4 text-[#c7b8ff]">
+      <p className="rounded-md bg-[var(--studio-select)]/10 px-2.5 py-2 text-[11px] leading-4 text-[#c7b8ff]">
         Binds to a JSON source and updates after publish. Change the source data
         and every live edition reflects it — no re-export.
       </p>

@@ -32,7 +32,7 @@ function LockedFeature({
             <Link
               href="/account"
               target="_blank"
-              className="font-semibold text-[var(--accent-vivid)] hover:underline"
+              className="font-semibold text-[var(--studio-select)] hover:underline"
             >
               See plans
             </Link>
@@ -181,7 +181,7 @@ export function BookSettingsForm({ book }: { book: any }) {
                 className={twMerge(
                   'rounded-xl border p-2.5 text-left transition text-xs',
                   watch('headingFont') === pair.heading
-                    ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/10 text-white font-bold'
+                    ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10 text-white font-bold'
                     : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
                 )}
               >

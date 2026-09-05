@@ -66,7 +66,9 @@ function Launcher() {
   // back button closes the dialog like people expect it to.
   if (searchParams.get('new') !== '1') return null
 
-  return <CreateBookModal onClose={close} />
+  // `?template=` comes from the gallery's "Start from this", so a visitor who
+  // read an edition lands on that edition rather than on a chooser.
+  return <CreateBookModal onClose={close} initialTemplateId={searchParams.get('template') ?? undefined} />
 }
 
 export function CreateBookLauncher() {

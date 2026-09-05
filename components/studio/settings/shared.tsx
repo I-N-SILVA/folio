@@ -34,7 +34,7 @@ export function Field({
  * ties the inspector to the selection highlight on the canvas.
  */
 const controlBase =
-  'w-full rounded-lg border border-neutral-700/80 bg-neutral-950/60 px-2.5 py-2 text-sm text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 hover:border-neutral-600 focus:border-[var(--accent-vivid)] focus:ring-2 focus:ring-[var(--accent-vivid)]/25'
+  'w-full rounded-lg border border-neutral-700/80 bg-neutral-950/60 px-2.5 py-2 text-sm text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 hover:border-neutral-600 focus:border-[var(--studio-select)] focus:ring-2 focus:ring-[var(--studio-select)]/25'
 
 export const inputCls = controlBase
 
@@ -85,7 +85,7 @@ export function Toggle({
       <span
         className={twMerge(
           'relative h-5 w-9 shrink-0 rounded-full transition-colors',
-          checked ? 'bg-[var(--accent-vivid)]' : 'bg-neutral-700'
+          checked ? 'bg-[var(--studio-select)]' : 'bg-neutral-700'
         )}
       >
         <span
@@ -115,7 +115,7 @@ export function IconPicker({ value, onChange }: { value?: string; onChange: (nam
             className={twMerge(
               'flex aspect-square items-center justify-center rounded-lg border transition-colors',
               active
-                ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/20 text-[var(--accent-vivid)]'
+                ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/20 text-[var(--studio-select)]'
                 : 'border-neutral-700/80 bg-neutral-950/60 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200'
             )}
           >

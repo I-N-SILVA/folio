@@ -1,12 +1,11 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { Check } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 
 export function Features() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [addedToBag, setAddedToBag] = useState(false)
   
   // Track scroll progress within this container (which is 400vh tall)
   const { scrollYProgress } = useScroll({
@@ -59,8 +58,8 @@ export function Features() {
         {/* --- LEFT TEXT FEATURES --- */}
         <div className="absolute top-12 md:top-0 md:left-[10%] w-full md:w-[350px] md:h-full flex items-start md:items-center justify-center z-20 pointer-events-none">
           <motion.div style={{ opacity: f1Opacity, y: f1Y, filter: f1Blur }} className="absolute px-6 md:px-0 text-center md:text-left">
-            <h2 className="font-display text-4xl sm:text-5xl text-white mb-4 [text-shadow:0_4px_32px_rgba(0,0,0,1),_0_2px_8px_rgba(0,0,0,1)]">Shoppable Pages</h2>
-            <p className="text-zinc-200 text-lg leading-relaxed [text-shadow:0_2px_16px_rgba(0,0,0,1),_0_1px_4px_rgba(0,0,0,1)] bg-black/40 md:bg-black/20 p-4 md:-ml-4 rounded-xl backdrop-blur-md border border-white/5">Embed rich checkouts and product tags directly onto the page. Your readers never have to leave the edition to buy.</p>
+            <h2 className="font-display text-4xl sm:text-5xl text-white mb-4 [text-shadow:0_4px_32px_rgba(0,0,0,1),_0_2px_8px_rgba(0,0,0,1)]">Pages that sell</h2>
+            <p className="text-zinc-200 text-lg leading-relaxed [text-shadow:0_2px_16px_rgba(0,0,0,1),_0_1px_4px_rgba(0,0,0,1)] bg-black/40 md:bg-black/20 p-4 md:-ml-4 rounded-xl backdrop-blur-md border border-white/5">Tag any product on the page with its price and a link straight to your shop — and see which pieces readers actually opened.</p>
           </motion.div>
           
           <motion.div style={{ opacity: f3Opacity, y: f3Y, filter: f3Blur }} className="absolute px-6 md:px-0 text-center md:text-left">
@@ -106,27 +105,13 @@ export function Features() {
                 </div>
                 <div className="text-white font-medium text-xs md:text-sm truncate">Oversized Trench</div>
                 <div className="text-zinc-400 text-[10px] md:text-xs">$450 • In Stock</div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAddedToBag(true)
-                    setTimeout(() => setAddedToBag(false), 2500)
-                  }}
-                  className={`mt-2 w-full py-1.5 text-center text-[10px] md:text-xs font-semibold rounded flex items-center justify-center gap-1 transition-all ${
-                    addedToBag
-                      ? 'bg-emerald-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.5)]'
-                      : 'bg-white text-black hover:bg-zinc-200 active:scale-95'
-                  }`}
-                >
-                  {addedToBag ? (
-                    <>
-                      <Check size={12} strokeWidth={3} />
-                      <span>Added to Bag!</span>
-                    </>
-                  ) : (
-                    <span>Add to Bag</span>
-                  )}
-                </button>
+                {/* The demo shows what the block actually does: it links to the
+                    author's own shop. It used to mime an in-edition bag, which
+                    the product no longer has. */}
+                <span className="mt-2 flex w-full items-center justify-center gap-1 rounded bg-white py-1.5 text-center text-[10px] font-semibold text-black md:text-xs">
+                  <ExternalLink size={11} />
+                  <span>View in shop</span>
+                </span>
               </div>
             </motion.div>
 

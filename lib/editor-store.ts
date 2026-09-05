@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Book, Page, Block, Hotspot } from './book-schema'
+import type { Book, Page, Block, Hotspot, Frame } from './book-schema'
 
 interface EditorStore {
   book: Book | null
@@ -25,6 +25,13 @@ interface EditorStore {
 
   updatePage: (pageId: string, updates: Partial<Page>) => void
   updateBlock: (pageId: string, blockId: string, updates: Partial<Block>) => void
+  /** Move or resize a block on a canvas page. */
+  setBlockFrame: (pageId: string, blockId: string, frame: Frame) => void
+  /**
+   * Switch a page between flow and canvas, seeding frames on the way in so the
+   * page never scatters.
+   */
+  setPageLayoutMode: (pageId: string, layout: Page['layout'], seed?: Record<string, Frame>) => void
   addBlock: (pageId: string, block: Block) => void
   insertBlockAt: (pageId: string, block: Block, index: number) => void
   duplicateBlock: (pageId: string, blockId: string) => void
@@ -32,10 +39,14 @@ interface EditorStore {
   moveBlock: (pageId: string, blockId: string, direction: 'up' | 'down') => void
 
   addHotspot: (pageId: string, hotspot: Hotspot) => void
+  /** Add hotspots across many pages as a single undoable step. */
+  addHotspotsBatch: (byPage: { pageId: string; hotspots: Hotspot[] }[]) => void
   updateHotspot: (pageId: string, hotspotId: string, updates: Partial<Hotspot>) => void
   removeHotspot: (pageId: string, hotspotId: string) => void
 
   addPage: () => void
+  /** Insert a page directly after `afterIndex`, optionally pre-filled. */
+  insertPage: (afterIndex: number, page?: Partial<Pick<Page, 'layout' | 'blocks'>>) => void
   removePage: (pageId: string) => void
   reorderPages: (fromIndex: number, toIndex: number) => void
   setPageBlocks: (pageId: string, blocks: Block[]) => void
@@ -159,6 +170,60 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   }),
 
+  setBlockFrame: (pageId, blockId, frame) => set((state) => {
+    if (!state.book?.pages) return state
+    // Keyed history: a drag is hundreds of updates, and each one landing its own
+    // snapshot would bury every earlier edit under a single gesture.
+    return {
+      isDirty: true,
+      ...coalescedHistory(state, state.book, `frame:${blockId}`),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) =>
+          p.id === pageId
+            ? {
+                ...p,
+                blocks: p.blocks.map((b) => (b.id === blockId ? ({ ...b, frame } as Block) : b)),
+              }
+            : p
+        ),
+      },
+    }
+  }),
+
+  setPageLayoutMode: (pageId, layout, seed) => set((state) => {
+    if (!state.book?.pages) return state
+    return {
+      isDirty: true,
+      ...snapshotHistory(state, state.book),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) => {
+          if (p.id !== pageId) return p
+          if (layout !== 'canvas') return { ...p, layout }
+          // Seed from where the blocks actually are, so switching to canvas
+          // shows the same page rather than a pile in the corner. `seed` is
+          // measured off the live flow layout by the editor; the index-derived
+          // fallback is for callers with no DOM to measure. A block that already
+          // has a frame keeps it — switching back and forth is lossless, because
+          // flow simply ignores `frame` rather than the canvas destroying it.
+          return {
+            ...p,
+            layout,
+            blocks: p.blocks.map((b, i) =>
+              b.frame
+                ? b
+                : ({
+                    ...b,
+                    frame: seed?.[b.id] ?? { x: 8, y: Math.min(92, 8 + i * 15), w: 84, z: i },
+                  } as Block)
+            ),
+          }
+        }),
+      },
+    }
+  }),
+
   addBlock: (pageId, block) => set((state) => {
     if (!state.book?.pages) return state
     return {
@@ -262,6 +327,30 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   }),
 
+  /**
+   * Everything the detector found, in one step.
+   *
+   * `addHotspot` snapshots history per call, so accepting 21 detected pins
+   * across 24 pages would have cost 21 presses of ⌘Z to undo. The post-import
+   * step promises "you can undo the whole thing" — this is what makes that
+   * true.
+   */
+  addHotspotsBatch: (byPage) => set((state) => {
+    if (!state.book?.pages) return state
+    const found = new Map(byPage.map((entry) => [entry.pageId, entry.hotspots]))
+    return {
+      isDirty: true,
+      ...snapshotHistory(state, state.book),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) => {
+          const extra = found.get(p.id)
+          return extra?.length ? { ...p, hotspots: [...p.hotspots, ...extra] } : p
+        }),
+      },
+    }
+  }),
+
   updateHotspot: (pageId, hotspotId, updates) => set((state) => {
     if (!state.book?.pages) return state
     return {
@@ -310,6 +399,39 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       ...snapshotHistory(state, state.book),
       book: { ...state.book, pages: [...pages, newPage] },
       currentPageIndex: pages.length,
+    }
+  }),
+
+  /**
+   * Insert a page where the author is, rather than at the end.
+   *
+   * `addPage` only appends, so adding a page after page 3 of 20 meant appending
+   * and then dragging it back seventeen places. This is also what the Layouts
+   * tab uses: applying a layout used to overwrite the current page's blocks and
+   * apologise in a toast afterwards.
+   */
+  insertPage: (afterIndex, seed) => set((state) => {
+    if (!state.book) return state
+    const pages = state.book.pages ?? []
+    const at = Math.min(Math.max(afterIndex + 1, 0), pages.length)
+    const newPage: Page = {
+      id: crypto.randomUUID(),
+      book_id: state.book.id,
+      page_number: at + 1,
+      type: 'content',
+      layout: seed?.layout ?? 'text',
+      blocks: seed?.blocks ?? [],
+      hotspots: [],
+    }
+    const next = [...pages.slice(0, at), newPage, ...pages.slice(at)]
+      .map((p, i) => ({ ...p, page_number: i + 1 }))
+    return {
+      isDirty: true,
+      ...snapshotHistory(state, state.book),
+      book: { ...state.book, pages: next },
+      currentPageIndex: at,
+      selectedBlockId: null,
+      selectedHotspotId: null,
     }
   }),
 

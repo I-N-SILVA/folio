@@ -18,8 +18,8 @@ const SAMPLE_PRODUCTS: ProductItem[] = [
     image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
     description: 'Handcrafted heavy mulberry silk with horn buttons.',
     badge: 'Best Seller',
-    action: 'cart',
-    ctaLabel: 'Add to Bag',
+    action: 'link',
+    ctaLabel: 'View',
     inStock: true,
   },
   {
@@ -30,8 +30,8 @@ const SAMPLE_PRODUCTS: ProductItem[] = [
     image: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?auto=format&fit=crop&w=1200&q=85',
     description: '100% Mongolian organic combed cashmere yarn.',
     badge: 'New Season',
-    action: 'cart',
-    ctaLabel: 'Add to Bag',
+    action: 'link',
+    ctaLabel: 'View',
     inStock: true,
   },
   {
@@ -41,8 +41,8 @@ const SAMPLE_PRODUCTS: ProductItem[] = [
     image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85',
     description: 'Relaxed tailored dropped silhouette with French seams.',
     badge: 'Limited Run',
-    action: 'cart',
-    ctaLabel: 'Add to Bag',
+    action: 'link',
+    ctaLabel: 'View',
     inStock: true,
   },
 ]
@@ -170,12 +170,12 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                 price: '$190',
                 image: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
                 description: 'Product specifications and details.',
-                action: 'cart',
-                ctaLabel: 'Add to Bag',
+                action: 'link',
+                ctaLabel: 'View',
                 inStock: true,
               })
             }}
-            className="flex items-center gap-1 text-xs font-semibold text-[var(--accent-vivid)] hover:underline"
+            className="flex items-center gap-1 text-xs font-semibold text-[var(--studio-select)] hover:underline"
           >
             <Plus size={13} />
             Add Product
@@ -278,28 +278,26 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Button Action">
-                <select {...register(`items.${idx}.action` as const)} className={selectCls}>
-                  <option value="cart">Add to Bag (In-Edition Drawer)</option>
-                  <option value="checkout">Buy Now (Direct Checkout)</option>
-                  <option value="link">External Product Link</option>
-                </select>
-              </Field>
-              <Field label="Button Label">
-                <input
-                  {...register(`items.${idx}.ctaLabel` as const)}
-                  className={inputCls}
-                  placeholder="Add to Bag"
-                />
-              </Field>
-            </div>
-
-            <Field label="Checkout / Store URL">
+            {/* There is nothing to choose between any more: a product links to
+                where the author sells it. The alternative — an in-edition bag —
+                ended at a checkout QLICO could not honour, so it is gone. */}
+            <Field label="Where to buy it">
               <input
                 {...register(`items.${idx}.buyUrl` as const)}
                 className={inputCls}
-                placeholder="https://yourstore.com/checkout or Stripe payment link"
+                placeholder="https://your-shop.com/the-product"
+              />
+            </Field>
+            <p className="-mt-1 text-[11px] leading-4 text-neutral-500">
+              Your own product page, Stripe Payment Link or Shopify listing. Leave it empty and
+              the product still shows with its price and description — just without a button.
+            </p>
+
+            <Field label="Button label">
+              <input
+                {...register(`items.${idx}.ctaLabel` as const)}
+                className={inputCls}
+                placeholder="View"
               />
             </Field>
           </div>

@@ -44,7 +44,7 @@ export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIco
         onTouchStart={handleTouchStart}
         aria-label={hotspot.label}
       >
-        <span className="flex items-center gap-1.5 rounded-full bg-black/90 px-3 py-1 text-white shadow-2xl border border-white/20 backdrop-blur-md transition-all group-hover:bg-[var(--accent-vivid)] group-hover:border-transparent">
+        <span className="flex items-center gap-1.5 rounded-full bg-black/90 px-3 py-1 text-white shadow-2xl border border-white/20 backdrop-blur-md transition-all group-hover:bg-black group-hover:border-white/40">
           <ShoppingBag size={12} className="text-amber-300" />
           <span className="text-[11px] font-bold tracking-tight">
             {hotspot.price ? hotspot.price : hotspot.label}
@@ -127,7 +127,7 @@ export function HotspotIcon({ hotspot, bookId, pageNumber, onClick }: HotspotIco
       <span className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/95 text-neutral-900 shadow-xl border border-black/10 hover:scale-110 transition-transform">
         {createElement(hotspotIcon(hotspot.icon), {
           size: 15,
-          className: isEcomAction ? 'text-[var(--accent-vivid)]' : 'text-neutral-900',
+          className: isEcomAction ? 'text-amber-600' : 'text-neutral-900',
         })}
       </span>
       {hotspot.action === 'checkout' && hotspot.price && (

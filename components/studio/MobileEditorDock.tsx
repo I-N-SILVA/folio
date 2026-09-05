@@ -165,7 +165,7 @@ function DockTab({
         // 44px min target — these are the primary controls on touch.
         'flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors',
         active
-          ? 'bg-[var(--accent-vivid)]/20 text-white'
+          ? 'bg-[var(--studio-select)]/20 text-white'
           : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'
       )}
     >

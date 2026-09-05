@@ -334,7 +334,7 @@ export function Hero() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-white/80"></span>
                 </span>
-                QLICO 2.0
+                Publishing, perfected
               </motion.div>
               
               <motion.h1 
@@ -343,8 +343,13 @@ export function Hero() {
                 transition={{ duration: 1.2, delay: 0.4, ease: "easeOut" }}
                 className="font-display text-5xl sm:text-6xl md:text-8xl lg:text-[7rem] leading-[1.05] tracking-tight text-white mb-6 font-normal drop-shadow-[0_0_40px_rgba(255,255,255,0.2)]"
               >
-                Publishing, <br/>
-                <span className="italic text-zinc-400">Perfected.</span>
+                {/* The measurement claim, restored. "Publishing, Perfected" and
+                    "Unmatched elegance" are claims Issuu, Flipsnack and
+                    FlippingBook all make; this one is the only thing QLICO can
+                    say that they cannot, and it is why the analytics exist.
+                    BRAND.md and HANDOVER.md both record it. */}
+                Send a PDF. <br/>
+                <span className="italic text-zinc-400">See who actually read it.</span>
               </motion.h1>
               
               <motion.p 
@@ -353,7 +358,8 @@ export function Hero() {
                 transition={{ duration: 1, delay: 0.6 }}
                 className="max-w-2xl text-lg md:text-xl font-normal leading-relaxed text-zinc-400 drop-shadow-lg"
               >
-                Transform static PDFs into immersive, interactive editions. No code required. Unmatched elegance.
+                Drop in a PDF and it becomes an interactive edition you can send as one link —
+                then watch which pages people finish, which links they click, and who came back.
               </motion.p>
               
               <motion.div 

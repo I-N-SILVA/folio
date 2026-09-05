@@ -143,7 +143,7 @@ export function HotspotSettingsForm({
               className={twMerge(
                 'rounded-lg border px-2 py-1.5 text-left transition text-xs',
                 beaconStyle === style.id
-                  ? 'border-[var(--accent-vivid)] bg-[var(--accent-vivid)]/10 text-white font-bold'
+                  ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10 text-white font-bold'
                   : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
               )}
             >

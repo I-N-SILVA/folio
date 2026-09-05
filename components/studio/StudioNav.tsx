@@ -30,6 +30,7 @@ export function StudioNav({ current }: { current?: 'library' | 'insights' | 'acc
           <NavLink href="/insights" active={current === 'insights'}>
             Insights
           </NavLink>
+          <NavLink href="/gallery">Gallery</NavLink>
           <NavLink href="/account" active={current === 'account'}>
             Account
           </NavLink>

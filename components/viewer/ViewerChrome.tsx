@@ -17,21 +17,17 @@ import {
   Headphones,
   Printer,
   Search,
-  ShoppingBag,
-  MessageSquare,
   Globe,
+  MoreHorizontal,
 } from 'lucide-react'
-import { LANGUAGES, type LanguageCode, getTranslation } from '@/lib/translate'
 import { ViewerEngine, ViewerEngineHandle } from './ViewerEngine'
 import { KeyboardHints } from './KeyboardHints'
 import { ForeEdge } from './ForeEdge'
 import { TableOfContents } from './TableOfContents'
 import { FilmstripScrubber } from './FilmstripScrubber'
-import { CartDrawer, type CartItem } from './CartDrawer'
-import { CheckoutModal } from './CheckoutModal'
 import { SearchModal } from './SearchModal'
-import { ReviewDrawer, type ReviewComment } from './ReviewDrawer'
 import { playPageFlipSound, type PaperPhysics } from '@/lib/sound'
+import { trackEvent } from '@/lib/tracking'
 import {
   isSpeechSupported,
   speakPageText,
@@ -43,6 +39,31 @@ import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, roundZoom } from '@/lib/page-geometry'
 
 /** Width of the reading frame at 100%; scales with zoom. */
 const BASE_FRAME_WIDTH = 1040
+
+/** One row of the More menu — named, rather than an icon the reader must decode. */
+function MenuRow({
+  icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: React.ReactNode
+  label: string
+  value?: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      role="menuitem"
+      onClick={onClick}
+      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-medium text-[var(--qlico-ink)] transition-colors hover:bg-[var(--tint)]"
+    >
+      <span className="grid w-4 shrink-0 place-items-center text-[var(--qlico-muted)]">{icon}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {value && <span className="shrink-0 text-[11px] font-semibold text-[var(--qlico-muted)]">{value}</span>}
+    </button>
+  )
+}
 
 function subscribeToFullscreen(onChange: () => void) {
   document.addEventListener('fullscreenchange', onChange)
@@ -87,6 +108,7 @@ export function ViewerChrome({
   const [currentPage, setCurrentPage] = useState(0)
   const [zoom, setZoom] = useState(1)
   const [showToc, setShowToc] = useState(false)
+  const [showMore, setShowMore] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(false)
   const reduce = useReducedMotion()
 
@@ -108,6 +130,24 @@ export function ViewerChrome({
       // localStorage unavailable
     }
   }, [])
+
+  // A menu that only closes by pressing the same button again is a menu people
+  // leave open over the page they are trying to read.
+  useEffect(() => {
+    if (!showMore) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMore(false)
+    }
+    const onDown = (e: PointerEvent) => {
+      if (!(e.target as HTMLElement)?.closest?.('[data-more-menu]')) setShowMore(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onDown)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onDown)
+    }
+  }, [showMore])
 
   const toggleSound = () => {
     setSoundEnabled((prev) => {
@@ -135,8 +175,6 @@ export function ViewerChrome({
     setSpeechSpeed((curr) => (curr === 1 ? 1.25 : curr === 1.25 ? 1.5 : 1))
   }
 
-  const [currentLang, setCurrentLang] = useState<LanguageCode>('en')
-  const [showLangMenu, setShowLangMenu] = useState(false)
 
   // Pages released by the unlock endpoint are merged in here, which remounts
   // the flip engine with the full edition — react-pageflip fixes its page count
@@ -189,76 +227,6 @@ export function ViewerChrome({
   }
 
   const [showSearch, setShowSearch] = useState(false)
-  const [showCart, setShowCart] = useState(false)
-  const [showCheckout, setShowCheckout] = useState(false)
-  const [showReview, setShowReview] = useState(false)
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [reviewComments, setReviewComments] = useState<ReviewComment[]>([])
-
-  // Cmd+F shortcut for full-text search
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
-        e.preventDefault()
-        setShowSearch(true)
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
-  const handleAddToCart = (item: Omit<CartItem, 'quantity'>) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id)
-      if (existing) {
-        return prev.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i))
-      }
-      return [...prev, { ...item, quantity: 1 }]
-    })
-    setShowCart(true)
-  }
-
-  // Global event listener for shoppable block cards and hotspot buttons
-  useEffect(() => {
-    const onAdd = (e: Event) => {
-      const customEvent = e as CustomEvent<Omit<CartItem, 'quantity'>>
-      if (customEvent.detail) {
-        handleAddToCart(customEvent.detail)
-      }
-    }
-    window.addEventListener('folio:add-to-cart', onAdd)
-    return () => window.removeEventListener('folio:add-to-cart', onAdd)
-  }, [])
-
-  const handleUpdateCartQuantity = (id: string, qty: number) => {
-    if (qty <= 0) {
-      setCartItems((prev) => prev.filter((i) => i.id !== id))
-    } else {
-      setCartItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i)))
-    }
-  }
-
-  const handleRemoveCartItem = (id: string) => {
-    setCartItems((prev) => prev.filter((i) => i.id !== id))
-  }
-
-  const handleAddReviewComment = (c: { author: string; text: string; pageNumber: number }) => {
-    setReviewComments((prev) => [
-      ...prev,
-      {
-        id: `rev-${Date.now()}`,
-        author: c.author,
-        text: c.text,
-        pageNumber: c.pageNumber,
-        timestamp: 'Just now',
-        resolved: false,
-      },
-    ])
-  }
-
-  const handleResolveReviewComment = (id: string) => {
-    setReviewComments((prev) => prev.map((c) => (c.id === id ? { ...c, resolved: true } : c)))
-  }
 
   // Synchronize speech synthesis with current page
   useEffect(() => {
@@ -463,38 +431,6 @@ export function ViewerChrome({
             </button>
           )}
 
-          {/* Shoppable Bag Drawer */}
-          {!embed && (
-            <button
-              onClick={() => setShowCart(true)}
-              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
-              aria-label="Shopping Bag"
-              title="Shopping Bag"
-            >
-              <ShoppingBag size={18} />
-              {cartItems.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 grid h-4 w-4 place-items-center rounded-full bg-white text-[9px] font-bold text-black shadow">
-                  {cartItems.reduce((acc, i) => acc + i.quantity, 0)}
-                </span>
-              )}
-            </button>
-          )}
-
-          {/* Client Feedback & Proofing Drawer (Desktop / Tablet) */}
-          {!embed && (
-            <button
-              onClick={() => setShowReview(true)}
-              className="relative hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
-              aria-label="Feedback & Review"
-              title="Feedback & Review"
-            >
-              <MessageSquare size={18} />
-              {reviewComments.filter((c) => !c.resolved).length > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-400" />
-              )}
-            </button>
-          )}
-
           {/* TOC / Overview drawer */}
           {!embed && (
             <button
@@ -507,100 +443,59 @@ export function ViewerChrome({
             </button>
           )}
 
-          {/* Tactile page turn sound toggle (Desktop / Tablet) */}
+          {/* Fourteen controls met anyone who clicked a link to look at a
+              lookbook. Contents, search, the bag and fullscreen stay; sound,
+              narration, translation and print move behind one menu where they
+              can carry a name instead of an icon. */}
           {!embed && (
-            <button
-              onClick={toggleSound}
-              className={`hidden sm:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-[var(--tint)] ${
-                soundEnabled ? 'text-[var(--accent-fg)]' : 'text-[var(--qlico-muted)]'
-              }`}
-              aria-label={soundEnabled ? 'Mute page sound' : 'Enable tactile flip sound'}
-              title={soundEnabled ? 'Flip sound enabled' : 'Enable flip sound'}
-            >
-              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-            </button>
-          )}
-
-          {/* Read-Aloud / Audiobook Narration toggle (Desktop / Tablet) */}
-          {!embed && canSpeech && (
-            <div className="hidden sm:flex items-center">
+            <div className="relative" data-more-menu>
               <button
-                onClick={toggleNarration}
-                className={twMerge(
-                  'flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors',
-                  narrating
-                    ? 'bg-amber-400/20 text-amber-500 hover:bg-amber-400/30'
-                    : 'text-[var(--qlico-muted)] hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]'
-                )}
-                aria-label={narrating ? 'Stop audiobook narration' : 'Listen with Audiobook narration'}
-                title={narrating ? 'Stop narration' : 'Listen with Audiobook narration'}
-              >
-                <Headphones size={18} className={narrating ? 'animate-pulse' : ''} />
-              </button>
-              {narrating && (
-                <button
-                  onClick={cycleSpeed}
-                  className="rounded-md px-1.5 py-0.5 text-[10px] font-bold text-amber-500 hover:bg-amber-400/20"
-                  title="Speech speed"
-                >
-                  {speechSpeed}x
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Multi-Language Instant Translation */}
-          {!embed && (
-            <div className="relative hidden sm:block">
-              <button
-                onClick={() => setShowLangMenu(!showLangMenu)}
+                onClick={() => setShowMore((v) => !v)}
+                aria-expanded={showMore}
+                aria-haspopup="menu"
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
-                aria-label="Select Language"
-                title="Change Edition Language"
+                aria-label="More reading options"
+                title="More"
               >
-                <Globe size={18} />
+                <MoreHorizontal size={18} />
               </button>
 
-              {showLangMenu && (
-                <div className="absolute top-12 right-0 z-50 w-44 rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-2 shadow-2xl backdrop-blur-xl">
-                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--qlico-muted)]">
-                    Select Language
-                  </div>
-                  {LANGUAGES.map((l) => (
-                    <button
-                      key={l.code}
+              {showMore && (
+                <div
+                  role="menu"
+                  className="absolute bottom-full right-0 z-50 mb-2 w-60 rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-1.5 shadow-2xl"
+                >
+                  <MenuRow
+                    icon={soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                    label="Page-turn sound"
+                    value={soundEnabled ? 'On' : 'Off'}
+                    onClick={toggleSound}
+                  />
+
+                  {canSpeech && (
+                    <MenuRow
+                      icon={<Headphones size={16} className={narrating ? 'animate-pulse' : ''} />}
+                      label={narrating ? 'Stop reading aloud' : 'Read aloud'}
+                      value={narrating ? `${speechSpeed}x` : undefined}
                       onClick={() => {
-                        setCurrentLang(l.code)
-                        setShowLangMenu(false)
+                        if (narrating) cycleSpeed()
+                        else toggleNarration()
                       }}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                        currentLang === l.code
-                          ? 'bg-[var(--accent)] text-[var(--accent-contrast)] shadow-sm'
-                          : 'text-[var(--qlico-ink)] hover:bg-[var(--tint)]'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span>{l.flag}</span>
-                        <span>{l.name}</span>
-                      </span>
-                      {currentLang === l.code && <span className="text-[10px]">✓</span>}
-                    </button>
-                  ))}
+                    />
+                  )}
+
+                  <MenuRow
+                    icon={<Printer size={16} />}
+                    label="Print or save as PDF"
+                    onClick={() => {
+                      setShowMore(false)
+                      window.print()
+                    }}
+                  />
+
                 </div>
               )}
             </div>
-          )}
-
-          {/* Press / PDF Print button */}
-          {!embed && (
-            <button
-              onClick={() => window.print()}
-              className="hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
-              aria-label="Print edition / Export PDF"
-              title="Print edition / Export PDF"
-            >
-              <Printer size={18} />
-            </button>
           )}
 
           {canFullscreen && (
@@ -660,44 +555,6 @@ export function ViewerChrome({
           onClose={() => setShowSearch(false)}
           book={visibleBook}
           onSelectPage={(i) => engineRef.current?.goTo(i)}
-        />
-      )}
-
-      {/* Shoppable Cart Drawer */}
-      {showCart && (
-        <CartDrawer
-          isOpen={showCart}
-          onClose={() => setShowCart(false)}
-          items={cartItems}
-          onUpdateQuantity={handleUpdateCartQuantity}
-          onRemoveItem={handleRemoveCartItem}
-          onCheckout={() => {
-            setShowCart(false)
-            setShowCheckout(true)
-          }}
-        />
-      )}
-
-      {/* Shoppable Checkout Modal */}
-      {showCheckout && (
-        <CheckoutModal
-          isOpen={showCheckout}
-          onClose={() => setShowCheckout(false)}
-          items={cartItems}
-          onClearCart={() => setCartItems([])}
-          bookTitle={visibleBook.title}
-        />
-      )}
-
-      {/* Client Feedback & Review Drawer */}
-      {showReview && (
-        <ReviewDrawer
-          isOpen={showReview}
-          onClose={() => setShowReview(false)}
-          currentPageNumber={currentPage + 1}
-          comments={reviewComments}
-          onAddComment={handleAddReviewComment}
-          onResolveComment={handleResolveReviewComment}
         />
       )}
 

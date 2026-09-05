@@ -29,9 +29,12 @@ import { PageManagerModal } from '@/components/studio/PageManagerModal'
 import { ShareModal } from '@/components/studio/ShareModal'
 import { ShortcutsModal } from '@/components/studio/ShortcutsModal'
 import { CommandPalette } from '@/components/studio/CommandPalette'
+import { PublishChecklistModal } from '@/components/studio/PublishChecklistModal'
+import { PostImportModal } from '@/components/studio/PostImportModal'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { EntitlementsProvider, type StudioEntitlements } from '@/components/studio/EntitlementsContext'
+import { publishChecks, type PublishIssue } from '@/lib/publish-checks'
 import type { Book } from '@/lib/book-schema'
 
 interface Props {
@@ -54,6 +57,21 @@ export function EditorClient({ book, entitlements }: Props) {
   const [showCommandPalette, setShowCommandPalette] = useState(false)
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  const [pendingChecks, setPendingChecks] = useState<PublishIssue[] | null>(null)
+
+  /**
+   * A fresh import lands here with `?imported=1`. Read once on mount and the
+   * parameter stripped, so a refresh doesn't re-offer a step the author already
+   * answered, and a shared editor link never opens it at all.
+   */
+  const [showPostImport, setShowPostImport] = useState(false)
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('imported') !== '1') return
+    url.searchParams.delete('imported')
+    window.history.replaceState(null, '', url.toString())
+    setShowPostImport(true)
+  }, [])
 
   // Warn about unsaved changes
   useEffect(() => {
@@ -308,7 +326,28 @@ export function EditorClient({ book, entitlements }: Props) {
     }))
   }
 
+  /**
+   * Publishing used to flip a boolean with nothing looking at the edition first.
+   * A button still pointing at `https://example.com`, an image with no alt text
+   * or a gate set past the last page are all invisible in the editor and obvious
+   * to whoever opens the link. The checks run on the way out, not while writing.
+   */
   const handlePublishToggle = async () => {
+    if (!storeBook) return
+    if (!storeBook.settings.published) {
+      const issues = publishChecks(storeBook)
+      // Nothing to say, so say nothing. A dialog that reads "all clear" on every
+      // publish is a speed bump on the one path that should be fastest — the
+      // share sheet that follows is confirmation enough.
+      if (issues.length > 0) {
+        setPendingChecks(issues)
+        return
+      }
+    }
+    await applyPublish()
+  }
+
+  const applyPublish = async () => {
     if (!storeBook) return
     const next = !storeBook.settings.published
     useEditorStore.setState((s) => ({
@@ -548,26 +587,9 @@ export function EditorClient({ book, entitlements }: Props) {
       {/* Small screens get the side panels back as bottom sheets. */}
       <MobileEditorDock />
 
-      {/* Status Bar */}
-      <div className="hidden h-8 shrink-0 items-center justify-between border-t border-neutral-800 bg-neutral-900 px-4 lg:flex">
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-neutral-300">
-          <div className={twMerge(
-            "w-1.5 h-1.5 rounded-full",
-            isDirty ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
-          )} />
-          {isDirty ? 'UNSAVED CHANGES' : 'ALL CHANGES SAVED'}
-        </div>
-
-        {/* neutral-400 rather than neutral-500: at 9–10px on neutral-900 the
-            old value sat under the 4.5:1 contrast floor. */}
-        <div className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-tight text-neutral-400">
-          <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 py-0.5 text-neutral-300">⌘Z</kbd> Undo
-          <span className="mx-1 opacity-40">|</span>
-          <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 py-0.5 text-neutral-300">⇧⌘Z</kbd> Redo
-          <span className="mx-1 opacity-40">|</span>
-          <kbd className="rounded border border-neutral-700 bg-neutral-800 px-1 py-0.5 text-neutral-300">⌘S</kbd> Save
-        </div>
-      </div>
+      {/* The status bar that used to sit here showed save state for the third
+          time — the header pill and its timestamp already say it — and spent 32px
+          of canvas restating shortcuts the ? modal lists. */}
 
       {/* Command Palette (⌘K) */}
       <CommandPalette
@@ -575,8 +597,11 @@ export function EditorClient({ book, entitlements }: Props) {
         onClose={() => setShowCommandPalette(false)}
         onOpenPreview={() => setShowPreview(true)}
         onOpenShare={() => setShowShare(true)}
-        onToggleGuides={() => {}}
-        onAutoDetectPins={() => {}}
+        /* Both of these were `() => {}`. A palette that silently no-ops teaches
+           people not to open it, so they are wired to the canvas that owns them
+           via a small event rather than left as decoration. */
+        onToggleGuides={() => window.dispatchEvent(new CustomEvent('qlico:toggle-guides'))}
+        onAutoDetectPins={() => window.dispatchEvent(new CustomEvent('qlico:detect-pins'))}
         onOpenAssetLibrary={() => setShowAssetLibrary(true)}
       />
 
@@ -608,6 +633,19 @@ export function EditorClient({ book, entitlements }: Props) {
 
       {/* Shortcuts Modal */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+
+      {showPostImport && <PostImportModal onClose={() => setShowPostImport(false)} />}
+
+      {pendingChecks !== null && (
+        <PublishChecklistModal
+          issues={pendingChecks}
+          onClose={() => setPendingChecks(null)}
+          onConfirm={() => {
+            setPendingChecks(null)
+            applyPublish()
+          }}
+        />
+      )}
 
       {showShare && storeBook?.slug && (
         <ShareModal
