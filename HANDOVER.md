@@ -102,6 +102,26 @@ with `playwright-core` from npm). Build, `npx next start`, open a gallery
 edition, read `document.fonts` and `getComputedStyle`. Two minutes. Do this
 before believing any claim about what the app renders.
 
+### `npm run audit:browser` — run it before believing the app looks right
+
+`scripts/audit-browser.mjs`. Build, `npx next start`, point it at the port. It
+opens each route at 320 / 390 / 768 / 1440 and reports sideways scroll, text set
+in its own background colour, a font that is named but not loaded, uncaught
+errors, non-200s and broken images.
+
+It exists because reading the CSS was not enough twice in one session, and
+both failures were invisible to typecheck, lint and 265 unit tests:
+
+- eight font families named across the presets and the studio's pairings, none
+  of them loaded;
+- the reader's control bar 450px wide against a 390px phone, scrolling the
+  primary surface sideways on every phone width.
+
+Chromium lives at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` in the
+cloud dev environment; set `CHROME_PATH` anywhere else. It is not wired into
+CI — that needs a built app and a running server on every push, which is a
+separate decision.
+
 ### Also new this session
 
 - **Live data now works.** The Data block fetched from the reader's browser, so
