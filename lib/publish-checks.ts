@@ -229,7 +229,9 @@ export function publishChecks(book: Book): PublishIssue[] {
   // link is the whole of the purchase path.
   const unbuyable = pages.flatMap((p) =>
     p.blocks.flatMap((b) =>
-      b.type === 'product-grid' ? b.items.filter((i) => !i.buyUrl).map((i) => ({ page: p.page_number, item: i })) : []
+      b.type === 'product-grid'
+        ? b.items.filter((i) => !i.buyUrl).map((i) => ({ page: p.page_number, item: i }))
+        : []
     )
   )
   if (unbuyable.length > 0) {

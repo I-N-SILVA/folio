@@ -65,7 +65,9 @@ export function AudioBlock({ block, bookId }: { block: AudioBlock; bookId: strin
 
   // Empty is a valid draft state — the publish checks stop it going live.
   if (!block.src) {
-    return <EmptyBlock label="Choose an audio file" icon={<Music size={20} />} aspect="aspect-auto" />
+    return (
+      <EmptyBlock label="Choose an audio file" icon={<Music size={20} />} aspect="aspect-auto" />
+    )
   }
 
   return (

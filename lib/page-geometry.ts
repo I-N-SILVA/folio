@@ -78,7 +78,10 @@ export function pageSideFor(index: number, portrait: boolean): PageSide {
  * opposite it — both of which a reader sees as a half-empty spread, so the
  * editor should show them the same way.
  */
-export function spreadFor(index: number, total: number): { left: number | null; right: number | null } {
+export function spreadFor(
+  index: number,
+  total: number
+): { left: number | null; right: number | null } {
   if (index <= 0) return { left: null, right: 0 }
   const left = index % 2 === 1 ? index : index - 1
   const right = left + 1
