@@ -282,7 +282,13 @@ export function ViewerChrome({
 
   return (
     // `relative` anchors the embed's absolutely-positioned control bar.
-    <div className="relative flex w-full flex-col items-center gap-4">
+    //
+    // `overflow-x-clip`, not `overflow-x-hidden`: the ambient aura below sits at
+    // `-inset-8`, so on any viewport narrower than the frame it hung 32px past
+    // each edge and scrolled the whole reader sideways. `clip` stops that
+    // without creating a scroll container — `hidden` would, and the control bar
+    // is `sticky`, which a scroll container ancestor quietly breaks.
+    <div className="relative flex w-full flex-col items-center gap-4 overflow-x-clip">
       {/* Book settles in gracefully on the gallery surface. Capped width keeps a
           comfortable margin around the spread instead of edge-to-edge zoom. */}
       <motion.div
@@ -343,7 +349,11 @@ export function ViewerChrome({
             // than the frame, and a bar pinned to the content's bottom edge sits
             // below the visible area and gets clipped away.
             ? 'fixed bottom-3 left-1/2 -translate-x-1/2 gap-1 px-2 py-1.5'
-            : 'sticky bottom-4 gap-3 px-4 py-3 sm:gap-6 sm:px-6'
+            // Measured at 450px intrinsic width against a 390px phone, which
+            // pushed the whole reader sideways — the primary surface, on the
+            // device most links are opened on. The max-width is the guarantee;
+            // the tighter base spacing is what keeps it from ever needing it.
+            : 'sticky bottom-4 max-w-[calc(100vw-0.75rem)] gap-1 px-2 py-3 sm:gap-6 sm:px-6'
         )}
       >
           <button
@@ -361,7 +371,7 @@ export function ViewerChrome({
           <span
             className={twMerge(
               'text-center font-semibold tabular-nums tracking-[0.08em]',
-              embed ? 'min-w-[54px] text-xs' : 'min-w-[80px] text-sm'
+              embed ? 'min-w-[54px] text-xs' : 'min-w-[64px] text-sm sm:min-w-[80px]'
             )}
           >
             {Math.min(currentPage + 1, editionPages)} / {editionPages}
@@ -369,7 +379,7 @@ export function ViewerChrome({
 
           {stillLocked > 0 && !embed && (
             <span
-              className="flex items-center gap-1 rounded-full bg-[var(--tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--qlico-muted)]"
+              className="hidden items-center gap-1 rounded-full bg-[var(--tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--qlico-muted)] sm:flex"
               title={`${editionPages - stillLocked} of ${editionPages} pages are free to read`}
             >
               <Lock size={10} />
@@ -423,7 +433,7 @@ export function ViewerChrome({
           {!embed && (
             <button
               onClick={() => setShowSearch(true)}
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)]"
+              className="hidden min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-[var(--qlico-muted)] transition-colors hover:bg-[var(--tint)] hover:text-[var(--qlico-ink)] sm:flex"
               aria-label="Search edition (Cmd+F)"
               title="Search edition (Cmd+F)"
             >
@@ -465,6 +475,20 @@ export function ViewerChrome({
                   role="menu"
                   className="absolute bottom-full right-0 z-50 mb-2 w-60 rounded-2xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)] p-1.5 shadow-2xl"
                 >
+                  {/* Search has its own button from `sm` up. On a phone the bar
+                      has no room for it, and losing search on the device most
+                      links are opened on is worse than a row in this menu. */}
+                  <div className="sm:hidden">
+                    <MenuRow
+                      icon={<Search size={16} />}
+                      label="Search this edition"
+                      onClick={() => {
+                        setShowMore(false)
+                        setShowSearch(true)
+                      }}
+                    />
+                  </div>
+
                   <MenuRow
                     icon={soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                     label="Page-turn sound"
