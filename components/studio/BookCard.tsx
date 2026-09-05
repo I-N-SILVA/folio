@@ -10,6 +10,7 @@ import {
   Copy,
   Edit2,
   ExternalLink,
+  LayoutTemplate,
   MoreHorizontal,
   Share2,
   Trash2,
@@ -158,6 +159,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   const router = useRouter()
 
   const published = book.settings?.published
+  const isTemplate = Boolean(book.settings?.isTemplate)
   const displayDate = book.updated_at || book.created_at || new Date().toISOString()
   const engagement = initialBook.engagement
   // An import that died partway leaves an edition with no pages, holding a slug
@@ -195,16 +197,24 @@ export function BookCard({ book: initialBook }: BookCardProps) {
     }
   }
 
-  const handleDuplicate = async () => {
+  const handleDuplicate = async (asTemplate = false) => {
     setMenuOpen(false)
     setIsDuplicating(true)
     try {
-      const res = await fetch(`/api/books/${book.id}/duplicate`, { method: 'POST' })
+      const res = await fetch(`/api/books/${book.id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ asTemplate }),
+      })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
         throw new Error(errData.error || 'Could not duplicate this edition')
       }
-      toast.success('Edition duplicated!')
+      toast.success(
+        asTemplate
+          ? 'Saved as a template — start your next edition from it.'
+          : 'Edition duplicated!'
+      )
       router.refresh()
     } catch (err: any) {
       toast.error(err.message)
@@ -276,10 +286,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         {!isEditing && (
           <span
             className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
-              published ? 'bg-[#dcebd7] text-[#3d6c38]' : 'bg-[var(--tint-weak)] text-[var(--qlico-muted)]'
+              isTemplate
+                ? 'bg-[var(--tint-strong)] text-[var(--qlico-ink)]'
+                : published
+                  ? 'bg-[#dcebd7] text-[#3d6c38]'
+                  : 'bg-[var(--tint-weak)] text-[var(--qlico-muted)]'
             }`}
           >
-            {published ? 'Published' : 'Draft'}
+            {isTemplate ? 'Template' : published ? 'Published' : 'Draft'}
           </span>
         )}
       </div>
@@ -309,7 +323,8 @@ export function BookCard({ book: initialBook }: BookCardProps) {
         </p>
       ) : (
         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
-          {published ? 'No reads yet' : 'Draft'} · {book.pages?.length || 0} pages ·{' '}
+          {isTemplate ? 'Starting point' : published ? 'No reads yet' : 'Draft'} ·{' '}
+          {book.pages?.length || 0} pages ·{' '}
           {new Date(displayDate).toLocaleDateString()}
         </p>
       )}
@@ -367,12 +382,14 @@ export function BookCard({ book: initialBook }: BookCardProps) {
               >
                 Rename
               </MenuButton>
-              <MenuButton
-                onClick={handleDuplicate}
-                icon={<Copy size={15} />}
-              >
-                Duplicate
+              <MenuButton onClick={() => handleDuplicate(false)} icon={<Copy size={15} />}>
+                {isTemplate ? 'New edition from this' : 'Duplicate'}
               </MenuButton>
+              {!isTemplate && (
+                <MenuButton onClick={() => handleDuplicate(true)} icon={<LayoutTemplate size={15} />}>
+                  Save as template
+                </MenuButton>
+              )}
               <MenuButton
                 onClick={() => {
                   setMenuOpen(false)

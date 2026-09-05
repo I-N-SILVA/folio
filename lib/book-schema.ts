@@ -342,6 +342,16 @@ export const SEOSchema = z.object({
 export const BookSettingsSchema = z.object({
   published: z.boolean().default(false),
   unlisted: z.boolean().default(false),
+  /**
+   * A reusable starting point rather than something to publish.
+   *
+   * Deliberately a flag on a normal edition and not a table of its own: a
+   * template is a book, "start from this" is the duplicate that already exists,
+   * and a second storage shape would have to be kept in step with every schema
+   * change to the first. It does count against the plan's edition limit, which
+   * the UI says at the point of saving one.
+   */
+  isTemplate: z.boolean().optional(),
   gating: GatingSchema.default({
     enabled: false,
     page_number: 3,

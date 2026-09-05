@@ -55,7 +55,57 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
     initialTemplateId ? (TEMPLATES.find((t) => t.id === initialTemplateId) ?? null) : null
   )
   const [previewPageIndex, setPreviewPageIndex] = useState<number>(0)
+
+  /** The author's own saved templates — see settings.isTemplate. */
+  const [ownTemplates, setOwnTemplates] = useState<{ id: string; title: string; pageCount: number }[]>([])
+  const [creatingFromOwn, setCreatingFromOwn] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/books')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((books: { id: string; title: string; settings?: { isTemplate?: boolean }; pages?: { count: number }[] }[]) => {
+        if (!active || !Array.isArray(books)) return
+        setOwnTemplates(
+          books
+            .filter((b) => b.settings?.isTemplate)
+            .map((b) => ({ id: b.id, title: b.title, pageCount: b.pages?.[0]?.count ?? 0 }))
+        )
+      })
+      .catch(() => {
+        // No templates shown is the same as having none. This is an extra
+        // shortcut, not the way to create an edition.
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  /**
+   * Start from one of the author's own templates.
+   *
+   * This is the duplicate route, which is what "save as template" wrote in the
+   * first place — a template is a normal edition carrying a flag, so copying
+   * one is copying an edition.
+   */
+  async function startFromOwnTemplate(templateId: string) {
+    setCreatingFromOwn(templateId)
+    try {
+      const res = await fetch(`/api/books/${templateId}/duplicate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ asTemplate: false }),
+      })
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload.error || 'Could not start from that template')
+      toast.success('Edition created from your template')
+      router.push(`/editor/${payload.id}`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not start from that template')
+      setCreatingFromOwn(null)
+    }
+  }
 
   // The slug is the public URL and nothing in the app can change it later, so
   // it has to be settable here. Derived from the title until the user takes
@@ -389,6 +439,42 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
         </div>
 
         <div className="p-6 max-h-[65vh] overflow-y-auto">
+          {/* An author's own templates come first. The whole point of saving one
+              is that the next client project starts from your work, not from
+              ours — putting them under six starter designs would bury it. */}
+          {ownTemplates.length > 0 && selectedCategory === 'All' && (
+            <div className="mb-6">
+              <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--qlico-muted)]">
+                Your templates
+              </h3>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {ownTemplates.map((tmpl) => (
+                  <button
+                    key={tmpl.id}
+                    type="button"
+                    disabled={creatingFromOwn !== null}
+                    onClick={() => startFromOwnTemplate(tmpl.id)}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 p-3 text-left transition hover:border-[var(--accent)] disabled:opacity-60"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-[var(--qlico-ink)]">
+                        {tmpl.title}
+                      </span>
+                      <span className="block text-[11px] text-[var(--qlico-muted)]">
+                        {tmpl.pageCount} {tmpl.pageCount === 1 ? 'page' : 'pages'}
+                      </span>
+                    </span>
+                    {creatingFromOwn === tmpl.id ? (
+                      <Loader2 size={15} className="shrink-0 animate-spin text-[var(--qlico-muted)]" />
+                    ) : (
+                      <ArrowRight size={15} className="shrink-0 text-[var(--qlico-muted)]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {filteredTemplates.map((tmpl) => (
               <div

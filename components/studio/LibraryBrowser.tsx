@@ -12,13 +12,14 @@ type LibraryBook = Omit<Book, 'pages'> & {
   engagement?: { readers: number; completionRate: number; leads: number } | null
 }
 
-type Filter = 'all' | 'published' | 'draft'
+type Filter = 'all' | 'published' | 'draft' | 'template'
 type Sort = 'recent' | 'created' | 'title'
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'published', label: 'Published' },
   { value: 'draft', label: 'Drafts' },
+  { value: 'template', label: 'Templates' },
 ]
 
 const SORTS: { value: Sort; label: string }[] = [
@@ -43,8 +44,12 @@ export function LibraryBrowser({ books }: { books: LibraryBook[] }) {
     const needle = query.trim().toLowerCase()
 
     const matched = books.filter((book) => {
-      if (filter === 'published' && !book.settings?.published) return false
-      if (filter === 'draft' && book.settings?.published) return false
+      const isTemplate = Boolean(book.settings?.isTemplate)
+      // A template is a starting point, not a draft you forgot to publish, so
+      // it stays out of both status filters and has its own.
+      if (filter === 'template' && !isTemplate) return false
+      if (filter === 'published' && (!book.settings?.published || isTemplate)) return false
+      if (filter === 'draft' && (book.settings?.published || isTemplate)) return false
       if (!needle) return true
       return (
         book.title.toLowerCase().includes(needle) ||

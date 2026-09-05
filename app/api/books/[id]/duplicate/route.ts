@@ -3,17 +3,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { checkBookQuota } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
+import { duplicateNames } from '@/lib/duplicate-naming'
 import type { Page, Block, Hotspot } from '@/lib/book-schema'
 
-function randomSuffix() {
-  return Math.random().toString(36).slice(2, 6)
-}
-
+/**
+ * Copy an edition — and, with `asTemplate`, save it as a starting point.
+ *
+ * "Save as template" and "duplicate" are the same operation with a different
+ * name on the result, so they are the same route. A template is a normal
+ * edition carrying `settings.isTemplate`; starting from one is this route
+ * again, without the flag.
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  const body = (await request.json().catch(() => null)) as { asTemplate?: boolean } | null
+  const asTemplate = body?.asTemplate === true
   const supabase = await createServerSupabase()
 
   const {
@@ -51,8 +58,7 @@ export async function POST(
   }
 
   // 3. Create cloned book
-  const newSlug = `${original.slug.slice(0, 80)}-copy-${randomSuffix()}`
-  const newTitle = `${original.title} (Copy)`
+  const { title: newTitle, slug: newSlug } = duplicateNames(original, asTemplate)
 
   const { data: newBook, error: insertBookError } = await supabase
     .from('books')
@@ -66,6 +72,9 @@ export async function POST(
         ...(original.settings ?? {}),
         published: false,
         unlisted: false,
+        // Starting *from* a template gives an edition, not another template,
+        // so the flag is set explicitly either way rather than inherited.
+        isTemplate: asTemplate,
       },
     })
     .select()
