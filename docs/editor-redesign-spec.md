@@ -362,7 +362,38 @@ and a button.
 
 ## §9 — What is still outstanding
 
-Written after the implementation pass, so it is the accurate list.
+Written after the implementation pass and revised as items shipped, so it is the
+accurate list.
+
+**Shipped since this section was first written**
+
+- **Edition styles** (§6). Five named type sets — Editorial, Journal, Modern,
+  Classic, Technical — each defining the whole scale for all six text variants,
+  in `lib/typesets.ts`. Fixing it turned up that the typography controls had
+  never worked at all: eight Google families were named across the presets and
+  the "curated pairings" and **none of them was loaded**, so all four pairing
+  buttons rendered identically, and `--font-display: var(--font-display), …` in
+  `globals.css` was a self-referential custom property CSS discards, which took
+  out the app's own two fonts too. `lib/fonts.ts` is now the single list of
+  faces that are actually served, and a test asserts nothing names a family
+  outside it.
+- **Live data with a real source** (§6). The block fetched from the reader's
+  browser, so CORS decided whether the feature worked and the author's own Test
+  button had the same blind spot — it passed for a same-origin path and failed
+  for every real source. Now `lib/live-data.ts` reads it server-side with a 30s
+  cache and a 6h stale-value grace window, `/api/live-data` takes a block id and
+  never a URL, and `/api/live-data/test` runs the studio's Test button down the
+  same path.
+- **Copy/paste and multi-select blocks** (§6). Shift/meta-click, Cmd+A,
+  Cmd+C/X/V/D, and a delete that takes the whole selection as one undo step. The
+  clipboard lives in `localStorage` (`lib/block-clipboard.ts`) rather than in the
+  store, because the case that matters is pasting into a *different* edition.
+- **Save as template** (§6). `settings.isTemplate` on a normal edition, so
+  "start from this" is the duplicate route that already existed. Templates count
+  against the plan's edition limit — a decision, not an oversight.
+- **Image crop and focal point** (§6). `focalX`/`focalY` percentages on the
+  image block and the page background, with a draggable picker over the image
+  itself. The five presets stay and still work.
 
 **Not done, and each is a real piece of work**
 
@@ -372,24 +403,22 @@ Written after the implementation pass, so it is the accurate list.
    mistake. New components (`InsertPanel`, `PublishChecklistModal`,
    `PostImportModal`) use the tokens. Do the sweep with a screenshot diff, not
    by hand.
-2. **Edition styles** (§6) — a named type set per edition rather than per-block
-   overrides. The single largest remaining quality item, and the difference
-   between a page builder and a publishing tool.
-3. **Image crop and focal point** (§6).
-4. **Save as template** (§6) — the strongest retention mechanic available.
-5. **Version history** (§6).
-6. **Copy/paste and multi-select blocks** (§6).
-7. **Live data with a real source** (§6) — the block can now be *inserted*, and
-   the publish check stops one going live without a source, but binding it to a
-   Google Sheet or a webhook and refreshing it is not built.
-8. **Draft comments for the author's reviewers** (§6).
-9. ~~**Commerce: Stripe Connect, orders, a Sales tab.**~~ **Decided: cut.** For
+2. **Version history** (§6). Undo covers a session; this is "what did this look
+   like last Tuesday". Needs storage, and "duplicate" is the manual stand-in.
+3. **Draft comments for the author's reviewers** (§6). The old review drawer was
+   cut because it dropped what a reviewer typed on refresh. Rebuilding it
+   honestly needs a table and an auth story for a reviewer who has no account.
+4. ~~**Commerce: Stripe Connect, orders, a Sales tab.**~~ **Decided: cut.** For
    the MVP, QLICO handles no payments at all — a product links to the author's
    own shop. The cart, the drawer and all four add-to-bag paths are gone. If it
    is ever revisited it is Stripe Connect against the author's account, and it
    needs an entry in `lib/plans.ts` on the way in.
-10. **Send the weekly digest by hand and read the email.** Needs a deployed
-    environment with `CRON_SECRET`; it cannot be done from a sandbox.
+5. **Send the weekly digest by hand and read the email.** Needs a deployed
+   environment with `CRON_SECRET`; it cannot be done from a sandbox.
+6. **No automated visual coverage** for canvas, spreads, or the container-query
+   phone fallback. A Chromium harness has been used by hand this session (see
+   §9 note below) and it works; wiring it into CI is a separate decision, since
+   it needs a built app and a running server on every push.
 
 **Worth knowing before the next change**
 
@@ -403,3 +432,10 @@ Written after the implementation pass, so it is the accurate list.
   `--accent-vivid` or `--qlico-teal` for selection, focus or drag state: they
   are `#000` in light and `#fff` in dark, and that is how six controls became
   invisible.
+- **A font an author can choose must be a font `lib/fonts.ts` loads.** Adding a
+  family name anywhere else renders as the browser default and looks like a
+  working control. `lib/typesets.test.ts` fails if you do.
+- **Verifying CSS by reading it is how all of the above shipped.** Chromium is
+  available: build, `next start`, and read `getComputedStyle` from a real page.
+  It took two minutes and settled three questions that were unanswerable from
+  the source.

@@ -117,17 +117,26 @@ Before the next feature, in this order:
 
 ## §5 — If the next thing has to be a feature
 
-Ranked by evidence, not by appeal:
+The three ranked here have since been built — live data server-side, edition
+styles on fonts that are actually loaded, and save-as-template — along with
+multi-select, a cross-edition clipboard and a draggable focal point. See
+`editor-redesign-spec.md` §9 for what shipped and what did not.
 
-1. **Live data with a real source.** It is the only thing here a PDF
-   structurally cannot do, and the only reason a customer would leave Issuu
-   rather than shop on price. The block exists and can be inserted; binding it
-   to a Google Sheet or a webhook is what makes it true. See the investor-letter
-   case in `product-proof-2026-09.md` §5.
-2. **Edition styles.** A named type set per edition instead of per-block
-   overrides. The difference between a page builder and a publishing tool.
-3. **Save as template.** Turns a studio's second client project into a ten-minute
-   job. The strongest retention mechanic available, and the infrastructure is
-   already there.
+**That does not change §4.** Building three more features is exactly what §4
+says to stop doing, and the reason they were built anyway is that each one was
+either broken or absent in a way a customer would hit in the first hour — not
+because the evidence arrived. It has not. Nobody has sent the digest, nobody
+has watched five people import a PDF, and pricing is still a guess.
 
-Everything else in the spec's §9 waits for a person to ask for it.
+What is left in the spec's §9 waits for a person to ask for it. The next thing
+is §4, in the order it is written.
+
+**One thing worth carrying forward.** The typography work found that eight font
+families were named across the theme presets and the studio's "curated
+pairings" and none of them was ever loaded — so four buttons that claimed to
+change the type produced identical output, and had for as long as they had
+existed. That is the same failure as the six cut features in §2, found the same
+way: by checking what the shipped path actually does rather than reading the
+code that describes it. Chromium is available in this repo's dev environment;
+`getComputedStyle` on a real built page answers in two minutes what source
+reading cannot answer at all.

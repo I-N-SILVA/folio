@@ -62,6 +62,64 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### The typography controls had never done anything
+
+Read this alongside the six-features section below — it is the same failure,
+found nine months later, in the part of the product this app is *sold* on.
+
+Every theme preset named a Google font pairing (Playfair Display, Sora, Lora,
+DM Serif, Space Grotesk, IBM Plex) and the studio offered four "Curated
+Editorial Font Pairings" on top. **The app loaded exactly two families, neither
+of them any of those.** `font-family: "Playfair Display", sans-serif` with no
+Playfair Display loaded is `sans-serif`, so all four pairing buttons produced
+identical output, and every preset rendered in the browser's default sans.
+
+The two font dropdowns were broken a second, independent way: their values are
+stacks (`Georgia, serif`) and `PageRenderer` wrapped whatever it was given in
+quotes, so the browser looked for one family literally named `Georgia, serif`.
+
+And `globals.css` had `--font-display: var(--font-display), …` — a custom
+property defined in terms of itself, which CSS treats as a cycle and discards.
+So the app's own two loaded families were unreachable as well, and the whole
+product had been running on system fonts.
+
+What replaced it:
+
+- `lib/fonts.ts` is the only place a font is loaded, and `lib/typesets.ts` is
+  the only place one is named. `lib/typesets.test.ts` fails if a type set names
+  a family `lib/fonts.ts` does not load. **Do not add a font family name
+  anywhere else** — it will render as the browser default and look like a
+  working control.
+- Five edition styles, each defining the whole scale for all six text variants.
+  `TextBlock` reads CSS variables instead of fixed Tailwind classes, so a
+  heading is no longer 30px in every edition ever made.
+- Legacy names stored on existing editions map to the nearest loaded family.
+
+**How it was found, which is the transferable part.** Not by reading the CSS —
+the CSS looked right, and had looked right to everyone who read it. Chromium is
+installed in this environment (`/opt/pw-browsers/chromium-1194/chrome-linux/chrome`,
+with `playwright-core` from npm). Build, `npx next start`, open a gallery
+edition, read `document.fonts` and `getComputedStyle`. Two minutes. Do this
+before believing any claim about what the app renders.
+
+### Also new this session
+
+- **Live data now works.** The Data block fetched from the reader's browser, so
+  CORS decided whether the feature existed — it read "Offline" for every reader
+  while the author's own Test button passed, because the Test button had the
+  same defect and so got tried against same-origin paths. Server-side now:
+  `lib/live-data.ts`, `/api/live-data` (takes a block id, never a URL, so it is
+  not an open proxy), `/api/live-data/test` for the studio.
+- **`safeFetch` in `lib/safe-fetch.ts`** follows redirects while checking every
+  hop. `redirect: 'manual'` alone was safe but wrong: a shortened link, an
+  http→https upgrade and a Sheets publish URL are all redirects.
+- **Multi-select and a clipboard that crosses editions** (`lib/block-clipboard.ts`,
+  localStorage-backed, everything read back parsed through `BlockSchema`).
+- **Save as template** — `settings.isTemplate` on a normal edition; "start from
+  this" is the duplicate route. Templates count against the plan's edition
+  limit, deliberately.
+- **Draggable focal point** for image blocks and page backgrounds.
+
 ### Six features did nothing, and four of them had passing tests
 
 The single most useful thing to know about this codebase. Removed this branch:
