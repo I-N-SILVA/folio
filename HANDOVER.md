@@ -1,22 +1,28 @@
 # Handover
 
-State of QLICO after the `claude/product-strategy-audit-xt5fdi` work. Written for
-whoever picks this up next — human or agent.
+State of QLICO after the `claude/product-analysis-ux-m6irp4` work, which follows
+the earlier `claude/product-strategy-audit-xt5fdi` branch. Written for whoever
+picks this up next — human or agent.
 
-The reasoning behind every product decision below is in
-`docs/product-strategy-audit.md`, which audits the product as it was and ends in
-the roadmap this branch implements. Read it before undoing anything here.
+Four documents carry the reasoning, and they are worth the twenty minutes:
 
-Verification baseline: **126 tests across 13 files passing, 0 lint errors, 28
+| Document | What it is for |
+|---|---|
+| `docs/product-proof-2026-09.md` | What was wrong, with a file:line behind every claim |
+| `docs/editor-redesign-spec.md` | What to build, marked SHIPPED / PARTIAL / NOT STARTED, with a §9 of what is left |
+| `docs/mvp-scope.md` | **Read this first.** What the product *is*, what was cut and why, and what to do instead of building |
+| `docs/product-strategy-audit.md` | The earlier audit; positioning, pricing and GTM |
+
+Verification baseline: **180 tests across 26 files passing, 0 lint errors, 39
 lint warnings, `tsc --noEmit` clean, production build clean.**
 
 ```bash
 npm run typecheck && npm test -- --run && npm run lint && npm run build
 ```
 
-`npm run format:check` fails on ~89 files and did before this work — the repo has
-never been Prettier-clean. New files are formatted; the rest is left alone rather
-than buried under a whole-repo reformat.
+`npm run format:check` still fails on files that predate this work — the repo has
+never been Prettier-clean. New and touched files are formatted; the rest is left
+alone rather than buried under a whole-repo reformat.
 
 ---
 
@@ -53,7 +59,80 @@ reporting and no way to exercise the billing paths.
 
 ---
 
-## 2. What changed on this branch, and the reasoning you'd otherwise rediscover
+## 2. What changed most recently, and the reasoning you'd otherwise rediscover
+
+### Six features did nothing, and four of them had passing tests
+
+The single most useful thing to know about this codebase. Removed this branch:
+
+| Removed | What it actually did |
+|---|---|
+| `CheckoutModal` | Took a card number, waited 1.8s, invented an order number, confirmed a sale that never happened |
+| The cart | Four paths fed a bag whose only destination was that checkout |
+| `ButtonBlock` magic hrefs | `#cart` / `#buy` silently added an item at an invented $120 |
+| Language picker | `getTranslation` was imported and never called — picking a language moved a checkmark |
+| `ReviewDrawer` | Took a client's typed feedback into React state and dropped it on refresh |
+| `SocialTeaserModal` | Built a download link, never clicked it, then toasted "Downloaded!" |
+
+Four had tests. **Every one of those test files reimplemented the logic locally
+and asserted against its own copy** — `lib/cart.test.ts` defined
+`addToCartHelper`, `lib/review.test.ts` defined `addCommentHelper`. Green suites,
+dead code. Two of the six shipped in a single commit (49dc294) that added five
+features at once; two of that five did nothing.
+
+**If you take one habit from this branch: a test that does not import the
+shipped path is not a test.** And keep grepping for unimported files — that is
+how four of these were found.
+
+### Commerce is cut, deliberately
+
+QLICO handles no payments. A product is a listing that links to the author's own
+shop. No cart, no checkout, no payouts, no PCI scope, no Stripe Connect, and
+nothing to meter in `lib/plans.ts`. If it is ever revisited, it is Connect
+against the *author's* account, orders in the database and a Sales tab — and it
+needs a plan entry on the way in. See `docs/mvp-scope.md` §2.
+
+### One token turned six controls invisible
+
+`--accent`, `--accent-vivid`, `--qlico-teal` and `--qlico-oxblood` are all
+`#000` in light and `#fff` in dark. The editor used `--accent-vivid` for
+interface state while drawing author content on a white page, so with dark theme
+on the selection ring was white on white, and the reader's buy-pin icon was
+white on a white beacon.
+
+`globals.css` now defines a `--studio-*` palette plus **`--studio-select`, a
+functional interaction colour used for selection, drag targets and focus rings
+and used nowhere in author content.** A monochrome brand accent cannot mark a
+selection on a white page; that is a job it can never do. **Do not reach for
+`--accent*` or `--qlico-teal` for UI state.**
+
+### The editor stopped promising what it could not do
+
+The canvas drew a free-composition page and ran a vertical block list. There is
+now a per-page `layout: 'canvas'` mode with an optional `frame` on every block,
+honoured only in that mode, so no existing page changes and there is no
+migration. Switching seeds frames by **measuring the live flow layout**, so a
+page never scatters, and switching back is lossless.
+
+Phones stack via **one CSS container query** (`.qlico-canvas-block`, in
+`globals.css`) rather than a viewport breakpoint — so the reader, the embed, the
+thumbnails and the editor's mobile simulator all obey the same rule.
+
+Also: a spread view (the reader shows facing pages; the editor only ever showed
+one), one insert surface reachable by `/` and `+`, empty media blocks backed by
+`lib/publish-checks.ts`, the post-import detection step, and `/gallery` — six
+readable editions rendered from `data/templates.ts` with no database rows.
+
+### The detector was open to the internet
+
+`/api/ai/detect-hotspots` had no authentication, only a per-IP request count,
+and it fetches an author-supplied URL server-side and calls Gemini. It is now
+signed-in only, budgeted per user and charged per page, and the fetch refuses
+loopback, link-local, RFC1918, `.internal` and cloud metadata addresses.
+
+---
+
+## 2b. What changed on the previous branch
 
 ### The plans were decorative
 
@@ -144,6 +223,20 @@ Ordered by how much they'd hurt.
    deliberately had none so nobody could promote themselves. It pins `plan` and
    `status` to their current values, which is what makes it safe — read it before
    adding another user-writable column.
+7. **Canvas layout and spread view were verified by hand, not by a browser
+   test.** The geometry, seeding and round-tripping are unit-tested, and both
+   were driven in a running app and screenshotted during development — but there
+   is no automated test that would catch a visual regression in either. The same
+   is true of the container-query phone fallback.
+8. **The editor still hardcodes `neutral-*` for its surfaces.** The
+   `--studio-*` tokens exist and the bugs are fixed, but the sweep across ~2,000
+   lines of editor JSX was not done: it is cosmetic, carries real regression
+   risk, and no test would catch a mistake. Do it with a screenshot diff.
+9. **`z.custom<Page>()` in the detect route validates nothing.** It is a type
+   assertion, not a schema, so the page objects that route receives are whatever
+   JSON the client sent. It is signed-in only now and the image fetch is
+   guarded, so the blast radius is the caller's own quota — but do not add a new
+   sink that trusts those objects without validating them first.
 
 ---
 
@@ -155,6 +248,12 @@ Ordered by how much they'd hurt.
   because that would silently redirect someone else's circulated links.
 - **Password protection / view-once:** the schema fields are gone now, not just
   the controls. Build them properly or leave them out.
+- **Commerce: decided — cut.** Not an open question any more. See §2 and
+  `docs/mvp-scope.md`.
+- **What else to cut.** `docs/mvp-scope.md` §3 marks webhooks, the embed route
+  and the filmstrip scrubber as *on probation*: they work, nobody has asked for
+  them, and the next time one needs maintenance is the moment to remove it
+  instead.
 - **Custom domain:** removed from all copy. It needs domain routing, certificate
   provisioning and verification — a project, not a fix.
 - **Pricing:** $19 Pro is unvalidated and undercuts Issuu, Flipsnack and
@@ -210,3 +309,26 @@ Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
   against it rather than reasoning about it.
 - **When you fix a bug, revert the fix and confirm the new test fails.** A test
   that passes against broken code is worse than no test.
+- **A test that does not import the shipped path is not a test.** Four dead
+  features survived behind test files that reimplemented the logic locally. If
+  the test defines the function it is testing, it is testing itself.
+- **`--studio-select` is the interaction colour.** Never use `--accent`,
+  `--accent-vivid` or `--qlico-teal` for selection, focus or drag state — they
+  are `#000` in light and `#fff` in dark, which is how six controls became
+  invisible.
+- **`page.layout` has a sixth value, `'canvas'`.** Anything switching on layout
+  needs a branch for it. A block's `frame` is honoured *only* in that mode.
+- **Media and link targets may be empty strings.** `draftableUrl` /
+  `draftableHref` allow `''` so a block can exist before it has a source.
+  Anything assuming a `src` or `href` is present must handle it — an empty
+  `href` in an `<a>` resolves to the current page and silently reloads.
+  "Not empty" is enforced at publish, in `lib/publish-checks.ts`, not on save.
+- **`draftableHref` is deliberately narrower than `draftableUrl`.** Media may be
+  a `data:` URI; a link may not — an href is a navigation target. Links take
+  http, https, mailto, tel or a same-origin path.
+- **`trackEvent` ignores non-UUID book ids.** The gallery and the bundled demo
+  render from files with no database row, so their events could only ever be
+  rejected by the foreign key.
+- **The canvas phone fallback is a CSS *container* query**, not a viewport one,
+  so it works inside the editor's narrow mobile simulator too. Keep it that way;
+  a viewport breakpoint would make the simulator lie.
