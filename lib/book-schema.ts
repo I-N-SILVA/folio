@@ -10,20 +10,18 @@ import { z } from 'zod'
  * target is a valid *draft* — `lib/publish-checks.ts` is what stops an edition
  * going live with one, which is where that check belongs.
  */
-const draftableUrl = z
-  .string()
-  .refine(
-    (s) => {
-      if (s === '') return true
-      try {
-        const url = new URL(s)
-        return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'data:'
-      } catch {
-        return s.startsWith('/') || s.startsWith('data:')
-      }
-    },
-    { message: 'Must be a valid URL, or empty while you are still drafting' }
-  )
+const draftableUrl = z.string().refine(
+  (s) => {
+    if (s === '') return true
+    try {
+      const url = new URL(s)
+      return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'data:'
+    } catch {
+      return s.startsWith('/') || s.startsWith('data:')
+    }
+  },
+  { message: 'Must be a valid URL, or empty while you are still drafting' }
+)
 
 /**
  * The same, for somewhere a reader is *sent* rather than something rendered.
@@ -34,24 +32,21 @@ const draftableUrl = z
  * data: URIs into hrefs is not a thing to rely on a browser mitigation for.
  * mailto and tel are added because a button reasonably wants them.
  */
-const draftableHref = z
-  .string()
-  .refine(
-    (s) => {
-      if (s === '') return true
-      try {
-        const url = new URL(s)
-        return ['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)
-      } catch {
-        // A same-origin path, but never a protocol-relative "//host" one.
-        return s.startsWith('/') && !s.startsWith('//')
-      }
-    },
-    { message: 'Must be a link, or empty while you are still drafting' }
-  )
+const draftableHref = z.string().refine(
+  (s) => {
+    if (s === '') return true
+    try {
+      const url = new URL(s)
+      return ['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)
+    } catch {
+      // A same-origin path, but never a protocol-relative "//host" one.
+      return s.startsWith('/') && !s.startsWith('//')
+    }
+  },
+  { message: 'Must be a link, or empty while you are still drafting' }
+)
 
 // ─── Block Schemas ─────────────────────────────────────────────────────────────
-
 
 /**
  * Where a block sits, when its page is laid out as a canvas.
@@ -179,8 +174,14 @@ export const ProductItemSchema = z.object({
   image: z.string(),
   alt: z.string().optional(),
   description: z.string().optional(),
-  /** Where the author actually sells this. Without one, no button is shown. */
-  buyUrl: z.string().optional(),
+  /**
+   * Where the author actually sells this. Without one, no button is shown.
+   *
+   * `draftableHref`, not a bare string: this is opened in the reader's browser
+   * via `window.open`, so an author could otherwise store a `javascript:` URL
+   * and run it against every stranger who reads their edition.
+   */
+  buyUrl: draftableHref.optional(),
   ctaLabel: z.string().optional().default('View'),
   /**
    * Every product is a link out now.
@@ -234,7 +235,10 @@ export const HotspotSchema = z.object({
   y: z.number().min(0).max(100),
   label: z.string(),
   icon: z.string().default('Info'),
-  beaconStyle: z.enum(['pulse', 'shopping', 'audio', 'step', 'minimal']).default('pulse').optional(),
+  beaconStyle: z
+    .enum(['pulse', 'shopping', 'audio', 'step', 'minimal'])
+    .default('pulse')
+    .optional(),
   stepNumber: z.number().int().min(1).max(99).optional(),
   pinColor: z.string().optional(),
   modal: z.object({
@@ -246,8 +250,16 @@ export const HotspotSchema = z.object({
   // 'checkout' shows a price and sends the reader to `stripeUrl`. Without one
   // it shows the price and no button — it never adds to a cart, because there
   // is no cart.
-  linkUrl: z.string().url().optional(),
-  stripeUrl: z.string().url().optional(),
+  /**
+   * Both land in a reader-facing `<a href>`, so both take `draftableHref`.
+   *
+   * `z.string().url()` is not enough and never was: Zod's `url` format is
+   * satisfied by anything `new URL()` parses, which includes
+   * `javascript:alert(1)` and `data:text/html,…`. An author could store either
+   * and it would run in the browser of everyone who opened the edition.
+   */
+  linkUrl: draftableHref.optional(),
+  stripeUrl: draftableHref.optional(),
   price: z.string().optional(),
   ctaLabel: z.string().optional(),
 })
@@ -262,7 +274,10 @@ export const BackgroundSchema = z.object({
   overlay: z.string().optional(), // rgba color or dark tint hex
   overlayOpacity: z.number().min(0).max(100).optional(),
   blur: z.enum(['none', 'sm', 'md', 'lg']).optional(),
-  paperTexture: z.enum(['none', 'gloss', 'matte', 'washi', 'linen', 'carbon']).default('none').optional(),
+  paperTexture: z
+    .enum(['none', 'gloss', 'matte', 'washi', 'linen', 'carbon'])
+    .default('none')
+    .optional(),
 })
 
 export const AmbientAudioSchema = z.object({
@@ -293,7 +308,10 @@ export const ThemeSchema = z.object({
   headingFont: z.string().optional(),
   bodyFont: z.string().optional(),
   paperPhysics: z.enum(['magazine', 'hardcover', 'washi']).default('magazine').optional(),
-  paperTexture: z.enum(['none', 'gloss', 'matte', 'washi', 'linen', 'carbon']).default('none').optional(),
+  paperTexture: z
+    .enum(['none', 'gloss', 'matte', 'washi', 'linen', 'carbon'])
+    .default('none')
+    .optional(),
 })
 
 // ─── Book Settings Schema ──────────────────────────────────────────────────────
@@ -335,7 +353,11 @@ export const BookSettingsSchema = z.object({
 
 export const BookSchema = z.object({
   id: z.string(),
-  slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
+  slug: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9-]+$/),
   title: z.string().min(1).max(200),
   description: z.string().optional(),
   owner_id: z.string(),

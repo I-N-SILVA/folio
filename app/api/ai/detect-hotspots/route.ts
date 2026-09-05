@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { isAiEnabled, detectHotspots } from '@/lib/ai'
 import { rateLimitCost } from '@/lib/rate-limit'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { isFetchableImage } from '@/lib/safe-fetch'
 import type { Hotspot, Page } from '@/lib/book-schema'
 
 /**
@@ -97,44 +98,15 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
   return hotspots
 }
 
-/**
- * Whether the server is willing to fetch this image.
- *
- * `page.background.image` is author-supplied and fetched server-side, so an
- * unguarded fetch is a request the server makes on someone else's behalf to
- * anywhere it can reach — including the metadata endpoints and private ranges a
- * browser could never touch. Uploads live on public https URLs, so refusing
- * everything else costs nothing real.
- */
-function isFetchableImage(url: string): boolean {
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
-    return false
-  }
-  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false
-
-  const host = parsed.hostname.toLowerCase()
-  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.internal'))
-    return false
-  if (host === '169.254.169.254' || host === 'metadata.google.internal') return false
-  // IPv6 loopback / unique-local, and the IPv4 private + loopback + link-local ranges.
-  if (host === '::1' || host.startsWith('[')) return false
-  if (/^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host)) return false
-  if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false
-  if (/^169\.254\./.test(host)) return false
-  if (/^0\./.test(host)) return false
-  return true
-}
-
 /** Whatever we can find on one page, AI first and structure as the fallback. */
 async function detectForPage(page: Page): Promise<Hotspot[]> {
   let detected: Hotspot[] = []
 
-  if (isAiEnabled() && page.background?.image && isFetchableImage(page.background.image)) {
+  if (isAiEnabled() && page.background?.image && (await isFetchableImage(page.background.image))) {
     try {
-      const imgRes = await fetch(page.background.image)
+      // `redirect: 'manual'` because only the first URL was ever checked: a 302
+      // to the metadata service would otherwise be followed without inspection.
+      const imgRes = await fetch(page.background.image, { redirect: 'manual' })
       if (imgRes.ok) {
         const buffer = Buffer.from(await imgRes.arrayBuffer())
         detected = await detectHotspots(buffer, page.page_number)
