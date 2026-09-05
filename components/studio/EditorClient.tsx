@@ -156,7 +156,7 @@ export function EditorClient({ book, entitlements }: Props) {
       // mid-statement and surfaced as "Save failed — check your connection".
       //
       // PUT /api/books/[id]/pages replaces the whole set inside one transaction
-      // (see supabase/migrations/010), which is what "the pages are now this"
+      // (see replace_book_pages in 009), which is what "the pages are now this"
       // actually requires — so it is sent only when the pages have moved.
       if (pagesChanged) {
         const pagesRes = await fetch(`/api/books/${bookAtSaveStart.id}/pages`, {

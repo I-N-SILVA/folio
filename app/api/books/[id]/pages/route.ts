@@ -65,7 +65,7 @@ export async function PUT(
   // an INSERT as two separate round-trips, so every autosave — one every couple
   // of seconds while editing — briefly left the book with no pages, and
   // anything that stopped the INSERT landing made that permanent. See
-  // migrations/010 for why the delete can't simply become an upsert.
+  // 009's replace_book_pages for why the delete can't simply become an upsert.
   const { error: rpcError } = await supabaseAdmin.rpc('replace_book_pages', {
     p_book_id: id,
     p_pages: rows,
@@ -73,7 +73,7 @@ export async function PUT(
 
   if (!rpcError) return new NextResponse(null, { status: 204 })
 
-  // PGRST202 / 42883 mean migration 010 hasn't been applied. Rather than break
+  // PGRST202 / 42883 mean 009 hasn't been applied. Rather than break
   // saving outright on such an install, fall back to the old two-statement path
   // — but snapshot the pages first so a failed insert can be put back.
   const missingFunction = rpcError.code === 'PGRST202' || rpcError.code === '42883'
@@ -83,7 +83,7 @@ export async function PUT(
   }
 
   console.error(
-    '[pages] replace_book_pages() is missing — apply supabase/migrations/010_replace_book_pages.sql. ' +
+    '[pages] replace_book_pages() is missing — apply supabase/migrations/009_post_audit_features.sql. ' +
       'Falling back to a non-atomic save.'
   )
 

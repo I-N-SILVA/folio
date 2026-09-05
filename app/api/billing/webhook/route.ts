@@ -121,13 +121,13 @@ async function setPlanForCustomer(
 
   const { error } = await supabaseAdmin.from('profiles').update(update).eq('id', profile.id)
 
-  // 42703 = undefined_column, i.e. migration 011 hasn't been applied. Retry
+  // 42703 = undefined_column: the dunning columns land in 009. Retry
   // without the dunning columns rather than dropping a billing event entirely —
   // the grace period simply doesn't expire until the migration lands, which is
   // the behaviour this install already had.
   if (error?.code === '42703') {
     console.error(
-      '[stripe webhook] dunning columns missing — apply supabase/migrations/011_dunning_grace.sql'
+      '[stripe webhook] dunning columns missing — apply supabase/migrations/009_post_audit_features.sql'
     )
     delete update.stripe_past_due_since
     delete update.stripe_event_at

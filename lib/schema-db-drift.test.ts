@@ -9,7 +9,7 @@ import { PageSchema, EVENT_TYPES } from './book-schema'
  * This project has now shipped the same bug twice. Migration 008 exists because
  * `events.event_type` allowed eleven values while the client had always sent
  * thirteen, so every `page_click` and `gate_unlock` was silently rejected.
- * Migration 010 exists because `pages.layout` allowed four while the editor's
+ * Migration 012 exists because `pages.layout` allowed four while the editor's
  * dropdown offered five — an author who chose "Grid" got "Could not save these
  * pages" and no way to work out why.
  *

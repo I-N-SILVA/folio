@@ -78,12 +78,12 @@ export async function PATCH(
       .upsert({ slug: current.slug, book_id: id }, { onConflict: 'slug' })
 
     if (filed.error) {
-      // 42P01 = undefined_table: migration 014 hasn't been applied. Refuse the
+      // 42P01 = undefined_table: book_slug_history lands in 009. Refuse the
       // rename rather than performing one that silently breaks every link
       // already in circulation.
       if (filed.error.code === '42P01') {
         console.error(
-          '[books] book_slug_history is missing — apply supabase/migrations/014_slug_history.sql'
+          '[books] book_slug_history is missing — apply supabase/migrations/009_post_audit_features.sql'
         )
         return NextResponse.json(
           { error: 'Changing an edition’s link is not available on this deployment yet.' },
@@ -120,7 +120,7 @@ export async function PATCH(
 
 // A second page-replacement handler used to live here: `PUT /api/books/[id]`,
 // which deleted every page and then inserted the new set as two unrelated
-// statements — the exact data-loss shape that `supabase/migrations/010` and
+// statements — the exact data-loss shape that `replace_book_pages` (009) and
 // `PUT /api/books/[id]/pages` exist to prevent. Nothing called it, so it was a
 // loaded gun pointed at whoever wired up saving next. Page replacement has one
 // route now, and that route is transactional.

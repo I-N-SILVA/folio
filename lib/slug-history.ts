@@ -16,7 +16,7 @@ export async function findCurrentSlug(oldSlug: string): Promise<string | null> {
     .maybeSingle()
 
   if (error) {
-    // 42P01 = undefined_table: migration 014 hasn't been applied. A 404 is the
+    // 42P01 = undefined_table: book_slug_history lands in 009. A 404 is the
     // correct answer on such an install — no slug has ever been changed there.
     if (error.code !== '42P01') {
       console.error('[slug-history] lookup failed:', error)

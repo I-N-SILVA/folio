@@ -70,10 +70,10 @@ export async function GET(request: NextRequest) {
     .limit(BATCH_SIZE)
 
   if (error) {
-    // 42703 = undefined_column: migration 013 hasn't been applied.
+    // 42703 = undefined_column: the digest columns land in 009.
     if (error.code === '42703') {
       console.error(
-        '[cron/digest] digest columns missing — apply supabase/migrations/013_weekly_digest.sql'
+        '[cron/digest] digest columns missing — apply supabase/migrations/009_post_audit_features.sql'
       )
       return NextResponse.json({ skipped: 'migration_missing' }, { status: 200 })
     }

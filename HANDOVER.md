@@ -38,7 +38,7 @@ apply. Grep for `is missing` and `apply supabase/migrations` in production logs.
 | Migration | Consequence if missing |
 |---|---|
 | `009_post_audit_features.sql` | The database will miss several key features including: Gate view events, atomic page saving, dunning grace periods, edition engagement insights, weekly digests, and slug history. |
-| `011_fix_pages_layout_check.sql` | **Two page layouts cannot be saved at all.** The `pages.layout` CHECK has allowed four values since 002, while the editor's dropdown has always offered five — an author choosing "Grid" got "Could not save these pages" and no clue why. `canvas` is the sixth and does not work without this. |
+| `012_fix_pages_layout_check.sql` | **Two page layouts cannot be saved at all.** The `pages.layout` CHECK has allowed four values since 002, while the editor's dropdown has always offered five — an author choosing "Grid" got "Could not save these pages" and no clue why. `canvas` is the sixth and does not work without this. |
 
 ### Configure what's optional
 
@@ -220,7 +220,7 @@ Ordered by how much they'd hurt.
 5. **Nothing prunes `book_slug_history`.** It grows by one row per rename, which
    is fine, but a released slug is never reusable by anyone — deliberately, since
    reuse would hijack old links.
-6. **`profiles` now has an UPDATE policy** (migration 013), where 004
+6. **`profiles` now has an UPDATE policy** (in 009), where 004
    deliberately had none so nobody could promote themselves. It pins `plan` and
    `status` to their current values, which is what makes it safe — read it before
    adding another user-writable column.
@@ -243,7 +243,7 @@ Ordered by how much they'd hurt.
 
 ## 4. Decisions that are the owner's, not the implementer's
 
-- **Was 301-from-the-old-slug the right call?** It is built (migration 014, the
+- **Was 301-from-the-old-slug the right call?** It is built (009's slug history, the
   editor's Link field, `lib/slug-history.ts`). The consequence to be comfortable
   with: a slug that has ever been used can never be claimed by another edition,
   because that would silently redirect someone else's circulated links.
