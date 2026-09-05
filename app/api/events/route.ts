@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { EVENT_TYPES } from '@/lib/book-schema'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
@@ -6,22 +7,8 @@ import { rateLimit, clientIp } from '@/lib/rate-limit'
 const EventBodySchema = z.object({
   bookId: z.string(),
   sessionId: z.string(),
-  eventType: z.enum([
-    'book_open',
-    'page_view',
-    'page_flip',
-    'hotspot_click',
-    'modal_open',
-    'modal_close',
-    'video_play',
-    'video_complete',
-    'audio_play',
-    'cta_click',
-    'book_complete',
-    'page_click',
-    'gate_view',
-    'gate_unlock',
-  ]),
+  // One list, in lib/book-schema. See EVENT_TYPES for why.
+  eventType: z.enum(EVENT_TYPES),
   pageNumber: z.number().int().optional(),
   payload: z.record(z.string(), z.unknown()).optional(),
 })

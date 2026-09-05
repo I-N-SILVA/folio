@@ -38,6 +38,7 @@ apply. Grep for `is missing` and `apply supabase/migrations` in production logs.
 | Migration | Consequence if missing |
 |---|---|
 | `009_post_audit_features.sql` | The database will miss several key features including: Gate view events, atomic page saving, dunning grace periods, edition engagement insights, weekly digests, and slug history. |
+| `011_fix_pages_layout_check.sql` | **Two page layouts cannot be saved at all.** The `pages.layout` CHECK has allowed four values since 002, while the editor's dropdown has always offered five — an author choosing "Grid" got "Could not save these pages" and no clue why. `canvas` is the sixth and does not work without this. |
 
 ### Configure what's optional
 

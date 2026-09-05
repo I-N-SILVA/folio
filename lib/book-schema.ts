@@ -403,21 +403,36 @@ export type Book = z.infer<typeof BookSchema>
 
 // ─── Analytics event types ─────────────────────────────────────────────────────
 
-export type EventType =
-  | 'book_open'
-  | 'page_view'
-  | 'page_flip'
-  | 'hotspot_click'
-  | 'modal_open'
-  | 'modal_close'
-  | 'video_play'
-  | 'video_complete'
-  | 'audio_play'
-  | 'cta_click'
-  | 'book_complete'
-  | 'page_click' // New for Heatmaps
-  | 'gate_view' // Reader reached the lead gate
-  | 'gate_unlock' // New for Gating
+export const EVENT_TYPES = [
+  'book_open',
+  'page_view',
+  'page_flip',
+  'hotspot_click',
+  'modal_open',
+  'modal_close',
+  'video_play',
+  'video_complete',
+  'audio_play',
+  'cta_click',
+  'book_complete',
+  'page_click', // heatmaps
+  'gate_view', // reader reached the lead gate
+  'gate_unlock', // lead captured
+] as const
+
+/**
+ * A const array rather than a bare union, so it exists at runtime.
+ *
+ * This list used to be written out three times — here as a type, again as a Zod
+ * enum in `app/api/events/route.ts`, and again as a CHECK constraint in SQL —
+ * with a comment in migration 009 asking whoever changed one to remember the
+ * others. Two of the three drifted anyway, twice: migration 008 exists because
+ * `page_click` and `gate_unlock` were silently rejected for months.
+ *
+ * The route now imports this, and `lib/schema-db-drift.test.ts` compares it
+ * against the SQL. A union type could do neither.
+ */
+export type EventType = (typeof EVENT_TYPES)[number]
 
 // ─── Theme presets ─────────────────────────────────────────────────────────────
 
