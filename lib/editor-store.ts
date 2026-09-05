@@ -1,10 +1,17 @@
 import { create } from 'zustand'
 import type { Book, Page, Block, Hotspot, Frame } from './book-schema'
+import { readClipboard, rekeyForPaste, writeClipboard } from './block-clipboard'
 
 interface EditorStore {
   book: Book | null
   currentPageIndex: number
   selectedBlockId: string | null
+  /**
+   * The whole selection, including `selectedBlockId`, which stays the anchor —
+   * the one the settings panel edits. Everything that reads a single selected
+   * block still works; everything that acts on a selection uses this.
+   */
+  selectedBlockIds: string[]
   selectedHotspotId: string | null
   hotspotMode: boolean
   isDirty: boolean
@@ -19,6 +26,9 @@ interface EditorStore {
   setBook: (book: Book) => void
   setCurrentPageIndex: (idx: number) => void
   selectBlock: (id: string | null) => void
+  /** Shift- or meta-click: add to the selection, or take out of it. */
+  toggleBlockSelection: (id: string) => void
+  selectBlocks: (ids: string[]) => void
   selectHotspot: (id: string | null) => void
   setHotspotMode: (on: boolean) => void
   setIsSaving: (saving: boolean) => void
@@ -36,6 +46,12 @@ interface EditorStore {
   insertBlockAt: (pageId: string, block: Block, index: number) => void
   duplicateBlock: (pageId: string, blockId: string) => void
   removeBlock: (pageId: string, blockId: string) => void
+  /** Delete every block in `blockIds` as one undo step. */
+  removeBlocks: (pageId: string, blockIds: string[]) => void
+  /** Put the selection on the clipboard. Returns how many were copied. */
+  copyBlocks: (pageId: string, blockIds: string[]) => number
+  /** Paste the clipboard onto a page, after `afterBlockId` when given. */
+  pasteBlocks: (pageId: string, afterBlockId?: string | null) => number
   moveBlock: (pageId: string, blockId: string, direction: 'up' | 'down') => void
 
   addHotspot: (pageId: string, hotspot: Hotspot) => void
@@ -102,6 +118,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   book: null,
   currentPageIndex: 0,
   selectedBlockId: null,
+  selectedBlockIds: [],
   selectedHotspotId: null,
   hotspotMode: false,
   isDirty: false,
@@ -112,9 +129,28 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   lastEditAt: 0,
 
   setBook: (book) => set({ book, isDirty: false }),
-  setCurrentPageIndex: (idx) => set({ currentPageIndex: idx, selectedBlockId: null, selectedHotspotId: null }),
-  selectBlock: (id) => set({ selectedBlockId: id, selectedHotspotId: null }),
-  selectHotspot: (id) => set({ selectedHotspotId: id, selectedBlockId: null }),
+  setCurrentPageIndex: (idx) =>
+    set({ currentPageIndex: idx, selectedBlockId: null, selectedBlockIds: [], selectedHotspotId: null }),
+  selectBlock: (id) =>
+    set({ selectedBlockId: id, selectedBlockIds: id ? [id] : [], selectedHotspotId: null }),
+
+  toggleBlockSelection: (id) =>
+    set((state) => {
+      const has = state.selectedBlockIds.includes(id)
+      const next = has ? state.selectedBlockIds.filter((b) => b !== id) : [...state.selectedBlockIds, id]
+      return {
+        selectedBlockIds: next,
+        // The anchor follows the selection: deselecting the block the settings
+        // panel is editing has to move that panel to another selected block, or
+        // close it, rather than leaving it on something no longer selected.
+        selectedBlockId: has ? (state.selectedBlockId === id ? (next[0] ?? null) : state.selectedBlockId) : id,
+        selectedHotspotId: null,
+      }
+    }),
+
+  selectBlocks: (ids) => set({ selectedBlockIds: ids, selectedBlockId: ids[0] ?? null, selectedHotspotId: null }),
+
+  selectHotspot: (id) => set({ selectedHotspotId: id, selectedBlockId: null, selectedBlockIds: [] }),
   setHotspotMode: (on) => set({ hotspotMode: on }),
   setIsSaving: (saving) => set({ isSaving: saving }),
 
@@ -283,6 +319,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return {
       isDirty: true,
       selectedBlockId: null,
+      selectedBlockIds: [],
       ...snapshotHistory(state, state.book),
       book: {
         ...state.book,
@@ -292,6 +329,68 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       },
     }
   }),
+
+  removeBlocks: (pageId, blockIds) => set((state) => {
+    if (!state.book?.pages || blockIds.length === 0) return state
+    const doomed = new Set(blockIds)
+    return {
+      isDirty: true,
+      selectedBlockId: null,
+      selectedBlockIds: [],
+      // One snapshot for the whole selection: deleting six blocks and pressing
+      // undo should bring six back, not one.
+      ...snapshotHistory(state, state.book),
+      book: {
+        ...state.book,
+        pages: state.book.pages.map((p) =>
+          p.id === pageId ? { ...p, blocks: p.blocks.filter((b) => !doomed.has(b.id)) } : p
+        ),
+      },
+    }
+  }),
+
+  copyBlocks: (pageId, blockIds) => {
+    const state = get()
+    const page = state.book?.pages?.find((p) => p.id === pageId)
+    if (!page) return 0
+    // Page order, not click order — pasting should reproduce the arrangement
+    // that was copied rather than the sequence it was clicked in.
+    const chosen = page.blocks.filter((b) => blockIds.includes(b.id))
+    return writeClipboard(chosen) ? chosen.length : 0
+  },
+
+  pasteBlocks: (pageId, afterBlockId) => {
+    const clipped = readClipboard()
+    if (clipped.length === 0) return 0
+
+    let pasted = 0
+    set((state) => {
+      if (!state.book?.pages) return state
+      const page = state.book.pages.find((p) => p.id === pageId)
+      if (!page) return state
+
+      const fresh = rekeyForPaste(clipped, page.layout === 'canvas')
+      const anchor = afterBlockId ? page.blocks.findIndex((b) => b.id === afterBlockId) : -1
+      const at = anchor === -1 ? page.blocks.length : anchor + 1
+      const nextBlocks = [...page.blocks]
+      nextBlocks.splice(at, 0, ...fresh)
+      pasted = fresh.length
+
+      return {
+        isDirty: true,
+        // Selecting what was just pasted is what makes a paste followed by a
+        // drag or a delete work without hunting for it.
+        selectedBlockId: fresh[0].id,
+        selectedBlockIds: fresh.map((b) => b.id),
+        ...snapshotHistory(state, state.book),
+        book: {
+          ...state.book,
+          pages: state.book.pages.map((p) => (p.id === pageId ? { ...p, blocks: nextBlocks } : p)),
+        },
+      }
+    })
+    return pasted
+  },
 
   moveBlock: (pageId, blockId, direction) => set((state) => {
     if (!state.book?.pages) return state

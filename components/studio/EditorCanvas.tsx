@@ -64,6 +64,7 @@ function SortableBlock({
   id,
   label,
   isSelected,
+  isAnchor,
   canMoveUp,
   canMoveDown,
   onMoveUp,
@@ -79,6 +80,8 @@ function SortableBlock({
   /** Block type, surfaced on the selection so it's clear what's being edited. */
   label: string
   isSelected: boolean
+  /** The one the settings panel is editing, when several are selected. */
+  isAnchor: boolean
   canMoveUp?: boolean
   canMoveDown?: boolean
   onMoveUp?: () => void
@@ -106,7 +109,11 @@ function SortableBlock({
       onClick={onClick}
       className={twMerge(
         'relative group/block transition-all outline-none rounded-lg',
-        isSelected ? 'ring-2 ring-[var(--studio-select)] shadow-md' : 'hover:ring-1 hover:ring-neutral-400',
+        isSelected
+          ? isAnchor
+            ? 'ring-2 ring-[var(--studio-select)] shadow-md'
+            : 'ring-2 ring-[var(--studio-select)]/50'
+          : 'hover:ring-1 hover:ring-neutral-400',
         isDragging && 'opacity-40 z-50 ring-2 ring-[var(--studio-select)] shadow-2xl scale-[1.01]',
         !isSelected && 'cursor-pointer'
       )}
@@ -115,7 +122,7 @@ function SortableBlock({
       <div
         className={twMerge(
           'absolute -top-3.5 left-2 z-50 flex items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 py-0.5 text-white shadow-xl border border-neutral-700 transition-all select-none',
-          isSelected
+          isAnchor
             ? 'opacity-100 scale-100'
             : 'opacity-0 scale-95 pointer-events-none group-hover/block:opacity-100 group-hover/block:scale-100 group-hover/block:pointer-events-auto'
         )}
@@ -233,6 +240,8 @@ export function EditorCanvas() {
     selectedHotspotId,
     setHotspotMode,
     selectBlock,
+    selectedBlockIds,
+    toggleBlockSelection,
     addBlock,
     insertBlockAt,
     duplicateBlock,
@@ -1003,7 +1012,8 @@ export function EditorCanvas() {
                         key={block.id}
                         id={block.id}
                         label={block.type === 'text' ? (block.variant ?? 'text') : block.type}
-                        isSelected={selectedBlockId === block.id}
+                        isSelected={selectedBlockIds.includes(block.id)}
+                        isAnchor={selectedBlockId === block.id}
                         canMoveUp={blockIndex > 0}
                         canMoveDown={blockIndex < currentPage.blocks.length - 1}
                         onMoveUp={() => moveBlock(currentPage.id, block.id, 'up')}
@@ -1019,7 +1029,10 @@ export function EditorCanvas() {
                         }}
                         onClick={(e) => {
                           e.stopPropagation()
-                          selectBlock(block.id)
+                          // Shift or meta extends the selection; a plain click
+                          // replaces it, which is what every other canvas does.
+                          if (e.shiftKey || e.metaKey || e.ctrlKey) toggleBlockSelection(block.id)
+                          else selectBlock(block.id)
                         }}
                       >
                         {children}

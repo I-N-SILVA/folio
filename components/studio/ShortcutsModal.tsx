@@ -21,9 +21,20 @@ const SHORTCUT_GROUPS = [
   {
     category: 'Editing & Canvas',
     shortcuts: [
-      { keys: ['⌫ / Del'], desc: 'Delete selected block or hotspot' },
+      { keys: ['⌫ / Del'], desc: 'Delete selected blocks or hotspot' },
       { keys: ['Click + Drag'], desc: 'Reposition hotspot or block' },
       { keys: ['?'], desc: 'Open keyboard shortcuts cheatsheet' },
+    ],
+  },
+  {
+    category: 'Selection & Clipboard',
+    shortcuts: [
+      { keys: ['⇧ / ⌘', 'Click'], desc: 'Add a block to the selection' },
+      { keys: ['⌘', 'A'], desc: 'Select every block on the page' },
+      { keys: ['⌘', 'C'], desc: 'Copy — works across editions' },
+      { keys: ['⌘', 'X'], desc: 'Cut selected blocks' },
+      { keys: ['⌘', 'V'], desc: 'Paste below the selection' },
+      { keys: ['⌘', 'D'], desc: 'Duplicate selected blocks' },
     ],
   },
   {

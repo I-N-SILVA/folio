@@ -9,7 +9,8 @@ import { HotspotSettingsForm } from './HotspotSettingsForm'
 import { BookSettingsForm } from './BookSettingsForm'
 
 export function SettingsPanel() {
-  const { book, currentPageIndex, selectedBlockId, selectedHotspotId } = useEditorStore()
+  const { book, currentPageIndex, selectedBlockId, selectedBlockIds, selectedHotspotId, copyBlocks, removeBlocks, pasteBlocks } =
+    useEditorStore()
   const [tab, setTab] = useState<'selection' | 'book'>('selection')
 
   // Auto-switch to selection tab when something is selected
@@ -66,7 +67,42 @@ export function SettingsPanel() {
         {tab === 'book' ? (
           <BookSettingsForm key={book.id} book={book} />
         ) : selectedBlock ? (
-          <BlockSettingsForm key={selectedBlock.id} block={selectedBlock} pageId={currentPage.id} />
+          <>
+            {/* With several blocks selected the panel still edits one of them —
+                the anchor — so it has to say so, and offer the actions that
+                apply to the whole selection. Silently editing one of six
+                selected blocks is worse than not offering multi-select. */}
+            {selectedBlockIds.length > 1 && (
+              <div className="mb-3 rounded-lg border border-[var(--studio-select)]/40 bg-[var(--studio-select)]/10 p-2.5">
+                <p className="text-[11px] font-semibold text-white">
+                  {selectedBlockIds.length} blocks selected
+                </p>
+                <p className="mt-0.5 text-[10px] leading-4 text-neutral-400">
+                  Settings below apply to the highlighted one.
+                </p>
+                <div className="mt-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      copyBlocks(currentPage.id, selectedBlockIds)
+                      pasteBlocks(currentPage.id, selectedBlockIds[selectedBlockIds.length - 1])
+                    }}
+                    className="flex-1 rounded-md bg-neutral-800 py-1.5 text-[11px] font-semibold text-neutral-200 transition-colors hover:bg-neutral-700"
+                  >
+                    Duplicate all
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeBlocks(currentPage.id, selectedBlockIds)}
+                    className="flex-1 rounded-md bg-red-500/15 py-1.5 text-[11px] font-semibold text-red-300 transition-colors hover:bg-red-500/25"
+                  >
+                    Delete all
+                  </button>
+                </div>
+              </div>
+            )}
+            <BlockSettingsForm key={selectedBlock.id} block={selectedBlock} pageId={currentPage.id} />
+          </>
         ) : selectedHotspot ? (
           <HotspotSettingsForm key={selectedHotspot.id} hotspot={selectedHotspot} pageId={currentPage.id} />
         ) : (

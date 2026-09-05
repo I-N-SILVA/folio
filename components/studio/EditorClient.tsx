@@ -293,17 +293,73 @@ export function EditorClient({ book, entitlements }: Props) {
         return
       }
 
-      // Delete/Backspace → remove selected block
+      // Copy / cut / paste / duplicate, on the block selection.
+      //
+      // These do not touch the OS clipboard — see lib/block-clipboard.ts — so
+      // they only fire when the selection is blocks and the caret is not in a
+      // field, which leaves ordinary text copy and paste alone.
+      if (meta && ['c', 'x', 'v', 'd'].includes(e.key)) {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        if (window.getSelection()?.toString()) return
+
+        const store = useEditorStore.getState()
+        const page = store.book?.pages?.[store.currentPageIndex]
+        if (!page) return
+        const selected = store.selectedBlockIds
+
+        if (e.key === 'v') {
+          e.preventDefault()
+          const n = store.pasteBlocks(page.id, store.selectedBlockId)
+          if (n) toast.success(n === 1 ? 'Pasted 1 block' : `Pasted ${n} blocks`)
+          return
+        }
+
+        if (selected.length === 0) return
+
+        if (e.key === 'c' || e.key === 'x') {
+          e.preventDefault()
+          const n = store.copyBlocks(page.id, selected)
+          if (!n) {
+            toast.error('Could not copy — this browser is blocking storage.')
+            return
+          }
+          if (e.key === 'x') store.removeBlocks(page.id, selected)
+          toast.success(`${e.key === 'x' ? 'Cut' : 'Copied'} ${n} block${n === 1 ? '' : 's'}`)
+          return
+        }
+
+        // Cmd+D duplicates in place. It was only ever available from the block
+        // toolbar, one block at a time.
+        e.preventDefault()
+        store.copyBlocks(page.id, selected)
+        store.pasteBlocks(page.id, selected[selected.length - 1])
+        return
+      }
+
+      // Cmd+A → select every block on the page
+      if (meta && e.key === 'a') {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        const store = useEditorStore.getState()
+        const page = store.book?.pages?.[store.currentPageIndex]
+        if (!page || page.blocks.length === 0) return
+        e.preventDefault()
+        store.selectBlocks(page.blocks.map((b) => b.id))
+        return
+      }
+
+      // Delete/Backspace → remove the selected blocks
       if (e.key === 'Delete' || e.key === 'Backspace') {
         // Don't capture if user is typing in an input/textarea
         const tag = (e.target as HTMLElement)?.tagName
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
 
-        const { selectedBlockId, selectedHotspotId, book } = useEditorStore.getState()
+        const { selectedBlockIds, selectedHotspotId, book } = useEditorStore.getState()
         const currentPage = book?.pages?.[useEditorStore.getState().currentPageIndex]
-        if (selectedBlockId && currentPage) {
+        if (selectedBlockIds.length && currentPage) {
           e.preventDefault()
-          useEditorStore.getState().removeBlock(currentPage.id, selectedBlockId)
+          useEditorStore.getState().removeBlocks(currentPage.id, selectedBlockIds)
         } else if (selectedHotspotId && currentPage) {
           e.preventDefault()
           useEditorStore.getState().removeHotspot(currentPage.id, selectedHotspotId)
