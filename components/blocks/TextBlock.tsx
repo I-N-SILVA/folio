@@ -7,13 +7,23 @@ import { Bold, Italic, AlignLeft, AlignCenter, AlignRight, Check } from 'lucide-
 import { useEditorStore } from '@/lib/editor-store'
 import type { TextBlock as TextBlockType } from '@/lib/book-schema'
 
+/**
+ * What is left of the old per-variant styling: the parts that are structure or
+ * ornament rather than type.
+ *
+ * The sizes, weights, tracking and leading used to live here as fixed Tailwind
+ * classes, which meant a heading was 30px in every edition ever made. They now
+ * come from the edition's type set as CSS variables — see lib/typesets.ts —
+ * so one choice restyles the whole document and a per-block override is
+ * genuinely an override.
+ */
 const variantStyles: Record<TextBlockType['variant'], string> = {
-  title: 'font-display text-4xl md:text-6xl font-bold leading-[1.08] tracking-[-0.04em]',
-  heading: 'font-display text-2xl md:text-3xl font-semibold leading-snug tracking-[-0.025em]',
-  body: 'text-base md:text-lg leading-relaxed font-normal tracking-[-0.01em]',
-  caption: 'text-xs md:text-sm opacity-75 italic leading-normal tracking-wide',
-  quote: 'text-xl md:text-2xl italic border-l-3 border-[var(--primary)] pl-4 opacity-95 leading-relaxed tracking-[-0.01em]',
-  stat: 'font-display text-5xl md:text-7xl font-bold tabular-nums tracking-[-0.05em]',
+  title: '',
+  heading: '',
+  body: '',
+  caption: 'opacity-75',
+  quote: 'border-l-3 border-[var(--primary)] pl-4 opacity-95',
+  stat: 'tabular-nums',
 }
 
 const fontSizeStyles: Record<string, string> = {
@@ -113,20 +123,30 @@ export function TextBlock({ block, pageId }: { block: TextBlockType; pageId?: st
     }
   }
 
-  const isHeading = ['title', 'heading', 'stat'].includes(block.variant)
+  const v = block.variant
 
   const containerClasses = twMerge(
-    block.fontSize ? fontSizeStyles[block.fontSize] : variantStyles[block.variant],
+    variantStyles[v],
+    // A size or tracking override is a Tailwind class, and a class cannot beat
+    // an inline style — so when one is set, the type-set value for that one
+    // property is left off below rather than fought with.
+    block.fontSize ? fontSizeStyles[block.fontSize] : '',
+    block.letterSpacing ? spacingStyles[block.letterSpacing] : '',
     alignStyles[block.align ?? 'left'],
     block.padding ? paddingStyles[block.padding] : '',
     block.borderRadius ? radiusStyles[block.borderRadius] : '',
-    block.letterSpacing ? spacingStyles[block.letterSpacing] : '',
     block.backgroundColor ? 'border border-current/10' : '',
     'text-[var(--text-color)] transition-all'
   )
 
   const customInlineStyle: React.CSSProperties = {
-    fontFamily: isHeading ? 'var(--heading-font)' : 'var(--body-font)',
+    fontFamily: `var(--t-${v}-family, var(--body-font))`,
+    fontWeight: `var(--t-${v}-weight, 400)` as unknown as number,
+    lineHeight: `var(--t-${v}-lh, 1.5)`,
+    fontStyle: `var(--t-${v}-style, normal)`,
+    textTransform: `var(--t-${v}-transform, none)` as React.CSSProperties['textTransform'],
+    ...(block.fontSize ? {} : { fontSize: `var(--t-${v}-size, 1rem)` }),
+    ...(block.letterSpacing ? {} : { letterSpacing: `var(--t-${v}-ls, normal)` }),
     ...(block.textColor ? { color: block.textColor } : {}),
     ...(block.backgroundColor ? { backgroundColor: block.backgroundColor } : {}),
   }

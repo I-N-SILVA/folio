@@ -5,10 +5,10 @@
   "description": "An ultra-luxury interactive digital monograph showcasing shoppable lookbooks, architectural spreads, and spatial audio narration.",
   "owner_id": "demo",
   "theme": {
+    "typeset": "editorial",
     "preset": "ivory",
     "background": "#fcfbf9",
     "primary": "#0d0d11",
-    "headingFont": "Bodoni Moda",
     "paperPhysics": "magazine"
   },
   "settings": {

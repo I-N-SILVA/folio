@@ -4,8 +4,16 @@
   "title": "Mara Ito — Selected Works",
   "description": "A designer's portfolio as an interactive edition — case studies with context one tap away.",
   "owner_id": "demo",
-  "theme": { "preset": "carbon", "background": "#111111", "primary": "#f5f5f5", "headingFont": "Space Grotesk" },
-  "settings": { "published": true, "unlisted": false },
+  "theme": {
+    "typeset": "modern",
+    "preset": "carbon",
+    "background": "#111111",
+    "primary": "#f5f5f5"
+  },
+  "settings": {
+    "published": true,
+    "unlisted": false
+  },
   "pages": [
     {
       "id": "pf-page-1",
@@ -13,11 +21,31 @@
       "page_number": 1,
       "type": "cover",
       "layout": "hero",
-      "background": { "color": "#111111" },
+      "background": {
+        "color": "#111111"
+      },
       "blocks": [
-        { "type": "text", "id": "pf1-1", "variant": "caption", "content": "PORTFOLIO · 2024 – 2026", "align": "center" },
-        { "type": "text", "id": "pf1-2", "variant": "title", "content": "Mara Ito", "align": "center" },
-        { "type": "text", "id": "pf1-3", "variant": "body", "content": "Brand and digital design for teams that care how things feel. Three projects, five minutes.", "align": "center" }
+        {
+          "type": "text",
+          "id": "pf1-1",
+          "variant": "caption",
+          "content": "PORTFOLIO · 2024 – 2026",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf1-2",
+          "variant": "title",
+          "content": "Mara Ito",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf1-3",
+          "variant": "body",
+          "content": "Brand and digital design for teams that care how things feel. Three projects, five minutes.",
+          "align": "center"
+        }
       ],
       "hotspots": []
     },
@@ -27,7 +55,9 @@
       "page_number": 2,
       "type": "content",
       "layout": "split",
-      "background": { "color": "#ffffff" },
+      "background": {
+        "color": "#ffffff"
+      },
       "blocks": [
         {
           "type": "image",
@@ -36,9 +66,24 @@
           "alt": "Nova brand identity spread",
           "lightbox": true
         },
-        { "type": "text", "id": "pf2-2", "variant": "heading", "content": "Nova — identity" },
-        { "type": "text", "id": "pf2-3", "variant": "body", "content": "A fintech rebrand from wordmark to motion system. Shipped in nine weeks with a two-person team; adopted across product, web, and out-of-home." },
-        { "type": "text", "id": "pf2-4", "variant": "caption", "content": "Tap the pin for role and results." }
+        {
+          "type": "text",
+          "id": "pf2-2",
+          "variant": "heading",
+          "content": "Nova — identity"
+        },
+        {
+          "type": "text",
+          "id": "pf2-3",
+          "variant": "body",
+          "content": "A fintech rebrand from wordmark to motion system. Shipped in nine weeks with a two-person team; adopted across product, web, and out-of-home."
+        },
+        {
+          "type": "text",
+          "id": "pf2-4",
+          "variant": "caption",
+          "content": "Tap the pin for role and results."
+        }
       ],
       "hotspots": [
         {
@@ -65,7 +110,13 @@
         "overlay": "rgba(0,0,0,0.5)"
       },
       "blocks": [
-        { "type": "text", "id": "pf3-1", "variant": "heading", "content": "Process, not mystery", "align": "center" }
+        {
+          "type": "text",
+          "id": "pf3-1",
+          "variant": "heading",
+          "content": "Process, not mystery",
+          "align": "center"
+        }
       ],
       "hotspots": [
         {
@@ -98,7 +149,9 @@
       "page_number": 4,
       "type": "content",
       "layout": "split",
-      "background": { "color": "#ffffff" },
+      "background": {
+        "color": "#ffffff"
+      },
       "blocks": [
         {
           "type": "image",
@@ -107,9 +160,26 @@
           "alt": "Atlas app interface designs",
           "lightbox": true
         },
-        { "type": "text", "id": "pf4-2", "variant": "heading", "content": "Atlas — product design" },
-        { "type": "text", "id": "pf4-3", "variant": "body", "content": "A field-operations app redesigned around one insight: crews work with gloves on. Bigger targets, fewer taps, offline-first." },
-        { "type": "button", "id": "pf4-4", "label": "Read the case study", "href": "https://qlico.app", "variant": "ghost", "target": "_blank" }
+        {
+          "type": "text",
+          "id": "pf4-2",
+          "variant": "heading",
+          "content": "Atlas — product design"
+        },
+        {
+          "type": "text",
+          "id": "pf4-3",
+          "variant": "body",
+          "content": "A field-operations app redesigned around one insight: crews work with gloves on. Bigger targets, fewer taps, offline-first."
+        },
+        {
+          "type": "button",
+          "id": "pf4-4",
+          "label": "Read the case study",
+          "href": "https://qlico.app",
+          "variant": "ghost",
+          "target": "_blank"
+        }
       ],
       "hotspots": []
     },
@@ -119,15 +189,59 @@
       "page_number": 5,
       "type": "content",
       "layout": "hero",
-      "background": { "color": "#111111" },
+      "background": {
+        "color": "#111111"
+      },
       "blocks": [
-        { "type": "text", "id": "pf5-1", "variant": "heading", "content": "In numbers", "align": "center" },
-        { "type": "text", "id": "pf5-2", "variant": "stat", "content": "12", "align": "center" },
-        { "type": "text", "id": "pf5-3", "variant": "caption", "content": "Brands shipped end-to-end", "align": "center" },
-        { "type": "text", "id": "pf5-4", "variant": "stat", "content": "8 yrs", "align": "center" },
-        { "type": "text", "id": "pf5-5", "variant": "caption", "content": "Across identity, product, and motion", "align": "center" },
-        { "type": "text", "id": "pf5-6", "variant": "stat", "content": "2", "align": "center" },
-        { "type": "text", "id": "pf5-7", "variant": "caption", "content": "Client slots open this quarter", "align": "center" }
+        {
+          "type": "text",
+          "id": "pf5-1",
+          "variant": "heading",
+          "content": "In numbers",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf5-2",
+          "variant": "stat",
+          "content": "12",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf5-3",
+          "variant": "caption",
+          "content": "Brands shipped end-to-end",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf5-4",
+          "variant": "stat",
+          "content": "8 yrs",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf5-5",
+          "variant": "caption",
+          "content": "Across identity, product, and motion",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf5-6",
+          "variant": "stat",
+          "content": "2",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf5-7",
+          "variant": "caption",
+          "content": "Client slots open this quarter",
+          "align": "center"
+        }
       ],
       "hotspots": []
     },
@@ -137,10 +251,22 @@
       "page_number": 6,
       "type": "content",
       "layout": "text",
-      "background": { "color": "#ffffff" },
+      "background": {
+        "color": "#ffffff"
+      },
       "blocks": [
-        { "type": "text", "id": "pf6-1", "variant": "quote", "content": "\"Mara sent her portfolio as a link. By the time we called her, we already knew which case study the whole team had read twice.\"" },
-        { "type": "text", "id": "pf6-2", "variant": "caption", "content": "— Head of Design, Nova" }
+        {
+          "type": "text",
+          "id": "pf6-1",
+          "variant": "quote",
+          "content": "\"Mara sent her portfolio as a link. By the time we called her, we already knew which case study the whole team had read twice.\""
+        },
+        {
+          "type": "text",
+          "id": "pf6-2",
+          "variant": "caption",
+          "content": "— Head of Design, Nova"
+        }
       ],
       "hotspots": []
     },
@@ -150,12 +276,36 @@
       "page_number": 7,
       "type": "back",
       "layout": "hero",
-      "background": { "color": "#111111" },
+      "background": {
+        "color": "#111111"
+      },
       "blocks": [
-        { "type": "text", "id": "pf7-1", "variant": "title", "content": "Let's work.", "align": "center" },
-        { "type": "text", "id": "pf7-2", "variant": "body", "content": "Booking projects for next quarter — brand, product, or both.", "align": "center" },
-        { "type": "divider", "id": "pf7-3" },
-        { "type": "button", "id": "pf7-4", "label": "Book an intro call →", "href": "https://qlico.app", "variant": "primary", "target": "_blank" }
+        {
+          "type": "text",
+          "id": "pf7-1",
+          "variant": "title",
+          "content": "Let's work.",
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "pf7-2",
+          "variant": "body",
+          "content": "Booking projects for next quarter — brand, product, or both.",
+          "align": "center"
+        },
+        {
+          "type": "divider",
+          "id": "pf7-3"
+        },
+        {
+          "type": "button",
+          "id": "pf7-4",
+          "label": "Book an intro call →",
+          "href": "https://qlico.app",
+          "variant": "primary",
+          "target": "_blank"
+        }
       ],
       "hotspots": []
     }

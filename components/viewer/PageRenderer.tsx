@@ -5,6 +5,7 @@ import { twMerge } from 'tailwind-merge'
 import { BlockRenderer } from '@/components/blocks'
 import type { Page, Theme } from '@/lib/book-schema'
 import { THEME_PRESETS } from '@/lib/book-schema'
+import { getTypeset, typesetCssVars } from '@/lib/typesets'
 
 const layoutStyles: Record<Page['layout'], string> = {
   hero: 'flex flex-col items-center justify-center text-center p-6 md:p-10',
@@ -69,8 +70,15 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
     
     const primaryColor = theme?.primary || preset?.primary || '#3c2384'
     const bgColor = bg?.color || theme?.background || preset?.background || '#ffffff'
-    const headingFont = theme?.headingFont || preset?.headingFont || 'inherit'
-    const bodyFont = theme?.bodyFont || preset?.bodyFont || 'inherit'
+    // The edition's type set decides the whole scale, not just the pairing.
+    // Theme-level font overrides still win, and legacy names stored on existing
+    // editions are mapped onto a face that is actually loaded — see
+    // lib/typesets.ts.
+    const typeset = getTypeset(theme?.typeset ?? preset?.typeset)
+    const typeVars = typesetCssVars(typeset, {
+      headingFont: theme?.headingFont,
+      bodyFont: theme?.bodyFont,
+    })
     
     // Determine text color from the actual page background luminance so any
     // background — preset, per-page color, or image+overlay — stays legible.
@@ -86,8 +94,7 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
       ['--background' as any]: bgColor,
       ['--text-color' as any]: textColor,
       ['--muted-color' as any]: mutedColor,
-      ['--heading-font' as any]: `"${headingFont}", sans-serif`,
-      ['--body-font' as any]: `"${bodyFont}", sans-serif`,
+      ...typeVars,
       color: 'var(--text-color)',
       fontFamily: 'var(--body-font)',
     }

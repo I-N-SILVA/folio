@@ -58,11 +58,10 @@ export const TEMPLATES: PublicationTemplate[] = [
       title: 'Monochrome Luxury Lookbook',
       description: 'Spring/Summer ready-to-wear editorial edition',
       theme: {
+        typeset: 'editorial',
         preset: 'carbon',
         primary: '#ffffff',
         background: '#09090b',
-        headingFont: 'Playfair Display',
-        bodyFont: 'Inter',
       },
       settings: {
         published: true,
@@ -275,11 +274,10 @@ export const TEMPLATES: PublicationTemplate[] = [
       title: 'Architectural Monograph: Pavilion IX',
       description: 'Selected residential & cultural works in Kyoto',
       theme: {
+        typeset: 'classic',
         preset: 'ivory',
         primary: '#1c1917',
         background: '#fcfbf9',
-        headingFont: 'Inter',
-        bodyFont: 'Inter',
       },
       settings: {
         published: true,
@@ -466,11 +464,10 @@ export const TEMPLATES: PublicationTemplate[] = [
       title: "L'Atelier Degustation Menu",
       description: 'Nine-course autumn tasting experience and wine pairings',
       theme: {
+        typeset: 'journal',
         preset: 'cream',
         primary: '#f59e0b',
         background: '#181411',
-        headingFont: 'Playfair Display',
-        bodyFont: 'Inter',
       },
       settings: {
         published: true,
@@ -657,11 +654,10 @@ export const TEMPLATES: PublicationTemplate[] = [
       title: 'FY2026 Executive Investor Report',
       description: 'Annual shareholder review, key financial metrics and strategic growth roadmap',
       theme: {
+        typeset: 'technical',
         preset: 'slate',
         primary: '#38bdf8',
         background: '#0a192f',
-        headingFont: 'Inter',
-        bodyFont: 'Inter',
       },
       settings: {
         published: true,
@@ -846,11 +842,10 @@ export const TEMPLATES: PublicationTemplate[] = [
       title: 'Studio RAW: Visual Identity Systems',
       description: 'Selected design case studies, art direction, and digital brand transformations',
       theme: {
+        typeset: 'modern',
         preset: 'carbon',
         primary: '#a855f7',
         background: '#18181b',
-        headingFont: 'Playfair Display',
-        bodyFont: 'Inter',
       },
       settings: {
         published: true,
@@ -1021,11 +1016,10 @@ export const TEMPLATES: PublicationTemplate[] = [
       title: 'Vector Engine: Architecture Whitepaper',
       description: 'Technical whitepaper and performance benchmarks for next-gen search',
       theme: {
+        typeset: 'technical',
         preset: 'sage',
         primary: '#10b981',
         background: '#064e3b',
-        headingFont: 'Inter',
-        bodyFont: 'Inter',
       },
       settings: {
         published: true,

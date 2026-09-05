@@ -303,6 +303,12 @@ export const PageSchema = z.object({
 
 export const ThemeSchema = z.object({
   preset: z.enum(['ivory', 'slate', 'cream', 'carbon', 'sage', 'custom']).default('ivory'),
+  /**
+   * The edition's type set — see `lib/typesets.ts`. A plain string rather than
+   * an enum so adding a style is not a migration, and `getTypeset` falls back
+   * to the default for anything it does not recognise.
+   */
+  typeset: z.string().optional(),
   background: z.string().optional(),
   primary: z.string().optional(),
   headingFont: z.string().optional(),
@@ -436,40 +442,45 @@ export type EventType = (typeof EVENT_TYPES)[number]
 
 // ─── Theme presets ─────────────────────────────────────────────────────────────
 
+/**
+ * A preset is a palette plus a default type set.
+ *
+ * It used to name a font pairing too — Playfair Display, Sora, Lora and the
+ * rest — none of which was ever loaded, so every preset rendered in the
+ * browser's default sans-serif whatever it claimed. The type now lives in
+ * `lib/typesets.ts`, where every family named is a family served; a preset
+ * points at the type set closest to what its pairing was reaching for, so an
+ * edition made before this change lands somewhere coherent.
+ */
 export const THEME_PRESETS = {
   ivory: {
     label: 'Ivory',
     background: '#F7F6F2',
     primary: '#01696F',
-    headingFont: 'Playfair Display',
-    bodyFont: 'Inter',
+    typeset: 'editorial',
   },
   slate: {
     label: 'Slate',
     background: '#1C1C2E',
     primary: '#7C6EF8',
-    headingFont: 'Sora',
-    bodyFont: 'Inter',
+    typeset: 'modern',
   },
   cream: {
     label: 'Cream',
     background: '#FFFBF0',
     primary: '#C84B31',
-    headingFont: 'Lora',
-    bodyFont: 'Source Serif 4',
+    typeset: 'journal',
   },
   carbon: {
     label: 'Carbon',
     background: '#111111',
     primary: '#F5F5F5',
-    headingFont: 'Space Grotesk',
-    bodyFont: 'IBM Plex Sans',
+    typeset: 'technical',
   },
   sage: {
     label: 'Sage',
     background: '#F0F4F0',
     primary: '#2D6A4F',
-    headingFont: 'DM Serif Display',
-    bodyFont: 'DM Sans',
+    typeset: 'classic',
   },
 } as const

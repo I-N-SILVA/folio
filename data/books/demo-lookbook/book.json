@@ -5,10 +5,10 @@
   "description": "A shoppable homeware lookbook. Tap the pins to buy without leaving the page.",
   "owner_id": "demo",
   "theme": {
+    "typeset": "editorial",
     "preset": "cream",
     "background": "#fffbf0",
-    "primary": "#c84b31",
-    "headingFont": "Lora"
+    "primary": "#c84b31"
   },
   "settings": {
     "published": true,

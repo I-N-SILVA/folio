@@ -1,18 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Outfit, Bodoni_Moda } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from './providers'
+import { fontVariables } from '@/lib/fonts'
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 import { AppleSplashLinks } from '@/components/AppleSplashLinks'
 import './globals.css'
 
-const bodyFont = Outfit({ subsets: ['latin'], variable: '--font-body', display: 'swap' })
-const displayFont = Bodoni_Moda({
-  subsets: ['latin'],
-  variable: '--font-display',
-  display: 'swap',
-  style: ['normal', 'italic'],
-})
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app'
 
@@ -74,7 +67,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`h-full antialiased ${bodyFont.variable} ${displayFont.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`h-full antialiased ${fontVariables}`} suppressHydrationWarning>
       <head>
         {/* Stamp a stored theme choice before first paint. Without this, a user
             who picked dark sees a white flash on every navigation while React
