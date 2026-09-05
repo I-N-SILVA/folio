@@ -5,13 +5,13 @@ import type { DataBlock as DataBlockType } from '@/lib/book-schema'
 
 /**
  * Spreads the first poll of many blocks across a few hundred milliseconds.
- * Derived from the block rather than random so it stays stable across renders
- * and doesn't make the component impure.
+ * Derived from the block id rather than random so it stays stable across
+ * renders and doesn't make the component impure.
  *
  * FNV-1a, because the obvious `h * 31 + c` accumulator maps near-identical
- * strings to near-identical values — and these seeds are near-identical by
- * nature, being URLs that differ in one query parameter. Measured: six blocks
- * still fired within 1ms of each other. This mixes.
+ * strings to near-identical values, and ids from the same insert run are
+ * near-identical by nature. Measured: six blocks still fired within 1ms of each
+ * other. This mixes.
  */
 function hashJitter(seed: string): number {
   let h = 2166136261
@@ -26,13 +26,6 @@ function hashJitter(seed: string): number {
 const timedOutControllers = new WeakSet<AbortController>()
 function timedOut(c: AbortController): boolean {
   return timedOutControllers.has(c)
-}
-
-function getPath(obj: unknown, path: string): unknown {
-  return path.split('.').reduce<unknown>((acc, key) => {
-    if (acc && typeof acc === 'object') return (acc as Record<string, unknown>)[key]
-    return undefined
-  }, obj)
 }
 
 // How often a published edition re-polls its data source. Short enough that
@@ -50,7 +43,7 @@ type Status = 'loading' | 'live' | 'stale' | 'error'
  * Re-polls on an interval and whenever the tab regains focus, so a reader who
  * keeps the page open actually sees updates land.
  */
-export function DataBlock({ block }: { block: DataBlockType }) {
+export function DataBlock({ block, bookId }: { block: DataBlockType; bookId: string }) {
   const [value, setValue] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>('loading')
 
@@ -76,17 +69,28 @@ export function DataBlock({ block }: { block: DataBlockType }) {
         controller.abort()
       }, FETCH_TIMEOUT_MS)
 
-      fetch(block.source, { cache: 'no-store', signal: controller.signal })
+      // Through the server, not straight at the author's source.
+      //
+      // Fetching the source from here made CORS decide whether the feature
+      // worked at all — most real sources send no header for a reader's origin,
+      // so the block read "Offline" for every reader while the author's own
+      // test passed. It also published the source URL inside the page and made
+      // load scale with readers. See lib/live-data.ts.
+      fetch(`/api/live-data?book=${encodeURIComponent(bookId)}&block=${encodeURIComponent(block.id)}`, {
+        cache: 'no-store',
+        signal: controller.signal,
+      })
         .then((r) => {
           if (!r.ok) throw new Error(`${r.status}`)
           return r.json()
         })
-        .then((json) => {
+        .then((data: { value: string | null; stale?: boolean }) => {
           if (!active) return
-          const v = getPath(json, block.path)
-          if (v != null) {
-            setValue(String(v))
-            setStatus('live')
+          if (data.value != null) {
+            setValue(data.value)
+            // A source that has gone down keeps showing its last good value,
+            // marked stale, rather than dropping to "Offline".
+            setStatus(data.stale ? 'stale' : 'live')
           } else {
             setStatus('error')
           }
@@ -107,7 +111,7 @@ export function DataBlock({ block }: { block: DataBlockType }) {
 
     // Debounced so live-editing the source/path in the studio doesn't spam
     // fetches, and staggered so twenty blocks don't all fire in the same tick.
-    const initial = setTimeout(load, 350 + Math.floor(hashJitter(block.id + block.source) * 600))
+    const initial = setTimeout(load, 350 + Math.floor(hashJitter(block.id) * 600))
     const interval = setInterval(load, REFRESH_MS)
     function onVisible() {
       if (document.visibilityState === 'visible') load()
@@ -121,18 +125,27 @@ export function DataBlock({ block }: { block: DataBlockType }) {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [block.source, block.path, block.id])
+  }, [block.id, bookId])
 
   const display = value ?? block.fallback ?? '—'
   const align =
     block.align === 'center' ? 'justify-center' : block.align === 'right' ? 'justify-end' : 'justify-start'
 
   const live = status === 'live'
+  const isStale = status === 'stale'
   // The badge read "Live" while the first request was still in flight, which
   // claimed a fresh value before one existed.
   const badgeLabel =
-    status === 'error' ? (value ? 'Stale' : 'Offline') : status === 'loading' ? 'Checking' : 'Live'
-  const badgeColor = status === 'error' ? '#b45309' : 'var(--primary)'
+    status === 'error'
+      ? value
+        ? 'Stale'
+        : 'Offline'
+      : isStale
+        ? 'Stale'
+        : status === 'loading'
+          ? 'Checking'
+          : 'Live'
+  const badgeColor = status === 'error' || isStale ? '#b45309' : 'var(--primary)'
 
   return (
     <div className={`flex items-center gap-3 ${align}`} style={{ fontFamily: 'var(--body-font)' }}>
@@ -148,10 +161,10 @@ export function DataBlock({ block }: { block: DataBlockType }) {
         title={status === 'error' ? 'Could not reach the data source' : undefined}
         className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
         style={{
-          color: live ? badgeColor : status === 'error' ? badgeColor : 'var(--muted-color, currentColor)',
+          color: live || status === 'error' || isStale ? badgeColor : 'var(--muted-color, currentColor)',
           borderColor: live
             ? 'color-mix(in srgb, var(--primary) 35%, transparent)'
-            : status === 'error'
+            : status === 'error' || isStale
               ? 'color-mix(in srgb, #b45309 35%, transparent)'
               : 'currentColor',
           opacity: status === 'loading' ? 0.5 : 1,

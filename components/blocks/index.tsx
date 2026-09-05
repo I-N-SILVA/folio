@@ -28,7 +28,7 @@ export function BlockRenderer({ block, bookId, pageId }: { block: Block; bookId:
       {block.type === 'button' && <ButtonBlock block={block} bookId={bookId} />}
       {block.type === 'divider' && <DividerBlock block={block} />}
       {block.type === 'embed' && <EmbedBlock block={block} />}
-      {block.type === 'data' && <DataBlock block={block} />}
+      {block.type === 'data' && <DataBlock block={block} bookId={bookId} />}
       {block.type === 'product-grid' && <ProductGridBlock block={block} />}
     </Suspense>
   )

@@ -33,16 +33,25 @@ export function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: str
     }
     setTest({ state: 'loading' })
     try {
-      const res = await fetch(source, { cache: 'no-store' })
-      if (!res.ok) throw new Error(String(res.status))
-      const json = await res.json()
-      const v = path
-        .split('.')
-        .reduce<unknown>((acc, k) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[k] : undefined), json)
-      if (v == null) setTest({ state: 'err', msg: `Path "${path}" not found in the source.` })
-      else setTest({ state: 'ok', value: `${prefix ?? ''}${String(v)}${suffix ?? ''}` })
+      // Through the server, on the same path a reader takes. Fetching the source
+      // from the browser tested a different thing entirely: it passed for a
+      // same-origin path and failed on CORS for every real source, which is the
+      // reverse of what happens after publish.
+      const res = await fetch('/api/live-data/test', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ source, path }),
+      })
+      const probe = await res.json()
+      if (!res.ok) {
+        setTest({ state: 'err', msg: probe?.error ?? 'Could not test that source.' })
+      } else if (probe.ok) {
+        setTest({ state: 'ok', value: `${prefix ?? ''}${probe.value}${suffix ?? ''}` })
+      } else {
+        setTest({ state: 'err', msg: probe.detail })
+      }
     } catch {
-      setTest({ state: 'err', msg: 'Could not fetch or parse the source.' })
+      setTest({ state: 'err', msg: 'Could not reach the server.' })
     }
   }
 

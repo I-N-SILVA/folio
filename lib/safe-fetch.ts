@@ -8,9 +8,10 @@ import { lookup } from 'node:dns/promises'
 // an author typed needs exactly this check.
 
 /**
- * Whether the server is willing to fetch this image.
+ * Whether the server is willing to fetch this URL on someone else's behalf.
  *
- * `page.background.image` is author-supplied and fetched server-side, so an
+ * A page background image and a live-data source are both author-supplied and
+ * fetched server-side, so an
  * unguarded fetch is a request the server makes on someone else's behalf to
  * anywhere it can reach — including the metadata endpoints and private ranges a
  * browser could never touch.
@@ -51,7 +52,7 @@ export function isPrivateAddress(ip: string): boolean {
   return false
 }
 
-export async function isFetchableImage(url: string): Promise<boolean> {
+export async function isFetchableUrl(url: string): Promise<boolean> {
   let parsed: URL
   try {
     parsed = new URL(url)
@@ -76,4 +77,51 @@ export async function isFetchableImage(url: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+/** Refused before any request left the process. */
+export class BlockedUrlError extends Error {
+  constructor(readonly url: string) {
+    super(`Refused to fetch ${url}`)
+    this.name = 'BlockedUrlError'
+  }
+}
+
+/**
+ * `fetch`, with every hop checked.
+ *
+ * `redirect: 'manual'` is what keeps a redirect from walking past the guard, but
+ * on its own it also breaks the honest majority: an author's data source behind
+ * `http → https`, a shortened link, or a Google Sheets publish URL is a redirect,
+ * and refusing all of them means the feature only works for sources that happen
+ * to answer directly. So follow them — one at a time, re-checking each hop the
+ * same way the first URL was checked. That is the only difference between this
+ * and `fetch`, and it is the whole point.
+ *
+ * Throws `BlockedUrlError` when a hop is refused, so a caller can tell "this URL
+ * is not allowed" from "the source is down".
+ */
+export async function safeFetch(
+  url: string,
+  init: RequestInit & { maxRedirects?: number } = {}
+): Promise<Response> {
+  const { maxRedirects = 3, ...rest } = init
+  let current = url
+
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    if (!(await isFetchableUrl(current))) throw new BlockedUrlError(current)
+
+    const res = await fetch(current, { ...rest, redirect: 'manual' })
+    if (res.status < 300 || res.status > 399) return res
+
+    const location = res.headers.get('location')
+    if (!location) return res
+    try {
+      current = new URL(location, current).toString()
+    } catch {
+      throw new BlockedUrlError(location)
+    }
+  }
+
+  throw new BlockedUrlError(`${url} (too many redirects)`)
 }

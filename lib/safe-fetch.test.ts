@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isPrivateAddress, isFetchableImage } from '@/lib/safe-fetch'
+import { isPrivateAddress, isFetchableUrl } from '@/lib/safe-fetch'
 
 describe('isPrivateAddress', () => {
   it('refuses loopback, link-local and the private ranges', () => {
@@ -42,20 +42,20 @@ describe('isPrivateAddress', () => {
   })
 })
 
-describe('isFetchableImage', () => {
+describe('isFetchableUrl', () => {
   it('refuses every scheme but http and https', async () => {
     for (const url of ['file:///etc/passwd', 'gopher://x/', 'data:image/png;base64,AAAA']) {
-      expect(await isFetchableImage(url)).toBe(false)
+      expect(await isFetchableUrl(url)).toBe(false)
     }
   })
 
   it('refuses a literal private address whatever the encoding', async () => {
     // WHATWG parsing normalises all of these to 127.0.0.1 before we see them.
     for (const host of ['127.0.0.1', '2130706433', '0x7f000001', '0177.0.0.1']) {
-      expect(await isFetchableImage(`http://${host}/x.png`)).toBe(false)
+      expect(await isFetchableUrl(`http://${host}/x.png`)).toBe(false)
     }
-    expect(await isFetchableImage('http://169.254.169.254/latest/meta-data/')).toBe(false)
-    expect(await isFetchableImage('http://[::1]/x.png')).toBe(false)
+    expect(await isFetchableUrl('http://169.254.169.254/latest/meta-data/')).toBe(false)
+    expect(await isFetchableUrl('http://[::1]/x.png')).toBe(false)
   })
 
   it('refuses localhost and internal names', async () => {
@@ -65,7 +65,7 @@ describe('isFetchableImage', () => {
       'redis.internal',
       'metadata.google.internal',
     ]) {
-      expect(await isFetchableImage(`http://${host}/x.png`)).toBe(false)
+      expect(await isFetchableUrl(`http://${host}/x.png`)).toBe(false)
     }
   })
 
@@ -80,7 +80,7 @@ describe('isFetchableImage', () => {
    * the wrong reason.
    */
   it('resolves names, so a public name pointing at a private address is refused', async () => {
-    expect(await isFetchableImage('https://example.com/x.png')).toBe(true)
-    expect(await isFetchableImage('http://127.0.0.1.nip.io/x.png')).toBe(false)
+    expect(await isFetchableUrl('https://example.com/x.png')).toBe(true)
+    expect(await isFetchableUrl('http://127.0.0.1.nip.io/x.png')).toBe(false)
   })
 })

@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { isAiEnabled, detectHotspots } from '@/lib/ai'
 import { rateLimitCost } from '@/lib/rate-limit'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { isFetchableImage } from '@/lib/safe-fetch'
+import { safeFetch } from '@/lib/safe-fetch'
 import type { Hotspot, Page } from '@/lib/book-schema'
 
 /**
@@ -102,11 +102,12 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
 async function detectForPage(page: Page): Promise<Hotspot[]> {
   let detected: Hotspot[] = []
 
-  if (isAiEnabled() && page.background?.image && (await isFetchableImage(page.background.image))) {
+  if (isAiEnabled() && page.background?.image) {
     try {
-      // `redirect: 'manual'` because only the first URL was ever checked: a 302
-      // to the metadata service would otherwise be followed without inspection.
-      const imgRes = await fetch(page.background.image, { redirect: 'manual' })
+      // `safeFetch` checks every hop, not just the first: a 302 to the metadata
+      // service would otherwise be followed without inspection. Refusing all
+      // redirects instead used to fail an ordinary CDN image behind one.
+      const imgRes = await safeFetch(page.background.image)
       if (imgRes.ok) {
         const buffer = Buffer.from(await imgRes.arrayBuffer())
         detected = await detectHotspots(buffer, page.page_number)
