@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import { isAiEnabled, detectHotspots } from '@/lib/ai'
-import { rateLimit, clientIp } from '@/lib/rate-limit'
+import { rateLimitCost } from '@/lib/rate-limit'
+import { createServerSupabase } from '@/lib/supabase-server'
 import type { Hotspot, Page } from '@/lib/book-schema'
 
 /**
@@ -29,7 +30,9 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
   for (const block of page.blocks ?? []) {
     if (block.type === 'text') {
       // Find prices like $99.00, €150, £45
-      const priceMatches = block.content.match(/(?:[$€£¥]\s*\d+(?:\.\d{2})?|\d+(?:\.\d{2})?\s*(?:USD|EUR|GBP))/gi)
+      const priceMatches = block.content.match(
+        /(?:[$€£¥]\s*\d+(?:\.\d{2})?|\d+(?:\.\d{2})?\s*(?:USD|EUR|GBP))/gi
+      )
       if (priceMatches) {
         for (const price of priceMatches) {
           hotspots.push({
@@ -75,7 +78,8 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
   // If no prices/links found, add a sample interactive highlight pin
   if (hotspots.length === 0 && (page.blocks?.length ?? 0) > 0) {
     const firstText = page.blocks?.find((b) => b.type === 'text') as any
-    const heading = firstText?.content?.slice(0, 30)?.replace(/#+/g, '')?.trim() || 'Interactive Detail'
+    const heading =
+      firstText?.content?.slice(0, 30)?.replace(/#+/g, '')?.trim() || 'Interactive Detail'
     hotspots.push({
       id: uuidv4(),
       label: heading,
@@ -93,11 +97,42 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
   return hotspots
 }
 
+/**
+ * Whether the server is willing to fetch this image.
+ *
+ * `page.background.image` is author-supplied and fetched server-side, so an
+ * unguarded fetch is a request the server makes on someone else's behalf to
+ * anywhere it can reach — including the metadata endpoints and private ranges a
+ * browser could never touch. Uploads live on public https URLs, so refusing
+ * everything else costs nothing real.
+ */
+function isFetchableImage(url: string): boolean {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false
+
+  const host = parsed.hostname.toLowerCase()
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.internal'))
+    return false
+  if (host === '169.254.169.254' || host === 'metadata.google.internal') return false
+  // IPv6 loopback / unique-local, and the IPv4 private + loopback + link-local ranges.
+  if (host === '::1' || host.startsWith('[')) return false
+  if (/^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host)) return false
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return false
+  if (/^169\.254\./.test(host)) return false
+  if (/^0\./.test(host)) return false
+  return true
+}
+
 /** Whatever we can find on one page, AI first and structure as the fallback. */
 async function detectForPage(page: Page): Promise<Hotspot[]> {
   let detected: Hotspot[] = []
 
-  if (isAiEnabled() && page.background?.image) {
+  if (isAiEnabled() && page.background?.image && isFetchableImage(page.background.image)) {
     try {
       const imgRes = await fetch(page.background.image)
       if (imgRes.ok) {
@@ -113,19 +148,31 @@ async function detectForPage(page: Page): Promise<Hotspot[]> {
 }
 
 export async function POST(request: NextRequest) {
-  const limit = rateLimit(`ai-detect:${clientIp(request)}`, 15, 60_000)
-  if (!limit.ok) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded. Please wait a moment.' },
-      { status: 429 }
-    )
-  }
+  // This route spends the project's Gemini quota and makes the server fetch
+  // URLs, and it had no authentication at all — only a per-IP request count.
+  // Signed-in only, and budgeted per user rather than per address.
+  const supabase = await createServerSupabase()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json().catch(() => null)
   const parsed = DetectSchema.safeParse(body)
 
   if (!parsed.success) {
     return NextResponse.json({ error: 'Page data is required.' }, { status: 400 })
+  }
+
+  // Charged per page, because that is what the work is. 200 pages a minute
+  // covers importing several long PDFs back to back and stops a loop.
+  const pageCount = 'page' in parsed.data ? 1 : parsed.data.pages.length
+  const limit = rateLimitCost(`ai-detect:${user.id}`, 200, 60_000, pageCount)
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: 'That is a lot of pages at once. Try again in a minute.' },
+      { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } }
+    )
   }
 
   if ('page' in parsed.data) {

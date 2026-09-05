@@ -42,16 +42,39 @@ export type RateLimitResult = {
  * `windowMs`. Identical keys share a window.
  */
 export function rateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
+  return rateLimitCost(key, limit, windowMs, 1)
+}
+
+/**
+ * `rateLimit`, but a request can cost more than one.
+ *
+ * Counting requests is the wrong unit when one request can be far more
+ * expensive than another. The hotspot detector takes a page array: at one hit
+ * per request, fifteen calls a minute is either far too generous (fifteen
+ * 120-page scans, each fetching an image and calling Gemini per page) or far
+ * too mean (fifteen single pages). Charging per page makes the budget mean the
+ * same thing whichever way it is spent.
+ */
+export function rateLimitCost(
+  key: string,
+  limit: number,
+  windowMs: number,
+  cost: number
+): RateLimitResult {
   const now = Date.now()
   sweep(now)
 
   const bucket = buckets.get(key)
   if (!bucket || bucket.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs })
-    return { ok: true, retryAfter: 0 }
+    buckets.set(key, { count: cost, resetAt: now + windowMs })
+    // A single request costing more than the whole budget is refused outright
+    // rather than being allowed through on an empty window.
+    return cost > limit
+      ? { ok: false, retryAfter: Math.ceil(windowMs / 1000) }
+      : { ok: true, retryAfter: 0 }
   }
 
-  bucket.count++
+  bucket.count += cost
   if (bucket.count > limit) {
     return { ok: false, retryAfter: Math.ceil((bucket.resetAt - now) / 1000) }
   }

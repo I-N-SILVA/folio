@@ -25,6 +25,31 @@ const draftableUrl = z
     { message: 'Must be a valid URL, or empty while you are still drafting' }
   )
 
+/**
+ * The same, for somewhere a reader is *sent* rather than something rendered.
+ *
+ * `draftableUrl` admits `data:` because an image may legitimately be inlined.
+ * A link is different: `<a href="data:text/html,…">` is a navigation target, and
+ * while browsers now block top-level data: navigation, putting author-supplied
+ * data: URIs into hrefs is not a thing to rely on a browser mitigation for.
+ * mailto and tel are added because a button reasonably wants them.
+ */
+const draftableHref = z
+  .string()
+  .refine(
+    (s) => {
+      if (s === '') return true
+      try {
+        const url = new URL(s)
+        return ['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)
+      } catch {
+        // A same-origin path, but never a protocol-relative "//host" one.
+        return s.startsWith('/') && !s.startsWith('//')
+      }
+    },
+    { message: 'Must be a link, or empty while you are still drafting' }
+  )
+
 // ─── Block Schemas ─────────────────────────────────────────────────────────────
 
 
@@ -107,7 +132,7 @@ export const ButtonBlockSchema = z.object({
   id: z.string(),
   frame: FrameSchema.optional(),
   label: z.string(),
-  href: draftableUrl,
+  href: draftableHref,
   variant: z.enum(['primary', 'secondary', 'ghost']),
   shape: z.enum(['pill', 'rounded', 'square']).optional(),
   size: z.enum(['sm', 'md', 'lg']).optional(),
