@@ -112,12 +112,10 @@
           "icon": "ShoppingBag",
           "modal": {
             "title": "Mulberry Silk Overcoat — Noir",
-            "body": "Woven with long-staple Italian silk. Features taped seams, horn buttons, and an unstructured fluid drape. Add to bag for seamless in-edition checkout."
+            "body": "$480 · Woven with long-staple Italian silk. Features taped seams, horn buttons, and an unstructured fluid drape. Add to bag for seamless in-edition checkout."
           },
-          "action": "checkout",
-          "stripeUrl": "https://buy.stripe.com/test_demo",
-          "price": "$480",
-          "ctaLabel": "Add to Cart"
+          "action": "modal",
+          "price": "$480"
         }
       ]
     },
@@ -178,12 +176,10 @@
           "icon": "ShoppingBag",
           "modal": {
             "title": "Stonewashed Linen Throw — Sand",
-            "body": "100% European flax linen woven on heritage looms in Guimarães, Portugal."
+            "body": "$68 · 100% European flax linen woven on heritage looms in Guimarães, Portugal."
           },
-          "action": "checkout",
-          "stripeUrl": "https://buy.stripe.com/test_demo",
-          "price": "$68",
-          "ctaLabel": "Add to Cart"
+          "action": "modal",
+          "price": "$68"
         }
       ]
     },
@@ -348,12 +344,10 @@
           "icon": "ShoppingBag",
           "modal": {
             "title": "Grand Cru Reserve Wine Pairing",
-            "body": "Curated selection of 6 vintage biodynamic wines from Burgundy, Wachau, and Priorat."
+            "body": "$145 · Curated selection of 6 vintage biodynamic wines from Burgundy, Wachau, and Priorat."
           },
-          "action": "checkout",
-          "stripeUrl": "https://buy.stripe.com/test_demo",
-          "price": "$145",
-          "ctaLabel": "Reserve Pairing"
+          "action": "modal",
+          "price": "$145"
         }
       ]
     },
