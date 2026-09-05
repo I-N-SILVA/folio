@@ -7,7 +7,17 @@ import { FolderOpen } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import type { Block, ImageBlock } from '@/lib/book-schema'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
+import { FocalPointPicker } from './FocalPointPicker'
 import { Field, inputCls } from './shared'
+
+/** The same five positions the preset dropdown has always meant. */
+const PRESET_POINTS: Record<'center' | 'top' | 'bottom' | 'left' | 'right', [number, number]> = {
+  center: [50, 50],
+  top: [50, 0],
+  bottom: [50, 100],
+  left: [0, 50],
+  right: [100, 50],
+}
 
 export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: string }) {
   const { updateBlock } = useEditorStore()
@@ -40,6 +50,12 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
   const currentFit = watch('objectFit') ?? block.objectFit ?? 'cover'
   const currentShadow = watch('shadow') ?? block.shadow ?? 'none'
   const currentFocal = watch('focalPoint') ?? block.focalPoint ?? 'center'
+  const currentSrc = watch('src') ?? block.src
+  // An image placed before exact focal points existed has a preset and no
+  // coordinates; the picker opens on the preset's own point rather than
+  // snapping the image to the middle the first time it is touched.
+  const focalX = block.focalX ?? PRESET_POINTS[currentFocal as keyof typeof PRESET_POINTS]?.[0] ?? 50
+  const focalY = block.focalY ?? PRESET_POINTS[currentFocal as keyof typeof PRESET_POINTS]?.[1] ?? 50
 
   useEffect(() => {
     const sub = watch((values) => {
@@ -287,8 +303,13 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
           <select
             value={currentFocal}
             onChange={(e) => {
-              setValue('focalPoint', e.target.value as any, { shouldDirty: true })
-              updateBlock(pageId, block.id, { focalPoint: e.target.value as any })
+              const preset = e.target.value as 'center' | 'top' | 'bottom' | 'left' | 'right'
+              setValue('focalPoint', preset, { shouldDirty: true })
+              // A preset and an exact point are the same setting expressed two
+              // ways, so choosing one writes both — otherwise the picker below
+              // would go on showing the old crosshair while the image moved.
+              const [px, py] = PRESET_POINTS[preset]
+              updateBlock(pageId, block.id, { focalPoint: preset, focalX: px, focalY: py })
             }}
             className={inputCls}
           >
@@ -300,6 +321,19 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
           </select>
         </Field>
       </div>
+
+      {/* Only for a crop: with `contain` or `fill` nothing is cut off, so
+          there is no part of the image to choose to keep. */}
+      {currentSrc && currentFit === 'cover' && (
+        <Field label="What stays in frame">
+          <FocalPointPicker
+            src={currentSrc}
+            x={focalX}
+            y={focalY}
+            onChange={(nx, ny) => updateBlock(pageId, block.id, { focalX: nx, focalY: ny })}
+          />
+        </Field>
+      )}
 
       <AssetLibraryModal
         isOpen={showAssetLibrary}

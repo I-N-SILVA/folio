@@ -79,7 +79,14 @@ export function ImageBlock({ block }: { block: ImageBlock }) {
   const aspectCls = block.aspectRatio ? aspectStyles[block.aspectRatio] ?? 'aspect-video' : 'aspect-video'
   const radiusCls = block.borderRadius ? radiusStyles[block.borderRadius] ?? 'rounded-xl' : 'rounded-xl'
   const shadowCls = block.shadow ? shadowStyles[block.shadow] ?? 'shadow-none' : 'shadow-none'
-  const focalCls = block.focalPoint ? focalStyles[block.focalPoint] ?? 'object-center' : 'object-center'
+  // An exact focal point wins over the five presets; see the schema.
+  const hasExactFocal = typeof block.focalX === 'number' && typeof block.focalY === 'number'
+  const focalCls = hasExactFocal
+    ? ''
+    : block.focalPoint
+      ? focalStyles[block.focalPoint] ?? 'object-center'
+      : 'object-center'
+  const focalStyle = hasExactFocal ? { objectPosition: `${block.focalX}% ${block.focalY}%` } : undefined
   const fitCls = block.objectFit === 'contain' ? 'object-contain' : block.objectFit === 'fill' ? 'object-fill' : 'object-cover'
   const widthCls = block.width ? widthStyles[block.width] ?? 'w-full' : 'w-full'
   const alignCls = block.align ? alignStyles[block.align] ?? 'mx-auto' : 'mx-auto'
@@ -117,6 +124,7 @@ export function ImageBlock({ block }: { block: ImageBlock }) {
                 block.lightbox ? 'cursor-zoom-in' : '',
                 'transition-transform duration-300'
               )}
+              style={focalStyle}
               onClick={() => block.lightbox && setOpen(true)}
               onError={() => setFailed(true)}
               sizes="(max-width: 768px) 100vw, 50vw"

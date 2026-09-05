@@ -101,6 +101,16 @@ export const ImageBlockSchema = z.object({
   border: z.boolean().optional(),
   borderColor: z.string().optional(),
   focalPoint: z.enum(['center', 'top', 'bottom', 'left', 'right']).optional(),
+  /**
+   * Where in the image to keep when `cover` crops it, as percentages.
+   *
+   * `focalPoint` above is five presets, and five presets do not cover "the
+   * face is a third of the way in and near the top" — which is most photographs
+   * in a lookbook. These win when set; the preset is kept so every image
+   * already placed keeps its crop.
+   */
+  focalX: z.number().min(0).max(100).optional(),
+  focalY: z.number().min(0).max(100).optional(),
 })
 
 export const VideoBlockSchema = z.object({
@@ -270,6 +280,13 @@ export const BackgroundSchema = z.object({
   color: z.string().optional(),
   image: z.string().optional(),
   imagePosition: z.enum(['center', 'top', 'bottom', 'left', 'right']).optional(),
+  /**
+   * An exact focal point for a background image, in percent. Wins over
+   * `imagePosition`, which stays for every page already set — see the note on
+   * the image block's own `focalX`.
+   */
+  focalX: z.number().min(0).max(100).optional(),
+  focalY: z.number().min(0).max(100).optional(),
   imageFit: z.enum(['cover', 'contain', 'auto']).optional(),
   overlay: z.string().optional(), // rgba color or dark tint hex
   overlayOpacity: z.number().min(0).max(100).optional(),

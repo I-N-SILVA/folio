@@ -101,7 +101,10 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
     if (bg?.image) {
       backgroundStyle.backgroundImage = `url(${bg.image})`
       backgroundStyle.backgroundSize = bg.imageFit ?? 'cover'
-      backgroundStyle.backgroundPosition = bg.imagePosition ?? 'center'
+      backgroundStyle.backgroundPosition =
+        typeof bg.focalX === 'number' && typeof bg.focalY === 'number'
+          ? `${bg.focalX}% ${bg.focalY}%`
+          : bg.imagePosition ?? 'center'
       backgroundStyle.backgroundRepeat = 'no-repeat'
     }
 

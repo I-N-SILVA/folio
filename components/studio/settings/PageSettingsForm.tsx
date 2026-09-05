@@ -8,7 +8,17 @@ import { FolderOpen, Trash2, Upload } from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import type { Page } from '@/lib/book-schema'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
+import { FocalPointPicker } from './FocalPointPicker'
 import { Field, inputCls, selectCls } from './shared'
+
+/** The five positions the preset dropdown has always meant, as percentages. */
+const BG_PRESET_POINTS: Record<'center' | 'top' | 'bottom' | 'left' | 'right', [number, number]> = {
+  center: [50, 50],
+  top: [50, 0],
+  bottom: [50, 100],
+  left: [0, 50],
+  right: [100, 50],
+}
 
 const CURATED_TEXTURES = [
   {
@@ -40,6 +50,24 @@ const CURATED_TEXTURES = [
 
 export function PageSettingsForm({ page }: { page: Page }) {
   const { updatePage } = useEditorStore()
+
+  /**
+   * Merge into the background as it is *now*.
+   *
+   * The `page` prop is a render-old snapshot, and the form's own watch
+   * subscription writes the background too — so spreading the prop here would
+   * quietly revert whatever that subscription had just written in the same
+   * tick, e.g. a colour typed a moment before dragging the focal point.
+   */
+  const mergeBackground = useCallback(
+    (updates: Partial<NonNullable<Page['background']>>) => {
+      const live = useEditorStore
+        .getState()
+        .book?.pages?.find((p) => p.id === page.id)?.background
+      updatePage(page.id, { background: { ...live, ...updates } })
+    },
+    [page.id, updatePage]
+  )
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
@@ -280,7 +308,19 @@ export function PageSettingsForm({ page }: { page: Page }) {
                 </select>
               </Field>
               <Field label="Focal Position">
-                <select {...register('bgPosition')} className={selectCls}>
+                <select
+                  {...register('bgPosition')}
+                  onChange={(e) => {
+                    const preset = e.target.value as keyof typeof BG_PRESET_POINTS
+                    setValue('bgPosition', preset, { shouldDirty: true })
+                    // The preset and the exact point are one setting written two
+                    // ways; keeping them in step is what stops the picker from
+                    // showing a crosshair the page no longer uses.
+                    const [px, py] = BG_PRESET_POINTS[preset]
+                    mergeBackground({ imagePosition: preset, focalX: px, focalY: py })
+                  }}
+                  className={selectCls}
+                >
                   <option value="center">Center</option>
                   <option value="top">Top</option>
                   <option value="bottom">Bottom</option>
@@ -289,6 +329,21 @@ export function PageSettingsForm({ page }: { page: Page }) {
                 </select>
               </Field>
             </div>
+
+            {/* A full-bleed background is the crop that matters most — it is the
+                whole page — and until now the only control over it was five
+                presets. `contain` and `auto` show the whole image, so there is
+                nothing to choose to keep. */}
+            {watch('bgFit') !== 'contain' && watch('bgFit') !== 'auto' && (
+              <Field label="What stays in frame">
+                <FocalPointPicker
+                  src={currentBgImage}
+                  x={page.background?.focalX ?? BG_PRESET_POINTS[(watch('bgPosition') ?? 'center') as keyof typeof BG_PRESET_POINTS][0]}
+                  y={page.background?.focalY ?? BG_PRESET_POINTS[(watch('bgPosition') ?? 'center') as keyof typeof BG_PRESET_POINTS][1]}
+                  onChange={(nx, ny) => mergeBackground({ focalX: nx, focalY: ny })}
+                />
+              </Field>
+            )}
 
             {/* Dark Tint Overlay Slider for Legibility */}
             <Field label={`Legibility Dark Overlay Tint: ${currentOpacity}%`}>
