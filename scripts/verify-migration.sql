@@ -221,3 +221,113 @@ BEGIN
 END $$;
 
 ROLLBACK;
+
+-- ── The redemption claim, under contention ───────────────────────────────────
+--
+-- `redeemLicense` does not decide the outcome in TypeScript; it narrows an
+-- UPDATE to rows that are still unclaimed and lets the database arbitrate, then
+-- reads the returned rows to see whether it won. A prior SELECT followed by an
+-- unconditional UPDATE left a window where two simultaneous redemptions both
+-- passed the check and both wrote — one licence, a paid plan on two accounts,
+-- and an audit trail keeping only the later one. Trivially exploitable by
+-- firing the same request from two sessions.
+--
+-- `lib/appsumo.test.ts` proves the TypeScript builds that filter. This proves
+-- the database actually behaves the way that filter assumes, which no mock can.
+
+\set ON_ERROR_STOP on
+
+BEGIN;
+
+INSERT INTO auth.users (id, email) VALUES
+  ('33333333-3333-3333-3333-333333333333', 'first@example.com'),
+  ('44444444-4444-4444-4444-444444444444', 'second@example.com');
+
+INSERT INTO public.appsumo_licenses (license_key, tier, plan, status)
+VALUES ('RACE-KEY', 1, 'ltd_tier1', 'active');
+
+DO $$
+DECLARE
+  first_won  int;
+  second_won int;
+  holder     uuid;
+BEGIN
+  -- Both callers run the same conditional claim, in order, in one transaction.
+  -- Serialising them here is the honest model of what the database does to two
+  -- concurrent UPDATEs of the same row: the second waits, re-evaluates its
+  -- WHERE against the committed row, and matches nothing.
+  WITH claimed AS (
+    UPDATE public.appsumo_licenses
+    SET redeemed_by = '33333333-3333-3333-3333-333333333333', redeemed_at = now()
+    WHERE license_key = 'RACE-KEY'
+      AND status <> 'refunded'
+      AND (redeemed_by IS NULL OR redeemed_by = '33333333-3333-3333-3333-333333333333')
+    RETURNING 1
+  ) SELECT count(*) INTO first_won FROM claimed;
+
+  WITH claimed AS (
+    UPDATE public.appsumo_licenses
+    SET redeemed_by = '44444444-4444-4444-4444-444444444444', redeemed_at = now()
+    WHERE license_key = 'RACE-KEY'
+      AND status <> 'refunded'
+      AND (redeemed_by IS NULL OR redeemed_by = '44444444-4444-4444-4444-444444444444')
+    RETURNING 1
+  ) SELECT count(*) INTO second_won FROM claimed;
+
+  IF first_won <> 1 THEN
+    RAISE EXCEPTION 'the first claim did not win — nobody can redeem';
+  END IF;
+  IF second_won <> 0 THEN
+    RAISE EXCEPTION 'the second claim also won — one licence, two paid accounts';
+  END IF;
+
+  SELECT redeemed_by INTO holder FROM public.appsumo_licenses WHERE license_key = 'RACE-KEY';
+  IF holder <> '33333333-3333-3333-3333-333333333333' THEN
+    RAISE EXCEPTION 'the later claim overwrote the earlier one: %', holder;
+  END IF;
+
+  RAISE NOTICE 'ok  one licence can only ever be claimed by one account';
+END $$;
+
+-- The same claim run twice by its own holder is idempotent, so a retry after a
+-- dropped response does not tell the buyer their code is already used.
+DO $$
+DECLARE again int;
+BEGIN
+  WITH claimed AS (
+    UPDATE public.appsumo_licenses
+    SET redeemed_at = now()
+    WHERE license_key = 'RACE-KEY'
+      AND status <> 'refunded'
+      AND (redeemed_by IS NULL OR redeemed_by = '33333333-3333-3333-3333-333333333333')
+    RETURNING 1
+  ) SELECT count(*) INTO again FROM claimed;
+
+  IF again <> 1 THEN
+    RAISE EXCEPTION 'the holder retrying was refused — a dropped response looks like a used code';
+  END IF;
+  RAISE NOTICE 'ok  the holder retrying still succeeds';
+END $$;
+
+-- A refunded licence is claimable by nobody, including the person who held it.
+DO $$
+DECLARE won int;
+BEGIN
+  UPDATE public.appsumo_licenses SET status = 'refunded' WHERE license_key = 'RACE-KEY';
+
+  WITH claimed AS (
+    UPDATE public.appsumo_licenses
+    SET redeemed_by = '44444444-4444-4444-4444-444444444444'
+    WHERE license_key = 'RACE-KEY'
+      AND status <> 'refunded'
+      AND (redeemed_by IS NULL OR redeemed_by = '44444444-4444-4444-4444-444444444444')
+    RETURNING 1
+  ) SELECT count(*) INTO won FROM claimed;
+
+  IF won <> 0 THEN
+    RAISE EXCEPTION 'a refunded licence was redeemed';
+  END IF;
+  RAISE NOTICE 'ok  a refunded licence is claimable by nobody';
+END $$;
+
+ROLLBACK;
