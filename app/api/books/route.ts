@@ -2,21 +2,29 @@ import { randomUUID } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { checkBookQuota } from '@/lib/entitlements'
+import { checkBookQuota, isBookLimitError } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 
 const CreateBookSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().optional(),
-  slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
-  theme: z.object({
-    preset: z.enum(['ivory', 'slate', 'cream', 'carbon', 'sage', 'custom']).default('ivory'),
-  }).optional(),
+  slug: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9-]+$/),
+  theme: z
+    .object({
+      preset: z.enum(['ivory', 'slate', 'cream', 'carbon', 'sage', 'custom']).default('ivory'),
+    })
+    .optional(),
 })
 
 export async function GET(request: NextRequest) {
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data, error } = await supabase
@@ -31,7 +39,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
@@ -77,6 +87,23 @@ export async function POST(request: NextRequest) {
     // 23505 = unique_violation on the slug.
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Slug already taken' }, { status: 409 })
+    }
+    // The quota check above passed and the trigger still refused: either two
+    // creates raced for the last slot, or the ladders have drifted apart again.
+    // Either way the client gets the answer it knows how to render.
+    if (isBookLimitError(error)) {
+      return NextResponse.json(
+        {
+          error: `You've reached your plan's limit of ${formatQuota(quota.limit)} book${
+            quota.limit === 1 ? '' : 's'
+          }. Upgrade to publish more.`,
+          code: 'plan_limit',
+          plan: quota.plan.id,
+          used: quota.used,
+          limit: Number.isFinite(quota.limit) ? quota.limit : null,
+        },
+        { status: 403 }
+      )
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

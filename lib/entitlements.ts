@@ -135,7 +135,10 @@ export function readerPolicy(
   }
 }
 
-export async function getUserEntitlements(userId: string, email?: string | null): Promise<Entitlements> {
+export async function getUserEntitlements(
+  userId: string,
+  email?: string | null
+): Promise<Entitlements> {
   return (await getUserPlan(userId, email)).entitlements
 }
 
@@ -175,6 +178,25 @@ export async function checkBookQuota(
     const plan = getPlan(DEFAULT_PLAN)
     return { allowed: true, plan, used: 0, limit: plan.entitlements.maxBooks }
   }
+}
+
+/**
+ * Is this the database's edition-limit backstop talking?
+ *
+ * `enforce_book_limit` (006) raises `BOOK_LIMIT_REACHED` with a check_violation
+ * SQLSTATE. Routes have to recognise it, because reaching it is not always a
+ * bug: two creates racing each other both pass `checkBookQuota` and one loses
+ * at the insert. Without this the loser gets HTTP 500 carrying a raw Postgres
+ * exception string, which is what a free author actually saw for months while
+ * the ladder in 006 and the one in `lib/plans.ts` disagreed about the free tier.
+ */
+export function isBookLimitError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false
+  // Matched on the message, not on the SQLSTATE: the trigger raises
+  // `check_violation` (23514), which `books` and `pages` also produce for real
+  // CHECK constraints, and answering one of those with "upgrade your plan"
+  // would be worse than the 500 this replaces.
+  return /BOOK_LIMIT_REACHED/.test(error.message ?? '')
 }
 
 export { getEntitlements }

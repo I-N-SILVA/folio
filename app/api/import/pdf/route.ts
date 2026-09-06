@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
-import { checkBookQuota } from '@/lib/entitlements'
+import { checkBookQuota, isBookLimitError } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { rateLimit } from '@/lib/rate-limit'
 import { MAX_IMPORT_PAGES, pagePath, mapWithConcurrency } from '@/lib/import'
@@ -114,6 +114,20 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
+    if (isBookLimitError(bookError)) {
+      return NextResponse.json(
+        {
+          error: `You've reached your plan's limit of ${formatQuota(quota.limit)} book${
+            quota.limit === 1 ? '' : 's'
+          }. Upgrade to import more.`,
+          code: 'plan_limit',
+          plan: quota.plan.id,
+          used: quota.used,
+          limit: Number.isFinite(quota.limit) ? quota.limit : null,
+        },
+        { status: 403 }
+      )
+    }
     console.error('[pdf-import] Failed to create book:', bookError)
     return NextResponse.json(
       { error: `Failed to create book: ${bookError.message}` },
@@ -147,9 +161,15 @@ export async function POST(request: NextRequest) {
     // Without every target the import can't complete, and a half-written book is
     // worse than none — roll it back so the slug and the quota slot are freed.
     await supabaseAdmin.from('books').delete().eq('id', bookId)
-    console.error('[pdf-import] Upload grant mismatch:', { granted: granted.length, expected: pageCount, lastError: lastStorageError })
+    console.error('[pdf-import] Upload grant mismatch:', {
+      granted: granted.length,
+      expected: pageCount,
+      lastError: lastStorageError,
+    })
     return NextResponse.json(
-      { error: `Could not prepare upload storage (${lastStorageError || 'please check Supabase storage configuration'}).` },
+      {
+        error: `Could not prepare upload storage (${lastStorageError || 'please check Supabase storage configuration'}).`,
+      },
       { status: 500 }
     )
   }

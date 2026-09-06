@@ -29,19 +29,45 @@ CREATE TABLE IF NOT EXISTS auth.users (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- `auth.uid()` is the identity every RLS policy is written against. Supabase
--- reads it out of the request JWT; here it reads a session setting, which lets
--- a test become a given user with `SET LOCAL request.jwt.claim.sub`.
+-- `auth.uid()` is the identity every RLS policy is written against, so a shim
+-- that gets it wrong does not fail — it returns NULL, every `USING (auth.uid()
+-- = owner_id)` denies, and the harness reports the product as broken.
+--
+-- This read `request.jwt.claim.sub`, which PostgREST stopped setting in v9.
+-- Against PostgREST 12 it is always NULL, so no harness here had ever executed
+-- a statement as a signed-in user: everything ran as `service_role`, which
+-- bypasses RLS entirely, or as `anon` against the public-read policy. The
+-- policies themselves were untested.
+--
+-- These are Supabase's own definitions. The legacy setting is kept first
+-- because it is also what `SET LOCAL request.jwt.claim.sub = '…'` sets, which
+-- is how a psql test becomes a given user without minting a token.
 CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
 LANGUAGE sql STABLE
 AS $$
-  SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid;
+  SELECT COALESCE(
+    NULLIF(current_setting('request.jwt.claim.sub', true), ''),
+    (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
+  )::uuid;
 $$;
 
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text
 LANGUAGE sql STABLE
 AS $$
-  SELECT COALESCE(NULLIF(current_setting('request.jwt.claim.role', true), ''), 'anon');
+  SELECT COALESCE(
+    NULLIF(current_setting('request.jwt.claim.role', true), ''),
+    (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role'),
+    'anon'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION auth.email() RETURNS text
+LANGUAGE sql STABLE
+AS $$
+  SELECT COALESCE(
+    NULLIF(current_setting('request.jwt.claim.email', true), ''),
+    (NULLIF(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email')
+  );
 $$;
 
 GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;

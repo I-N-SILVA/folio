@@ -31,6 +31,7 @@ npm run verify:migration        # applies master_migration.sql for real, twice
 npm run verify:appsumo:e2e      # the licence lifecycle against real PostgREST
 npm run verify:routes:e2e       # the webhook and the digest, over HTTP
 npm run verify:mvp:e2e          # the product itself: publish → read → gated → reported
+npm run verify:author:e2e       # the buyer: sign in → create → publish → redeem → refund
 
 # Against a deployment
 CRON_SECRET=…      npm run preflight      -- https://<domain>   # config + live schema
@@ -330,6 +331,78 @@ separate decision.
   this" is the duplicate route. Templates count against the plan's edition
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
+
+### Nothing had ever run as a signed-in user, and RLS was untested
+
+`scripts/supabase-shim.sql` defined `auth.uid()` as
+`current_setting('request.jwt.claim.sub')`. PostgREST stopped setting that in
+v9; against the v12 binary these harnesses run it is always NULL. Every RLS
+policy in this schema is written as `USING (auth.uid() = owner_id)`, so under
+the shim they all denied — and nothing noticed, because every harness so far
+reached the database as `service_role`, which bypasses RLS entirely, or as
+`anon` against the public-read policy. **The policies themselves had never been
+executed.** They are the only thing standing between one author's editions and
+another's.
+
+The shim now uses Supabase's own definitions, reading `request.jwt.claims` and
+falling back to the legacy setting so `SET LOCAL request.jwt.claim.sub` still
+works in a psql test. With that fixed, `verify:author:e2e` confirms a second
+author gets 403 on PATCH and DELETE of an edition that is not theirs.
+
+### The author's half of the product had no harness either
+
+`scripts/harness-session.mjs` is what made one possible. The studio is
+cookie-authenticated — `createServerSupabase` and `proxy.ts` both read the
+session out of `@supabase/ssr`'s cookies — so a script holding a bearer token
+could reach the database and none of the product. Rather than hand-rolling the
+cookie name and encoding (both have changed across @supabase/ssr releases, and a
+wrong guess fails as "signed out" rather than as an error), it drives the
+library over an in-memory jar and prints the `Cookie` header a signed-in browser
+would send.
+
+`npm run verify:author:e2e` then walks the buyer's first hour against a
+production build: the studio is shut to a stranger and open to a session; an
+author creates, edits, saves and publishes an edition and it appears at its
+public address; the free plan's limit is the number the pricing page sells and
+hitting it is a 403 the client can render; a second author cannot touch the
+first one's edition; an AppSumo code lifts the plan, cannot be redeemed twice by
+different people, stays idempotent for its rightful holder, and a refund takes
+it back.
+
+### The free plan sold three editions and allowed one
+
+Found by that harness on its first run, and it is the top of the AppSumo funnel:
+the people who arrive from the deal page, try free first, and decide from that
+whether the lifetime deal is worth buying.
+
+`lib/plans.ts` says `maxBooks: 3` for free. `book_limit_for_plan` in 006 said
+`ELSE 1 -- free`. Everything in the app reads the first: `/account` draws its
+quota bar from it, `checkBookQuota` admits the request from it, and
+`components/landing/Pricing.tsx` sells "3 Active Editions" in those words. So
+the API's quota check passed, the request went all the way to the insert, and
+the trigger raised:
+
+```
+HTTP 500  {"error":"BOOK_LIMIT_REACHED: plan free allows 1 book(s)"}
+```
+
+The route's designed answer — 403, `code: 'plan_limit'`, used/limit, an upgrade
+prompt the UI already renders — was unreachable. A free author's *second*
+edition was a 500 carrying a raw Postgres exception.
+
+Only the free row had drifted; pro, tier1, tier2 and tier3 already agreed. 017
+realigns it, and `lib/plan-limits.test.ts` parses both the SQL ladder and
+`lib/plans.ts` — and the number on the pricing card — and fails if any of the
+three stop matching. Reverting 017 makes it fail, which was checked.
+
+Separately, the three routes that create an edition (`POST /api/books`,
+`POST /api/import/pdf`, `POST /api/books/[id]/duplicate`) now recognise
+`BOOK_LIMIT_REACHED` and answer with the same 403 payload. Reaching the trigger
+is not always a bug — two creates racing each other both pass the quota check
+and one loses at the insert — so the backstop needed a client-readable answer
+either way. Matched on the message, not the `check_violation` SQLSTATE, because
+`books` and `pages` raise that for real CHECK constraints too and answering one
+of those with "upgrade your plan" would be worse than the 500 it replaces.
 
 ### The reader answered 200 for pages that were not there
 
@@ -639,6 +712,10 @@ Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
   is ISR at 60s. `lib/revalidate-reader.ts` clears both `/book/<slug>` and
   `/embed/<slug>`; a rename has to clear the address it is leaving as well as the
   one it is taking.
+- **Two copies of the same numbers drift, and a comment does not stop it.** 006
+  said "Keep the limits in sync with lib/plans.ts" and the free row drifted
+  anyway. If a constant has to exist in both SQL and TypeScript, add a test that
+  parses both — `lib/plan-limits.test.ts`, `supabase/master-migration.test.ts`.
 - **Postgres 16 is available in the container** (`/usr/lib/postgresql/16/bin`, run
   as the `postgres` user, not root). Build the schema locally and test SQL
   against it rather than reasoning about it.

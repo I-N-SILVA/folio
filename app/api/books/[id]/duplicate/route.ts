@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { checkBookQuota } from '@/lib/entitlements'
+import { checkBookQuota, isBookLimitError } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { duplicateNames } from '@/lib/duplicate-naming'
 import type { Page, Block, Hotspot } from '@/lib/book-schema'
@@ -14,10 +14,7 @@ import type { Page, Block, Hotspot } from '@/lib/book-schema'
  * edition carrying `settings.isTemplate`; starting from one is this route
  * again, without the flag.
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = (await request.json().catch(() => null)) as { asTemplate?: boolean } | null
   const asTemplate = body?.asTemplate === true
@@ -81,6 +78,20 @@ export async function POST(
     .single()
 
   if (insertBookError || !newBook) {
+    if (isBookLimitError(insertBookError)) {
+      return NextResponse.json(
+        {
+          error: `You've reached your plan's limit of ${formatQuota(quota.limit)} book${
+            quota.limit === 1 ? '' : 's'
+          }. Upgrade to create more editions.`,
+          code: 'plan_limit',
+          plan: quota.plan.id,
+          used: quota.used,
+          limit: Number.isFinite(quota.limit) ? quota.limit : null,
+        },
+        { status: 403 }
+      )
+    }
     return NextResponse.json(
       { error: insertBookError?.message || 'Could not create duplicate edition' },
       { status: 500 }
