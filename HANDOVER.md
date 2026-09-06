@@ -13,11 +13,21 @@ Four documents carry the reasoning, and they are worth the twenty minutes:
 | `docs/mvp-scope.md` | **Read this first.** What the product *is*, what was cut and why, and what to do instead of building |
 | `docs/product-strategy-audit.md` | The earlier audit; positioning, pricing and GTM |
 
-Verification baseline: **180 tests across 26 files passing, 0 lint errors, 39
+Verification baseline: **282 tests across 32 files passing, 0 lint errors, 37
 lint warnings, `tsc --noEmit` clean, production build clean.**
 
 ```bash
 npm run typecheck && npm test -- --run && npm run lint && npm run build
+```
+
+Those four prove the code is consistent with itself. They do not prove the app
+works — every serious failure in this repo's history passed all four. Three more
+commands ask the running thing instead, and they are the ones to trust:
+
+```bash
+CRON_SECRET=…      npm run preflight      -- https://<domain>   # config + live schema
+APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>   # the whole licence path
+                   npm run audit:browser  -- https://<domain>   # what it renders
 ```
 
 `npm run format:check` still fails on files that predate this work — the repo has
@@ -44,8 +54,14 @@ apply. Grep for `is missing` and `apply supabase/migrations` in production logs.
 
 | Migration | Consequence if missing |
 |---|---|
-| `009_post_audit_features.sql` | The database will miss several key features including: Gate view events, atomic page saving, dunning grace periods, edition engagement insights, weekly digests, and slug history. |
-| `012_fix_pages_layout_check.sql` | **Two page layouts cannot be saved at all.** The `pages.layout` CHECK has allowed four values since 002, while the editor's dropdown has always offered five — an author choosing "Grid" got "Could not save these pages" and no clue why. `canvas` is the sixth and does not work without this. |
+| `009_post_audit_features.sql` | Gate-view events, atomic page saving, dunning grace, edition engagement insights, the weekly digest and slug history all degrade silently. |
+| `012_fix_pages_layout_check.sql` | **Two page layouts cannot be saved at all.** The `pages.layout` CHECK allowed four values since 002 while the editor's dropdown offered five — an author choosing "Grid" got "Could not save these pages" and no clue why. `canvas` is the sixth. |
+| `013_appsumo_columns_backfill.sql` | On a project whose `appsumo_licenses` table predates a column, **a buyer who paid cannot redeem.** 005 uses `CREATE TABLE IF NOT EXISTS`, which no-ops on an existing older table. |
+| `014_schema_selfcheck.sql` | `npm run preflight` cannot read the live CHECK constraints, so the one check that catches an unapplied migration reports a warning instead of an answer. |
+
+**`npm run preflight` answers all of this against the deployment**, including
+whether the live constraints accept every value this code can produce. Run it
+rather than reading logs for `is missing`.
 
 ### Configure what's optional
 
