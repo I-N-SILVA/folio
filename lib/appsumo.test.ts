@@ -255,6 +255,53 @@ describe('applyAppSumoEvent', () => {
     expect(carry!.filters).toContain('is:redeemed_by=null')
   })
 
+  it('reverts a refunded buyer to Free', async () => {
+    // AppSumo's refund window is 60 days and the launch plan's whole answer to
+    // refund abuse is that this webhook takes the entitlements back. Untested,
+    // that answer is a hope.
+    const { admin, writes } = makeWebhookAdmin({
+      'KEY-1': { license_key: 'KEY-1', redeemed_by: 'user-abc', plan: 'ltd_tier3', status: 'active' },
+    })
+    const apply = await load(admin)
+    const result = await apply({ action: 'refund', license_key: 'KEY-1', tier: 3 })
+
+    expect(result.ok).toBe(true)
+    // The license is marked refunded...
+    const upsert = writes.find((w) => w.op === 'upsert')
+    expect(upsert!.payload.status).toBe('refunded')
+    // ...and the buyer's profile goes back to Free, not left on tier 3.
+    const profile = writes.find((w) => w.table === 'profiles' && w.op === 'update')
+    expect(profile, 'no profile write — a refunded buyer keeps their plan').toBeDefined()
+    expect(profile!.payload.plan).toBe('free')
+    expect(profile!.payload.status).toBe('refunded')
+    expect(profile!.filters).toContain('eq:id=user-abc')
+  })
+
+  it('does not touch a profile when the license was never redeemed', async () => {
+    // A refund for a code nobody claimed has no user to demote, and writing a
+    // profile row keyed on null would be a bug looking for somewhere to happen.
+    const { admin, writes } = makeWebhookAdmin({
+      'KEY-1': { license_key: 'KEY-1', redeemed_by: null, status: 'active' },
+    })
+    const apply = await load(admin)
+    await apply({ action: 'refund', license_key: 'KEY-1', tier: 1 })
+    expect(writes.filter((w) => w.table === 'profiles')).toEqual([])
+  })
+
+  it('moves a buyer up when they stack a code', async () => {
+    // `enhance` is how AppSumo represents a stacked purchase, and it is the
+    // path most likely to leave someone paying tier 2 money for tier 1 limits.
+    const { admin, writes } = makeWebhookAdmin({
+      'KEY-1': { license_key: 'KEY-1', redeemed_by: 'user-abc', plan: 'ltd_tier1', status: 'active' },
+    })
+    const apply = await load(admin)
+    await apply({ action: 'enhance', license_key: 'KEY-1', tier: 2 })
+
+    expect(writes.find((w) => w.op === 'upsert')!.payload.plan).toBe('ltd_tier2')
+    const profile = writes.find((w) => w.table === 'profiles' && w.op === 'update')
+    expect(profile!.payload.plan).toBe('ltd_tier2')
+  })
+
   it('reports a missing license key', async () => {
     const { admin } = makeWebhookAdmin({})
     const apply = await load(admin)
