@@ -21,14 +21,24 @@ npm run typecheck && npm test -- --run && npm run lint && npm run build
 ```
 
 Those four prove the code is consistent with itself. They do not prove the app
-works — every serious failure in this repo's history passed all four. Three more
-commands ask the running thing instead, and they are the ones to trust:
+works — every serious failure in this repo's history passed all four, including
+two that would have broken the AppSumo launch outright. These ask the running
+thing instead, and they are the ones to trust:
 
 ```bash
+# No deployment needed — these stand up their own PostgreSQL and PostgREST
+npm run verify:migration        # applies master_migration.sql for real, twice
+npm run verify:appsumo:e2e      # the licence lifecycle against real PostgREST
+
+# Against a deployment
 CRON_SECRET=…      npm run preflight      -- https://<domain>   # config + live schema
-APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>   # the whole licence path
+APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>   # webhook + redeem gate
                    npm run audit:browser  -- https://<domain>   # what it renders
 ```
+
+The two local ones need `service postgresql start` and the PostgREST binary;
+`scripts/verify-appsumo-e2e.sh` prints how to get it. They are the only checks
+that have ever caught a PostgREST-semantics bug, and they caught two.
 
 `npm run format:check` still fails on files that predate this work — the repo has
 never been Prettier-clean. New and touched files are formatted; the rest is left
