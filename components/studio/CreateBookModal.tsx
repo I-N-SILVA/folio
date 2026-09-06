@@ -98,7 +98,16 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
         body: JSON.stringify({ asTemplate: false }),
       })
       const payload = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(payload.error || 'Could not start from that template')
+      if (!res.ok) {
+        // The same wall the other two create paths show, rather than a toast
+        // that names the limit and then vanishes.
+        if (payload.code === 'plan_limit') {
+          setLimitHit(true)
+          setCreatingFromOwn(null)
+          return
+        }
+        throw new Error(payload.error || 'Could not start from that template')
+      }
       toast.success('Edition created from your template')
       router.push(`/editor/${payload.id}`)
     } catch (err) {

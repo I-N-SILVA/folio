@@ -127,9 +127,29 @@ export const APPSUMO_TIER_TO_PLAN: Record<number, PlanId> = {
   3: 'ltd_tier3',
 }
 
+/**
+ * The plan an AppSumo purchase tier grants.
+ *
+ * `tier` arrives straight off the webhook payload, so it is whatever AppSumo
+ * sent — and the fallback used to be `?? 'ltd_tier3'` for *anything* not in the
+ * map. Above the range that is right: if AppSumo adds a tier above ours, the
+ * buyer paid the most and should get the best plan we have. Below it, it meant
+ * a negative, fractional or garbage tier granted unlimited lifetime access,
+ * which is a revenue hole nobody decided to open.
+ *
+ * So: clamp, in both directions.
+ */
 export function planFromAppSumoTier(tier: number | null | undefined): PlanId {
-  if (!tier) return 'ltd_tier1'
-  return APPSUMO_TIER_TO_PLAN[tier] ?? 'ltd_tier3'
+  const known = Object.keys(APPSUMO_TIER_TO_PLAN).map(Number).sort((a, b) => a - b)
+  const lowest = known[0]
+  const highest = known[known.length - 1]
+
+  if (typeof tier !== 'number' || !Number.isFinite(tier)) return APPSUMO_TIER_TO_PLAN[lowest]
+
+  const whole = Math.floor(tier)
+  if (whole <= lowest) return APPSUMO_TIER_TO_PLAN[lowest]
+  if (whole >= highest) return APPSUMO_TIER_TO_PLAN[highest]
+  return APPSUMO_TIER_TO_PLAN[whole] ?? APPSUMO_TIER_TO_PLAN[lowest]
 }
 
 export function isValidPlan(id: string | null | undefined): id is PlanId {

@@ -11,7 +11,11 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     orientation: 'portrait-primary',
     background_color: '#ffffff',
-    theme_color: '#3c2384',
+    // Matches the light-mode `themeColor` in app/layout.tsx and the page's own
+    // background. It was #3c2384, a violet that appears nowhere else in the
+    // product, so an installed app opened with a purple status bar above a
+    // white page.
+    theme_color: '#ffffff',
     categories: ['productivity', 'business', 'books'],
     icons: [
       { src: '/brand/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

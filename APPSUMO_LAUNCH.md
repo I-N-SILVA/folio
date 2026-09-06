@@ -138,8 +138,12 @@ APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>  # the whole lic
 
 ## 4. Pre-launch (product polish)
 
-- [ ] Empty/limit states: when a Free or LTD user hits their book cap, the
-      create flow shows the upgrade message from the `plan_limit` response.
+- [x] Empty/limit states: all four paths that can create an edition — blank,
+      from a starter template, from one of the author's own templates, and PDF
+      import — return `code: 'plan_limit'` and raise the same wall, which names
+      the plan and its limit and offers both "See plans" and "Redeem a code".
+      `BookCard`'s Duplicate and Save-as-template surface the server's message,
+      which already names the limit.
 - [x] Seed demo editions — four bundled editions (product tour, shoppable
       lookbook, living report, portfolio) served without Supabase from
       `data/books/` and featured on the landing page.
@@ -147,7 +151,14 @@ APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>  # the whole lic
       the dashboard (`components/studio/OnboardingChecklist.tsx`).
 - [ ] Support: help docs + a shared inbox; AppSumo reviewers reward fast replies.
 - [ ] Legal: Privacy Policy + Terms live (required).
-- [ ] Performance/PWA pass (see `LAUNCH.md`): Lighthouse ≥ 90, installable.
+- [x] PWA: manifest linked and served, all four icons present, the service
+      worker registers and activates, and the theme colours now match what the
+      page actually paints (the manifest said violet and the dark viewport said
+      navy, neither of which the app has been for a long time). `colorScheme`
+      declared only `light`, so the browser's own controls and scrollbars
+      stayed light on a dark page; it is `light dark` now. Verified in Chromium
+      via `npm run audit:browser`.
+- [ ] Performance pass (see `LAUNCH.md`): Lighthouse ≥ 90.
 
 ---
 

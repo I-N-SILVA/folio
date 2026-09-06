@@ -55,11 +55,20 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  // These are the browser's own chrome — the address bar on Android, the status
+  // bar on an installed PWA — so they have to be the colours the page actually
+  // paints. The dark one was #141a3a, a navy from an earlier brand that
+  // `--background` has not been for a long time, which put a navy bar above a
+  // black page.
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#141a3a' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
   ],
-  colorScheme: 'light',
+  // The app has a complete dark palette and honours `prefers-color-scheme`.
+  // Declaring only `light` told the browser otherwise, so its own furniture —
+  // form controls, scrollbars, the default canvas behind the page — stayed
+  // light while everything the app painted went dark.
+  colorScheme: 'light dark',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',

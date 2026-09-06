@@ -55,8 +55,25 @@ describe('planFromAppSumoTier', () => {
     expect(planFromAppSumoTier(0)).toBe('ltd_tier1')
   })
 
-  it('clamps out-of-range tiers to the top tier rather than crashing', () => {
+  it('clamps a tier above the range to the top tier', () => {
+    // If AppSumo adds a tier above ours, that buyer paid the most and should
+    // get the best plan we have.
     expect(planFromAppSumoTier(99)).toBe('ltd_tier3')
+  })
+
+  it('does not hand the top tier to a value it does not understand', () => {
+    // The fallback used to be `?? 'ltd_tier3'` for anything outside the map, so
+    // a negative, fractional or non-numeric tier granted unlimited lifetime
+    // access. `tier` comes straight off the webhook payload.
+    expect(planFromAppSumoTier(-1)).toBe('ltd_tier1')
+    expect(planFromAppSumoTier(0.5)).toBe('ltd_tier1')
+    expect(planFromAppSumoTier(NaN)).toBe('ltd_tier1')
+    expect(planFromAppSumoTier(Infinity as unknown as number)).toBe('ltd_tier1')
+    expect(planFromAppSumoTier('3' as unknown as number)).toBe('ltd_tier1')
+  })
+
+  it('floors a fractional tier inside the range rather than falling through', () => {
+    expect(planFromAppSumoTier(2.7)).toBe('ltd_tier2')
   })
 })
 
