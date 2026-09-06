@@ -131,12 +131,22 @@ work someone forgot.
    would ever have been created. Both shapes are accepted now and both are
    exercised over HTTP.
 
-   Read from AppSumo's docs via search — the domain is blocked from this
-   network — so the dry-run in step 5 is what confirms it. Two things left
-   deliberately unhandled and worth knowing: `parent_license_key` (v2 add-on
-   webhooks; no add-ons here) and `X-Appsumo-Timestamp`, which v2 sends beside
-   the signature while the HMAC here covers the raw body only. If signature
-   verification fails on a v2 deal, that header is the first place to look.
+   The **signature** was wrong the same way and just as fatally: v1 signs the
+   raw body, v2 signs `X-Appsumo-Timestamp` concatenated directly in front of
+   it. Verifying the body alone meant every v2 webhook got a 401 and AppSumo
+   retried it forever. Both constructions verify now.
+
+   Read from AppSumo's docs via search plus a reference implementation
+   (`mdhedayet/appsumolicensing`, `$timestamp . $request->getContent()`) —
+   `docs.licensing.appsumo.com` is blocked from this network — so the dry-run
+   in step 5 is still what confirms it.
+
+   Left deliberately: `parent_license_key` on v2 add-on webhooks (no add-ons
+   here). And a known hazard, not a bug — nothing orders events by
+   `event_timestamp`, so a retried `activate` landing after a `refund` would
+   re-activate a refunded licence. `lib/stripe` already solves the equivalent
+   with `stripe_event_at`; copy that if AppSumo's retries ever arrive out of
+   order.
 
 ### Not code, and not optional
 

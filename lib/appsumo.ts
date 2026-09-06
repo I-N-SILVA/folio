@@ -17,6 +17,12 @@ import { planFromAppSumoTier, DEFAULT_PLAN } from '@/lib/plans'
 export const APPSUMO_SIGNATURE_HEADER = 'x-appsumo-signature'
 
 /**
+ * v2 sends the timestamp it signed with, and it is part of the signed material.
+ * See `verifyAppSumoSignature`.
+ */
+export const APPSUMO_TIMESTAMP_HEADER = 'x-appsumo-timestamp'
+
+/**
  * What this module does about an event, regardless of what AppSumo called it.
  *
  * These are the v1 names because they are what the rest of this file was
@@ -99,18 +105,53 @@ export function normalizeAction(event: AppSumoEvent): AppSumoAction | null {
 
 export type LicenseStatus = 'active' | 'deactivated' | 'refunded'
 
-/** Verify the HMAC-SHA256 signature AppSumo sends with each webhook. */
-export function verifyAppSumoSignature(rawBody: string, signature: string | null): boolean {
+/** Constant-time compare of two hex digests, tolerant of a length mismatch. */
+function digestsMatch(expected: string, provided: string): boolean {
+  const a = Buffer.from(expected)
+  const b = Buffer.from(provided)
+  // timingSafeEqual throws on differing lengths, so that is checked first. The
+  // length of a hex digest is not a secret.
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(a, b)
+}
+
+/**
+ * Verify the HMAC-SHA256 signature AppSumo sends with each webhook.
+ *
+ * The two API versions sign different material:
+ *
+ *   - **v1** signs the raw request body.
+ *   - **v2** signs the `X-Appsumo-Timestamp` header value concatenated directly
+ *     in front of the raw body, with no separator —
+ *     `hash_hmac('sha256', $timestamp . $body, $secret)`.
+ *
+ * This checked the body alone, so on a v2 deal **every webhook failed
+ * verification and got a 401**. AppSumo retries a non-2xx, so the queue would
+ * have filled with events that could never be accepted and no licence would
+ * ever have been created. Same outcome as reading the wrong payload field,
+ * reached one step earlier.
+ *
+ * Both constructions are accepted. That is not a weakening: each one still
+ * requires the shared key, so nobody without it can produce either, and which
+ * of the two arrives is decided by the deal's API version rather than by the
+ * caller.
+ */
+export function verifyAppSumoSignature(
+  rawBody: string,
+  signature: string | null,
+  timestamp?: string | null
+): boolean {
   const key = process.env.APPSUMO_API_KEY
   // If no key is configured we cannot verify — fail closed in production.
   if (!key) return process.env.NODE_ENV !== 'production'
   if (!signature) return false
 
-  const expected = crypto.createHmac('sha256', key).update(rawBody, 'utf8').digest('hex')
-  const a = Buffer.from(expected)
-  const b = Buffer.from(signature)
-  if (a.length !== b.length) return false
-  return crypto.timingSafeEqual(a, b)
+  const candidates = [rawBody]
+  if (timestamp) candidates.push(`${timestamp}${rawBody}`)
+
+  return candidates.some((material) =>
+    digestsMatch(crypto.createHmac('sha256', key).update(material, 'utf8').digest('hex'), signature)
+  )
 }
 
 /**

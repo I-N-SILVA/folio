@@ -110,12 +110,23 @@ that were white on white in dark mode. Tick the boxes; run the scripts.
       from the build network — so **still send a real test event and confirm a
       row lands**, which is the dry-run below.
 
-      Two things deliberately not handled: `parent_license_key` (v2 add-on
-      webhooks; this product sells no add-ons, and `migrate` is ignored with a
-      200 rather than retried forever), and `X-Appsumo-Timestamp`, which v2
-      sends alongside the signature — the HMAC here is over the raw body only.
-      If the dashboard shows v2 signature verification failing, that header is
-      the first place to look.
+      The **signature** differed too, and it was the same severity. v1 signs
+      the raw body; v2 signs `X-Appsumo-Timestamp` concatenated directly in
+      front of the body, no separator —
+      `hash_hmac('sha256', $timestamp . $body, $secret)`. This verified the
+      body alone, so every v2 webhook got a 401, AppSumo retried a non-2xx
+      forever, and no licence was ever created. Both constructions verify now,
+      which is not a weakening: each still requires the shared key.
+
+      One thing deliberately not handled: `parent_license_key` on v2 add-on
+      webhooks. This product sells no add-ons, and `migrate` is ignored with a
+      200 rather than retried forever.
+
+      One hazard worth knowing rather than fixing speculatively: nothing orders
+      events by `event_timestamp`, so a retried `activate` arriving after a
+      `refund` would re-activate a refunded licence. `lib/stripe` already
+      solves the equivalent with `stripe_event_at`; if AppSumo's retries ever
+      show up out of order, that is the pattern to copy.
 - [ ] (Optional, for the ongoing Pro channel) set `STRIPE_SECRET_KEY`,
       `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_PRO`, and point a Stripe
       webhook at `https://<domain>/api/billing/webhook`. Not needed for an

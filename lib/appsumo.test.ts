@@ -43,6 +43,41 @@ describe('verifyAppSumoSignature', () => {
     expect(verifyAppSumoSignature(body, 'deadbeef')).toBe(false)
   })
 
+  it('accepts a v2 signature, which covers the timestamp and the body', () => {
+    // AppSumo v2 signs `timestamp . body` with no separator. This verified the
+    // body alone, so every v2 webhook got a 401 — AppSumo retries a non-2xx,
+    // so the queue would have filled with events that could never be accepted
+    // and no licence would ever have been created.
+    const body = JSON.stringify({ event: 'purchase', license_key: 'abc', tier: 1 })
+    const ts = '1788660000'
+    const v2 = crypto.createHmac('sha256', KEY).update(`${ts}${body}`, 'utf8').digest('hex')
+
+    expect(verifyAppSumoSignature(body, v2, ts)).toBe(true)
+  })
+
+  it('still accepts a v1 signature over the body alone', () => {
+    // Which construction arrives is the deal's API version, not the caller's
+    // choice, so both have to work.
+    const body = JSON.stringify({ action: 'activate', license_key: 'abc' })
+    expect(verifyAppSumoSignature(body, sign(body), '1788660000')).toBe(true)
+    expect(verifyAppSumoSignature(body, sign(body), null)).toBe(true)
+  })
+
+  it('does not accept a v2 signature made with a different timestamp', () => {
+    const body = JSON.stringify({ event: 'purchase', license_key: 'abc' })
+    const signed = crypto.createHmac('sha256', KEY).update(`111${body}`, 'utf8').digest('hex')
+    expect(verifyAppSumoSignature(body, signed, '222')).toBe(false)
+  })
+
+  it('does not accept a timestamp appended rather than prepended', () => {
+    // Order matters and is not guessable from the header alone: the reference
+    // implementation is `$timestamp . $request->getContent()`.
+    const body = JSON.stringify({ event: 'purchase', license_key: 'abc' })
+    const ts = '1788660000'
+    const wrongWayRound = crypto.createHmac('sha256', KEY).update(`${body}${ts}`, 'utf8').digest('hex')
+    expect(verifyAppSumoSignature(body, wrongWayRound, ts)).toBe(false)
+  })
+
   it('fails closed in production when no key is configured', () => {
     vi.stubEnv('APPSUMO_API_KEY', '')
     vi.stubEnv('NODE_ENV', 'production')

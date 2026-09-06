@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   APPSUMO_SIGNATURE_HEADER,
+  APPSUMO_TIMESTAMP_HEADER,
   applyAppSumoEvent,
   verifyAppSumoSignature,
   type AppSumoEvent,
@@ -21,8 +22,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const raw = await request.text()
   const signature = request.headers.get(APPSUMO_SIGNATURE_HEADER)
+  // v2 signs the timestamp in front of the body; v1 signs the body alone.
+  const timestamp = request.headers.get(APPSUMO_TIMESTAMP_HEADER)
 
-  if (!verifyAppSumoSignature(raw, signature)) {
+  if (!verifyAppSumoSignature(raw, signature, timestamp)) {
     return NextResponse.json({ success: false, message: 'invalid signature' }, { status: 401 })
   }
 

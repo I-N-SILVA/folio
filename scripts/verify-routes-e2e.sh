@@ -159,12 +159,23 @@ CODE2=$(curl -s -o /tmp/wh2.json -w '%{http_code}' --noproxy '*' -X POST "http:/
 ROW2=$(su postgres -c "psql -tAq -d $DB -c \"select plan||'|'||status from public.appsumo_licenses where license_key='$V2'\"" | head -1 | tr -d '[:space:]')
 [[ "$ROW2" == "ltd_tier3|active" ]] && pass "the v2 licence row is right ($ROW2)" || fail "v2 licence row is '$ROW2'"
 
+# v2 signs `timestamp . body`, not the body alone. Signed the v2 way here,
+# because verifying only the body meant every v2 webhook got a 401.
+TS=$(date +%s)
 BODY3=$(python3 -c "import json,sys;print(json.dumps({'event':'deactivate','license_key':sys.argv[1],'tier':3}))" "$V2")
-SIG3=$(python3 -c "import hmac,hashlib,sys;print(hmac.new(sys.argv[1].encode(),sys.argv[2].encode(),hashlib.sha256).hexdigest())" "$APPSUMO_KEY" "$BODY3")
-curl -s -o /dev/null --noproxy '*' -X POST "http://127.0.0.1:$APP_PORT/api/appsumo/webhook" \
-  -H 'content-type: application/json' -H "x-appsumo-signature: $SIG3" -d "$BODY3"
+SIG3=$(python3 -c "import hmac,hashlib,sys;print(hmac.new(sys.argv[1].encode(),(sys.argv[2]+sys.argv[3]).encode(),hashlib.sha256).hexdigest())" "$APPSUMO_KEY" "$TS" "$BODY3")
+D3=$(curl -s -o /dev/null -w '%{http_code}' --noproxy '*' -X POST "http://127.0.0.1:$APP_PORT/api/appsumo/webhook" \
+  -H 'content-type: application/json' -H "x-appsumo-signature: $SIG3" -H "x-appsumo-timestamp: $TS" -d "$BODY3")
+[[ "$D3" == "200" ]] && pass "a v2-signed webhook (timestamp + body) verifies ($D3)" || fail "v2 signature rejected: $D3"
 ROW3=$(su postgres -c "psql -tAq -d $DB -c \"select status from public.appsumo_licenses where license_key='$V2'\"" | head -1 | tr -d '[:space:]')
 [[ "$ROW3" == "refunded" ]] && pass "a v2 deactivate refunds the licence" || fail "v2 deactivate left status '$ROW3'"
+
+# A signature over the body alone must not pass when a timestamp is present and
+# was signed — otherwise the check is decorative.
+BAD=$(python3 -c "import hmac,hashlib,sys;print(hmac.new(sys.argv[1].encode(),sys.argv[2].encode(),hashlib.sha256).hexdigest())" "wrong-key" "$BODY3")
+B1=$(curl -s -o /dev/null -w '%{http_code}' --noproxy '*' -X POST "http://127.0.0.1:$APP_PORT/api/appsumo/webhook" \
+  -H 'content-type: application/json' -H "x-appsumo-signature: $BAD" -H "x-appsumo-timestamp: $TS" -d "$BODY3")
+[[ "$B1" == "401" ]] && pass "a signature from the wrong key is still refused ($B1)" || fail "wrong key accepted: $B1"
 
 echo
 echo "==> the weekly digest, over HTTP, with the fixed slot claim"
