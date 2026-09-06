@@ -704,19 +704,32 @@ AS $$
   -- Pulls the quoted literals out of `CHECK (col = ANY (ARRAY['a'::text, …]))`,
   -- which is how Postgres normalises `CHECK (col IN ('a', …))` when it stores
   -- the expression.
+  --
+  -- The constraint is found by the column it actually constrains (`conkey`),
+  -- not by searching its text for the column name. The string search worked for
+  -- the three columns that matter and was one unlucky enum value away from
+  -- matching a neighbouring constraint and reporting another column's values as
+  -- this one's — which, in a tool whose whole job is to say whether the schema
+  -- is right, is the worst available failure.
   SELECT COALESCE(
     (
       SELECT array_agg(m[1])
       FROM pg_constraint c
       JOIN pg_class     t ON t.oid = c.conrelid
       JOIN pg_namespace n ON n.oid = t.relnamespace
+      JOIN pg_attribute a
+        ON a.attrelid = c.conrelid
+       AND a.attnum = ANY (c.conkey)
       CROSS JOIN LATERAL regexp_matches(
         pg_get_constraintdef(c.oid), '''([^'']+)''::text', 'g'
       ) AS m
       WHERE n.nspname = 'public'
         AND t.relname = p_table
         AND c.contype = 'c'
-        AND pg_get_constraintdef(c.oid) ILIKE '%' || p_column || '%'
+        AND a.attname = p_column
+        -- A single-column CHECK only; a multi-column one has no single list of
+        -- allowed values to report.
+        AND array_length(c.conkey, 1) = 1
     ),
     ARRAY[]::text[]
   );

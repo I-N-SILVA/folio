@@ -63,6 +63,13 @@ work someone forgot.
    project. Generated (`npm run db:master`), idempotent, safe to re-run, and
    therefore also how you bring an existing project up to date. Do not apply
    migrations by hand and do not edit that file.
+
+   It has been **executed** — `npm run verify:migration` applies it to a real
+   PostgreSQL 16, applies it a second time to prove it re-runs, saves pages
+   through `replace_book_pages`, writes one of every event type, and checks
+   that nonsense is still refused and RLS is on everywhere. CI runs it on
+   every push. So step 1 is a paste, not a gamble: the file is known to work
+   before it touches your project.
 2. **Set the environment.** `preflight` below tells you what is missing and
    what each absence costs. `APPSUMO_API_KEY` must be the value from the
    AppSumo partner dashboard: a mismatch rejects every real purchase and looks

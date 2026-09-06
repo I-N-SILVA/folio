@@ -15,7 +15,8 @@
     "audit:browser": "node scripts/audit-browser.mjs",
     "db:master": "node scripts/build-master-migration.mjs",
     "preflight": "node scripts/preflight.mjs",
-    "verify:appsumo": "node scripts/verify-appsumo.mjs"
+    "verify:appsumo": "node scripts/verify-appsumo.mjs",
+    "verify:migration": "bash scripts/verify-migration.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
