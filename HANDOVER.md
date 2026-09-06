@@ -123,8 +123,20 @@ work someone forgot.
    cannot burn a week of digests.
 7. **Own three mailboxes**: `support@`, `legal@`, `privacy@`. The app prints
    them (`app/help`, `app/terms`, `app/privacy`).
-8. **Reconcile `lib/appsumo.ts` field names** against AppSumo's current
-   developer docs; payload keys shift between API versions.
+8. ~~**Reconcile `lib/appsumo.ts` field names**~~ — done, and they did not
+   match. This file was on the Licensing API **v1** (`action`, with
+   `activate`/`enhance`/`reduce`/`refund`); the current **v2** sends `event`,
+   with `purchase`/`activate`/`upgrade`/`downgrade`/`deactivate`/`migrate`. On
+   a v2 deal every webhook was rejected `400 missing action` and no licence
+   would ever have been created. Both shapes are accepted now and both are
+   exercised over HTTP.
+
+   Read from AppSumo's docs via search — the domain is blocked from this
+   network — so the dry-run in step 5 is what confirms it. Two things left
+   deliberately unhandled and worth knowing: `parent_license_key` (v2 add-on
+   webhooks; no add-ons here) and `X-Appsumo-Timestamp`, which v2 sends beside
+   the signature while the HMAC here covers the raw body only. If signature
+   verification fails on a v2 deal, that header is the first place to look.
 
 ### Not code, and not optional
 
