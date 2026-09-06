@@ -3,28 +3,33 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { PageSchema } from '@/lib/book-schema'
 import { z } from 'zod'
+import { revalidateReader } from '@/lib/revalidate-reader'
 
-async function getOwner(bookId: string, userId: string) {
+/**
+ * The book's public address if this user owns it, `null` if they do not. The
+ * slug comes back from the ownership check rather than a second query: a save
+ * has to drop the reader's cached copy, and this route runs on every autosave.
+ */
+async function getOwnedSlug(bookId: string, userId: string): Promise<string | null> {
   const { data } = await supabaseAdmin
     .from('books')
-    .select('id')
+    .select('id, slug')
     .eq('id', bookId)
     .eq('owner_id', userId)
     .single()
-  return !!data
+  return (data?.slug as string | undefined) ?? null
 }
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const isOwner = await getOwner(id, user.id)
-  if (!isOwner) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const slug = await getOwnedSlug(id, user.id)
+  if (!slug) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data, error } = await supabase
     .from('pages')
@@ -36,17 +41,16 @@ export async function GET(
   return NextResponse.json(data)
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const isOwner = await getOwner(id, user.id)
-  if (!isOwner) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const slug = await getOwnedSlug(id, user.id)
+  if (!slug) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await request.json()
   const parsed = z.array(PageSchema.omit({ book_id: true })).safeParse(body)
@@ -71,7 +75,12 @@ export async function PUT(
     p_pages: rows,
   })
 
-  if (!rpcError) return new NextResponse(null, { status: 204 })
+  if (!rpcError) {
+    // The reader page is ISR. Without this the author's own edition shows them
+    // the previous version for up to a minute after they save it.
+    revalidateReader(slug)
+    return new NextResponse(null, { status: 204 })
+  }
 
   // PGRST202 / 42883 mean 009 hasn't been applied. Rather than break
   // saving outright on such an install, fall back to the old two-statement path
@@ -106,5 +115,6 @@ export async function PUT(
     }
   }
 
+  revalidateReader(slug)
   return new NextResponse(null, { status: 204 })
 }

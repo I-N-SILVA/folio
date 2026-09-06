@@ -18,7 +18,8 @@
     "verify:appsumo": "node scripts/verify-appsumo.mjs",
     "verify:migration": "bash scripts/verify-migration.sh",
     "verify:appsumo:e2e": "bash scripts/verify-appsumo-e2e.sh",
-    "verify:routes:e2e": "bash scripts/verify-routes-e2e.sh"
+    "verify:routes:e2e": "bash scripts/verify-routes-e2e.sh",
+    "verify:mvp:e2e": "bash scripts/verify-mvp-e2e.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

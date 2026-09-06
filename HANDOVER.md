@@ -30,6 +30,7 @@ thing instead, and they are the ones to trust:
 npm run verify:migration        # applies master_migration.sql for real, twice
 npm run verify:appsumo:e2e      # the licence lifecycle against real PostgREST
 npm run verify:routes:e2e       # the webhook and the digest, over HTTP
+npm run verify:mvp:e2e          # the product itself: publish → read → gated → reported
 
 # Against a deployment
 CRON_SECRET=…      npm run preflight      -- https://<domain>   # config + live schema
@@ -37,9 +38,11 @@ APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>   # webhook + re
                    npm run audit:browser  -- https://<domain>   # what it renders
 ```
 
-The two local ones need `service postgresql start` and the PostgREST binary;
+The local ones need `service postgresql start` and the PostgREST binary;
 `scripts/verify-appsumo-e2e.sh` prints how to get it. They are the only checks
-that have ever caught a PostgREST-semantics bug, and they caught two.
+that have ever caught a PostgREST-semantics bug, and they caught two — and
+`verify:mvp:e2e`, which had never been run because it did not exist, caught a
+third failure of the same kind the first time it ran.
 
 `npm run format:check` still fails on files that predate this work — the repo has
 never been Prettier-clean. New and touched files are formatted; the rest is left
@@ -328,6 +331,60 @@ separate decision.
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
 
+### The reader answered 200 for pages that were not there
+
+`npm run verify:mvp:e2e` is new. It runs the sentence `docs/mvp-scope.md` opens
+with — "Send a PDF. See who actually read it." — end to end against a real
+PostgreSQL, a real PostgREST and a production `next build`: an author publishes
+a gated two-page edition, a reader opens it, the events land, the gate takes an
+address, Insights reports that reader back, and a renamed edition's old link
+still arrives. Every one of those paths was covered by unit tests. The last one
+was broken anyway.
+
+`/book/<old-slug>` returned **HTTP 200 with a page reading "Not Found"** instead
+of a 308 to the new address. So did every slug that never existed. The cause is
+the reader skeleton added earlier in the same session: `loading.tsx` wraps
+`page.tsx` in a Suspense boundary, and Next's `loading.js` reference is blunt
+about what that costs —
+
+> When streaming, a `200` status code will be returned … Because the response
+> headers have already been sent to the client, the status code of the response
+> cannot be updated.
+
+`permanentRedirect` degrades to a `<meta http-equiv="refresh">` in the body and
+`notFound` to a `noindex` 200. A browser follows the meta tag, which is why
+clicking a renamed link by hand looked fine. Nothing else follows it: the Slack
+unfurl, the LinkedIn card, the crawler revisiting the old address and the link
+checker all saw 200 and the words "Not Found". `book_slug_history` exists for
+exactly one purpose — keeping a link that is already in someone's inbox alive
+across a rename — and that was the part that did not work.
+
+The fix is where the docs put it, "ensure the resource exists before the
+response body is streamed": `app/(reader)/book/[slug]/layout.tsx`. A layout is
+not wrapped by `loading.js` in its own segment, so it runs ahead of the
+boundary. It resolves the slug through `lib/reader-slug.ts` — one indexed
+single-column read — and redirects or 404s there. The edition itself still
+streams in behind the skeleton. `lib/reader-slug.test.ts` fails the build if the
+page and the resolver stop agreeing on what "published" means, or if the miss
+path drifts back into the page.
+
+### Nothing in the codebase had ever called `revalidatePath`
+
+Found while fixing the above, and worse in daily use than the redirect was. The
+reader page is ISR (`export const revalidate = 60`), which is right for a page
+strangers reach from a link. Nothing invalidated it. An author who fixed a typo,
+published an edition, renamed it or deleted it watched their own public address
+serve the previous version for up to a minute, with no way to tell whether the
+save had worked.
+
+`lib/revalidate-reader.ts` clears `/book/<slug>` and `/embed/<slug>`, and is
+called from the three routes that can change what a stranger sees: the PATCH
+(both addresses on a rename, so the old one starts forwarding at once rather
+than serving a stale copy of the edition it is supposed to forward to), the
+page-save PUT — the slug comes back from the ownership check it already ran, so
+autosave costs no extra query — and the DELETE, which is the one case where
+staleness means showing something the author has explicitly taken down.
+
 ### Six features did nothing, and four of them had passing tests
 
 The single most useful thing to know about this codebase. Removed this branch:
@@ -571,6 +628,17 @@ Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
   (`PageManagerModal`, `ShareModal`) were once dead code nothing imported, and
   this branch found two more dead paths the same way. No test or typecheck
   catches it.
+- **A `loading.tsx` in a segment forfeits that route's HTTP status codes.** It
+  wraps `page.tsx` in a Suspense boundary; the body starts streaming when the
+  fallback renders, so `notFound()` becomes a `noindex` 200 and `redirect()` a
+  `<meta http-equiv="refresh">` with no `Location`. Browsers follow the meta
+  tag, so this is invisible to a human clicking the link and total to a crawler
+  or an unfurl. Resolve existence in a `layout.tsx` in the same segment —
+  `loading.js` does not wrap it — as `app/(reader)/book/[slug]/layout.tsx` does.
+- **A route that changes a public page must call `revalidateReader`.** The reader
+  is ISR at 60s. `lib/revalidate-reader.ts` clears both `/book/<slug>` and
+  `/embed/<slug>`; a rename has to clear the address it is leaving as well as the
+  one it is taking.
 - **Postgres 16 is available in the container** (`/usr/lib/postgresql/16/bin`, run
   as the `postgres` user, not root). Build the schema locally and test SQL
   against it rather than reasoning about it.

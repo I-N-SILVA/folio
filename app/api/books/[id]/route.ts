@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { ThemeSchema, BookSettingsSchema } from '@/lib/book-schema'
+import { revalidateReader } from '@/lib/revalidate-reader'
 
 // ─── PATCH /api/books/[id] — partial book update ─────────────────────────────
 
@@ -20,10 +21,7 @@ const PatchBookSchema = z.object({
     .optional(),
 })
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createServerSupabase()
 
@@ -41,7 +39,8 @@ export async function PATCH(
     .single()
 
   if (!current) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (current.owner_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (current.owner_id !== user.id)
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await request.json()
   const parsed = PatchBookSchema.safeParse(body)
@@ -68,7 +67,10 @@ export async function PATCH(
 
     if (claimed.data && claimed.data.book_id !== id) {
       return NextResponse.json(
-        { error: 'That link belonged to another edition. Choose a different one.', code: 'slug_taken' },
+        {
+          error: 'That link belonged to another edition. Choose a different one.',
+          code: 'slug_taken',
+        },
         { status: 409 }
       )
     }
@@ -115,6 +117,11 @@ export async function PATCH(
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // Both addresses: the new one so the change is visible at once, the old one so
+  // it stops serving a cached copy of the edition instead of forwarding to it.
+  revalidateReader(current.slug, data.slug)
+
   return NextResponse.json(data)
 }
 
@@ -142,7 +149,7 @@ export async function DELETE(
   // Verify ownership
   const { data: book } = await supabase
     .from('books')
-    .select('id, owner_id')
+    .select('id, owner_id, slug')
     .eq('id', id)
     .single()
 
@@ -152,5 +159,11 @@ export async function DELETE(
   const { error } = await supabase.from('books').delete().eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Otherwise a deleted edition keeps serving from the ISR cache at its public
+  // address for the rest of the window — the one case where staleness means
+  // showing something the author has explicitly taken down.
+  revalidateReader(book.slug as string)
+
   return NextResponse.json({ success: true })
 }
