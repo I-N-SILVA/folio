@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { readableOn, composite } from '@/lib/contrast'
 import type { Metadata } from 'next'
 import { ArrowRight, BookOpen } from 'lucide-react'
 import { TEMPLATES } from '@/data/templates'
@@ -81,7 +82,12 @@ export default function GalleryPage() {
                     className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em]"
                     style={{
                       backgroundColor: `${tmpl.previewMockup.accentHex}22`,
-                      color: tmpl.previewMockup.accentHex,
+                      // An accent is chosen to sit beside text, not to be text.
+                      // Read as-is, some of them land under 3:1 at 9px.
+                      color: readableOn(
+                        tmpl.previewMockup.accentHex,
+                        composite(`${tmpl.previewMockup.accentHex}22`, tmpl.previewMockup.bgHex)
+                      ),
                       border: `1px solid ${tmpl.previewMockup.accentHex}44`,
                     }}
                   >

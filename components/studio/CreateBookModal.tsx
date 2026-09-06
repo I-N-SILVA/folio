@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { readableOn, composite } from '@/lib/contrast'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { X, FileText, Layout, Loader2, Crown, BookOpen, Eye, ArrowRight } from 'lucide-react'
@@ -503,7 +504,10 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
                       className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
                       style={{
                         backgroundColor: tmpl.previewMockup.accentHex + '22',
-                        color: tmpl.previewMockup.accentHex,
+                        color: readableOn(
+                          tmpl.previewMockup.accentHex,
+                          composite(tmpl.previewMockup.accentHex + '22', tmpl.previewMockup.bgHex)
+                        ),
                         border: `1px solid ${tmpl.previewMockup.accentHex}44`,
                       }}
                     >

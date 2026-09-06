@@ -332,6 +332,28 @@ separate decision.
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
 
+### `audit:browser` found a 2.7:1 pill on /gallery
+
+Run against the current build, at all four widths and in both colour schemes.
+Every gallery card paints its own colours — the template picks a background and
+an accent, and the category pill is that accent as text over a 13% wash of
+itself. An accent is chosen to sit *beside* text, not to be text, so `#d97706`
+on `#fcfbf9` came out at 2.7:1 at 9px.
+
+Hand-correcting the one template that failed was rejected: the next accent
+somebody adds has the same coin flip, and nothing would catch it.
+`lib/contrast-tokens.test.ts` scans class names and cannot see a hex sitting in
+`data/templates.ts`. So the pill now asks `readableOn` (in the new
+`lib/contrast.ts`) for a version of the accent that clears AA against the wash
+it actually sits on — walking toward black or white in small steps, so the hue
+survives; `#d97706` becomes `#985304` at 4.9:1, still visibly the same amber.
+
+`lib/contrast.test.ts` checks the maths, then walks **every** template and
+asserts both the corrected pill and the raw headline colour clear 4.5:1, and
+that both cards (the gallery and `CreateBookModal`) actually ask for the
+correction. Removing it from either makes the suite fail, which was checked.
+The audit re-run afterwards reports nothing.
+
 ### The PDF import and the paid entitlements now run in a harness too
 
 `scripts/supabase-gateway.mjs` grew a `/storage/v1`: buckets are directories,
@@ -703,6 +725,10 @@ Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
   `'use client'` does not save you — client components are still prerendered.
   Load it with `await import(...)`, or the component with `next/dynamic`
   (`ssr: false`).
+- **A colour that lives in data escapes the contrast tests.** `lib/contrast-tokens.test.ts`
+  reads class names, so a hex in `data/templates.ts` is invisible to it. Anything
+  painting itself from data has to run through `readableOn` in `lib/contrast.ts`
+  and be covered the way `lib/contrast.test.ts` covers the template cards.
 - **Tailwind v4 `@theme inline`: an unregistered colour utility generates nothing
   and fails silently.** `bg-primary` produced `background: rgba(0,0,0,0)` behind
   white text — an invisible button that no test or typecheck catches. **Verify
