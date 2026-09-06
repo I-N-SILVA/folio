@@ -19,6 +19,11 @@
 #   - the free plan's edition limit is the number the pricing page sells, and
 #     hitting it is a 403 the client can render, not a 500;
 #   - a second author cannot touch the first one's edition;
+#   - a PDF import claims its upload targets, takes the pages the browser
+#     writes to storage, and turns what actually landed into an edition;
+#   - the entitlements the tiers are sold on are enforced where the money is:
+#     a free author's lead gate does not run and their CSV export is refused,
+#     and a redeemed one's both work;
 #   - an AppSumo code lifts the plan, cannot be redeemed twice by different
 #     people, is idempotent for its rightful holder, and a refund takes it back.
 #
@@ -179,6 +184,97 @@ else
 fi
 
 echo
+echo "==> what the free plan is not sold"
+# `readerPolicy` treats the settings as a request and the plan as the answer, so
+# a free author can switch the gate on and it must not run. If it did, the lead
+# capture the paid tiers are sold on would be free, and the badge with it.
+GATED='{"published":true,"unlisted":false,"gating":{"enabled":true,"page_number":2,"type":"email","title":"Read the rest","description":"Your email, and the rest is yours."}}'
+FREEBOOK=$(rows "select id from public.books where slug='free-edition-1'")
+P1F=$(python3 -c 'import uuid;print(uuid.uuid4())'); P2F=$(python3 -c 'import uuid;print(uuid.uuid4())')
+curl -s -o /dev/null --noproxy '*' -X PUT "$A/api/books/$FREEBOOK/pages" -H "Cookie: $FC" \
+  -H 'content-type: application/json' \
+  -d "[{\"id\":\"$P1F\",\"page_number\":1,\"type\":\"cover\",\"layout\":\"hero\",\"blocks\":[{\"id\":\"f1\",\"type\":\"text\",\"variant\":\"title\",\"content\":\"A Free Edition\"}],\"hotspots\":[]},
+       {\"id\":\"$P2F\",\"page_number\":2,\"type\":\"content\",\"layout\":\"text\",\"blocks\":[{\"id\":\"f2\",\"type\":\"text\",\"variant\":\"body\",\"content\":\"Behind the gate that must not run.\"}],\"hotspots\":[]}]"
+curl -s -o /dev/null --noproxy '*' -X PATCH "$A/api/books/$FREEBOOK" -H "Cookie: $FC" \
+  -H 'content-type: application/json' -d "{\"settings\":$GATED}"
+
+FREE_HTML=$(curl -s --noproxy '*' "$A/book/free-edition-1")
+echo "$FREE_HTML" | grep -q 'Behind the gate that must not run' \
+  && pass "a free author's gate does not run — the page is readable" \
+  || fail "a free edition is gated, which is a paid entitlement given away"
+
+EXPORT_FREE=$(status -H "Cookie: $FC" "$A/api/analytics/free-edition-1/export?kind=events")
+[[ "$EXPORT_FREE" == "403" ]] && pass "CSV export is refused on free ($EXPORT_FREE)" \
+  || fail "CSV export on free returned $EXPORT_FREE"
+
+echo
+echo "==> a PDF import, which is the product's first sentence"
+# The browser renders the pages and writes them to storage itself, so the parts
+# a script can drive are the two server halves and the signed targets between
+# them: begin → PUT each page → finalize. That is the whole server contract.
+PNG=$(mktemp /tmp/qlico-page-XXXXXX.png)
+python3 - "$PNG" <<'PYPNG'
+import base64, sys
+# The smallest valid PNG: 1x1, opaque.
+sys.argv[1]
+open(sys.argv[1], 'wb').write(base64.b64decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='))
+PYPNG
+
+BEGIN=$(curl -s --noproxy '*' -X POST "$A/api/import/pdf" -H "Cookie: $AC" \
+  -H 'content-type: application/json' \
+  -d '{"title":"A Scanned Catalogue","slug":"scanned-catalogue","pageCount":3}')
+IMPORTED=$(echo "$BEGIN" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("bookId",""))' 2>/dev/null || true)
+TARGETS=$(echo "$BEGIN" | python3 -c 'import json,sys;print(len(json.load(sys.stdin).get("uploads",[])))' 2>/dev/null || echo 0)
+[[ -n "$IMPORTED" && "$TARGETS" == "3" ]] \
+  && pass "the import claims the slug and hands back 3 upload targets" \
+  || fail "begin answered: $(echo "$BEGIN" | head -c 300)"
+
+# Two of the three pages land. The third is the ordinary failure — a dropped
+# upload — and the finalizer is documented to treat storage, not the request, as
+# the authority on which pages exist.
+UPLOADED=0
+for n in 1 2; do
+  T=$(echo "$BEGIN" | python3 -c "import json,sys;u=json.load(sys.stdin)['uploads'];print(next(x['token'] for x in u if x['pageNumber']==$n))")
+  P=$(echo "$BEGIN" | python3 -c "import json,sys;u=json.load(sys.stdin)['uploads'];print(next(x['path'] for x in u if x['pageNumber']==$n))")
+  UP=$(curl -s -o /dev/null -w '%{http_code}' --noproxy '*' -X PUT \
+    "http://127.0.0.1:$GATEWAY_PORT/storage/v1/object/upload/sign/folio-assets/$P?token=$T" \
+    -H 'content-type: image/png' --data-binary "@$PNG")
+  [[ "$UP" == "200" ]] && UPLOADED=$((UPLOADED + 1))
+done
+[[ "$UPLOADED" == "2" ]] && pass "two pages written to storage" || fail "only $UPLOADED of 2 uploads were accepted"
+
+FIN=$(curl -s --noproxy '*' -X POST "$A/api/import/pdf/finalize" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d "{\"bookId\":\"$IMPORTED\"}")
+echo "$FIN" | grep -q '"pageCount":2' \
+  && pass "the edition is the two pages that landed, not the three that were claimed ($FIN)" \
+  || fail "finalize answered: $FIN"
+[[ "$(rows "select count(*) from public.pages where book_id='$IMPORTED'")" == "2" ]] \
+  && pass "two page rows" || fail "page rows: $(rows "select count(*) from public.pages where book_id='$IMPORTED'")"
+
+# Each page has to point at the object that was uploaded for it, or the import
+# succeeds and the edition renders blank.
+IMG=$(rows "select (blocks[1]->>'src') from public.pages where book_id='$IMPORTED' and page_number=1")
+echo "$IMG" | grep -q "books/$IMPORTED/pages/page-1.png" \
+  && pass "page 1 points at its own object" || fail "page 1's image src is '$IMG'"
+
+REFIN=$(curl -s --noproxy '*' -X POST "$A/api/import/pdf/finalize" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d "{\"bookId\":\"$IMPORTED\"}")
+echo "$REFIN" | grep -q 'alreadyFinalized' \
+  && pass "finalising twice does not double the edition" || fail "the second finalize answered: $REFIN"
+
+curl -s -o /dev/null --noproxy '*' -X PATCH "$A/api/books/$IMPORTED" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"settings":{"published":true,"unlisted":false}}'
+[[ "$(status "$A/book/scanned-catalogue")" == "200" ]] \
+  && pass "the imported edition serves at its public address" \
+  || fail "the imported edition returned $(status "$A/book/scanned-catalogue")"
+# 200 is not the same as showing the pages: the whole import is images, so the
+# reader has to carry the object each page points at.
+curl -s --noproxy '*' "$A/book/scanned-catalogue" | grep -q "books/$IMPORTED/pages/page-1.png" \
+  && pass "and the page images are in its HTML" || fail "the imported edition renders without its page images"
+rm -f "$PNG"
+
+echo
 echo "==> an AppSumo code"
 su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -c \"
   INSERT INTO public.appsumo_licenses (license_key, plan, tier, status, activation_email)
@@ -203,6 +299,22 @@ curl -s --noproxy '*' -X POST "$A/api/appsumo/redeem" -H "Cookie: $AC" \
 
 [[ "$(status -X POST "$A/api/appsumo/redeem" -H 'content-type: application/json' -d '{"code":"AUTHOR-E2E-1"}')" == "401" ]] \
   && pass "an anonymous caller is refused" || fail "an anonymous redeem was not a 401"
+
+echo
+echo "==> what the code buys"
+curl -s -o /dev/null --noproxy '*' -X PATCH "$A/api/books/$BOOK" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d "{\"settings\":$GATED}"
+PAID_HTML=$(curl -s --noproxy '*' "$A/book/silk-trench")
+echo "$PAID_HTML" | grep -q 'Read the rest' \
+  && pass "the same settings now run the gate" || fail "a redeemed author's gate did not run"
+echo "$PAID_HTML" | grep -q 'Hand-tailored in Milan' \
+  && fail "the gated page's text is in the HTML anyway — the gate is decoration" \
+  || pass "and the text behind it is not in the HTML"
+
+EXPORT_PAID=$(curl -s --noproxy '*' -H "Cookie: $AC" "$A/api/analytics/silk-trench/export?kind=events" -w '\n%{http_code}')
+EXPORT_CODE=$(echo "$EXPORT_PAID" | tail -1)
+[[ "$EXPORT_CODE" == "200" ]] && pass "CSV export works on the redeemed plan ($EXPORT_CODE)" \
+  || fail "CSV export on tier 2 returned $EXPORT_CODE"
 
 echo
 echo "==> a refund takes it back"

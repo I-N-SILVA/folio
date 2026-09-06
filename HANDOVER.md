@@ -31,7 +31,7 @@ npm run verify:migration        # applies master_migration.sql for real, twice
 npm run verify:appsumo:e2e      # the licence lifecycle against real PostgREST
 npm run verify:routes:e2e       # the webhook and the digest, over HTTP
 npm run verify:mvp:e2e          # the product itself: publish → read → gated → reported
-npm run verify:author:e2e       # the buyer: sign in → create → publish → redeem → refund
+npm run verify:author:e2e       # the buyer: sign in → import → publish → redeem → refund
 
 # Against a deployment
 CRON_SECRET=…      npm run preflight      -- https://<domain>   # config + live schema
@@ -331,6 +331,33 @@ separate decision.
   this" is the duplicate route. Templates count against the plan's edition
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
+
+### The PDF import and the paid entitlements now run in a harness too
+
+`scripts/supabase-gateway.mjs` grew a `/storage/v1`: buckets are directories,
+objects are files, and signed upload tokens are a `Map`. The endpoints and
+payload shapes were read out of
+`node_modules/@supabase/storage-js/src/packages/StorageFileApi.ts` rather than
+remembered — `createSignedUploadUrl` answers with a *relative* `url` that the
+client re-parses for its token, which is not a thing to guess at.
+
+That made the product's first sentence testable. The importer hands the browser
+one signed target per page, the browser writes the PNGs straight to storage, and
+`/api/import/pdf/finalize` turns whatever landed into page rows — none of it
+expressible against PostgREST, so none of it had ever been run. The harness
+drives both server halves and the PUTs between them, and deliberately uploads
+two of the three pages it claimed: storage is the authority on which pages
+exist, and the honest failure — a dropped upload — must produce a shorter
+edition rather than page rows pointing at objects that are not there. It does.
+Finalising twice is idempotent, and the imported edition's images reach the
+reader's HTML, which is the difference between a 200 and a book you can see.
+
+The same run now checks the feature matrix the tiers are sold on, from both
+sides: a free author can switch the lead gate on and it does not run, and their
+CSV export is a 403; the same settings on the same edition gate for real once a
+code is redeemed, with the text behind the gate absent from the HTML rather than
+merely hidden, and the export returns 200. Both correct, and neither had ever
+been executed against a running build.
 
 ### Nothing had ever run as a signed-in user, and RLS was untested
 
