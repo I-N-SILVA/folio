@@ -1,107 +1,42 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { createServerSupabase } from '@/lib/supabase-server'
+import { RedeemForm } from '@/components/studio/RedeemForm'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Gift, Loader2 } from 'lucide-react'
+export const dynamic = 'force-dynamic'
 
-export default function RedeemPage() {
-  const router = useRouter()
-  const [code, setCode] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState<string | null>(null)
+export const metadata = {
+  title: 'Redeem your deal',
+  description: 'Enter your AppSumo license code to unlock your lifetime plan.',
+}
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!code.trim()) return
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch('/api/appsumo/redeem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim() }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error ?? 'Something went wrong.')
-        setLoading(false)
-        return
-      }
-      setSuccess(data.planName ?? 'your plan')
-      setTimeout(() => router.push('/account'), 1400)
-    } catch {
-      setError('Network error. Please try again.')
-      setLoading(false)
-    }
+/**
+ * Redemption, behind sign-in.
+ *
+ * This page had no auth check. `/api/appsumo/redeem` correctly answers 401 to a
+ * signed-out caller, and the form rendered that as the literal word
+ * "Unauthorized" — to a buyer arriving from their AppSumo receipt, who is
+ * signed out almost by definition, on the one screen that stands between paying
+ * and using the product. At launch volume that is the support queue.
+ *
+ * `?code=` survives the round trip through the magic link, so a buyer who has
+ * to sign in first does not come back to an empty field holding a code they now
+ * have to find again.
+ */
+export default async function RedeemPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>
+}) {
+  const { code } = await searchParams
+  const supabase = await createServerSupabase()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    const next = code ? `/redeem?code=${encodeURIComponent(code)}` : '/redeem'
+    redirect(`/login?next=${encodeURIComponent(next)}`)
   }
 
-  return (
-    <main className="qlico-grain flex min-h-screen items-center justify-center bg-[var(--background)] p-6 text-[var(--qlico-ink)]">
-      <motion.div
-        initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-        className="w-full max-w-md rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 p-8 shadow-[var(--qlico-shadow)] backdrop-blur"
-      >
-        <div className="mb-7">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--invert-surface)] text-[var(--invert-text)] shadow-lg">
-            <Gift size={22} />
-          </span>
-          <h1 className="mt-5 font-display text-4xl font-semibold tracking-[-0.05em]">Redeem your deal</h1>
-          <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
-            Paste the license code from your AppSumo purchase to unlock your lifetime tier.
-          </p>
-        </div>
-
-        {success ? (
-          <div className="rounded-[1.5rem] border border-green-200 bg-green-50 p-6">
-            <h2 className="mb-1 font-semibold text-green-800">You're all set 🎉</h2>
-            <p className="text-sm text-green-700">
-              <strong>{success}</strong> is now active. Taking you to your account…
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label htmlFor="code" className="mb-2 block text-sm font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
-                License code
-              </label>
-              <input
-                id="code"
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="e.g. AS-XXXX-XXXX-XXXX"
-                autoComplete="off"
-                spellCheck={false}
-                className="w-full rounded-[1.1rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/70 px-4 py-3 font-mono text-sm tracking-wide outline-none transition focus:border-[var(--qlico-teal)] focus:ring-2 focus:ring-[var(--qlico-teal)]/20"
-              />
-            </div>
-
-            {error && (
-              <p className="rounded-[1rem] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || !code.trim()}
-              className="flex items-center justify-center gap-2 rounded-full bg-[var(--qlico-teal)] px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading && <Loader2 size={16} className="animate-spin" />}
-              {loading ? 'Redeeming…' : 'Redeem code'}
-            </button>
-
-            <Link href="/account" className="text-center text-sm font-bold text-[var(--qlico-muted)] hover:text-[var(--qlico-ink)]">
-              Back to account
-            </Link>
-          </form>
-        )}
-      </motion.div>
-    </main>
-  )
+  return <RedeemForm initialCode={code ?? ''} />
 }

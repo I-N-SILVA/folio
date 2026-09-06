@@ -58,8 +58,13 @@ if (!executablePath) {
 const browser = await chromium.launch({ executablePath })
 let findings = 0
 
-for (const width of WIDTHS) {
-  const ctx = await browser.newContext({ viewport: { width, height: 900 } })
+// Both themes. The palette inverts, and the contrast bug this catches was
+// legible in light and white-on-white in dark — checking one theme is checking
+// half the app.
+for (const { width, scheme } of WIDTHS.flatMap((width) =>
+  [/** @type {const} */ ('light'), /** @type {const} */ ('dark')].map((scheme) => ({ width, scheme }))
+)) {
+  const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme })
 
   for (const route of ROUTES) {
     const page = await ctx.newPage()
@@ -96,21 +101,129 @@ for (const width of WIDTHS) {
           }
         }
 
-        // Text the same colour as what it sits on — how six editor controls
-        // once became invisible from a single token.
+        // Contrast, not equality. An exact colour match catches white-on-white
+        // and nothing else; the failure that actually shipped was a background
+        // token that inverts between themes paired with a fixed `text-white`,
+        // and its near neighbours (#fff on #eee) are just as unreadable.
+        // 3.0 rather than WCAG's 4.5 so this reports what is genuinely
+        // illegible rather than every low-contrast caption.
+        const channel = (c) => {
+          const v = c / 255
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+        }
+        const luminance = (rgb) =>
+          0.2126 * channel(rgb[0]) + 0.7152 * channel(rgb[1]) + 0.0722 * channel(rgb[2])
+        // Resolved through a canvas rather than parsed out of the string.
+        //
+        // Chrome serves computed colours in whatever space the author wrote —
+        // Tailwind v4 emits `oklch(...)` and `color-mix()` yields `oklab(...)`.
+        // Scraping digits out of those treats 286.067 as a blue channel, which
+        // reported the site navigation at 2.8:1 and black-on-white at 1.0:1.
+        // Both were wrong, and a detector that cries wolf is worse than none.
+        //
+        // Painting the colour and reading the pixel back makes the browser do
+        // the conversion, so every format works.
+        const probeCanvas = document.createElement('canvas')
+        probeCanvas.width = probeCanvas.height = 1
+        const ctx2d = probeCanvas.getContext('2d', { willReadFrequently: true })
+        const cache = new Map()
+        const SENTINEL = '#010203'
+
+        /** `[r, g, b, a]` with a in 0..1, or null if the value is not a colour. */
+        const rgba = (value) => {
+          if (!value) return null
+          if (cache.has(value)) return cache.get(value)
+          let out = null
+          try {
+            // Assigning an invalid colour leaves fillStyle untouched, which is
+            // how it is detected without relying on an exception.
+            ctx2d.fillStyle = SENTINEL
+            ctx2d.fillStyle = value
+            if (ctx2d.fillStyle !== SENTINEL || value.trim().toLowerCase() === SENTINEL) {
+              ctx2d.clearRect(0, 0, 1, 1)
+              ctx2d.fillRect(0, 0, 1, 1)
+              const d = ctx2d.getImageData(0, 0, 1, 1).data
+              out = [d[0], d[1], d[2], d[3] / 255]
+            }
+          } catch {
+            out = null
+          }
+          cache.set(value, out)
+          return out
+        }
+
+        const over = (fg, bg) => [
+          fg[0] * fg[3] + bg[0] * (1 - fg[3]),
+          fg[1] * fg[3] + bg[1] * (1 - fg[3]),
+          fg[2] * fg[3] + bg[2] * (1 - fg[3]),
+        ]
+
+        /**
+         * What is actually behind this element.
+         *
+         * Taking the first non-transparent ancestor background is wrong when it
+         * is translucent — a 90%-white bar over a dark page is not white — so
+         * the translucent layers are collected and composited down onto the
+         * first opaque one.
+         */
+        const backdrop = (el) => {
+          const layers = []
+          let n = el
+          let base = null
+          while (n) {
+            const c = rgba(getComputedStyle(n).backgroundColor)
+            if (c && c[3] > 0.001) {
+              if (c[3] >= 0.999) {
+                base = [c[0], c[1], c[2]]
+                break
+              }
+              layers.push(c)
+            }
+            n = n.parentElement
+          }
+          if (!base) {
+            const html = rgba(getComputedStyle(document.documentElement).backgroundColor)
+            base = html && html[3] >= 0.999 ? [html[0], html[1], html[2]] : [255, 255, 255]
+          }
+          for (let i = layers.length - 1; i >= 0; i--) base = over(layers[i], base)
+          return base
+        }
+
+        const ratio = (a, b) => {
+          const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+          return (l1 + 0.05) / (l2 + 0.05)
+        }
+
         for (const el of document.querySelectorAll('button, a, p, h1, h2, h3, span, label')) {
           if (el.children.length || !(el.textContent || '').trim()) continue
           const cs = getComputedStyle(el)
-          if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue
-          let bg = 'rgba(0, 0, 0, 0)'
-          let n = el
-          while (n && bg === 'rgba(0, 0, 0, 0)') {
-            bg = getComputedStyle(n).backgroundColor
-            n = n.parentElement
+          if (cs.visibility === 'hidden' || cs.display === 'none') continue
+          // A deliberately faded element is a design choice, not a defect.
+          if (Number(cs.opacity) < 0.6) continue
+          // Nor is decorative text. The landing page sets its own wordmark at
+          // 20vw in near-black as a background flourish; it is `aria-hidden`
+          // and `pointer-events-none` precisely because it is not there to be
+          // read, and reporting it teaches the reader to ignore this tool.
+          if (el.closest('[aria-hidden="true"]')) continue
+          if (cs.pointerEvents === 'none' && !el.closest('button, a')) continue
+          const rect = el.getBoundingClientRect()
+          if (rect.width === 0 || rect.height === 0) continue
+          // Text over a picture is judged by the picture, which this cannot see.
+          let hasImage = false
+          for (let n = el; n; n = n.parentElement) {
+            if (getComputedStyle(n).backgroundImage !== 'none') { hasImage = true; break }
           }
-          if (bg && cs.color === bg) {
-            out.invisible.push((el.textContent || '').trim().slice(0, 30))
-            if (out.invisible.length >= 3) break
+          if (hasImage) continue
+
+          const fgRaw = rgba(cs.color)
+          if (!fgRaw || fgRaw[3] < 0.05) continue
+          const bg = backdrop(el)
+          const fg = over(fgRaw, bg)
+
+          const r = ratio(fg, bg)
+          if (r < 3) {
+            out.invisible.push(`${(el.textContent || '').trim().slice(0, 26)} (${r.toFixed(1)}:1)`)
+            if (out.invisible.length >= 4) break
           }
         }
 
@@ -129,20 +242,24 @@ for (const width of WIDTHS) {
 
         const broken = [...document.images]
           .filter((i) => i.complete && i.naturalWidth === 0)
-          .map((i) => i.currentSrc.slice(0, 60))
-        return { ...out, broken: broken.slice(0, 2) }
+          .map((i) => i.currentSrc)
+        return { ...out, broken }
       })
       .catch((e) => ({ error: String(e).slice(0, 90) }))
 
     if (probe.error) problems.push(probe.error)
     if (probe.overflow > 1) problems.push(`scrolls sideways by ${probe.overflow}px — ${probe.wide.join(', ')}`)
-    if (probe.invisible?.length) problems.push(`text on its own colour: ${probe.invisible.join(' | ')}`)
+    if (probe.invisible?.length) problems.push(`unreadable contrast: ${probe.invisible.join(' | ')}`)
     if (probe.fellBack?.length) problems.push(`font named but not loaded: ${[...new Set(probe.fellBack)].join(', ')}`)
-    if (probe.broken?.length) problems.push(`broken image: ${probe.broken.join(' | ')}`)
+    // The same IGNORE as the response filter: the demo editions point at
+    // Unsplash, which a sandboxed network refuses, and reporting that on every
+    // route buries the findings that are real.
+    const broken = (probe.broken ?? []).filter((u) => !IGNORE.test(u)).slice(0, 2)
+    if (broken.length) problems.push(`broken image: ${broken.map((u) => u.slice(0, 60)).join(' | ')}`)
 
     if (problems.length) {
       findings += problems.length
-      console.log(`\n  ${String(width).padStart(4)}px  ${route}`)
+      console.log(`\n  ${String(width).padStart(4)}px ${scheme.padEnd(5)} ${route}`)
       for (const p of [...new Set(problems)]) console.log(`         - ${p}`)
     }
     await page.close()

@@ -25,7 +25,10 @@
   --tint-strong: rgba(0, 0, 0, 0.1);
   --accent-vivid: #000000;
   --accent-vivid-hover: #333333;
-  --qlico-brass: #e0e0e0;
+  /* Was #e0e0e0 here and #333333 in dark — the wrong way round, so the "Press
+     & brand" eyebrow measured 1.3:1 on white and the account page's plan icons
+     were invisible in both themes. */
+  --qlico-brass: #4a4a4a;
   --qlico-teal: #000000;
   --qlico-oxblood: #000000;
   --qlico-border: #eaeaea;
@@ -62,7 +65,7 @@
   --accent-hover: #e0e0e0;
   --accent-fg: #ffffff;
   --accent-contrast: #000000;
-  --qlico-brass: #333333;
+  --qlico-brass: #c8c8c8;
   --qlico-teal: #ffffff;
   --qlico-oxblood: #ffffff;
   --qlico-border: #333333;
@@ -93,7 +96,7 @@
     --accent-hover: #e0e0e0;
     --accent-fg: #ffffff;
     --accent-contrast: #000000;
-    --qlico-brass: #333333;
+    --qlico-brass: #c8c8c8;
     --qlico-teal: #ffffff;
     --qlico-oxblood: #ffffff;
     --qlico-border: #333333;

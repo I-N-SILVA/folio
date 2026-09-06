@@ -135,7 +135,7 @@ export function Features() {
               <motion.div style={{ opacity: dataOverlayOpacity }} className="mt-4 md:mt-8 flex flex-col gap-2 md:gap-4">
                 <div className="flex justify-between items-center border-b border-black/10 pb-1 md:pb-2">
                   <span className="text-zinc-500 text-[8px] md:text-xs uppercase tracking-widest font-medium">Release</span>
-                  <span className="text-emerald-600 text-[10px] md:text-sm font-medium bg-emerald-600/10 px-1 md:px-2 py-0.5 rounded font-mono">LIVE NOW</span>
+                  <span className="text-emerald-700 text-[10px] md:text-sm font-medium bg-emerald-600/10 px-1 md:px-2 py-0.5 rounded font-mono">LIVE NOW</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-black/10 pb-1 md:pb-2">
                   <span className="text-zinc-500 text-[8px] md:text-xs uppercase tracking-widest font-medium">Stock</span>

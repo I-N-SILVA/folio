@@ -61,7 +61,10 @@ export function FilmstripScrubber({
 
               {/* Page Number Label */}
               <span className={`mt-1 font-mono text-[9px] tabular-nums font-semibold transition-colors ${
-                isActive ? 'text-white' : 'text-zinc-400'
+                // zinc-400 on the scrubber's 50%-black ground measured 1.5:1 —
+                // the page numbers were there but not readable, which is the
+                // only thing this control is for.
+                isActive ? 'text-white' : 'text-zinc-200'
               }`}>
                 {page.page_number}
               </span>

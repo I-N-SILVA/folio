@@ -295,7 +295,7 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
         <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/#pricing"
-            className="rounded-full bg-[var(--qlico-teal)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
+            className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--accent-contrast)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)]"
           >
             See plans
           </Link>
@@ -385,7 +385,7 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
             <button
               type="submit"
               disabled={loading || !newTitle.trim() || !effectiveSlug}
-              className="flex-[2] rounded-full bg-[var(--qlico-teal)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-[2] rounded-full bg-[var(--accent)] px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--accent-contrast)] shadow-lg transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create edition'}
             </button>
@@ -697,7 +697,7 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
                     <button
                       disabled={loading}
                       onClick={() => handleSelectTemplate(previewingTemplate)}
-                      className="flex items-center gap-2 rounded-full bg-[var(--qlico-teal)] px-5 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition hover:scale-105"
+                      className="flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--accent-contrast)] shadow-lg transition hover:scale-105"
                     >
                       {loading ? 'Creating…' : 'Use This Template'}
                       <ArrowRight size={14} />

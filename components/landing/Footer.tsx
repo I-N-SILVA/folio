@@ -25,14 +25,17 @@ export function Footer() {
             <Link href="/terms" className="text-zinc-500 transition-colors hover:text-white">Terms</Link>
           </div>
         </div>
-        <div className="mt-16 flex flex-col sm:flex-row sm:items-center justify-between border-t border-white/5 pt-8 text-[13px] font-medium text-zinc-600">
+        <div className="mt-16 flex flex-col sm:flex-row sm:items-center justify-between border-t border-white/5 pt-8 text-[13px] font-medium text-zinc-400">
           <span>© {new Date().getFullYear()} QLICO. All rights reserved.</span>
-          <span className="mt-4 sm:mt-0 text-zinc-500">Designed with precision.</span>
+          <span className="mt-4 sm:mt-0 text-zinc-400">Designed with precision.</span>
         </div>
       </div>
       
       {/* Soft elegant typographic footer */}
-      <div className="w-full flex justify-center overflow-hidden pointer-events-none select-none mt-16 border-t border-white/5 pt-12">
+      <div
+        aria-hidden="true"
+        className="w-full flex justify-center overflow-hidden pointer-events-none select-none mt-16 border-t border-white/5 pt-12"
+      >
         <h2 className="font-display text-[20vw] leading-[0.75] font-medium tracking-tighter text-zinc-800 whitespace-nowrap">
           QLICO
         </h2>

@@ -31,7 +31,7 @@ export function UpgradeButton({ className = '' }: { className?: string }) {
         go('/api/billing/checkout', setLoading)
       }}
       disabled={loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--qlico-teal)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--accent-contrast)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:opacity-50 ${className}`}
     >
       {loading && <Loader2 size={15} className="animate-spin" />}
       {loading ? 'Starting…' : 'Upgrade to Pro'}
