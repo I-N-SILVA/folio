@@ -36,44 +36,77 @@ alone rather than buried under a whole-repo reformat.
 
 ---
 
-## 1. Do these before launch — nothing else on this list matters more
+## 1. Launch runbook
 
-### Apply the pending migration
+Everything here that could be done from a sandbox has been. What is left needs a
+real deployment, real credentials, or a person — it is listed as such, not as
+work someone forgot.
 
-Apply **`supabase/master_migration.sql`**. It is now generated from the numbered
-migrations (`npm run db:master`) and every statement is idempotent, so it is
-safe on a fresh project and on one that is several migrations behind.
+### Done, and verified rather than asserted
 
-It used to be hand-maintained and had fallen three behind — a database built
-from it dropped every `page_click` and `gate_unlock` event and refused two of
-the six page layouts. `supabase/master-migration.test.ts` now fails if it drifts
-again. Check what's actually live before assuming.
+- The whole AppSumo licence path: webhook signature (accepts correct, refuses
+  unsigned and wrong), the `test` event, `activate` / `enhance` / `reduce` /
+  `refund` including the profile revert, the redemption race, and the
+  signed-out `/redeem?code=` → sign-in → back-with-the-code round trip.
+- Tier → plan mapping matches the deal table, and an unrecognised tier no
+  longer grants the top plan.
+- The pricing page's claims match `lib/plans.ts`, and live data is now actually
+  gated rather than merely advertised.
+- The database: one generated, idempotent consolidated migration; a test that
+  fails if it drifts from the numbered ones.
+- What it renders: no sideways scroll from 320px up, no unreadable text on the
+  public surfaces, every named font actually loaded, in both colour schemes.
 
-Every one of these degrades rather than breaks, and each logs which file to
-apply. Grep for `is missing` and `apply supabase/migrations` in production logs.
+### Needs the deployment — nobody can do these from here
 
-| Migration | Consequence if missing |
-|---|---|
-| `009_post_audit_features.sql` | Gate-view events, atomic page saving, dunning grace, edition engagement insights, the weekly digest and slug history all degrade silently. |
-| `012_fix_pages_layout_check.sql` | **Two page layouts cannot be saved at all.** The `pages.layout` CHECK allowed four values since 002 while the editor's dropdown offered five — an author choosing "Grid" got "Could not save these pages" and no clue why. `canvas` is the sixth. |
-| `013_appsumo_columns_backfill.sql` | On a project whose `appsumo_licenses` table predates a column, **a buyer who paid cannot redeem.** 005 uses `CREATE TABLE IF NOT EXISTS`, which no-ops on an existing older table. |
-| `014_schema_selfcheck.sql` | `npm run preflight` cannot read the live CHECK constraints, so the one check that catches an unapplied migration reports a warning instead of an answer. |
+1. **Apply `supabase/master_migration.sql`** to the production Supabase
+   project. Generated (`npm run db:master`), idempotent, safe to re-run, and
+   therefore also how you bring an existing project up to date. Do not apply
+   migrations by hand and do not edit that file.
+2. **Set the environment.** `preflight` below tells you what is missing and
+   what each absence costs. `APPSUMO_API_KEY` must be the value from the
+   AppSumo partner dashboard: a mismatch rejects every real purchase and looks
+   exactly like "no sales yet".
+3. **Point AppSumo's Notification URL** at
+   `https://<domain>/api/appsumo/webhook`.
+4. **Run the three checks and get them clean.**
 
-**`npm run preflight` answers all of this against the deployment**, including
-whether the live constraints accept every value this code can produce. Run it
-rather than reading logs for `is missing`.
+   ```bash
+   CRON_SECRET=…      npm run preflight      -- https://<domain>
+   APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>
+                      npm run audit:browser  -- https://<domain>
+   ```
 
-### Configure what's optional
+5. **Dry-run one real licence** end to end: AppSumo issues a test code → a row
+   lands in `appsumo_licenses` → redeem at `/redeem` → plan shows on `/account`
+   → refund → account reverts to Free. The scripts cover everything around
+   this; only a real code exercises the middle.
+6. **Send the weekly digest by hand** and read the email in a real inbox.
+   `curl -H "Authorization: Bearer $CRON_SECRET" https://<domain>/api/cron/digest`.
+   It is written, scheduled, idempotent and typechecked, and **no human has
+   ever received one** — so the retention half of the loop is theoretical until
+   this happens.
+7. **Own three mailboxes**: `support@`, `legal@`, `privacy@`. The app prints
+   them (`app/help`, `app/terms`, `app/privacy`).
+8. **Reconcile `lib/appsumo.ts` field names** against AppSumo's current
+   developer docs; payload keys shift between API versions.
 
-Five settings are optional at deploy time and each degrades by design. Know which
-are on:
+### Not code, and not optional
+
+The listing itself — title, hero video, screenshots, tier table, FAQ, founder
+intro — is section 5 of `APPSUMO_LAUNCH.md`. And `docs/mvp-scope.md` §4 still
+stands: nobody has watched five people import a PDF, and the price is a guess.
+A deal that opens on an untested price is a decision, not an oversight; make it
+deliberately.
+
+### Optional settings, and what each absence costs
 
 | Env | Without it |
 |---|---|
-| `GOOGLE_GENERATIVE_AI_API_KEY` | The import's "find products and write descriptions" option is hidden. |
-| `RESEND_API_KEY` + `EMAIL_FROM` | No lead notifications. A captured email is only visible in Insights. |
-| `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PRICE_PRO` | No self-serve upgrade. `/account` falls back to a link to the pricing section. |
-| `CRON_SECRET` | The weekly digest route refuses every request. It **fails closed deliberately** — without it the endpoint would be an unauthenticated way to make the app email its own users. Vercel Cron sends it as `Authorization: Bearer`; the schedule is in `vercel.json`. |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | The import's "find products and write descriptions" option is hidden; detection falls back to the heuristic. |
+| `RESEND_API_KEY` + `EMAIL_FROM` | No digest and no lead notification. A captured email is only visible in Insights. **Both** are needed — a key without a From address sends nothing. |
+| `STRIPE_SECRET_KEY` + `NEXT_PUBLIC_STRIPE_PRICE_PRO` | No self-serve upgrade. `/account` falls back to a link to the pricing section. Correct for an LTD-only launch. |
+| `CRON_SECRET` | The digest route and `/api/health` refuse every request. Both **fail closed deliberately**. Vercel Cron sends it as `Authorization: Bearer`; the schedule is in `vercel.json`. |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | `/help` shows `support@qlico.app`. |
 
 ### Authorize the Sentry and Stripe MCP servers
