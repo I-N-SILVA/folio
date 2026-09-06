@@ -60,34 +60,43 @@ const licenseRow = { license_key: 'KEY-1', plan: 'ltd_tier2', status: 'active', 
 const USER = '11111111-2222-3333-4444-555555555555'
 const OTHER = '99999999-8888-7777-6666-555555555555'
 
-/** Minimal stand-in for the query builder, recording the filters applied. */
+/**
+ * Minimal stand-in for the client, recording the RPC call.
+ *
+ * A mock is all this file can be, and it is worth being explicit about what
+ * that buys and what it does not. The claim used to be expressed as a
+ * PostgREST filter chain and this mock accepted it happily — while the real
+ * PostgREST answered `42703` and every redemption in production would have
+ * failed. `scripts/appsumo-e2e.test.ts` runs the same code against a real
+ * PostgREST for exactly that reason; these tests cover the branching around
+ * it, which that one is too slow to enumerate.
+ */
 function makeAdmin({
   read,
   claimed,
+  rpcError,
 }: {
   read: Record<string, unknown> | null
   claimed: Record<string, unknown>[]
+  rpcError?: { message: string }
 }) {
-  const filters: string[] = []
+  const calls: { fn: string; args: Record<string, unknown> }[] = []
   const builder: Record<string, any> = {
     select: () => builder,
     update: () => builder,
-    eq: (col: string) => {
-      filters.push(`eq:${col}`)
-      return builder
-    },
-    neq: (col: string, val: string) => {
-      filters.push(`neq:${col}=${val}`)
-      return builder
-    },
-    or: (expr: string) => {
-      filters.push(`or:${expr}`)
-      return builder
-    },
+    eq: () => builder,
+    neq: () => builder,
     maybeSingle: async () => ({ data: read }),
-    then: (resolve: (v: unknown) => unknown) => resolve({ data: claimed, error: null }),
+    then: (resolve: (v: unknown) => unknown) => resolve({ data: null, error: null }),
   }
-  return { from: () => builder, filters }
+  return {
+    from: () => builder,
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      calls.push({ fn, args })
+      return rpcError ? { data: null, error: rpcError } : { data: claimed, error: null }
+    },
+    calls,
+  }
 }
 
 describe('redeemLicense', () => {
@@ -117,12 +126,31 @@ describe('redeemLicense', () => {
     })
   })
 
-  it('scopes the claim to unclaimed rows and excludes refunds', async () => {
-    const admin = makeAdmin({ read: licenseRow, claimed: [{ license_key: 'KEY-1', plan: 'ltd_tier2' }] })
+  it('claims through the database function, not a PostgREST filter', async () => {
+    // The filter form compiled to SQL that referenced a column the CTE did not
+    // return, so Postgres rejected every claim and the buyer was told their
+    // code did not exist. See migration 015.
+    const admin = makeAdmin({ read: licenseRow, claimed: [{ license_key: 'KEY-1', plan: 'ltd_tier1' }] })
     const redeem = await load(admin)
     await redeem(USER, 'KEY-1')
-    expect(admin.filters).toContain('neq:status=refunded')
-    expect(admin.filters.some((f) => f.startsWith('or:redeemed_by.is.null'))).toBe(true)
+
+    expect(admin.calls).toHaveLength(1)
+    expect(admin.calls[0]).toEqual({
+      fn: 'claim_appsumo_license',
+      args: { p_license_key: 'KEY-1', p_user_id: USER },
+    })
+  })
+
+  it('reports a claim the database refused rather than claiming success', async () => {
+    // The only ways here are an unapplied migration or an unreachable database,
+    // and both must not read as "redeemed".
+    const admin = makeAdmin({
+      read: licenseRow,
+      claimed: [],
+      rpcError: { message: 'function public.claim_appsumo_license does not exist' },
+    })
+    const redeem = await load(admin)
+    expect(await redeem(USER, 'KEY-1')).toMatchObject({ ok: false, reason: 'not_found' })
   })
 
   it('reports an unknown code', async () => {

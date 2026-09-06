@@ -185,26 +185,36 @@ export async function redeemLicense(userId: string, rawKey: string): Promise<Red
   // paid plan to two accounts and the audit trail kept only the later one.
   // Trivially exploitable: fire the same code from two sessions at once.
   //
-  // Narrowing the UPDATE to rows that are still unclaimed (or already this
-  // user's, so a retry stays idempotent) makes the database arbitrate, and the
-  // returned rows say whether we won. Same reasoning as the slug insert in
-  // /api/books, which relies on the unique constraint rather than a prior read.
-  const { data: claimed, error: claimError } = await supabaseAdmin
-    .from('appsumo_licenses')
-    .update({ redeemed_by: userId, redeemed_at: new Date().toISOString() })
-    .eq('license_key', licenseKey)
-    .neq('status', 'refunded')
-    .or(`redeemed_by.is.null,redeemed_by.eq.${userId}`)
-    .select('license_key, plan')
+  // It runs as one statement in the database (migration 015) rather than as a
+  // PostgREST filter. It was written as a filter first, with
+  // `.or('redeemed_by.is.null,redeemed_by.eq.' + userId)`, and that never
+  // worked: PostgREST compiles an UPDATE carrying a `select=` into a CTE and
+  // then applies logical filters a second time to the CTE's output, where the
+  // column it names does not exist. Postgres answers `42703` and this function
+  // reported `not_found` — so every redemption failed, for everyone, with the
+  // buyer holding a valid code. Nothing caught it because the unit tests assert
+  // against a mock of the client. See the migration for the generated SQL.
+  const { data: claimed, error: claimError } = await supabaseAdmin.rpc('claim_appsumo_license', {
+    p_license_key: licenseKey,
+    p_user_id: userId,
+  })
 
-  if (claimError) return { ok: false, reason: 'not_found' }
+  if (claimError) {
+    // Worth a line in the log: the only ways here are the function being absent
+    // (an unapplied migration) or the database being unreachable, and both look
+    // to the buyer like a code that does not exist.
+    console.error('[appsumo] claim failed', claimError.message)
+    return { ok: false, reason: 'not_found' }
+  }
 
-  // No rows means another request claimed it between our read and our write,
-  // or a refund landed in the same window.
-  if (!claimed || claimed.length === 0) {
+  const rows = (claimed ?? []) as { license_key: string; plan: string }[]
+
+  // No rows means another request claimed it between our read and our write, or
+  // a refund landed in the same window.
+  if (rows.length === 0) {
     return { ok: false, reason: 'already_redeemed' }
   }
 
   await syncProfileFromLicense(userId, licenseKey)
-  return { ok: true, plan: claimed[0].plan ?? license.plan }
+  return { ok: true, plan: rows[0].plan ?? license.plan }
 }

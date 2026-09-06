@@ -16,7 +16,8 @@
     "db:master": "node scripts/build-master-migration.mjs",
     "preflight": "node scripts/preflight.mjs",
     "verify:appsumo": "node scripts/verify-appsumo.mjs",
-    "verify:migration": "bash scripts/verify-migration.sh"
+    "verify:migration": "bash scripts/verify-migration.sh",
+    "verify:appsumo:e2e": "bash scripts/verify-appsumo-e2e.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

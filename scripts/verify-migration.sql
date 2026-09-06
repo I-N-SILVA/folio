@@ -152,7 +152,8 @@ BEGIN
   FOREACH fn IN ARRAY ARRAY[
     'replace_book_pages',
     'edition_engagement',
-    'constraint_allowed_values'
+    'constraint_allowed_values',
+    'claim_appsumo_license'
   ] LOOP
     IF NOT EXISTS (
       SELECT 1 FROM pg_proc p

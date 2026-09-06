@@ -46,3 +46,17 @@ $$;
 
 GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+-- Supabase grants the API roles blanket table privileges and lets RLS do the
+-- real gating. Without these PostgREST answers permission-denied for
+-- everything, which looks like a broken app rather than a missing GRANT.
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+
+-- `service_role` is BYPASSRLS above, which is what makes supabaseAdmin able to
+-- read and write regardless of policy — and why every route using it has to
+-- check ownership itself.
