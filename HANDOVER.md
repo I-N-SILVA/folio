@@ -134,6 +134,47 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### `.or()` on an UPDATE does not work, and it broke two things silently
+
+**Read this before writing another Supabase query.** It is the most expensive
+thing in this file.
+
+PostgREST compiles an UPDATE carrying a `select=` into a CTE, then applies the
+*logical* filters (`or=`, `and=`) a second time to that CTE's output:
+
+```sql
+WITH pgrst_source AS (UPDATE … RETURNING id)
+SELECT … FROM pgrst_source AS profiles
+WHERE (profiles.digest_last_sent_at IS NULL OR …)   -- not a column of the CTE
+```
+
+The CTE only has what `RETURNING` produced, so the second copy names a column
+that is not there and Postgres answers `42703: column … does not exist`. Plain
+`eq`/`neq` filters are *not* duplicated, which is why the failure looks
+column-specific and is not: an `or=` on any column fails the same way.
+
+This codebase used that shape in both places it claims a slot before acting,
+and both were completely broken:
+
+- **Every AppSumo redemption failed.** `redeemLicense` read the error as
+  `not_found`, so a buyer with a valid code was told "We could not find that
+  license code." Every buyer, day one, with the Q&A open.
+- **The weekly digest has never sent an email to anybody.** The claim failed,
+  the route read no rows as "someone else claimed it", and every profile fell
+  into `skipped`. This file used to say the digest was "written, scheduled,
+  idempotent and typechecked, and no human has ever received one" — and read
+  that as nobody having run the cron. Running it was never going to work.
+
+Both now run as one statement in the database (migrations 015 and 016) rather
+than as a URL filter. Adding the column to the `select=` also works and was
+rejected: it leaves a money path depending on an undocumented quirk of how a
+filter is compiled, one careless edit of a select list away from breaking again.
+
+**Neither was catchable by the unit tests**, which assert against a hand-rolled
+mock of the Supabase client — the mock accepts `.or()` happily. `npm run
+verify:appsumo:e2e` stands up PostgreSQL + PostgREST + a Supabase-shaped
+gateway and runs the real code against it. That is what found both.
+
 ### The typography controls had never done anything
 
 Read this alongside the six-features section below — it is the same failure,

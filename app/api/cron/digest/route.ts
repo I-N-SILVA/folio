@@ -83,19 +83,39 @@ export async function GET(request: NextRequest) {
 
   let sent = 0
   let skipped = 0
+  // Kept apart from `skipped` deliberately. Everything used to land in one
+  // counter, so a run that claimed nothing, sent nothing and errored on every
+  // profile reported `{ sent: 0, skipped: 200 }` — which reads as "nothing was
+  // due this week" and is how a digest that could never send looked healthy
+  // for two branches.
+  let failed = 0
 
   for (const profile of profiles ?? []) {
     // Claim the slot before sending, and only if nothing else claimed it first.
     // Sending and then recording would double-send whenever the write fails;
     // this way a failed send costs one missed week, which is the cheaper error.
-    const claim = await supabaseAdmin
-      .from('profiles')
-      .update({ digest_last_sent_at: new Date().toISOString() })
-      .eq('id', profile.id)
-      .or(`digest_last_sent_at.is.null,digest_last_sent_at.lt.${due}`)
-      .select('id')
+    //
+    // One statement in the database (migration 016), not a PostgREST filter.
+    // It was a filter — `.update(...).eq('id', …).or('digest_last_sent_at.is
+    // .null,…').select('id')` — and PostgREST re-applies a logical filter to
+    // the CTE that an UPDATE with a `select=` compiles to, where only `id`
+    // exists. Postgres answered 42703 every time, `claim.data` was empty, and
+    // every profile fell into the `skipped` branch below. This route has never
+    // sent an email to anybody and could not have.
+    const { data: claimed, error: claimError } = await supabaseAdmin.rpc('claim_digest_slot', {
+      p_user_id: profile.id,
+      p_due: due,
+    })
 
-    if (!claim.data?.length) {
+    if (claimError) {
+      // An unapplied migration or an unreachable database. Both look exactly
+      // like "nothing was due", which is how the original bug hid, so say it.
+      console.error('[cron/digest] could not claim a slot', claimError.message)
+      failed++
+      continue
+    }
+
+    if (!claimed?.length) {
       skipped++
       continue
     }
@@ -140,14 +160,22 @@ export async function GET(request: NextRequest) {
       accountUrl: `${SITE_URL}/account`,
     })
 
-    if (result.sent) sent++
-    else skipped++
+    if (result.sent) {
+      sent++
+    } else {
+      // The slot is already claimed at this point, so this profile has lost its
+      // week. That is the deliberate trade — see the note above the claim — but
+      // it is a failure, not a skip.
+      failed++
+      console.error('[cron/digest] send failed', result.reason)
+    }
   }
 
   return NextResponse.json({
     considered: profiles?.length ?? 0,
     sent,
     skipped,
+    failed,
     more: (profiles?.length ?? 0) === BATCH_SIZE,
   })
 }

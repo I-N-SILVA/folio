@@ -130,3 +130,51 @@ describe.skipIf(!LIVE)('the AppSumo licence lifecycle, end to end', () => {
     expect(await redeemLicense(other, KEY_T2)).toMatchObject({ ok: false, reason: 'refunded' })
   })
 })
+
+/**
+ * The digest's slot claim.
+ *
+ * Same shape as the licence claim and same original bug: a `.or()` on an
+ * UPDATE carrying a `select=`, which PostgREST re-applies to a CTE that does
+ * not have the column. It failed for every profile on every run, and the route
+ * read that as "already claimed" — so the weekly digest has never sent an
+ * email to anybody. See migration 016.
+ */
+describe.skipIf(!LIVE)('the weekly digest slot claim', () => {
+  const user = process.env.E2E_OTHER_ID as string
+  let admin: typeof import('@/lib/supabase').supabaseAdmin
+
+  beforeAll(async () => {
+    admin = (await import('@/lib/supabase')).supabaseAdmin
+    await admin.from('profiles').update({ digest_last_sent_at: null }).eq('id', user)
+  })
+
+  const claim = (due: string) => admin.rpc('claim_digest_slot', { p_user_id: user, p_due: due })
+  const future = () => new Date(Date.now() + 60_000).toISOString()
+
+  it('claims a slot that has never been claimed', async () => {
+    const { data, error } = await claim(future())
+    expect(error).toBeNull()
+    expect(data).toHaveLength(1)
+  })
+
+  it('refuses a second claim in the same window', async () => {
+    // The idempotency the whole design rests on: a retry, an overlapping run,
+    // or a curious operator running the cron by hand must not double-send.
+    const { data, error } = await claim(new Date(Date.now() - 6 * 24 * 3600_000).toISOString())
+    expect(error).toBeNull()
+    expect(data).toHaveLength(0)
+  })
+
+  it('claims again once the profile is due', async () => {
+    const { data, error } = await claim(future())
+    expect(error).toBeNull()
+    expect(data).toHaveLength(1)
+  })
+
+  it('leaves other profiles alone', async () => {
+    const buyer = process.env.E2E_BUYER_ID as string
+    const { data } = await admin.from('profiles').select('digest_last_sent_at').eq('id', buyer).maybeSingle()
+    expect((data as { digest_last_sent_at?: string })?.digest_last_sent_at ?? null).toBeNull()
+  })
+})

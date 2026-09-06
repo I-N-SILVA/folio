@@ -71,4 +71,4 @@ NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:$GATEWAY_PORT" \
 NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON" \
 SUPABASE_SERVICE_ROLE_KEY="$SRV" \
 E2E_BUYER_ID="$BUYER" E2E_OTHER_ID="$OTHER" \
-  npx vitest run "$ROOT/scripts/appsumo-e2e.test.ts"
+  npx vitest run "$ROOT/scripts/live-postgrest.test.ts"

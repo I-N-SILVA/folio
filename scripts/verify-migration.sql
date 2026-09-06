@@ -153,7 +153,8 @@ BEGIN
     'replace_book_pages',
     'edition_engagement',
     'constraint_allowed_values',
-    'claim_appsumo_license'
+    'claim_appsumo_license',
+    'claim_digest_slot'
   ] LOOP
     IF NOT EXISTS (
       SELECT 1 FROM pg_proc p
