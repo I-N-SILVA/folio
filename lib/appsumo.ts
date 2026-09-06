@@ -77,7 +77,7 @@ export async function applyAppSumoEvent(event: AppSumoEvent): Promise<{ ok: bool
   // ON CONFLICT DO UPDATE only assigns the columns listed, so leaving it out
   // preserves whatever the row already holds, and a genuinely new row gets the
   // column default of null, which is correct for an unredeemed license.
-  await supabaseAdmin.from('appsumo_licenses').upsert(
+  const { error: upsertError } = await supabaseAdmin.from('appsumo_licenses').upsert(
     {
       license_key: licenseKey,
       prev_license_key: event.prev_license_key ?? null,
@@ -89,6 +89,16 @@ export async function applyAppSumoEvent(event: AppSumoEvent): Promise<{ ok: bool
     },
     { onConflict: 'license_key' }
   )
+
+  // The write's error was discarded, so a failed upsert still answered 200 and
+  // AppSumo — which retries on a non-2xx — never sent the event again. The
+  // licence was simply gone, and the buyer's code did not exist. Found by
+  // running the webhook over HTTP against a real database and watching it
+  // report success with no row written.
+  if (upsertError) {
+    console.error('[appsumo] could not write the license', upsertError.message)
+    return { ok: false, message: `could not persist license: ${upsertError.message}` }
+  }
 
   // A tier change issues a new key, so the redemption link has to move across.
   // Conditional on the new row still being unclaimed, so this can never

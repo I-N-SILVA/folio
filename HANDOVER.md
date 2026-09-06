@@ -29,6 +29,7 @@ thing instead, and they are the ones to trust:
 # No deployment needed — these stand up their own PostgreSQL and PostgREST
 npm run verify:migration        # applies master_migration.sql for real, twice
 npm run verify:appsumo:e2e      # the licence lifecycle against real PostgREST
+npm run verify:routes:e2e       # the webhook and the digest, over HTTP
 
 # Against a deployment
 CRON_SECRET=…      npm run preflight      -- https://<domain>   # config + live schema
@@ -184,6 +185,20 @@ filter is compiled, one careless edit of a select list away from breaking again.
 mock of the Supabase client — the mock accepts `.or()` happily. `npm run
 verify:appsumo:e2e` stands up PostgreSQL + PostgREST + a Supabase-shaped
 gateway and runs the real code against it. That is what found both.
+
+`npm run verify:routes:e2e` goes one further and drives the built app over
+HTTP. It found two more:
+
+- **the webhook answered 200 when the licence write failed.** `applyAppSumoEvent`
+  discarded the upsert's error, and AppSumo retries on a non-2xx — so a failed
+  write meant the event never came again and the buyer's code simply did not
+  exist;
+- **`NEXT_PUBLIC_*` is inlined at build time.** Changing
+  `NEXT_PUBLIC_SUPABASE_URL` in a hosting dashboard does nothing until the next
+  build. Worth knowing before step 2 of the runbook.
+
+It also sends a digest to a local capture server and prints it, so the route is
+demonstrably able to send — which, before migration 016, it was not.
 
 ### The typography controls had never done anything
 

@@ -14,7 +14,15 @@ import 'server-only'
  * exactly as it did before instead of failing a reader's unlock.
  */
 
-const API_URL = 'https://api.resend.com/emails'
+/**
+ * Overridable so the send path can be exercised against a capture server.
+ *
+ * Not a feature — a testability seam. The digest's claim was broken for two
+ * branches and nobody could tell, because there was no way to run the route
+ * and watch an email come out without a Resend key and a real inbox. It falls
+ * back to Resend, so an unset variable behaves exactly as before.
+ */
+const API_URL = process.env.RESEND_API_URL || 'https://api.resend.com/emails'
 
 export function isEmailEnabled(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM)
