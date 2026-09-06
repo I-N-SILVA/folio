@@ -95,24 +95,32 @@ work someone forgot.
                       npm run audit:browser  -- https://<domain>
    ```
 
-5. **Dry-run one real licence** end to end: AppSumo issues a test code → a row
-   lands in `appsumo_licenses` → redeem at `/redeem` → plan shows on `/account`
-   → refund → account reverts to Free. The scripts cover everything around
-   this; only a real code exercises the middle.
+5. **Dry-run one real licence.** AppSumo issues a test code → a row lands in
+   `appsumo_licenses` → redeem at `/redeem` → the plan shows on `/account` →
+   refund → the account reverts to Free.
+
+   Everything except AppSumo's own HTTP call is already proven:
+   `verify:appsumo:e2e` runs activate → redeem → a second account refused →
+   the holder's retry → stacking → reduce → refund → the dead code against a
+   real PostgREST, and `verify:routes:e2e` posts a signed webhook to the real
+   route and checks the row. Two launch-stopping bugs came out of writing
+   those. What a real code adds is confidence that AppSumo's payload shape
+   matches `lib/appsumo.ts` — which is the one thing no local harness can
+   check, and the reason item 8 below exists.
 6. **Send the weekly digest by hand** and read the email in a real inbox.
    `curl -H "Authorization: Bearer $CRON_SECRET" https://<domain>/api/cron/digest`.
-   Still true that **no human has ever received one**, so the retention half of
-   the loop is theoretical until this happens — but the words are no longer
-   unread: `lib/email-digest.test.ts` captures the exact body for the zero
-   week, a good week, and the singular case, and
 
-   ```bash
-   npx vitest run lib/email-digest.test.ts --reporter=verbose
-   ```
+   **This is now worth doing, and before today it would have done nothing.**
+   The slot claim was broken (migration 016) so the route skipped every profile
+   on every run — "no human has ever received one" was not for want of running
+   it. `verify:routes:e2e` now drives the route against a capture server and
+   gets `{considered:1, sent:1}` with the email in hand, so what is left is the
+   SMTP hop and your own inbox.
 
-   prints them. Read that before the first send rather than after. The route
-   bails before claiming anyone's slot when email is unconfigured, so running
-   it early cannot burn a week of digests.
+   `npx vitest run lib/email-digest.test.ts --reporter=verbose` prints the body
+   for a zero week, a good week and the singular case. The route bails before
+   claiming anyone's slot when email is unconfigured, so running it early
+   cannot burn a week of digests.
 7. **Own three mailboxes**: `support@`, `legal@`, `privacy@`. The app prints
    them (`app/help`, `app/terms`, `app/privacy`).
 8. **Reconcile `lib/appsumo.ts` field names** against AppSumo's current
