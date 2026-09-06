@@ -79,11 +79,12 @@ export function getPath(obj: unknown, path: string): unknown {
  * `Host` header, which a caller controls and which would turn every relative
  * source into a request to wherever they liked.
  */
-export function resolveSource(source: string): string | null {
+export function resolveSource(source: string): { url: string; sameOrigin: boolean } | null {
   if (!source) return null
-  if (!source.startsWith('/')) return source
+  if (!source.startsWith('/')) return { url: source, sameOrigin: false }
   try {
-    return new URL(source, process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app').toString()
+    const url = new URL(source, process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app').toString()
+    return { url, sameOrigin: true }
   } catch {
     return null
   }
@@ -113,17 +114,22 @@ export function clearLiveDataCache() {
  * the path identically, and left no way to tell which one you had.
  */
 export async function probeLiveValue(source: string, path: string): Promise<Probe> {
-  const url = resolveSource(source)
-  if (!url) return { ok: false, reason: 'blocked', detail: 'That does not look like a URL.' }
+  const resolved = resolveSource(source)
+  if (!resolved) return { ok: false, reason: 'blocked', detail: 'That does not look like a URL.' }
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
   try {
-    const res = await safeFetch(url, {
+    const res = await safeFetch(resolved.url, {
       cache: 'no-store',
       signal: controller.signal,
       headers: { accept: 'application/json' },
+      // A same-origin path resolves against an origin the operator set, so the
+      // address guard should not refuse it for being localhost in development
+      // or an internal host on a private deployment. Redirects from it are
+      // still checked.
+      trustFirstHop: resolved.sameOrigin,
     })
     if (!res.ok) return { ok: false, reason: 'http-error', detail: `The source answered ${res.status}.` }
 

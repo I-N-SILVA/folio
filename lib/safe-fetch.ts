@@ -103,13 +103,21 @@ export class BlockedUrlError extends Error {
  */
 export async function safeFetch(
   url: string,
-  init: RequestInit & { maxRedirects?: number } = {}
+  init: RequestInit & { maxRedirects?: number; trustFirstHop?: boolean } = {}
 ): Promise<Response> {
-  const { maxRedirects = 3, ...rest } = init
+  const { maxRedirects = 3, trustFirstHop = false, ...rest } = init
   let current = url
 
   for (let hop = 0; hop <= maxRedirects; hop++) {
-    if (!(await isFetchableUrl(current))) throw new BlockedUrlError(current)
+    // `trustFirstHop` is for a URL the *operator* chose, not one an author
+    // typed — a same-origin path resolved against NEXT_PUBLIC_SITE_URL. The
+    // guard exists to stop the server reaching somewhere an author picked, and
+    // refusing to fetch our own app because it happens to be on localhost or an
+    // internal host is the guard misfiring rather than working. Only the first
+    // hop: where that URL redirects to is not ours to vouch for.
+    if (!(hop === 0 && trustFirstHop) && !(await isFetchableUrl(current))) {
+      throw new BlockedUrlError(current)
+    }
 
     const res = await fetch(current, { ...rest, redirect: 'manual' })
     if (res.status < 300 || res.status > 399) return res

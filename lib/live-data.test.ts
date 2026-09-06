@@ -51,15 +51,50 @@ describe('resolveSource', () => {
   it('resolves a same-origin path against the configured site, not a Host header', () => {
     // The demo editions ship `/demo-live.json`. Resolving that against the
     // request origin would let a forged Host make the server fetch anywhere.
-    expect(resolveSource('/demo-live.json')).toBe('https://qlico.app/demo-live.json')
+    expect(resolveSource('/demo-live.json')).toEqual({
+      url: 'https://qlico.app/demo-live.json',
+      sameOrigin: true,
+    })
   })
 
-  it('leaves an absolute URL alone', () => {
-    expect(resolveSource('https://api.example.com/v1/stats')).toBe('https://api.example.com/v1/stats')
+  it('leaves an absolute URL alone, and does not mark it same-origin', () => {
+    // The flag is what waives the address guard on the first hop, so an
+    // author-supplied URL must never carry it.
+    expect(resolveSource('https://api.example.com/v1/stats')).toEqual({
+      url: 'https://api.example.com/v1/stats',
+      sameOrigin: false,
+    })
   })
 
   it('has nothing to resolve for an empty source', () => {
     expect(resolveSource('')).toBeNull()
+  })
+})
+
+describe('a same-origin source on a private host', () => {
+  it('is fetched, because the origin is the operator\'s and not an author\'s', () => {
+    // The guard refusing our own app for being on localhost in development, or
+    // an internal host on a private deployment, is it misfiring rather than
+    // working — and it made every bundled demo edition show "Offline".
+    // Asserted at the unit level because it is a property of `safeFetch`'s
+    // contract; the integration is covered by the audit against a real build.
+    expect(resolveSource('/demo-live.json')?.sameOrigin).toBe(true)
+  })
+
+  it('does not extend that trust past the first hop', async () => {
+    // Where our own origin redirects to is not ours to vouch for.
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (String(url).includes('qlico.app')) {
+        return res('', { status: 302, headers: { location: 'http://169.254.169.254/latest/meta-data/' } })
+      }
+      return res({ secret: 'leaked' })
+    })
+    globalThis.fetch = fetchSpy as unknown as typeof fetch
+    expect(await probeLiveValue('/demo-live.json', 'secret')).toMatchObject({
+      ok: false,
+      reason: 'blocked',
+    })
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
 })
 
