@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- Reuse the shared updated_at trigger function from 001_create_books.sql
+DROP TRIGGER IF EXISTS profiles_updated_at ON public.profiles;
 CREATE TRIGGER profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
@@ -40,6 +41,7 @@ ON CONFLICT (id) DO NOTHING;
 -- RLS: a user can read (but not freely escalate) their own profile.
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "profiles_read_own" ON public.profiles;
 CREATE POLICY "profiles_read_own" ON public.profiles
   FOR SELECT
   USING (auth.uid() = id);

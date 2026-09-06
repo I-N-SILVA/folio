@@ -13,17 +13,19 @@ CREATE TABLE IF NOT EXISTS public.pages (
   UNIQUE (book_id, page_number)
 );
 
+DROP TRIGGER IF EXISTS pages_updated_at ON public.pages;
 CREATE TRIGGER pages_updated_at
   BEFORE UPDATE ON public.pages
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- Index for ordered page fetching
-CREATE INDEX pages_book_order ON public.pages (book_id, page_number);
+CREATE INDEX IF NOT EXISTS pages_book_order ON public.pages (book_id, page_number);
 
 -- RLS
 ALTER TABLE public.pages ENABLE ROW LEVEL SECURITY;
 
 -- Owner inherits access via books
+DROP POLICY IF EXISTS "owner_all" ON public.pages;
 CREATE POLICY "owner_all" ON public.pages
   FOR ALL
   USING (EXISTS (
@@ -34,6 +36,7 @@ CREATE POLICY "owner_all" ON public.pages
   ));
 
 -- Public can read pages of published books
+DROP POLICY IF EXISTS "public_read_published" ON public.pages;
 CREATE POLICY "public_read_published" ON public.pages
   FOR SELECT
   USING (EXISTS (

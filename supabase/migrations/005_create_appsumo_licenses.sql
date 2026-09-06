@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.appsumo_licenses (
 CREATE INDEX IF NOT EXISTS appsumo_licenses_email
   ON public.appsumo_licenses (lower(activation_email));
 
+DROP TRIGGER IF EXISTS appsumo_licenses_updated_at ON public.appsumo_licenses;
 CREATE TRIGGER appsumo_licenses_updated_at
   BEFORE UPDATE ON public.appsumo_licenses
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();

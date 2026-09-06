@@ -6,7 +6,7 @@
 --
 -- Keep in sync with EventType in lib/book-schema.ts and the enum in
 -- app/api/events/route.ts.
-ALTER TABLE public.events DROP CONSTRAINT events_event_type_check;
+ALTER TABLE public.events DROP CONSTRAINT IF EXISTS events_event_type_check;
 
 ALTER TABLE public.events ADD CONSTRAINT events_event_type_check CHECK (event_type IN (
   'book_open','page_view','page_flip','hotspot_click',
@@ -218,6 +218,7 @@ CREATE INDEX IF NOT EXISTS profiles_digest_due
 -- change their own `plan`, and that must stay true. The WITH CHECK clause pins
 -- plan and status to their current values, so this policy cannot be used as a
 -- route to escalation.
+DROP POLICY IF EXISTS "profiles_update_own_prefs" ON public.profiles;
 CREATE POLICY "profiles_update_own_prefs" ON public.profiles
   FOR UPDATE
   USING (auth.uid() = id)
@@ -255,6 +256,7 @@ ALTER TABLE public.book_slug_history ENABLE ROW LEVEL SECURITY;
 
 -- Readers arrive anonymously on a dead link and need the forwarding address.
 -- The row holds no private data: a slug that was public and the id it points at.
+DROP POLICY IF EXISTS "public_read" ON public.book_slug_history;
 CREATE POLICY "public_read" ON public.book_slug_history
   FOR SELECT
   USING (true);

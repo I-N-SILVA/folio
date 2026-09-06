@@ -20,6 +20,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS books_updated_at ON public.books;
 CREATE TRIGGER books_updated_at
   BEFORE UPDATE ON public.books
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
@@ -28,12 +29,14 @@ CREATE TRIGGER books_updated_at
 ALTER TABLE public.books ENABLE ROW LEVEL SECURITY;
 
 -- Owner can do everything
+DROP POLICY IF EXISTS "owner_all" ON public.books;
 CREATE POLICY "owner_all" ON public.books
   FOR ALL
   USING (auth.uid() = owner_id)
   WITH CHECK (auth.uid() = owner_id);
 
 -- Public can read published books
+DROP POLICY IF EXISTS "public_read_published" ON public.books;
 CREATE POLICY "public_read_published" ON public.books
   FOR SELECT
   USING ((settings->>'published')::boolean = true);

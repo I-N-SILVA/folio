@@ -58,7 +58,7 @@ storage + edge), which makes LTD viable.
 | Redemption UI | `app/(studio)/redeem/page.tsx` | Paste code → unlock tier |
 | Account page | `app/(studio)/account/page.tsx` | Plan, usage meter, entitlements |
 | Quota enforcement | `app/api/books/route.ts` | 403 `plan_limit` when over book cap |
-| DB schema | `supabase/migrations/004,005_*.sql` | `profiles`, `appsumo_licenses` |
+| DB schema | `supabase/migrations/004,005,013_*.sql` | `profiles`, `appsumo_licenses`; 013 backfills every column on a table that predates them |
 | Quota endpoint | `app/api/entitlements/route.ts` | Powers the create-modal quota meter + upgrade wall |
 | DB-level limit | `supabase/migrations/006_*.sql` | Trigger backstops the book cap on any insert path |
 | Stripe billing (Pro) | `lib/stripe.ts`, `app/api/billing/*` | Checkout, portal, webhook; coexists with LTD plans |
@@ -76,7 +76,13 @@ Signature: HMAC-SHA256 of the raw body using `APPSUMO_API_KEY`, compared in
 constant time. **Fails closed in production** if no key is set.
 
 ### Go-live checklist (technical)
-- [ ] Apply migrations `001`–`007` to the production Supabase project.
+- [ ] Apply **`supabase/master_migration.sql`** to the production Supabase
+      project. It is generated from every numbered migration (`npm run
+      db:master`), idempotent, and safe to re-run — so it is also how you bring
+      an existing project up to date. Do not apply migrations by hand and do not
+      edit that file: it said `001`–`007` here for months while three later
+      migrations existed, and a database built from the stale copy silently
+      dropped every lead-capture event and refused two of the six page layouts.
 - [ ] Set `APPSUMO_API_KEY`, Supabase keys, and `NEXT_PUBLIC_SITE_URL` in prod.
 - [ ] (Optional, for the ongoing Pro channel) set `STRIPE_SECRET_KEY`,
       `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_PRO`, and point a Stripe
@@ -84,6 +90,7 @@ constant time. **Fails closed in production** if no key is set.
 - [ ] Set AppSumo "Notification URL" → `https://<domain>/api/appsumo/webhook`.
 - [ ] Reconcile field/header names in `lib/appsumo.ts` against AppSumo's current
       developer docs (payload keys can change between API versions).
+- [ ] Run `npm run preflight -- https://<domain>` and get a clean report.
 - [ ] Send AppSumo's test event; confirm 200 + a row in `appsumo_licenses`.
 - [ ] Dry-run: activate → redeem in-app → confirm plan on `/account` → refund →
       confirm revert to Free.

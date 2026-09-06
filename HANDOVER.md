@@ -30,7 +30,14 @@ alone rather than buried under a whole-repo reformat.
 
 ### Apply the pending migration
 
-One consolidated migration may not be applied. Check what's actually live before assuming.
+Apply **`supabase/master_migration.sql`**. It is now generated from the numbered
+migrations (`npm run db:master`) and every statement is idempotent, so it is
+safe on a fresh project and on one that is several migrations behind.
+
+It used to be hand-maintained and had fallen three behind — a database built
+from it dropped every `page_click` and `gate_unlock` event and refused two of
+the six page layouts. `supabase/master-migration.test.ts` now fails if it drifts
+again. Check what's actually live before assuming.
 
 Every one of these degrades rather than breaks, and each logs which file to
 apply. Grep for `is missing` and `apply supabase/migrations` in production logs.

@@ -12,7 +12,9 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "audit:browser": "node scripts/audit-browser.mjs"
+    "audit:browser": "node scripts/audit-browser.mjs",
+    "db:master": "node scripts/build-master-migration.mjs",
+    "preflight": "node scripts/preflight.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

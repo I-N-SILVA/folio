@@ -14,22 +14,24 @@ CREATE TABLE IF NOT EXISTS public.events (
 );
 
 -- GIN index for fast per-book dashboard queries
-CREATE INDEX events_book_type ON public.events (book_id, event_type);
+CREATE INDEX IF NOT EXISTS events_book_type ON public.events (book_id, event_type);
 -- B-tree for book_id filtering (most common query pattern)
-CREATE INDEX events_book_id ON public.events (book_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS events_book_id ON public.events (book_id, created_at DESC);
 -- Partial index for page-level queries
-CREATE INDEX events_page_number ON public.events (book_id, page_number)
+CREATE INDEX IF NOT EXISTS events_page_number ON public.events (book_id, page_number)
   WHERE page_number IS NOT NULL;
 
 -- RLS
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
 -- Anyone (including anon) can insert events
+DROP POLICY IF EXISTS "anon_insert" ON public.events;
 CREATE POLICY "anon_insert" ON public.events
   FOR INSERT
   WITH CHECK (true);
 
 -- Only book owner can read their events
+DROP POLICY IF EXISTS "owner_read" ON public.events;
 CREATE POLICY "owner_read" ON public.events
   FOR SELECT
   USING (EXISTS (
