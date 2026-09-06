@@ -109,6 +109,26 @@ with `playwright-core` from npm). Build, `npx next start`, open a gallery
 edition, read `document.fonts` and `getComputedStyle`. Two minutes. Do this
 before believing any claim about what the app renders.
 
+### Three scripts that answer launch questions with evidence
+
+```bash
+CRON_SECRET=…      npm run preflight      -- https://<domain>
+APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>
+                   npm run audit:browser  -- https://<domain>
+npm run db:master   # regenerate supabase/master_migration.sql after adding one
+```
+
+- **`preflight`** asks the deployment which env vars are set (presence, never
+  values), whether the tables and columns exist, and whether the live CHECK
+  constraints accept everything this code can produce. Behind `CRON_SECRET`;
+  404s otherwise. Warnings do not fail it — no Stripe key is correct for an
+  LTD-only launch.
+- **`verify:appsumo`** sends AppSumo's `test` event and, around it, checks the
+  webhook refuses unsigned and wrongly-signed requests, that the redemption API
+  refuses anonymous callers, and that a signed-out buyer with `?code=` is sent
+  to sign in with the code carried across. Safe against production.
+- **`audit:browser`** is below.
+
 ### `npm run audit:browser` — run it before believing the app looks right
 
 `scripts/audit-browser.mjs`. Build, `npx next start`, point it at the port. It

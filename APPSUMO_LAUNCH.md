@@ -76,6 +76,14 @@ Signature: HMAC-SHA256 of the raw body using `APPSUMO_API_KEY`, compared in
 constant time. **Fails closed in production** if no key is set.
 
 ### Go-live checklist (technical)
+
+Three of these are scripts rather than boxes, deliberately. Every serious
+failure this codebase has had looked ticked — a CHECK constraint two values
+behind the app, a consolidated migration three migrations behind, four buttons
+that were white on white in dark mode. Tick the boxes; run the scripts.
+
+**Configure**
+
 - [ ] Apply **`supabase/master_migration.sql`** to the production Supabase
       project. It is generated from every numbered migration (`npm run
       db:master`), idempotent, and safe to re-run — so it is also how you bring
@@ -83,18 +91,48 @@ constant time. **Fails closed in production** if no key is set.
       edit that file: it said `001`–`007` here for months while three later
       migrations existed, and a database built from the stale copy silently
       dropped every lead-capture event and refused two of the six page layouts.
-- [ ] Set `APPSUMO_API_KEY`, Supabase keys, and `NEXT_PUBLIC_SITE_URL` in prod.
-- [ ] (Optional, for the ongoing Pro channel) set `STRIPE_SECRET_KEY`,
-      `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_PRO`, and point a Stripe
-      webhook at `https://<domain>/api/billing/webhook`.
+- [ ] Set `APPSUMO_API_KEY`, the Supabase keys, `NEXT_PUBLIC_SITE_URL` and
+      `CRON_SECRET` in prod. `APPSUMO_API_KEY` must be the value from the
+      AppSumo partner dashboard — a mismatch rejects every real purchase and
+      looks exactly like "no sales yet".
 - [ ] Set AppSumo "Notification URL" → `https://<domain>/api/appsumo/webhook`.
 - [ ] Reconcile field/header names in `lib/appsumo.ts` against AppSumo's current
       developer docs (payload keys can change between API versions).
-- [ ] Run `npm run preflight -- https://<domain>` and get a clean report.
-- [ ] Send AppSumo's test event; confirm 200 + a row in `appsumo_licenses`.
-- [ ] Dry-run: activate → redeem in-app → confirm plan on `/account` → refund →
-      confirm revert to Free.
+- [ ] (Optional, for the ongoing Pro channel) set `STRIPE_SECRET_KEY`,
+      `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_PRO`, and point a Stripe
+      webhook at `https://<domain>/api/billing/webhook`. Not needed for an
+      LTD-only launch — `npm run preflight` reports its absence as a warning,
+      not a blocker.
+- [ ] Own the three mailboxes the app prints: `support@`, `legal@`, `privacy@`
+      (see `app/help`, `app/terms`, `app/privacy`).
+
+**Verify — these have to pass, not be believed**
+
+```bash
+CRON_SECRET=…      npm run preflight     -- https://<domain>   # config + live schema
+APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>  # the whole licence path
+                   npm run audit:browser  -- https://<domain>  # what it renders
+```
+
+- [ ] `preflight` clean. It reads the deployment's own environment (presence,
+      never values) and probes the live database, including whether the CHECK
+      constraints accept everything this code can produce. That last one is the
+      gap the unit tests cannot close: they compare the app to the `.sql` files,
+      which catches a migration nobody wrote, not one nobody applied.
+- [ ] `verify:appsumo` clean. Sends the `test` event AppSumo's checklist asks
+      for — and confirms the webhook refuses unsigned and wrongly-signed
+      requests, that the redemption API refuses anonymous callers, and that a
+      signed-out buyer arriving with `?code=` is sent to sign in with the code
+      carried across rather than shown the word "Unauthorized". Safe against
+      production: `test` touches no rows.
+- [ ] `audit:browser` clean. Both colour schemes at four widths.
 - [ ] Confirm `Sign in with magic link` works on the deployed domain.
+
+**Dry-run with a real code** — the one thing no script can do
+
+- [ ] Have AppSumo issue a test license → confirm a row lands in
+      `appsumo_licenses` → redeem it in-app at `/redeem` → confirm the plan on
+      `/account` → refund it → confirm the account reverts to Free.
 
 ---
 
