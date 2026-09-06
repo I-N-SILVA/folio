@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { readLiveValue } from '@/lib/live-data'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { DEMO_BOOKS } from '@/data/books'
+import { getOwnerEntitlements } from '@/lib/entitlements'
 import type { Block, Page } from '@/lib/book-schema'
 
 export const runtime = 'nodejs'
@@ -60,6 +61,8 @@ export async function GET(request: NextRequest) {
   }
 
   let block = findDemoBlock(bookId, blockId)
+  // The bundled demo editions are ours, so there is no owner to check.
+  let ownerId: string | null = null
 
   if (!block) {
     const { data: book } = await supabaseAdmin
@@ -82,6 +85,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    ownerId = book.owner_id as string | null
     block = findBlock((book.pages ?? []) as Page[], blockId)
   }
 
@@ -90,6 +94,23 @@ export async function GET(request: NextRequest) {
   }
   if (!block.source || !block.path) {
     return NextResponse.json({ error: 'This block has no source yet' }, { status: 409 })
+  }
+
+  // The landing page has sold live data as a paid feature since it existed and
+  // nothing enforced it, so a free edition bound to a live source exactly like
+  // a paid one. It is also the one entitlement with a real marginal cost — the
+  // server fetches the author's source on their behalf, on a schedule, forever.
+  //
+  // Checked against the *owner's* plan, not the reader's: a reader is anonymous,
+  // and it is the author who is on a plan.
+  if (ownerId) {
+    const entitlements = await getOwnerEntitlements(ownerId)
+    if (!entitlements.liveData) {
+      return NextResponse.json(
+        { error: 'Live data is available on paid plans', code: 'plan_limit' },
+        { status: 402 }
+      )
+    }
   }
 
   const result = await readLiveValue(block.source, block.path)

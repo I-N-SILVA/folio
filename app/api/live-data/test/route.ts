@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { probeLiveValue } from '@/lib/live-data'
 import { rateLimit } from '@/lib/rate-limit'
+import { getOwnerEntitlements } from '@/lib/entitlements'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,6 +43,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: 'Too many tests — wait a moment.' },
       { status: 429, headers: { 'Retry-After': String(limit.retryAfter) } }
+    )
+  }
+
+  // The same entitlement the reader route enforces. Without it the author's
+  // test passes and the published edition returns 402 — which is the precise
+  // asymmetry moving this fetch server-side was meant to remove.
+  const entitlements = await getOwnerEntitlements(user.id)
+  if (!entitlements.liveData) {
+    return NextResponse.json(
+      { ok: false, reason: 'blocked', detail: 'Live data is available on paid plans.' },
+      { status: 402 }
     )
   }
 

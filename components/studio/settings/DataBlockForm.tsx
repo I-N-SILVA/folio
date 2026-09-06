@@ -44,7 +44,8 @@ export function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: str
       })
       const probe = await res.json()
       if (!res.ok) {
-        setTest({ state: 'err', msg: probe?.error ?? 'Could not test that source.' })
+        // A 402 (plan) answers in the probe shape, not the error shape.
+        setTest({ state: 'err', msg: probe?.detail ?? probe?.error ?? 'Could not test that source.' })
       } else if (probe.ok) {
         setTest({ state: 'ok', value: `${prefix ?? ''}${probe.value}${suffix ?? ''}` })
       } else {

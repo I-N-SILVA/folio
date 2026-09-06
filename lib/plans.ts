@@ -31,6 +31,20 @@ export type Entitlements = {
   csvExport: boolean
   /** May remove the "Powered by QLICO" badge from the reader. Enforced: the reader + embed routes. */
   whiteLabel: boolean
+  /**
+   * Data blocks that read a live source. Enforced: GET /api/live-data and
+   * POST /api/live-data/test.
+   *
+   * The landing page has sold this as a paid feature since it existed and
+   * nothing enforced it — a free edition bound to a live source exactly like a
+   * paid one. That is the failure `HANDOVER` §2b is named after: a plan sheet
+   * listing what the product gives away teaches the reader that plans are
+   * decorative.
+   *
+   * It is also the one entitlement with a real marginal cost — the server
+   * fetches the author's source on their behalf, on a schedule, forever.
+   */
+  liveData: boolean
 }
 
 export type Plan = {
@@ -61,6 +75,7 @@ export const PLANS: Record<PlanId, Plan> = {
       leadGating: false,
       csvExport: false,
       whiteLabel: false,
+      liveData: false,
     },
   },
   pro: {
@@ -74,6 +89,7 @@ export const PLANS: Record<PlanId, Plan> = {
       leadGating: true,
       csvExport: true,
       whiteLabel: true,
+      liveData: true,
     },
   },
   // ── AppSumo lifetime deal tiers ──────────────────────────────────────────
@@ -88,6 +104,7 @@ export const PLANS: Record<PlanId, Plan> = {
       leadGating: true,
       csvExport: true,
       whiteLabel: false,
+      liveData: true,
     },
   },
   ltd_tier2: {
@@ -101,6 +118,7 @@ export const PLANS: Record<PlanId, Plan> = {
       leadGating: true,
       csvExport: true,
       whiteLabel: true,
+      liveData: true,
     },
   },
   ltd_tier3: {
@@ -114,6 +132,7 @@ export const PLANS: Record<PlanId, Plan> = {
       leadGating: true,
       csvExport: true,
       whiteLabel: true,
+      liveData: true,
     },
   },
 }

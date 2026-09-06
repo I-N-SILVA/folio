@@ -39,13 +39,18 @@ const PLANS = [
   {
     name: 'Lifetime',
     price: '$59',
-    description: 'One-time payment or AppSumo code. Yours forever.',
+    period: '+',
+    // This said "Everything in Pro", and Tier 1 is 10 editions, 90 days of
+    // analytics and the QLICO badge still on the reader. On an AppSumo listing
+    // that is a refund and a one-taco review. The numbers below are Tier 1 —
+    // the entry price — and they match lib/plans.ts.
+    description: 'One-time, from Tier 1. Stack codes to move up. Yours forever.',
     features: [
-      'Everything in Pro',
-      'Lifetime Updates',
-      'Redeem AppSumo Code',
+      '10 Editions (Tier 1) — up to Unlimited',
+      '90 Days Analytics (Tier 1) — up to 365',
+      'Email Capture, CSV Export, Live Data',
+      'Stack Codes to Move Up a Tier',
       'No Monthly Subscriptions',
-      'Priority Creator Support',
     ],
     cta: 'Redeem or Get Lifetime',
     href: '/redeem',

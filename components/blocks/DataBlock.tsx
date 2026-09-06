@@ -35,7 +35,7 @@ const REFRESH_MS = 45_000
 /** A hanging source used to leave the badge on "loading" indefinitely. */
 const FETCH_TIMEOUT_MS = 8_000
 
-type Status = 'loading' | 'live' | 'stale' | 'error'
+type Status = 'loading' | 'live' | 'stale' | 'error' | 'locked'
 
 /**
  * Living editions — binds to a JSON source and renders the current value with a
@@ -81,12 +81,17 @@ export function DataBlock({ block, bookId }: { block: DataBlockType; bookId: str
         signal: controller.signal,
       })
         .then((r) => {
+          // 402 is the owner's plan, not the source being down. Saying
+          // "Offline" there sends the author to check an API that is fine.
+          if (r.status === 402) return { value: null, locked: true }
           if (!r.ok) throw new Error(`${r.status}`)
           return r.json()
         })
-        .then((data: { value: string | null; stale?: boolean }) => {
+        .then((data: { value: string | null; stale?: boolean; locked?: boolean }) => {
           if (!active) return
-          if (data.value != null) {
+          if (data.locked) {
+            setStatus('locked')
+          } else if (data.value != null) {
             setValue(data.value)
             // A source that has gone down keeps showing its last good value,
             // marked stale, rather than dropping to "Offline".
@@ -133,10 +138,12 @@ export function DataBlock({ block, bookId }: { block: DataBlockType; bookId: str
 
   const live = status === 'live'
   const isStale = status === 'stale'
+  const locked = status === 'locked'
   // The badge read "Live" while the first request was still in flight, which
   // claimed a fresh value before one existed.
-  const badgeLabel =
-    status === 'error'
+  const badgeLabel = locked
+    ? 'Upgrade'
+    : status === 'error'
       ? value
         ? 'Stale'
         : 'Offline'
@@ -145,7 +152,7 @@ export function DataBlock({ block, bookId }: { block: DataBlockType; bookId: str
         : status === 'loading'
           ? 'Checking'
           : 'Live'
-  const badgeColor = status === 'error' || isStale ? '#b45309' : 'var(--primary)'
+  const badgeColor = status === 'error' || isStale || locked ? '#b45309' : 'var(--primary)'
 
   return (
     <div className={`flex items-center gap-3 ${align}`} style={{ fontFamily: 'var(--body-font)' }}>
@@ -158,13 +165,19 @@ export function DataBlock({ block, bookId }: { block: DataBlockType; bookId: str
         </div>
       </div>
       <span
-        title={status === 'error' ? 'Could not reach the data source' : undefined}
+        title={
+          locked
+            ? 'Live data is available on paid plans'
+            : status === 'error'
+              ? 'Could not reach the data source'
+              : undefined
+        }
         className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
         style={{
-          color: live || status === 'error' || isStale ? badgeColor : 'var(--muted-color, currentColor)',
+          color: live || status === 'error' || isStale || locked ? badgeColor : 'var(--muted-color, currentColor)',
           borderColor: live
             ? 'color-mix(in srgb, var(--primary) 35%, transparent)'
-            : status === 'error' || isStale
+            : status === 'error' || isStale || locked
               ? 'color-mix(in srgb, #b45309 35%, transparent)'
               : 'currentColor',
           opacity: status === 'loading' ? 0.5 : 1,
