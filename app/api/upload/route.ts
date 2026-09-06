@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { rateLimit } from '@/lib/rate-limit'
-import { MAX_ASSET_BYTES, isAllowedAssetType, humanBytes } from '@/lib/uploads'
+import { MAX_ASSET_BYTES, isAllowedAssetType, humanBytes, safeAssetExtension } from '@/lib/uploads'
 
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Throttle per user: uploads are expensive (storage + bandwidth).
@@ -50,7 +52,8 @@ export async function POST(request: NextRequest) {
 
   if (!book) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const ext = file.name.split('.').pop()
+  // Never the raw filename: it is client-supplied and lands in a storage key.
+  const ext = safeAssetExtension(file.name, file.type)
   const path = `books/${bookId}/assets/${crypto.randomUUID()}.${ext}`
   const bytes = await file.arrayBuffer()
 
@@ -60,9 +63,9 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const { data: { publicUrl } } = supabaseAdmin.storage
-    .from('folio-assets')
-    .getPublicUrl(path)
+  const {
+    data: { publicUrl },
+  } = supabaseAdmin.storage.from('folio-assets').getPublicUrl(path)
 
   return NextResponse.json({ url: publicUrl })
 }

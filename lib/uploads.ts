@@ -26,6 +26,52 @@ export function isAllowedAssetType(type: string): boolean {
   return ALLOWED_ASSET_PREFIXES.some((prefix) => normalized.startsWith(prefix))
 }
 
+/**
+ * Extensions worth preserving, keyed by the MIME type we already validated.
+ * The client's filename is a hint; the type is what the route actually checked.
+ */
+const EXTENSION_FOR_TYPE: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
+  'audio/mpeg': 'mp3',
+  'audio/mp4': 'm4a',
+  'audio/ogg': 'ogg',
+  'audio/wav': 'wav',
+  'audio/webm': 'weba',
+}
+
+/**
+ * A storage-key extension for an upload, from a filename we do not trust.
+ *
+ * `/api/upload` built its key as `` `…/${crypto.randomUUID()}.${file.name.split('.').pop()}` ``,
+ * which hands a segment of the key to the client. `File.name` out of a
+ * multipart body is an arbitrary string: "photo" (no dot) makes the extension
+ * `photo`, "a../../../x" makes it `/x` — two extra path segments — and
+ * "weird.$(id)" goes in verbatim. Nothing escapes the book's own asset prefix,
+ * because the last `.` swallows any `..` before it, so this is hygiene rather
+ * than a way into somebody else's edition. It is still the client choosing part
+ * of a path, and the fix costs nothing.
+ *
+ * The MIME type is the authority — the route has already checked it against
+ * `isAllowedAssetType`. A filename extension is used only when it is plainly an
+ * extension and the type is one we have no mapping for, and `bin` is the
+ * fallback rather than nothing, so a key never ends in a bare dot.
+ */
+export function safeAssetExtension(fileName: string, mimeType: string): string {
+  const mapped = EXTENSION_FOR_TYPE[mimeType.toLowerCase().trim()]
+  if (mapped) return mapped
+
+  const dot = fileName.lastIndexOf('.')
+  const candidate = dot === -1 ? '' : fileName.slice(dot + 1).toLowerCase()
+  return /^[a-z0-9]{1,8}$/.test(candidate) ? candidate : 'bin'
+}
+
 export function humanBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`
   return `${Math.round(bytes / 1024)} KB`

@@ -332,6 +332,30 @@ separate decision.
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
 
+### The last of the uncovered routes, and a filename that chose a storage key
+
+`verify:author:e2e` now also covers `/api/upload`, `/api/account/preferences`
+and the analytics retention window — 47 assertions, all green.
+
+The window is the one worth naming: it is sold on every plan and was once "a
+label on a range picker and nothing else". The harness plants two readers, one
+of them sixty days old, and asks for a year. A free author is answered with
+thirty days and one reader, `window.clamped` true; the same edition on tier 2
+opens to a hundred and eighty and counts both. Enforced, and now proven so
+against a running build rather than a unit test of the clamp.
+
+`/api/upload` built its storage key as
+`` `…/${crypto.randomUUID()}.${file.name.split('.').pop()}` ``, which hands part
+of the key to the client. `File.name` out of a multipart body is an arbitrary
+string: `photo` (no dot) made the extension `photo`, `a../../../x` made it `/x`
+— two extra path segments — and `weird.$(id)` went in verbatim. Nothing escapes
+the book's own asset prefix, because the last `.` swallows any `..` before it,
+so this is hygiene rather than a way into somebody else's edition. It is still
+the client choosing part of a path. `safeAssetExtension` takes the extension
+from the MIME type the route already validated, falls back to a
+`[a-z0-9]{1,8}` filename extension, and `bin` after that — so a key never ends
+in a bare dot either.
+
 ### `audit:browser` found a 2.7:1 pill on /gallery
 
 Run against the current build, at all four widths and in both colour schemes.

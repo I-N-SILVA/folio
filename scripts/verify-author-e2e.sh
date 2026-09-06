@@ -22,8 +22,11 @@
 #   - a PDF import claims its upload targets, takes the pages the browser
 #     writes to storage, and turns what actually landed into an edition;
 #   - the entitlements the tiers are sold on are enforced where the money is:
-#     a free author's lead gate does not run and their CSV export is refused,
-#     and a redeemed one's both work;
+#     a free author's lead gate does not run, their CSV export is refused and
+#     their analytics stop at the window they were sold, and a redeemed one's
+#     all three work;
+#   - an asset upload lands under its own book and refuses a stranger's;
+#   - the one profile field an author may set is settable and nothing else is;
 #   - an AppSumo code lifts the plan, cannot be redeemed twice by different
 #     people, is idempotent for its rightful holder, and a refund takes it back.
 #
@@ -207,6 +210,19 @@ EXPORT_FREE=$(status -H "Cookie: $FC" "$A/api/analytics/free-edition-1/export?ki
 [[ "$EXPORT_FREE" == "403" ]] && pass "CSV export is refused on free ($EXPORT_FREE)" \
   || fail "CSV export on free returned $EXPORT_FREE"
 
+# The retention window is sold on every plan — 30 days on free — and used to be
+# a label on a range picker. Two readers, one of them older than the window, and
+# a request for a year: only the recent one may be counted.
+su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -c \"
+  INSERT INTO public.events (book_id, session_id, event_type, page_number, created_at)
+  VALUES ('$FREEBOOK','recent','book_open',1, now() - interval '5 days'),
+         ('$FREEBOOK','ancient','book_open',1, now() - interval '60 days');\"" >/dev/null
+WINDOW=$(curl -s --noproxy '*' -H "Cookie: $FC" "$A/api/analytics/free-edition-1?range=365d")
+SEEN=$(echo "$WINDOW" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d["summary"]["uniqueSessions"], d["window"]["days"], d["window"]["clamped"])' 2>/dev/null || echo 'parse-failed')
+[[ "$SEEN" == "1 30 True" ]] \
+  && pass "a year asked for, 30 days answered, one reader in range ($SEEN)" \
+  || fail "the free window reported '$SEEN', expected '1 30 True'"
+
 echo
 echo "==> a PDF import, which is the product's first sentence"
 # The browser renders the pages and writes them to storage itself, so the parts
@@ -275,6 +291,55 @@ curl -s --noproxy '*' "$A/book/scanned-catalogue" | grep -q "books/$IMPORTED/pag
 rm -f "$PNG"
 
 echo
+echo "==> an asset upload, and the one profile field an author may set"
+ASSET=$(mktemp /tmp/qlico-asset-XXXXXX.png)
+python3 -c "import base64,sys;open(sys.argv[1],'wb').write(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='))" "$ASSET"
+
+UP=$(curl -s --noproxy '*' -X POST "$A/api/upload" -H "Cookie: $AC" \
+  -F "bookId=$BOOK" -F "file=@$ASSET;type=image/png;filename=a../../../x")
+ASSET_URL=$(echo "$UP" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("url",""))' 2>/dev/null || true)
+# The filename is client-supplied and used to become part of the storage key —
+# "a../../../x" made the extension "/x", two extra path segments. It must land
+# under this book's own assets prefix with a plain extension.
+if [[ "$ASSET_URL" == *"books/$BOOK/assets/"* ]] && [[ "$ASSET_URL" =~ \.[a-z0-9]{1,8}$ ]]; then
+  pass "the asset is under its own book with a sanitised extension"
+else
+  fail "upload answered: $UP"
+fi
+[[ "$(status "$ASSET_URL")" == "200" ]] && pass "and it reads back at that URL" \
+  || fail "the asset URL returned $(status "$ASSET_URL")"
+
+FOREIGN=$(status -X POST "$A/api/upload" -H "Cookie: $IC" -F "bookId=$BOOK" -F "file=@$ASSET;type=image/png")
+[[ "$FOREIGN" == "403" ]] && pass "uploading into somebody else's edition is refused ($FOREIGN)" \
+  || fail "a stranger's upload returned $FOREIGN"
+
+SVG=$(status -X POST "$A/api/upload" -H "Cookie: $AC" -F "bookId=$BOOK" -F "file=@$ASSET;type=image/svg+xml")
+[[ "$SVG" == "415" ]] && pass "SVG is refused, since it can carry script ($SVG)" \
+  || fail "an SVG upload returned $SVG"
+rm -f "$ASSET"
+
+PREF=$(status -X POST "$A/api/account/preferences" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"digestOptOut":true}')
+[[ "$PREF" == "200" ]] && pass "the digest opt-out saves ($PREF)" || fail "preferences returned $PREF"
+[[ "$(rows "select digest_opt_out from public.profiles where id='$AUTHOR'")" == "t" ]] \
+  && pass "and it is on the profile" || fail "digest_opt_out is '$(rows "select digest_opt_out from public.profiles where id='$AUTHOR'")'"
+
+# `profiles` also carries `plan` and `status`, and 004 grants end users no
+# UPDATE policy at all, so this route's one-field allowlist is the only way in.
+# A Zod object strips unknown keys rather than rejecting them, so the request
+# succeeds — what matters is that the extra field reaches nothing.
+PROMOTE=$(status -X POST "$A/api/account/preferences" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"digestOptOut":false,"plan":"ltd_tier3"}')
+[[ "$PROMOTE" == "200" ]] && pass "a body carrying a plan is accepted and the plan ignored ($PROMOTE)" \
+  || fail "preferences with an extra field returned $PROMOTE"
+[[ "$(rows "select plan from public.profiles where id='$AUTHOR'")" == "free" ]] \
+  && pass "the plan is untouched" || fail "the plan is now '$(rows "select plan from public.profiles where id='$AUTHOR'")'"
+BAD_PREF=$(status -X POST "$A/api/account/preferences" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"digestOptOut":"yes"}')
+[[ "$BAD_PREF" == "400" ]] && pass "a wrongly-typed value is refused ($BAD_PREF)" \
+  || fail "a string where a boolean belongs returned $BAD_PREF"
+
+echo
 echo "==> an AppSumo code"
 su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -c \"
   INSERT INTO public.appsumo_licenses (license_key, plan, tier, status, activation_email)
@@ -315,6 +380,17 @@ EXPORT_PAID=$(curl -s --noproxy '*' -H "Cookie: $AC" "$A/api/analytics/silk-tren
 EXPORT_CODE=$(echo "$EXPORT_PAID" | tail -1)
 [[ "$EXPORT_CODE" == "200" ]] && pass "CSV export works on the redeemed plan ($EXPORT_CODE)" \
   || fail "CSV export on tier 2 returned $EXPORT_CODE"
+
+# 180 days on tier 2, so the same 60-day-old reader is now inside the window.
+su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -c \"
+  INSERT INTO public.events (book_id, session_id, event_type, page_number, created_at)
+  VALUES ('$BOOK','recent','book_open',1, now() - interval '5 days'),
+         ('$BOOK','ancient','book_open',1, now() - interval '60 days');\"" >/dev/null
+PWINDOW=$(curl -s --noproxy '*' -H "Cookie: $AC" "$A/api/analytics/silk-trench?range=365d")
+PSEEN=$(echo "$PWINDOW" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d["summary"]["uniqueSessions"], d["window"]["days"])' 2>/dev/null || echo 'parse-failed')
+[[ "$PSEEN" == "2 180" ]] \
+  && pass "the window opens to 180 days and both readers are in it ($PSEEN)" \
+  || fail "the tier-2 window reported '$PSEEN', expected '2 180'"
 
 echo
 echo "==> a refund takes it back"
