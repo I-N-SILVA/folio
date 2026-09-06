@@ -40,9 +40,21 @@ function authorized(request: NextRequest): boolean {
 
 type Check = { name: string; ok: boolean; detail: string; critical: boolean }
 
-function envCheck(name: string, critical: boolean, why: string): Check {
-  const present = Boolean(process.env[name]?.trim())
-  return { name, ok: present, critical, detail: present ? 'set' : why }
+/**
+ * `aliases` because a variable can have more than one accepted spelling and
+ * reporting only one is how a preflight raises a false blocker. `lib/supabase.ts`
+ * takes `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SERVICE_KEY`, and `.env.example`
+ * documented the second — so an operator who followed it exactly would have been
+ * told the deployment was broken.
+ */
+function envCheck(name: string, critical: boolean, why: string, aliases: string[] = []): Check {
+  const found = [name, ...aliases].find((n) => process.env[n]?.trim())
+  return {
+    name,
+    ok: Boolean(found),
+    critical,
+    detail: found ? (found === name ? 'set' : `set as ${found}`) : why,
+  }
 }
 
 /**
@@ -179,14 +191,18 @@ export async function GET(request: NextRequest) {
   const checks: Check[] = [
     envCheck('NEXT_PUBLIC_SUPABASE_URL', true, 'missing — nothing works'),
     envCheck('NEXT_PUBLIC_SUPABASE_ANON_KEY', true, 'missing — nobody can sign in'),
-    envCheck('SUPABASE_SERVICE_ROLE_KEY', true, 'missing — webhooks and analytics cannot write'),
+    envCheck('SUPABASE_SERVICE_ROLE_KEY', true, 'missing — webhooks and analytics cannot write', [
+      'SUPABASE_SERVICE_KEY',
+    ]),
     envCheck('NEXT_PUBLIC_SITE_URL', true, 'missing — share links and emails point at qlico.app'),
     envCheck('APPSUMO_API_KEY', true, 'missing — every AppSumo webhook is rejected as unsigned'),
     envCheck('CRON_SECRET', true, 'missing — the weekly digest never sends'),
     envCheck('RESEND_API_KEY', false, 'missing — no digest email and no lead notification'),
+    envCheck('EMAIL_FROM', false, 'missing — Resend has no From address, so nothing sends'),
     envCheck('STRIPE_SECRET_KEY', false, 'missing — the ongoing Pro channel is off (fine for an LTD-only launch)'),
     envCheck('STRIPE_WEBHOOK_SECRET', false, 'missing — Stripe subscription changes are ignored'),
-    envCheck('GEMINI_API_KEY', false, 'missing — hotspot detection falls back to the heuristic'),
+    envCheck('GOOGLE_GENERATIVE_AI_API_KEY', false, 'missing — hotspot detection falls back to the heuristic'),
+    envCheck('NEXT_PUBLIC_SUPPORT_EMAIL', false, 'missing — /help shows support@qlico.app'),
   ]
 
   checks.push({
