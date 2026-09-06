@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import crypto from 'node:crypto'
-import { verifyAppSumoSignature } from './appsumo'
+import { normalizeAction, verifyAppSumoSignature } from './appsumo'
 
 const KEY = 'test-secret-key'
 
@@ -98,6 +98,50 @@ function makeAdmin({
     calls,
   }
 }
+
+describe('normalizeAction — both AppSumo payload shapes', () => {
+  it('reads the v1 `action` field', () => {
+    for (const [raw, expected] of [
+      ['activate', 'activate'],
+      ['enhance', 'enhance'],
+      ['reduce', 'reduce'],
+      ['refund', 'refund'],
+      ['test', 'test'],
+    ] as const) {
+      expect(normalizeAction({ action: raw })).toBe(expected)
+    }
+  })
+
+  it('reads the v2 `event` field', () => {
+    // This file was written for v1 and read `action` only. On a v2 deal that is
+    // undefined, so the route answered 400 and *every* webhook was rejected —
+    // no licence row, ever, and every buyer's code did not exist.
+    for (const [raw, expected] of [
+      ['purchase', 'activate'],
+      ['activate', 'activate'],
+      ['upgrade', 'enhance'],
+      ['downgrade', 'reduce'],
+      ['deactivate', 'refund'],
+    ] as const) {
+      expect(normalizeAction({ event: raw })).toBe(expected)
+    }
+  })
+
+  it('prefers `event` when a payload somehow carries both', () => {
+    expect(normalizeAction({ event: 'deactivate', action: 'activate' })).toBe('refund')
+  })
+
+  it('is not case- or whitespace-sensitive', () => {
+    expect(normalizeAction({ event: '  Deactivate ' })).toBe('refund')
+  })
+
+  it('returns null for a verb neither version defines', () => {
+    // `migrate` is v2's deal add-on event and this product sells no add-ons.
+    expect(normalizeAction({ event: 'migrate' })).toBeNull()
+    expect(normalizeAction({ event: 'something_new' })).toBeNull()
+    expect(normalizeAction({})).toBeNull()
+  })
+})
 
 describe('redeemLicense', () => {
   beforeEach(() => {
@@ -328,6 +372,39 @@ describe('applyAppSumoEvent', () => {
     expect(writes.find((w) => w.op === 'upsert')!.payload.plan).toBe('ltd_tier2')
     const profile = writes.find((w) => w.table === 'profiles' && w.op === 'update')
     expect(profile!.payload.plan).toBe('ltd_tier2')
+  })
+
+  it('applies a v2 payload as readily as a v1 one', async () => {
+    // The parser test above covers the mapping; this covers the path, because
+    // a correct mapping that nothing calls is exactly the bug being fixed.
+    const { admin, writes } = makeWebhookAdmin({})
+    const apply = await load(admin)
+    const result = await apply({ event: 'purchase', license_key: 'V2-KEY', tier: 3 })
+
+    expect(result.ok).toBe(true)
+    const upsert = writes.find((w) => w.op === 'upsert')
+    expect(upsert!.payload).toMatchObject({ license_key: 'V2-KEY', plan: 'ltd_tier3', status: 'active' })
+  })
+
+  it('marks a v2 deactivate as refunded', async () => {
+    const { admin, writes } = makeWebhookAdmin({
+      'V2-KEY': { license_key: 'V2-KEY', redeemed_by: 'user-abc' },
+    })
+    const apply = await load(admin)
+    await apply({ event: 'deactivate', license_key: 'V2-KEY', tier: 1 })
+    expect(writes.find((w) => w.op === 'upsert')!.payload.status).toBe('refunded')
+  })
+
+  it('ignores a verb it does not understand without erroring', async () => {
+    // AppSumo retries a non-2xx, so failing on `migrate` would fill their queue
+    // with something we will never handle. Do nothing, say so, answer 200.
+    const { admin, writes } = makeWebhookAdmin({})
+    const apply = await load(admin)
+    const result = await apply({ event: 'migrate', license_key: 'ADDON-1', tier: 1 })
+
+    expect(result.ok).toBe(true)
+    expect(result.message).toContain('ignored')
+    expect(writes).toEqual([])
   })
 
   it('reports a missing license key', async () => {

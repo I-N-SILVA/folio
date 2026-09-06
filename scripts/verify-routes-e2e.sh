@@ -35,6 +35,17 @@ MAILBOX="${TMPDIR:-/tmp}/qlico-mailbox.jsonl"
 
 [[ -x "$POSTGREST_BIN" ]] || { echo "PostgREST not found — set POSTGREST_BIN. See scripts/verify-appsumo-e2e.sh."; exit 2; }
 
+# A leftover server on one of these ports silently answers instead of the build
+# this run just made, so the harness reports on code that is not the code under
+# test. That happened, and it passed three checks it should have failed.
+for port in "$PGRST_PORT" "$GATEWAY_PORT" "$MAIL_PORT" "$APP_PORT"; do
+  if curl -s --noproxy '*' -o /dev/null --max-time 2 "http://127.0.0.1:$port/" 2>/dev/null; then
+    echo "Something is already listening on 127.0.0.1:$port — it would answer instead of this build."
+    echo "  kill it, or set PGRST_PORT / GATEWAY_PORT / MAIL_PORT / APP_PORT."
+    exit 2
+  fi
+done
+
 cleanup() { kill ${PGRST_PID:-} ${GW_PID:-} ${MAIL_PID:-} ${APP_PID:-} 2>/dev/null || true; }
 trap cleanup EXIT
 
@@ -131,6 +142,29 @@ CODE=$(curl -s -o /tmp/wh.json -w '%{http_code}' --noproxy '*' -X POST "http://1
 
 ROW=$(su postgres -c "psql -tAq -d $DB -c \"select plan||'|'||status from public.appsumo_licenses where license_key='$LICENSE'\"" | head -1 | tr -d '[:space:]')
 [[ "$ROW" == "ltd_tier2|active" ]] && pass "the licence row exists with the right tier ($ROW)" || fail "licence row is '$ROW'"
+
+# AppSumo's v2 Licensing API sends `event`, not `action`, and `deactivate`
+# rather than `refund`. This file read `action` only, so a v2 deal would have
+# had every webhook rejected with a 400 and no licence ever created. Which API
+# a deal is on is decided in the partner dashboard, so both are exercised.
+echo
+echo "==> the same webhook in AppSumo's v2 shape"
+V2="V2-$RANDOM"
+BODY2=$(python3 -c "import json,sys;print(json.dumps({'event':'purchase','license_key':sys.argv[1],'tier':3,'license_status':'active','activation_email':'author@example.com'}))" "$V2")
+SIG2=$(python3 -c "import hmac,hashlib,sys;print(hmac.new(sys.argv[1].encode(),sys.argv[2].encode(),hashlib.sha256).hexdigest())" "$APPSUMO_KEY" "$BODY2")
+CODE2=$(curl -s -o /tmp/wh2.json -w '%{http_code}' --noproxy '*' -X POST "http://127.0.0.1:$APP_PORT/api/appsumo/webhook" \
+  -H 'content-type: application/json' -H "x-appsumo-signature: $SIG2" -d "$BODY2")
+[[ "$CODE2" == "200" ]] && pass "webhook accepts a v2 purchase ($CODE2)" || fail "v2 webhook returned $CODE2: $(cat /tmp/wh2.json)"
+
+ROW2=$(su postgres -c "psql -tAq -d $DB -c \"select plan||'|'||status from public.appsumo_licenses where license_key='$V2'\"" | head -1 | tr -d '[:space:]')
+[[ "$ROW2" == "ltd_tier3|active" ]] && pass "the v2 licence row is right ($ROW2)" || fail "v2 licence row is '$ROW2'"
+
+BODY3=$(python3 -c "import json,sys;print(json.dumps({'event':'deactivate','license_key':sys.argv[1],'tier':3}))" "$V2")
+SIG3=$(python3 -c "import hmac,hashlib,sys;print(hmac.new(sys.argv[1].encode(),sys.argv[2].encode(),hashlib.sha256).hexdigest())" "$APPSUMO_KEY" "$BODY3")
+curl -s -o /dev/null --noproxy '*' -X POST "http://127.0.0.1:$APP_PORT/api/appsumo/webhook" \
+  -H 'content-type: application/json' -H "x-appsumo-signature: $SIG3" -d "$BODY3"
+ROW3=$(su postgres -c "psql -tAq -d $DB -c \"select status from public.appsumo_licenses where license_key='$V2'\"" | head -1 | tr -d '[:space:]')
+[[ "$ROW3" == "refunded" ]] && pass "a v2 deactivate refunds the licence" || fail "v2 deactivate left status '$ROW3'"
 
 echo
 echo "==> the weekly digest, over HTTP, with the fixed slot claim"

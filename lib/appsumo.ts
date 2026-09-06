@@ -16,18 +16,85 @@ import { planFromAppSumoTier, DEFAULT_PLAN } from '@/lib/plans'
 
 export const APPSUMO_SIGNATURE_HEADER = 'x-appsumo-signature'
 
+/**
+ * What this module does about an event, regardless of what AppSumo called it.
+ *
+ * These are the v1 names because they are what the rest of this file was
+ * written against. They are an internal vocabulary now — see `normalizeAction`.
+ */
 export type AppSumoAction = 'activate' | 'enhance' | 'reduce' | 'refund' | 'test'
 
+/**
+ * Both payload shapes AppSumo has shipped.
+ *
+ * The Licensing API v1 sends `action` with `activate` / `enhance` / `reduce` /
+ * `refund`. The current v2 sends **`event`** with `purchase` / `activate` /
+ * `upgrade` / `downgrade` / `deactivate` / `migrate`, alongside
+ * `license_status`, `event_timestamp` and a `test` boolean.
+ *
+ * This file was written for v1 only, and read `event.action`. Against a v2 deal
+ * that is `undefined`, the route answers `400 missing action`, and **every
+ * webhook AppSumo sends is rejected** — no licence row is ever created, and
+ * every buyer's code does not exist. Which of the two a deal is on is decided
+ * in the partner dashboard, not here, so this accepts both.
+ *
+ * Sourced from AppSumo's published documentation via search
+ * (docs.licensing.appsumo.com is not reachable from this network). Treat it as
+ * a strong default, not as a substitute for the reconciliation step in
+ * APPSUMO_LAUNCH.md — send a real test event and confirm a row lands.
+ */
 export type AppSumoEvent = {
-  action: AppSumoAction
+  /** v1. */
+  action?: string
+  /** v2. */
+  event?: string
   license_key?: string
   prev_license_key?: string | null
+  /** v2, on add-on webhooks: the deal this add-on hangs off. */
+  parent_license_key?: string | null
   tier?: number
   plan_id?: string
   uuid?: string
   activation_email?: string
   invoice_item_uuid?: string
+  /** v2 sends the licence's own status alongside the event. */
+  license_status?: string
+  event_timestamp?: number | string
+  created_at?: number | string
   test?: boolean
+  extra?: Record<string, unknown>
+}
+
+/**
+ * v2's verbs mapped onto the internal ones. `purchase` and `activate` both mean
+ * "there is a licence now" — v2 splits buying from the buyer first using it,
+ * and both should leave an active row, which is what `activate` does here.
+ */
+const EVENT_ALIASES: Record<string, AppSumoAction> = {
+  // v1, unchanged.
+  activate: 'activate',
+  enhance: 'enhance',
+  reduce: 'reduce',
+  refund: 'refund',
+  test: 'test',
+  // v2.
+  purchase: 'activate',
+  upgrade: 'enhance',
+  downgrade: 'reduce',
+  deactivate: 'refund',
+}
+
+/**
+ * The action to take, from either payload shape.
+ *
+ * Returns null for a verb neither version defines — `migrate`, for one, which
+ * v2 sends for deal add-ons and which this product does not sell. Doing nothing
+ * and saying so beats guessing at a licence change.
+ */
+export function normalizeAction(event: AppSumoEvent): AppSumoAction | null {
+  const raw = (event.event ?? event.action ?? '').toString().trim().toLowerCase()
+  if (!raw) return null
+  return EVENT_ALIASES[raw] ?? null
 }
 
 export type LicenseStatus = 'active' | 'deactivated' | 'refunded'
@@ -51,13 +118,22 @@ export function verifyAppSumoSignature(rawBody: string, signature: string | null
  * row and, if the license is already linked to a user, syncs their plan.
  */
 export async function applyAppSumoEvent(event: AppSumoEvent): Promise<{ ok: boolean; message: string }> {
+  const action = normalizeAction(event)
+  if (!action) {
+    // A verb neither API version defines — `migrate` for a deal add-on, or
+    // something added since. 200 with a message rather than an error: AppSumo
+    // retries a non-2xx, and retrying something we will never understand just
+    // fills their queue.
+    return { ok: true, message: `ignored: ${event.event ?? event.action ?? 'no event'}` }
+  }
+
   const licenseKey = event.license_key?.trim()
-  if (event.action === 'test') return { ok: true, message: 'test ok' }
+  if (action === 'test') return { ok: true, message: 'test ok' }
   if (!licenseKey) return { ok: false, message: 'missing license_key' }
 
   const tier = event.tier ?? 1
   const plan = planFromAppSumoTier(tier)
-  const isRefund = event.action === 'refund'
+  const isRefund = action === 'refund'
   const status: LicenseStatus = isRefund ? 'refunded' : 'active'
 
   // On tier change AppSumo issues a new license_key and references the old one.
@@ -133,7 +209,7 @@ export async function applyAppSumoEvent(event: AppSumoEvent): Promise<{ ok: bool
     await syncProfileFromLicense(holder, licenseKey)
   }
 
-  return { ok: true, message: `${event.action} applied` }
+  return { ok: true, message: `${action} applied` }
 }
 
 /** Push a license's plan/status onto the linked user's profile. */

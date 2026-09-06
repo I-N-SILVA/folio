@@ -96,8 +96,26 @@ that were white on white in dark mode. Tick the boxes; run the scripts.
       AppSumo partner dashboard — a mismatch rejects every real purchase and
       looks exactly like "no sales yet".
 - [ ] Set AppSumo "Notification URL" → `https://<domain>/api/appsumo/webhook`.
-- [ ] Reconcile field/header names in `lib/appsumo.ts` against AppSumo's current
-      developer docs (payload keys can change between API versions).
+- [x] Reconcile field/header names in `lib/appsumo.ts` against AppSumo's
+      developer docs. **They did not match.** This file was written against the
+      Licensing API **v1** — `action`, with `activate` / `enhance` / `reduce` /
+      `refund`. The current **v2** sends **`event`**, with `purchase` /
+      `activate` / `upgrade` / `downgrade` / `deactivate` / `migrate`. On a v2
+      deal every webhook would have been rejected `400 missing action` and no
+      licence would ever have been created.
+
+      Both shapes are accepted now (`normalizeAction`), and both are exercised
+      over HTTP by `npm run verify:routes:e2e`. Sourced from AppSumo's published
+      documentation via search — `docs.licensing.appsumo.com` is not reachable
+      from the build network — so **still send a real test event and confirm a
+      row lands**, which is the dry-run below.
+
+      Two things deliberately not handled: `parent_license_key` (v2 add-on
+      webhooks; this product sells no add-ons, and `migrate` is ignored with a
+      200 rather than retried forever), and `X-Appsumo-Timestamp`, which v2
+      sends alongside the signature — the HMAC here is over the raw body only.
+      If the dashboard shows v2 signature verification failing, that header is
+      the first place to look.
 - [ ] (Optional, for the ongoing Pro channel) set `STRIPE_SECRET_KEY`,
       `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_PRO`, and point a Stripe
       webhook at `https://<domain>/api/billing/webhook`. Not needed for an

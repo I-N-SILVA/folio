@@ -33,14 +33,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'invalid json' }, { status: 400 })
   }
 
-  if (!event.action) {
-    return NextResponse.json({ success: false, message: 'missing action' }, { status: 400 })
+  // Both payload shapes: v1 sends `action`, v2 sends `event`. This used to
+  // require `action`, so a v2 deal had every one of its webhooks rejected with
+  // a 400 and no licence was ever created. See `normalizeAction`.
+  const verb = event.event ?? event.action
+  if (!verb) {
+    return NextResponse.json({ success: false, message: 'missing event' }, { status: 400 })
   }
 
   try {
     const result = await applyAppSumoEvent(event)
     return NextResponse.json(
-      { success: result.ok, message: result.message, event: event.action },
+      { success: result.ok, message: result.message, event: verb },
       { status: result.ok ? 200 : 422 }
     )
   } catch (err) {
