@@ -83,9 +83,18 @@ work someone forgot.
    this; only a real code exercises the middle.
 6. **Send the weekly digest by hand** and read the email in a real inbox.
    `curl -H "Authorization: Bearer $CRON_SECRET" https://<domain>/api/cron/digest`.
-   It is written, scheduled, idempotent and typechecked, and **no human has
-   ever received one** — so the retention half of the loop is theoretical until
-   this happens.
+   Still true that **no human has ever received one**, so the retention half of
+   the loop is theoretical until this happens — but the words are no longer
+   unread: `lib/email-digest.test.ts` captures the exact body for the zero
+   week, a good week, and the singular case, and
+
+   ```bash
+   npx vitest run lib/email-digest.test.ts --reporter=verbose
+   ```
+
+   prints them. Read that before the first send rather than after. The route
+   bails before claiming anyone's slot when email is unconfigured, so running
+   it early cannot burn a week of digests.
 7. **Own three mailboxes**: `support@`, `legal@`, `privacy@`. The app prints
    them (`app/help`, `app/terms`, `app/privacy`).
 8. **Reconcile `lib/appsumo.ts` field names** against AppSumo's current
