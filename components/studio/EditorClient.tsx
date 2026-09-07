@@ -15,6 +15,7 @@ import {
   Undo2,
   Redo2,
   History,
+  MessageSquare,
   Keyboard,
   Search,
   FolderOpen,
@@ -34,6 +35,7 @@ import { PublishChecklistModal } from '@/components/studio/PublishChecklistModal
 import { PostImportModal } from '@/components/studio/PostImportModal'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
 import { VersionHistoryModal } from '@/components/studio/VersionHistoryModal'
+import { ReviewModal } from '@/components/studio/ReviewModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { EntitlementsProvider, type StudioEntitlements } from '@/components/studio/EntitlementsContext'
 import { publishChecks, type PublishIssue } from '@/lib/publish-checks'
@@ -57,6 +59,7 @@ export function EditorClient({ book, entitlements }: Props) {
   const [showShare, setShowShare] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [showReview, setShowReview] = useState(false)
   const [showCommandPalette, setShowCommandPalette] = useState(false)
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
   const [publishing, setPublishing] = useState(false)
@@ -563,6 +566,15 @@ export function EditorClient({ book, entitlements }: Props) {
           <Keyboard size={14} />
         </button>
 
+        {/* Draft comments */}
+        <button
+          onClick={() => setShowReview(true)}
+          className="hidden items-center rounded-md border border-neutral-800 bg-neutral-900/80 p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 sm:flex"
+          title="Review comments"
+        >
+          <MessageSquare size={14} />
+        </button>
+
         {/* Version history */}
         <button
           onClick={() => setShowHistory(true)}
@@ -701,6 +713,8 @@ export function EditorClient({ book, entitlements }: Props) {
 
       {/* Shortcuts Modal */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+
+      {showReview && <ReviewModal bookId={book.id} onClose={() => setShowReview(false)} />}
 
       {showHistory && (
         <VersionHistoryModal

@@ -27,6 +27,8 @@
 #     all three work;
 #   - an edition can be put back to how it was, and restoring is not a
 #     one-way door;
+#   - a reviewer with no account can open a draft through a link and leave a
+#     comment on it, and revoking the link closes the door;
 #   - an asset upload lands under its own book and refuses a stranger's;
 #   - the one profile field an author may set is settable and nothing else is;
 #   - an AppSumo code lifts the plan, cannot be redeemed twice by different
@@ -335,6 +337,64 @@ RESTORE_FOREIGN=$(status -X POST -H "Cookie: $IC" "$A/api/books/$BOOK/versions/$
 [[ "$LIST_FOREIGN" == "403" && "$RESTORE_FOREIGN" == "403" ]] \
   && pass "somebody else can neither read nor roll back this history ($LIST_FOREIGN/$RESTORE_FOREIGN)" \
   || fail "a stranger got $LIST_FOREIGN listing and $RESTORE_FOREIGN restoring"
+
+echo
+echo "==> a reviewer who has no account"
+LINK=$(curl -s --noproxy '*' -X POST "$A/api/books/$BOOK/review-links" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"label":"Client"}')
+REVIEW_PATH=$(echo "$LINK" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("path",""))' 2>/dev/null || true)
+[[ "$REVIEW_PATH" == /review/* ]] && pass "the author gets a review link ($REVIEW_PATH)" \
+  || fail "creating a review link answered: $(echo "$LINK" | head -c 200)"
+TOKEN=${REVIEW_PATH#/review/}
+
+# No cookie at all from here: this is somebody who has never signed in.
+DRAFT=$(curl -s --noproxy '*' "$A/api/review/$TOKEN")
+echo "$DRAFT" | grep -q 'The Silk Trench' \
+  && pass "an anonymous visitor can open the draft" || fail "the review API answered: $(echo "$DRAFT" | head -c 200)"
+[[ "$(status "$A$REVIEW_PATH")" == "200" ]] && pass "and the page renders" \
+  || fail "the review page returned $(status "$A$REVIEW_PATH")"
+curl -s --noproxy '*' "$A$REVIEW_PATH" | grep -qi 'noindex' \
+  && pass "with noindex, since the URL is the credential" || fail "the review page is indexable"
+
+POSTED=$(curl -s --noproxy '*' -X POST "$A/api/review/$TOKEN/comments" \
+  -H 'content-type: application/json' \
+  -d '{"pageNumber":2,"authorName":"Marta","body":"The trench on page 2 needs a wider crop."}' \
+  -w '\n%{http_code}')
+[[ "$(echo "$POSTED" | tail -1)" == "201" ]] && pass "and leave a comment ($(echo "$POSTED" | tail -1))" \
+  || fail "posting a comment answered: $POSTED"
+
+BAD=$(status -X POST "$A/api/review/$TOKEN/comments" -H 'content-type: application/json' -d '{"pageNumber":2}')
+[[ "$BAD" == "400" ]] && pass "a comment with no name or body is refused ($BAD)" \
+  || fail "an empty comment returned $BAD"
+
+SEEN=$(curl -s --noproxy '*' -H "Cookie: $AC" "$A/api/books/$BOOK/comments")
+COMMENT_ID=$(echo "$SEEN" | python3 -c 'import json,sys;c=json.load(sys.stdin)["comments"];print(c[0]["id"] if c else "")' 2>/dev/null || true)
+echo "$SEEN" | grep -q 'wider crop' && pass "the author sees it" || fail "the author's comments: $(echo "$SEEN" | head -c 200)"
+
+RESOLVED=$(status -X PATCH "$A/api/books/$BOOK/comments/$COMMENT_ID" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"resolved":true}')
+[[ "$RESOLVED" == "200" ]] && pass "and can resolve it ($RESOLVED)" || fail "resolving returned $RESOLVED"
+[[ -n "$(rows "select resolved_at from public.book_comments where id='$COMMENT_ID'")" ]] \
+  && pass "which is recorded" || fail "resolved_at is still null"
+
+# A reviewer holds a capability, not an identity: no listing, no resolving.
+[[ "$(status "$A/api/books/$BOOK/comments")" == "401" ]] \
+  && pass "an anonymous caller cannot list the author's comments" \
+  || fail "listing comments anonymously returned $(status "$A/api/books/$BOOK/comments")"
+[[ "$(status -H "Cookie: $IC" "$A/api/books/$BOOK/review-links")" == "403" ]] \
+  && pass "and another author cannot see the links" \
+  || fail "a stranger listing links got $(status -H "Cookie: $IC" "$A/api/books/$BOOK/review-links")"
+
+LINK_ID=$(echo "$LINK" | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')
+[[ "$(status -X DELETE "$A/api/books/$BOOK/review-links/$LINK_ID" -H "Cookie: $AC")" == "200" ]] \
+  && pass "the link revokes" || fail "revoking the link failed"
+[[ "$(status "$A/api/review/$TOKEN")" == "404" ]] && pass "and stops opening at once" \
+  || fail "a revoked link still answered $(status "$A/api/review/$TOKEN")"
+[[ "$(status -X POST "$A/api/review/$TOKEN/comments" -H 'content-type: application/json' -d '{"pageNumber":1,"authorName":"Marta","body":"still here?"}')" == "404" ]] \
+  && pass "and takes no more comments" || fail "a revoked link still accepted a comment"
+[[ "$(status "$A/api/review/not-a-real-token")" == "404" ]] \
+  && pass "a token that never existed answers the same way" \
+  || fail "an unknown token returned $(status "$A/api/review/not-a-real-token")"
 
 echo
 echo "==> an asset upload, and the one profile field an author may set"

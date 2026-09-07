@@ -446,9 +446,31 @@ accurate list.
    way back out. The slug is deliberately *not* restored: it is the public
    address, and rolling it back would break links a rename filed in
    `book_slug_history` and left working.
-3. **Draft comments for the author's reviewers** (§6). The old review drawer was
-   cut because it dropped what a reviewer typed on refresh. Rebuilding it
-   honestly needs a table and an auth story for a reviewer who has no account.
+3. ~~**Draft comments for the author's reviewers** (§6).~~ **Shipped**, and
+   beyond the MVP sentence — this is a collaboration feature, optional for the
+   AppSumo launch rather than part of it.
+
+   019 adds `book_review_links` and `book_comments`. The auth story is the part
+   that needed deciding rather than assuming: **a reviewer is nobody**. A client
+   looking at a lookbook will not make an account, and requiring one is how the
+   feature goes unused. So access is a capability, not an identity — 32 bytes of
+   CSPRNG in a link, one row per link, revocable and expiring by default at 30
+   days. `review_link_book()` checks revocation and expiry in the same statement
+   that resolves the token, so a caller cannot check one and forget the other,
+   and revoked / expired / never-existed all answer identically because telling
+   them apart tells somebody holding a guessed token that it was once real.
+
+   A token buys reading one edition and commenting on it. Not listing editions,
+   not editing, not other editions' comments, not analytics — and not resolving,
+   because resolving is a judgement about the work and that is the author's.
+   There is no anon policy on either table: a reviewer never touches PostgREST.
+
+   The old drawer's actual failure — losing what somebody typed on refresh — is
+   fixed twice over: the comment is written to the server before it is
+   acknowledged, and the in-progress draft is kept in `localStorage` while it is
+   being typed. `/review/[token]` is `noindex`, and renders through
+   `PageRenderer` with a non-UUID book id so a client clicking through a draft
+   is not counted as a reader.
 4. ~~**Commerce: Stripe Connect, orders, a Sales tab.**~~ **Decided: cut.** For
    the MVP, QLICO handles no payments at all — a product links to the author's
    own shop. The cart, the drawer and all four add-to-bag paths are gone. If it

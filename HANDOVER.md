@@ -333,6 +333,51 @@ separate decision.
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
 
+### Draft comments (§9.3) — shipped, and optional for launch
+
+The last outstanding item of the editor redesign, and worth saying plainly: this
+is a collaboration feature, past the MVP sentence in `docs/mvp-scope.md`. It is
+not needed to launch on AppSumo; it is needed by the LTD buyer doing client work
+who wants to send a draft and get notes back.
+
+019 adds `book_review_links` and `book_comments`. **A reviewer is nobody** —
+that is the decision the spec said had to be made. A client looking at a
+lookbook will not make an account, so access is a capability rather than an
+identity: 32 bytes of CSPRNG in the link, one row per link, revocable, and
+expiring at 30 days by default so a link handed to a contractor in March does
+not still open in December.
+
+What a token buys: reading one edition and commenting on it. Not listing
+editions, not editing, not another edition's comments, not analytics — and not
+resolving, because resolving is a judgement about the work and that belongs to
+the author. There is deliberately **no anon policy** on either table; a reviewer
+never touches PostgREST, only routes that run as `service_role` after
+`review_link_book()` has resolved the token. That function checks revocation and
+expiry in the same statement that finds the book, so a caller cannot check one
+and forget the other. Revoked, expired and never-existed all answer identically,
+because distinguishing them tells somebody holding a guessed token that it was
+once real.
+
+The old drawer's actual failure — dropping what a reviewer typed on refresh — is
+fixed twice: the comment is written to the server before it is acknowledged, and
+the in-progress draft is kept in `localStorage` while it is being typed.
+`/review/[token]` is `noindex` (the URL *is* the credential) and renders through
+`PageRenderer` with a deliberately non-UUID book id, so `trackEvent` ignores it
+and a client clicking through a draft is not counted as a reader — the same
+lever the gallery and the bundled demo already use.
+
+`verify:author:e2e` walks it with no cookie at all: an anonymous visitor opens
+the draft, leaves a comment, is refused an empty one, the author sees and
+resolves it, an anonymous caller cannot list the author's comments, another
+author cannot see the links, and revoking closes both reading and commenting at
+once. 70 assertions in that harness now.
+
+One test worth remembering: the first version of "revoked and expired answer the
+same" searched the route's whole source for those words and tripped on the
+comment explaining the rule. Regexes over prose are the trap
+`supabase/master-migration.test.ts` already documents; it now matches the
+strings the route actually answers with.
+
 ### Version history (§9.2) — shipped
 
 Undo was a session: `lib/editor-store.ts` keeps a capped in-memory stack and
