@@ -426,8 +426,26 @@ accurate list.
    own palette on purpose — an edition preview renders the *book's* theme, not
    the app's — is marked `data-own-theme` on `PageRenderer`, so the audit skips
    it rather than being trained to ignore a permanent finding.
-2. **Version history** (§6). Undo covers a session; this is "what did this look
-   like last Tuesday". Needs storage, and "duplicate" is the manual stand-in.
+2. ~~**Version history** (§6).~~ **Shipped.** `book_versions` (018), a modal in
+   the editor, and `npm run verify:author:e2e` walks the round trip.
+
+   Three decisions, each with a reasonable-looking wrong answer. **When:** not
+   every save — the autosave fires every couple of seconds — and not only on
+   publish, because the edits worth recovering are the ones made before
+   deciding to publish. So automatic and time-bucketed: a save opens a version
+   only if the newest is older than 30 minutes, which turns a day of work into a
+   readable handful of points. Publishing is a named checkpoint and bypasses the
+   throttle. **Where the throttle lives:** in one statement, in the database.
+   Reading the newest version and then deciding to insert is the same
+   read-then-write that made `redeemLicense` and the weekly digest fail (015,
+   016). **What a version is:** the pages *and* the metadata, since a theme
+   change or a retitle is exactly what somebody wants back.
+
+   Restoring takes a labelled snapshot of the current state first — a restore
+   is itself a destructive edit, and picking the wrong version needs the same
+   way back out. The slug is deliberately *not* restored: it is the public
+   address, and rolling it back would break links a rename filed in
+   `book_slug_history` and left working.
 3. **Draft comments for the author's reviewers** (§6). The old review drawer was
    cut because it dropped what a reviewer typed on refresh. Rebuilding it
    honestly needs a table and an auth story for a reviewer who has no account.

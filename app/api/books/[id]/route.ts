@@ -4,6 +4,7 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { ThemeSchema, BookSettingsSchema } from '@/lib/book-schema'
 import { revalidateReader } from '@/lib/revalidate-reader'
+import { VERSIONS_KEPT } from '@/lib/versions'
 
 // ─── PATCH /api/books/[id] — partial book update ─────────────────────────────
 
@@ -34,13 +35,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // the address it is replacing.
   const { data: current } = await supabase
     .from('books')
-    .select('id, owner_id, slug')
+    .select('id, owner_id, slug, settings')
     .eq('id', id)
     .single()
 
   if (!current) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (current.owner_id !== user.id)
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  // Read before the update, so "did this just get published" is answerable.
+  const wasPublished =
+    (current.settings as { published?: boolean } | null)?.published === true
 
   const body = await request.json()
   const parsed = PatchBookSchema.safeParse(body)
@@ -121,6 +126,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // Both addresses: the new one so the change is visible at once, the old one so
   // it stops serving a cached copy of the edition instead of forwarding to it.
   revalidateReader(current.slug, data.slug)
+
+  // Publishing is the checkpoint people actually look for later — "put it back
+  // to how it went out" — so it gets a named version regardless of the
+  // throttle. Only on the transition: re-saving a published edition's settings
+  // is not a new publish.
+  const nowPublished = parsed.data.settings?.published === true
+  if (nowPublished && !wasPublished) {
+    const snapshot = await supabaseAdmin.rpc('snapshot_book_version', {
+      p_book_id: id,
+      p_label: 'Published',
+      p_min_gap: '0 minutes',
+      p_keep: VERSIONS_KEPT,
+    })
+    if (snapshot.error && snapshot.error.code !== '42P01' && snapshot.error.code !== 'PGRST202') {
+      console.error('[books] could not snapshot on publish:', snapshot.error)
+    }
+  }
 
   return NextResponse.json(data)
 }

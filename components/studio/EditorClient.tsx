@@ -14,6 +14,7 @@ import {
   Grid,
   Undo2,
   Redo2,
+  History,
   Keyboard,
   Search,
   FolderOpen,
@@ -32,6 +33,7 @@ import { CommandPalette } from '@/components/studio/CommandPalette'
 import { PublishChecklistModal } from '@/components/studio/PublishChecklistModal'
 import { PostImportModal } from '@/components/studio/PostImportModal'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
+import { VersionHistoryModal } from '@/components/studio/VersionHistoryModal'
 import { MobileEditorDock } from '@/components/studio/MobileEditorDock'
 import { EntitlementsProvider, type StudioEntitlements } from '@/components/studio/EntitlementsContext'
 import { publishChecks, type PublishIssue } from '@/lib/publish-checks'
@@ -54,6 +56,7 @@ export function EditorClient({ book, entitlements }: Props) {
   const [showPageManager, setShowPageManager] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [showCommandPalette, setShowCommandPalette] = useState(false)
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
   const [publishing, setPublishing] = useState(false)
@@ -560,6 +563,15 @@ export function EditorClient({ book, entitlements }: Props) {
           <Keyboard size={14} />
         </button>
 
+        {/* Version history */}
+        <button
+          onClick={() => setShowHistory(true)}
+          className="hidden items-center rounded-md border border-neutral-800 bg-neutral-900/80 p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 sm:flex"
+          title="Version history"
+        >
+          <History size={14} />
+        </button>
+
         {/* Visual page manager */}
         <button
           onClick={() => setShowPageManager(true)}
@@ -689,6 +701,18 @@ export function EditorClient({ book, entitlements }: Props) {
 
       {/* Shortcuts Modal */}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+
+      {showHistory && (
+        <VersionHistoryModal
+          bookId={book.id}
+          onClose={() => setShowHistory(false)}
+          // A restore rewrites the pages in the database while this editor still
+          // holds the old ones. Reloading is the only honest way to show what is
+          // now there — and it stops the next autosave writing the pre-restore
+          // state straight back over the restore.
+          onRestored={() => window.location.reload()}
+        />
+      )}
 
       {showPostImport && <PostImportModal onClose={() => setShowPostImport(false)} />}
 

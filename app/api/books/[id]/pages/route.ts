@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { PageSchema } from '@/lib/book-schema'
 import { z } from 'zod'
 import { revalidateReader } from '@/lib/revalidate-reader'
+import { AUTO_SNAPSHOT_GAP_MINUTES, VERSIONS_KEPT } from '@/lib/versions'
 
 /**
  * The book's public address if this user owns it, `null` if they do not. The
@@ -64,6 +65,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     blocks: p.blocks ?? [],
     hotspots: p.hotspots ?? [],
   }))
+
+  // A point in the edition's history, before this save overwrites the previous
+  // one. Throttled in the database (018), so an autosave firing every couple of
+  // seconds opens a new version roughly twice an hour rather than every time.
+  // Best effort on purpose: history is a safety net, and failing to take a
+  // snapshot must never be the reason somebody's work does not save.
+  const versionSnapshot = await supabaseAdmin.rpc('snapshot_book_version', {
+    p_book_id: id,
+    p_label: null,
+    p_min_gap: `${AUTO_SNAPSHOT_GAP_MINUTES} minutes`,
+    p_keep: VERSIONS_KEPT,
+  })
+  if (
+    versionSnapshot.error &&
+    versionSnapshot.error.code !== '42P01' &&
+    versionSnapshot.error.code !== 'PGRST202'
+  ) {
+    console.error('[pages] could not snapshot before saving:', versionSnapshot.error)
+  }
 
   // Replacing the page set has to be atomic. This route ran a DELETE and then
   // an INSERT as two separate round-trips, so every autosave — one every couple

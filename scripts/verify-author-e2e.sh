@@ -25,6 +25,8 @@
 #     a free author's lead gate does not run, their CSV export is refused and
 #     their analytics stop at the window they were sold, and a redeemed one's
 #     all three work;
+#   - an edition can be put back to how it was, and restoring is not a
+#     one-way door;
 #   - an asset upload lands under its own book and refuses a stranger's;
 #   - the one profile field an author may set is settable and nothing else is;
 #   - an AppSumo code lifts the plan, cannot be redeemed twice by different
@@ -289,6 +291,50 @@ curl -s -o /dev/null --noproxy '*' -X PATCH "$A/api/books/$IMPORTED" -H "Cookie:
 curl -s --noproxy '*' "$A/book/scanned-catalogue" | grep -q "books/$IMPORTED/pages/page-1.png" \
   && pass "and the page images are in its HTML" || fail "the imported edition renders without its page images"
 rm -f "$PNG"
+
+echo
+echo "==> what this edition looked like earlier"
+# Publishing is a named checkpoint; the autosave takes automatic ones, throttled
+# in the database so a save every couple of seconds does not become a row every
+# couple of seconds.
+VERSIONS=$(curl -s --noproxy '*' -H "Cookie: $AC" "$A/api/books/$BOOK/versions")
+LABELS=$(echo "$VERSIONS" | python3 -c 'import json,sys;print("|".join(str(v["label"]) for v in json.load(sys.stdin)["versions"]))' 2>/dev/null || echo 'parse-failed')
+echo "$LABELS" | grep -q 'Published' \
+  && pass "publishing left a named version ($LABELS)" || fail "versions after publish: $LABELS"
+
+# Wreck it the way a bad afternoon would: retitle, and replace the pages.
+curl -s -o /dev/null --noproxy '*' -X PATCH "$A/api/books/$BOOK" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"title":"Wrecked"}'
+WRECK=$(python3 -c 'import uuid;print(uuid.uuid4())')
+curl -s -o /dev/null --noproxy '*' -X PUT "$A/api/books/$BOOK/pages" -H "Cookie: $AC" \
+  -H 'content-type: application/json' \
+  -d "[{\"id\":\"$WRECK\",\"page_number\":1,\"type\":\"cover\",\"layout\":\"blank\",\"blocks\":[],\"hotspots\":[]}]"
+[[ "$(rows "select count(*) from public.pages where book_id='$BOOK'")" == "1" ]] \
+  && pass "the edition is down to one blank page" || fail "the wreck did not take"
+
+PUBLISHED_VERSION=$(echo "$VERSIONS" | python3 -c 'import json,sys;print(next(v["id"] for v in json.load(sys.stdin)["versions"] if v["label"]=="Published"))')
+RESTORE=$(curl -s --noproxy '*' -X POST "$A/api/books/$BOOK/versions/$PUBLISHED_VERSION/restore" -H "Cookie: $AC" -w '\n%{http_code}')
+[[ "$(echo "$RESTORE" | tail -1)" == "200" ]] \
+  && pass "restored ($(echo "$RESTORE" | sed '''$d'''))" || fail "restore answered: $RESTORE"
+
+[[ "$(rows "select title from public.books where id='$BOOK'")" == "TheSilkTrench" ]] \
+  && pass "the title came back" || fail "the title is '$(rows "select title from public.books where id='$BOOK'")'"
+[[ "$(rows "select count(*) from public.pages where book_id='$BOOK'")" == "2" ]] \
+  && pass "both pages came back" || fail "pages after restore: $(rows "select count(*) from public.pages where book_id='$BOOK'")"
+[[ "$(rows "select slug from public.books where id='$BOOK'")" == "silk-trench" ]] \
+  && pass "and the public address was left alone" || fail "the slug is now '$(rows "select slug from public.books where id='$BOOK'")'"
+
+# Restoring is a destructive edit too, so it records where it came from.
+AFTER=$(curl -s --noproxy '*' -H "Cookie: $AC" "$A/api/books/$BOOK/versions" \
+  | python3 -c 'import json,sys;print("|".join(str(v["label"]) for v in json.load(sys.stdin)["versions"]))')
+echo "$AFTER" | grep -q 'Before restoring' \
+  && pass "and left a way back out of the restore itself" || fail "versions after restore: $AFTER"
+
+LIST_FOREIGN=$(status -H "Cookie: $IC" "$A/api/books/$BOOK/versions")
+RESTORE_FOREIGN=$(status -X POST -H "Cookie: $IC" "$A/api/books/$BOOK/versions/$PUBLISHED_VERSION/restore")
+[[ "$LIST_FOREIGN" == "403" && "$RESTORE_FOREIGN" == "403" ]] \
+  && pass "somebody else can neither read nor roll back this history ($LIST_FOREIGN/$RESTORE_FOREIGN)" \
+  || fail "a stranger got $LIST_FOREIGN listing and $RESTORE_FOREIGN restoring"
 
 echo
 echo "==> an asset upload, and the one profile field an author may set"

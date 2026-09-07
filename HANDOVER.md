@@ -333,6 +333,55 @@ separate decision.
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
 
+### Version history (§9.2) — shipped
+
+Undo was a session: `lib/editor-store.ts` keeps a capped in-memory stack and
+closing the tab was the end of it. The stand-in was "duplicate the edition",
+which spends a slot against the plan's quota and leaves a second thing in the
+library to be confused by.
+
+`018_book_versions.sql` adds the table and two functions; `lib/versions.ts`
+holds the two numbers both routes pass; `VersionHistoryModal` is the editor's
+`History` button. Three decisions worth knowing:
+
+- **When a version is taken.** Not on every save — `PUT /api/books/[id]/pages`
+  is the autosave and fires every couple of seconds — and not only on publish,
+  because the edits worth recovering are the ones made *before* deciding to
+  publish. Automatic and time-bucketed: a save opens a new version only if the
+  newest is older than 30 minutes. Publishing is a named checkpoint and skips
+  the throttle.
+- **Where the throttle lives.** In one statement, in the database. Reading the
+  newest version and then deciding whether to insert is the same read-then-write
+  that made `redeemLicense` and the weekly digest fail silently (015, 016), and
+  two autosaves landing together would write two versions a second apart.
+- **What a version is.** Pages *and* metadata — a theme change or a retitle is
+  exactly the kind of thing somebody wants back. `pages.blocks`/`hotspots` are
+  `jsonb[]` rather than `jsonb`, so they are stored as real JSON arrays and
+  handed straight back to `replace_book_pages` on restore, which is
+  transactional.
+
+The slug is deliberately **not** restored. It is the public address, and rolling
+it back would break the links a rename filed in `book_slug_history` and left
+working — `lib/versions.test.ts` asserts the migration never sets it.
+
+Restoring snapshots the current state first, labelled `Before restoring …`,
+because a restore is itself a destructive edit and somebody who picks the wrong
+version needs the same way back out that brought them there. The modal says so
+rather than leaving it as a pleasant surprise: the reason people hesitate over a
+restore button is not knowing whether it is a one-way door.
+
+`verify:author:e2e` walks it end to end — publish leaves a named version, the
+edition is wrecked (retitled, pages replaced), the published version is
+restored, title and pages come back, the slug does not move, a "Before
+restoring" version now exists, and a second author gets 403 both listing and
+restoring. 55 assertions in that harness now, all green.
+
+One accepted lint warning: `VersionHistoryModal` trips
+`react-hooks/set-state-in-effect`, which is conservative about any state-setting
+call reached from an effect. The fetch sets nothing before its first await and
+carries a liveness flag so a slow response cannot set state on a closed modal;
+the rule flags it regardless, as it does 37 other places in this repo.
+
 ### §9.1, the last item of the editor redesign — closed by measuring it
 
 The spec asked for a sweep of ~540 hardcoded `neutral-*` classes across the
