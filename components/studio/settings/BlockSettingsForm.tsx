@@ -69,7 +69,7 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
       {block.type === 'audio' && <AudioBlockForm block={block} pageId={pageId} />}
       {block.type === 'button' && <ButtonBlockForm block={block} pageId={pageId} />}
       {block.type === 'divider' && (
-        <p className="text-xs text-neutral-500">No settings for divider block.</p>
+        <p className="text-xs text-neutral-400">No settings for divider block.</p>
       )}
       {block.type === 'embed' && <EmbedBlockForm block={block} pageId={pageId} />}
       {block.type === 'data' && <DataBlockForm block={block} pageId={pageId} />}

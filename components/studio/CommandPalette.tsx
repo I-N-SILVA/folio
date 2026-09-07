@@ -307,7 +307,7 @@ export function CommandPalette({
 
       <div className="max-h-[340px] overflow-y-auto p-2 custom-scrollbar space-y-1">
         {filtered.length === 0 ? (
-          <div className="py-8 text-center text-xs text-neutral-500">
+          <div className="py-8 text-center text-xs text-neutral-400">
             No commands matching &ldquo;{query}&rdquo;
           </div>
         ) : (
@@ -332,7 +332,7 @@ export function CommandPalette({
               <div className="flex items-center gap-2 shrink-0 ml-2">
                 <span
                   className={`text-[10px] uppercase font-mono tracking-wider ${
-                    selectedIndex === idx ? 'text-neutral-700' : 'text-neutral-500'
+                    selectedIndex === idx ? 'text-neutral-700' : 'text-neutral-400'
                   }`}
                 >
                   {item.category}
@@ -354,7 +354,7 @@ export function CommandPalette({
         )}
       </div>
 
-      <div className="flex items-center justify-between px-4 py-2 border-t border-neutral-800/80 bg-neutral-950 text-[10px] text-neutral-500">
+      <div className="flex items-center justify-between px-4 py-2 border-t border-neutral-800/80 bg-neutral-950 text-[10px] text-neutral-400">
         <span>Use ↑ ↓ to navigate</span>
         <span>Press ↵ to run command</span>
       </div>

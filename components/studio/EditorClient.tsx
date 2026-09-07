@@ -451,7 +451,7 @@ export function EditorClient({ book, entitlements }: Props) {
         </Link>
         <Link
           href="/dashboard"
-          className="hidden sm:flex items-center gap-1 text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-medium"
+          className="hidden sm:flex items-center gap-1 text-neutral-400 hover:text-neutral-200 transition-colors text-xs font-medium"
         >
           <ArrowLeft size={13} />
           <span>Dashboard</span>

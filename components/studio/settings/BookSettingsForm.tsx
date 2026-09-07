@@ -25,11 +25,11 @@ function LockedFeature({
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
       <div className="flex items-start gap-2">
-        <Lock size={13} className="mt-0.5 shrink-0 text-neutral-500" />
+        <Lock size={13} className="mt-0.5 shrink-0 text-neutral-400" />
         <div className="min-w-0">
           <p className="text-sm text-neutral-400">{label}</p>
-          {hint && <p className="mt-1 text-[11px] leading-4 text-neutral-500">{hint}</p>}
-          <p className="mt-2 text-[11px] leading-4 text-neutral-500">
+          {hint && <p className="mt-1 text-[11px] leading-4 text-neutral-400">{hint}</p>}
+          <p className="mt-2 text-[11px] leading-4 text-neutral-400">
             Not included in {planName}.{' '}
             <Link
               href="/account"
@@ -159,7 +159,7 @@ export function BookSettingsForm({ book }: { book: any }) {
         </Field>
 
         <Field label="Edition style">
-          <p className="pb-2 text-[11px] leading-4 text-neutral-500">
+          <p className="pb-2 text-[11px] leading-4 text-neutral-400">
             One choice sets the type for the whole edition — the pairing, the
             scale, the weights. Per-block overrides still win.
           </p>
@@ -376,7 +376,7 @@ export function BookSettingsForm({ book }: { book: any }) {
           hint="Point a CNAME record for your domain (e.g. catalog.brand.com) to cname.qlico.app"
         >
           <div className="relative">
-            <Globe size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+            <Globe size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
             <input
               type="text"
               placeholder="editions.yourbrand.com"

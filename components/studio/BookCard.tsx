@@ -101,25 +101,25 @@ function CoverPreview({
         // cover still reads as an object against a dark card.
         className="relative w-full max-w-[188px] overflow-hidden rounded-r-[5px] rounded-l-[2px] bg-[var(--qlico-vellum)] shadow-[0_1px_2px_rgba(20,26,58,0.18),0_10px_24px_-8px_rgba(20,26,58,0.28),0_28px_50px_-28px_rgba(20,26,58,0.35)] ring-1 ring-[var(--qlico-border)] transition-transform duration-300 group-hover:-translate-y-0.5"
       >
-      {cover && nearViewport ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0 origin-top-left transition-opacity"
-          style={{
-            width: PAGE_DESIGN_WIDTH,
-            height: PAGE_DESIGN_HEIGHT,
-            transform: `scale(${scale})`,
-            // Hide the un-scaled flash before the first measurement lands.
-            opacity: scale > 0 ? 1 : 0,
-          }}
-        >
-          <PageRenderer page={cover} bookId={cover.book_id} className="h-full w-full" />
-        </div>
-      ) : cover ? null : (
-        <div className="absolute inset-0 grid place-items-center text-[var(--qlico-muted)]">
-          <BookOpen size={28} strokeWidth={1.5} className="opacity-50" />
-        </div>
-      )}
+        {cover && nearViewport ? (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 origin-top-left transition-opacity"
+            style={{
+              width: PAGE_DESIGN_WIDTH,
+              height: PAGE_DESIGN_HEIGHT,
+              transform: `scale(${scale})`,
+              // Hide the un-scaled flash before the first measurement lands.
+              opacity: scale > 0 ? 1 : 0,
+            }}
+          >
+            <PageRenderer page={cover} bookId={cover.book_id} className="h-full w-full" />
+          </div>
+        ) : cover ? null : (
+          <div className="absolute inset-0 grid place-items-center text-[var(--qlico-muted)]">
+            <BookOpen size={28} strokeWidth={1.5} className="opacity-50" />
+          </div>
+        )}
 
         {/* Spine shading along the bound edge. */}
         <span
@@ -237,7 +237,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
       })
 
       if (!res.ok) throw new Error('Could not rename this edition')
-      
+
       const updated = await res.json()
       setBook(updated)
       setIsEditing(false)
@@ -248,14 +248,12 @@ export function BookCard({ book: initialBook }: BookCardProps) {
   }
 
   return (
-    <article className={`group relative overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--qlico-paper)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}>
-      <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[rgba(60,35,132,0.10)] blur-2xl transition group-hover:bg-[rgba(60,35,132,0.18)]" />
+    <article
+      className={`group relative overflow-hidden rounded-[2rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/78 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:bg-[var(--qlico-paper)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.10)] ${isDeleting ? 'opacity-50 grayscale' : ''}`}
+    >
+      <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-[var(--glow-brand)] blur-2xl transition group-hover:bg-[var(--glow-brand-strong)]" />
 
-      <CoverPreview
-        cover={initialBook.cover}
-        title={book.title}
-        href={`/editor/${book.id}`}
-      />
+      <CoverPreview cover={initialBook.cover} title={book.title} href={`/editor/${book.id}`} />
 
       <div className="flex items-start justify-between mb-3 gap-2">
         {isEditing ? (
@@ -273,16 +271,22 @@ export function BookCard({ book: initialBook }: BookCardProps) {
             <button onClick={handleRename} className="rounded p-1 text-green-700 hover:bg-green-50">
               <Check size={14} />
             </button>
-            <button onClick={() => setIsEditing(false)} className="rounded p-1 text-[var(--qlico-muted)] hover:bg-[var(--tint-weak)]">
+            <button
+              onClick={() => setIsEditing(false)}
+              className="rounded p-1 text-[var(--qlico-muted)] hover:bg-[var(--tint-weak)]"
+            >
               <X size={14} />
             </button>
           </div>
         ) : (
-          <h2 className="font-display flex-1 truncate text-2xl font-semibold tracking-[-0.05em] text-[var(--qlico-ink)]" title={book.title}>
+          <h2
+            className="font-display flex-1 truncate text-2xl font-semibold tracking-[-0.05em] text-[var(--qlico-ink)]"
+            title={book.title}
+          >
             {book.title}
           </h2>
         )}
-        
+
         {!isEditing && (
           <span
             className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
@@ -324,8 +328,7 @@ export function BookCard({ book: initialBook }: BookCardProps) {
       ) : (
         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--qlico-muted)]">
           {isTemplate ? 'Starting point' : published ? 'No reads yet' : 'Draft'} ·{' '}
-          {book.pages?.length || 0} pages ·{' '}
-          {new Date(displayDate).toLocaleDateString()}
+          {book.pages?.length || 0} pages · {new Date(displayDate).toLocaleDateString()}
         </p>
       )}
 
@@ -386,7 +389,10 @@ export function BookCard({ book: initialBook }: BookCardProps) {
                 {isTemplate ? 'New edition from this' : 'Duplicate'}
               </MenuButton>
               {!isTemplate && (
-                <MenuButton onClick={() => handleDuplicate(true)} icon={<LayoutTemplate size={15} />}>
+                <MenuButton
+                  onClick={() => handleDuplicate(true)}
+                  icon={<LayoutTemplate size={15} />}
+                >
                   Save as template
                 </MenuButton>
               )}
@@ -420,8 +426,8 @@ export function BookCard({ book: initialBook }: BookCardProps) {
           body={
             <>
               <strong className="font-semibold text-[var(--qlico-ink)]">{book.title}</strong> and
-              and all of its pages, hotspots, and reader data will be permanently removed. This can&apos;t
-              be undone.
+              and all of its pages, hotspots, and reader data will be permanently removed. This
+              can&apos;t be undone.
             </>
           }
           confirmLabel="Delete edition"

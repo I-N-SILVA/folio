@@ -281,7 +281,7 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
       className="w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden border border-neutral-700 bg-neutral-900 p-0"
     >
       <div className="flex items-center gap-2.5 border-b border-neutral-800 px-4 py-3">
-        <Search size={15} className="shrink-0 text-neutral-500" />
+        <Search size={15} className="shrink-0 text-neutral-400" />
         <input
           autoFocus
           value={query}
@@ -292,12 +292,12 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
           onKeyDown={handleKeyDown}
           placeholder="Search blocks and layouts…"
           aria-label="Search blocks and layouts"
-          className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-500"
+          className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-400"
         />
         <button
           onClick={onClose}
           aria-label="Close"
-          className="text-neutral-500 transition-colors hover:text-neutral-100"
+          className="text-neutral-400 transition-colors hover:text-neutral-100"
         >
           <X size={15} />
         </button>
@@ -317,7 +317,7 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
               'border-b-2 px-3 pb-2 pt-1 text-xs font-semibold capitalize transition-colors',
               activeTab === key
                 ? 'border-[var(--studio-select)] text-neutral-100'
-                : 'border-transparent text-neutral-500 hover:text-neutral-300'
+                : 'border-transparent text-neutral-400 hover:text-neutral-300'
             )}
           >
             {key}
@@ -328,14 +328,14 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
       <div ref={listRef} className="max-h-[52vh] overflow-y-auto p-2">
         {activeTab === 'blocks' ? (
           blocks.length === 0 ? (
-            <p className="px-3 py-8 text-center text-xs text-neutral-500">Nothing matches that.</p>
+            <p className="px-3 py-8 text-center text-xs text-neutral-400">Nothing matches that.</p>
           ) : (
             GROUP_ORDER.map((group) => {
               const inGroup = blocks.filter((b) => b.group === group)
               if (!inGroup.length) return null
               return (
                 <section key={group}>
-                  <h3 className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">
+                  <h3 className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">
                     {group}
                   </h3>
                   {inGroup.map((choice) => {
@@ -368,7 +368,7 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
                           <span className="block text-sm font-medium text-neutral-100">
                             {choice.label}
                           </span>
-                          <span className="block truncate text-[11px] text-neutral-500">
+                          <span className="block truncate text-[11px] text-neutral-400">
                             {choice.hint}
                           </span>
                         </span>
@@ -380,7 +380,7 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
             })
           )
         ) : layouts.length === 0 ? (
-          <p className="px-3 py-8 text-center text-xs text-neutral-500">Nothing matches that.</p>
+          <p className="px-3 py-8 text-center text-xs text-neutral-400">Nothing matches that.</p>
         ) : (
           <div className="grid grid-cols-2 gap-2 p-1">
             {layouts.map((tpl, index) => (
@@ -406,14 +406,14 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
                   ))}
                 </span>
                 <span className="text-xs font-semibold text-neutral-100">{tpl.label}</span>
-                <span className="text-[10px] leading-snug text-neutral-500">{tpl.description}</span>
+                <span className="text-[10px] leading-snug text-neutral-400">{tpl.description}</span>
               </button>
             ))}
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-neutral-800 px-4 py-2.5 text-[11px] text-neutral-500">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-neutral-800 px-4 py-2.5 text-[11px] text-neutral-400">
         <span>
           <Key>↑↓</Key> move
         </span>

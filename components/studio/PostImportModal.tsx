@@ -96,7 +96,7 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
       className="w-[540px] max-w-[calc(100vw-2rem)] overflow-hidden border border-neutral-700 bg-neutral-900 p-0"
     >
       <div className="p-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">
           {pageCount} page{pageCount === 1 ? '' : 's'} imported
         </p>
 
@@ -151,7 +151,7 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
               )}
             </ul>
 
-            <p className="mt-4 text-[12.5px] leading-5 text-neutral-500">
+            <p className="mt-4 text-[12.5px] leading-5 text-neutral-400">
               Across {stats.pages} of your {pageCount} pages. Adding them is one step — a single ⌘Z
               takes all of it back.
             </p>
@@ -202,7 +202,7 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
             >
               Not now
             </button>
-            <span className="ml-auto text-[11px] text-neutral-500">
+            <span className="ml-auto text-[11px] text-neutral-400">
               You can always add them later
             </span>
           </>
@@ -237,10 +237,10 @@ function FoundRow({
       <span className="min-w-[26px] font-display text-xl font-semibold tabular-nums text-neutral-100">
         {count}
       </span>
-      <span className="text-neutral-500">{icon}</span>
+      <span className="text-neutral-400">{icon}</span>
       <span className="min-w-0">
         <span className="block text-[13px] font-medium text-neutral-100">{title}</span>
-        <span className="block text-[11.5px] text-neutral-500">{detail}</span>
+        <span className="block text-[11.5px] text-neutral-400">{detail}</span>
       </span>
     </li>
   )

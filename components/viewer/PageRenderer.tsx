@@ -55,19 +55,26 @@ interface PageRendererProps {
   hideGutter?: boolean
   /** Position in a 2-page spread: 'left' has spine on the right, 'right' has spine on the left. */
   pageSide?: 'left' | 'right' | 'single'
-  renderBlockWrapper?: (block: import('@/lib/book-schema').Block, children: React.ReactNode) => React.ReactNode
+  renderBlockWrapper?: (
+    block: import('@/lib/book-schema').Block,
+    children: React.ReactNode
+  ) => React.ReactNode
 }
 
 export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
-  ({ page, bookId, theme, className, hideGutter, pageSide = 'single', renderBlockWrapper }, ref) => {
+  (
+    { page, bookId, theme, className, hideGutter, pageSide = 'single', renderBlockWrapper },
+    ref
+  ) => {
     const isCanvas = page.layout === 'canvas'
     const bg = page.background
 
     // Resolve theme colors
-    const preset = theme?.preset && theme.preset !== 'custom' 
-      ? THEME_PRESETS[theme.preset as keyof typeof THEME_PRESETS] 
-      : null
-    
+    const preset =
+      theme?.preset && theme.preset !== 'custom'
+        ? THEME_PRESETS[theme.preset as keyof typeof THEME_PRESETS]
+        : null
+
     const primaryColor = theme?.primary || preset?.primary || '#3c2384'
     const bgColor = bg?.color || theme?.background || preset?.background || '#ffffff'
     // The edition's type set decides the whole scale, not just the pairing.
@@ -79,7 +86,7 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
       headingFont: theme?.headingFont,
       bodyFont: theme?.bodyFont,
     })
-    
+
     // Determine text color from the actual page background luminance so any
     // background — preset, per-page color, or image+overlay — stays legible.
     const hasImage = Boolean(bg?.image)
@@ -104,16 +111,31 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
       backgroundStyle.backgroundPosition =
         typeof bg.focalX === 'number' && typeof bg.focalY === 'number'
           ? `${bg.focalX}% ${bg.focalY}%`
-          : bg.imagePosition ?? 'center'
+          : (bg.imagePosition ?? 'center')
       backgroundStyle.backgroundRepeat = 'no-repeat'
     }
 
-    const blurCls = bg?.blur === 'sm' ? 'backdrop-blur-sm' : bg?.blur === 'md' ? 'backdrop-blur-md' : bg?.blur === 'lg' ? 'backdrop-blur-xl' : ''
-    const overlayOpacity = typeof bg?.overlayOpacity === 'number' ? bg.overlayOpacity / 100 : (bg?.image ? 0.4 : 0)
+    const blurCls =
+      bg?.blur === 'sm'
+        ? 'backdrop-blur-sm'
+        : bg?.blur === 'md'
+          ? 'backdrop-blur-md'
+          : bg?.blur === 'lg'
+            ? 'backdrop-blur-xl'
+            : ''
+    const overlayOpacity =
+      typeof bg?.overlayOpacity === 'number' ? bg.overlayOpacity / 100 : bg?.image ? 0.4 : 0
 
     return (
       <div
         ref={ref}
+        // An edition carries its own palette — its theme preset decides its
+        // paper and its ink, and that must not follow the reader's system
+        // setting the way the app's own chrome does. `scripts/audit-theme.mjs`
+        // reports any element that renders identically in light and dark, so
+        // this marks the subtree where that is the intent rather than a
+        // hardcoded colour somebody forgot about.
+        data-own-theme=""
         className={twMerge(
           'relative w-full h-full overflow-hidden select-none',
           layoutStyles[page.layout],
@@ -142,12 +164,19 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
           aria-hidden
           className={twMerge(
             'pointer-events-none absolute inset-0 z-[1]',
-            (bg?.paperTexture === 'washi' || theme?.paperTexture === 'washi') && 'opacity-[0.08] mix-blend-multiply',
-            (bg?.paperTexture === 'linen' || theme?.paperTexture === 'linen') && 'opacity-[0.07] mix-blend-overlay',
-            (bg?.paperTexture === 'matte' || theme?.paperTexture === 'matte') && 'opacity-[0.05] mix-blend-multiply',
-            (bg?.paperTexture === 'carbon' || theme?.paperTexture === 'carbon') && 'opacity-[0.09] mix-blend-soft-light',
-            (bg?.paperTexture === 'gloss' || theme?.paperTexture === 'gloss') && 'opacity-[0.04] mix-blend-screen',
-            (!bg?.paperTexture || bg?.paperTexture === 'none') && (!theme?.paperTexture || theme?.paperTexture === 'none') && 'opacity-[0.035] mix-blend-multiply'
+            (bg?.paperTexture === 'washi' || theme?.paperTexture === 'washi') &&
+              'opacity-[0.08] mix-blend-multiply',
+            (bg?.paperTexture === 'linen' || theme?.paperTexture === 'linen') &&
+              'opacity-[0.07] mix-blend-overlay',
+            (bg?.paperTexture === 'matte' || theme?.paperTexture === 'matte') &&
+              'opacity-[0.05] mix-blend-multiply',
+            (bg?.paperTexture === 'carbon' || theme?.paperTexture === 'carbon') &&
+              'opacity-[0.09] mix-blend-soft-light',
+            (bg?.paperTexture === 'gloss' || theme?.paperTexture === 'gloss') &&
+              'opacity-[0.04] mix-blend-screen',
+            (!bg?.paperTexture || bg?.paperTexture === 'none') &&
+              (!theme?.paperTexture || theme?.paperTexture === 'none') &&
+              'opacity-[0.035] mix-blend-multiply'
           )}
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
@@ -190,10 +219,10 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
             isCanvas
               ? 'qlico-canvas h-full'
               : page.layout === 'split'
-              ? 'grid grid-cols-1 md:grid-cols-2 gap-6 items-center'
-              : page.layout === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 items-start'
-              : 'flex flex-col gap-4'
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-6 items-center'
+                : page.layout === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 items-start'
+                  : 'flex flex-col gap-4'
           )}
         >
           {/*
@@ -204,8 +233,12 @@ export const PageRenderer = forwardRef<HTMLDivElement, PageRendererProps>(
             from its index, so switching a page to canvas never scatters it.
           */}
           {(isCanvas ? [...page.blocks].sort(byPaintOrder) : page.blocks).map((block, index) => {
-            const blockElement = <BlockRenderer key={block.id} block={block} bookId={bookId} pageId={page.id} />
-            const wrapped = renderBlockWrapper ? renderBlockWrapper(block, blockElement) : blockElement
+            const blockElement = (
+              <BlockRenderer key={block.id} block={block} bookId={bookId} pageId={page.id} />
+            )
+            const wrapped = renderBlockWrapper
+              ? renderBlockWrapper(block, blockElement)
+              : blockElement
             if (!isCanvas) return wrapped
             const frame = block.frame ?? defaultFrame(index)
             return (

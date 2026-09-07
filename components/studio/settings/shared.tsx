@@ -23,7 +23,7 @@ export function Field({
         {label}
       </label>
       {children}
-      {hint && <p className="text-[11px] leading-4 text-neutral-500">{hint}</p>}
+      {hint && <p className="text-[11px] leading-4 text-neutral-400">{hint}</p>}
     </div>
   )
 }
@@ -55,7 +55,7 @@ export const colorInputCls =
 export function FieldGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-3 border-b border-neutral-800 pb-4 last:border-0 last:pb-0">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-500">
+      <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">
         {title}
       </h3>
       {children}

@@ -23,7 +23,9 @@ type DashboardBook = Omit<Book, 'pages'> & {
 
 async function getBooks(): Promise<DashboardBook[]> {
   const supabase = await createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   // Returning [] rendered a convincing but empty dashboard to a signed-out
   // visitor. That only ever showed up if the middleware didn't run — which it
   // skips whenever the Supabase env vars are missing, exactly the misconfigured
@@ -45,7 +47,10 @@ async function getBooks(): Promise<DashboardBook[]> {
     .from('pages')
     .select('*')
     .eq('page_number', 1)
-    .in('book_id', books.map((b) => b.id))
+    .in(
+      'book_id',
+      books.map((b) => b.id)
+    )
 
   const coverByBook = new Map((covers ?? []).map((p: Page) => [p.book_id, p]))
 
@@ -64,10 +69,12 @@ async function getBooks(): Promise<DashboardBook[]> {
   }))
 }
 
-export default async function DashboardPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+export default async function DashboardPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const searchParams = await props.searchParams
   const isResuming = searchParams?.resume === '1'
-  
+
   const books = await getBooks()
   const publishedCount = books.filter((book) => book.settings?.published).length
   const readers = books.reduce((total, book) => total + (book.engagement?.readers ?? 0), 0)
@@ -103,9 +110,15 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <Reveal delay={0}><StatCard label="Readers" value={readers} /></Reveal>
-            <Reveal delay={70}><StatCard label="Emails captured" value={leads} /></Reveal>
-            <Reveal delay={140}><StatCard label="Live editions" value={publishedCount} /></Reveal>
+            <Reveal delay={0}>
+              <StatCard label="Readers" value={readers} />
+            </Reveal>
+            <Reveal delay={70}>
+              <StatCard label="Emails captured" value={leads} />
+            </Reveal>
+            <Reveal delay={140}>
+              <StatCard label="Live editions" value={publishedCount} />
+            </Reveal>
           </div>
         </section>
 
@@ -124,17 +137,25 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                 <div className="flex animate-pulse flex-col gap-3">
                   <div className="h-4 w-3/4 rounded-full bg-[var(--qlico-border)]"></div>
                   <div className="h-4 w-1/2 rounded-full bg-[var(--qlico-border)]"></div>
-                  <p className="mt-2 text-xs font-semibold text-[var(--accent-fg)]">Importing your edition...</p>
+                  <p className="mt-2 text-xs font-semibold text-[var(--accent-fg)]">
+                    Importing your edition...
+                  </p>
                 </div>
               </div>
             </div>
           ) : (
             <section className="relative overflow-hidden rounded-[2.25rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/78 px-6 py-20 text-center shadow-sm">
-              <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[rgba(60,35,132,0.16)] blur-3xl" />
+              <div className="absolute left-1/2 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--glow-brand)] blur-3xl" />
               <div className="relative mx-auto mb-6 grid h-32 w-32 place-items-center rounded-[2.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)] shadow-sm">
-                <BookOpen size={48} className="text-[var(--qlico-muted)] opacity-60" strokeWidth={1.5} />
+                <BookOpen
+                  size={48}
+                  className="text-[var(--qlico-muted)] opacity-60"
+                  strokeWidth={1.5}
+                />
               </div>
-              <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">Create your first edition.</h2>
+              <h2 className="font-display text-4xl font-semibold tracking-[-0.04em]">
+                Create your first edition.
+              </h2>
               <p className="mx-auto mb-8 mt-3 max-w-md text-sm leading-6 text-[var(--qlico-muted)]">
                 Drop in a PDF and it becomes something people can read, click through, and finish —
                 on any device, from one link.
@@ -153,7 +174,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-3xl border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/55 p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--qlico-muted)]">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--qlico-muted)]">
+        {label}
+      </p>
       <p className="mt-2 font-display text-4xl font-semibold tracking-[-0.06em]">
         <NumberTicker value={value} />
       </p>

@@ -70,7 +70,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
               )}
             >
               <div className="font-semibold capitalize">{v.label}</div>
-              <div className="text-[9px] text-neutral-500 truncate">{v.desc}</div>
+              <div className="text-[9px] text-neutral-400 truncate">{v.desc}</div>
             </button>
           ))}
         </div>
@@ -164,7 +164,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
       <Field label="Card Highlight Box">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-[10px] text-neutral-500 block mb-1">Background Fill</label>
+            <label className="text-[10px] text-neutral-400 block mb-1">Background Fill</label>
             <select
               value={currentBg}
               onChange={(e) => {
@@ -183,7 +183,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
           </div>
 
           <div>
-            <label className="text-[10px] text-neutral-500 block mb-1">Padding & Inset</label>
+            <label className="text-[10px] text-neutral-400 block mb-1">Padding & Inset</label>
             <select
               value={currentPadding}
               onChange={(e) => {
@@ -220,7 +220,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
                 'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold transition',
                 currentAlign === id
                   ? 'bg-neutral-800 text-white shadow-sm'
-                  : 'text-neutral-500 hover:text-neutral-300'
+                  : 'text-neutral-400 hover:text-neutral-300'
               )}
             >
               <Icon size={13} />

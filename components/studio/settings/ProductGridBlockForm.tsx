@@ -195,7 +195,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                 <button
                   type="button"
                   onClick={() => remove(idx)}
-                  className="text-neutral-500 hover:text-red-400 p-1 transition"
+                  className="text-neutral-400 hover:text-red-400 p-1 transition"
                   title="Remove product"
                 >
                   <Trash2 size={13} />
@@ -288,7 +288,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                 placeholder="https://your-shop.com/the-product"
               />
             </Field>
-            <p className="-mt-1 text-[11px] leading-4 text-neutral-500">
+            <p className="-mt-1 text-[11px] leading-4 text-neutral-400">
               Your own product page, Stripe Payment Link or Shopify listing. Leave it empty and
               the product still shows with its price and description — just without a button.
             </p>

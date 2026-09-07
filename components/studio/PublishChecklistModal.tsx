@@ -74,7 +74,7 @@ export function PublishChecklistModal({
                 <span
                   className={twMerge(
                     'mt-0.5 shrink-0',
-                    issue.severity === 'blocker' ? 'text-amber-400' : 'text-neutral-500'
+                    issue.severity === 'blocker' ? 'text-amber-400' : 'text-neutral-400'
                   )}
                 >
                   {issue.severity === 'blocker' ? <AlertTriangle size={15} /> : <Info size={15} />}
@@ -83,7 +83,7 @@ export function PublishChecklistModal({
                   <span className="block text-[13px] font-medium text-neutral-100">
                     {issue.title}
                   </span>
-                  <span className="block text-[11.5px] leading-4 text-neutral-500">
+                  <span className="block text-[11.5px] leading-4 text-neutral-400">
                     {issue.detail}
                   </span>
                 </span>

@@ -37,6 +37,7 @@ npm run verify:author:e2e       # the buyer: sign in → import → publish → 
 CRON_SECRET=…      npm run preflight      -- https://<domain>   # config + live schema
 APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>   # webhook + redeem gate
                    npm run audit:browser  -- https://<domain>   # what it renders
+                   npm run audit:theme    -- https://<domain>   # light vs dark, same DOM
 ```
 
 The local ones need `service postgresql start` and the PostgREST binary;
@@ -331,6 +332,60 @@ separate decision.
   this" is the duplicate route. Templates count against the plan's edition
   limit, deliberately.
 - **Draggable focal point** for image blocks and page backgrounds.
+
+### §9.1, the last item of the editor redesign — closed by measuring it
+
+The spec asked for a sweep of ~540 hardcoded `neutral-*` classes across the
+studio and said to do it "with a screenshot diff, not by hand". The instrument
+is `npm run audit:theme` (`scripts/audit-theme.mjs`): render a route twice,
+under `prefers-color-scheme: light` and `dark`, walk the DOM in the same order
+both times, and report every element whose colour is byte-identical across the
+two — plus anything under AA against what is actually behind it, composited up
+through its ancestors.
+
+Two things it had to get right, and got wrong first:
+
+- **Colours are resolved through a 1×1 canvas.** Tailwind v4 emits `oklch(...)`,
+  and scraping digits out of `oklch(0.556 0 0)` reads 0.556 as a red channel.
+  The first run reported the entire editor at a flat 1:1.
+  `scripts/audit-browser.mjs` already carried this scar; I walked into it anyway.
+- **The ground is the ancestor chain, not the preceding element.** Walking the
+  flat collected array looks like ancestry and is not — the element before this
+  one in document order is usually a sibling's descendant.
+
+With it working, the premise turned out to be wrong. **The studio is a
+deliberate dark room** — `bg-neutral-950 text-neutral-100` at its root — so
+those 540 classes are the design, and rendering identically in both schemes is
+the requirement rather than the bug. A blind sweep would have been ~540 edits of
+pure regression risk for nothing. Of all of them exactly one was illegible:
+`text-neutral-500`, 4.18:1 on the studio's own grounds, in 59 places. That one
+class is now `text-neutral-400` and a test forbids its return.
+
+**What the sweep would have missed entirely:** `--qlico-muted` and
+`--invert-muted` were `#888888` in the light block, the `[data-theme='dark']`
+block *and* the `prefers-color-scheme` block. Written into each, so the palette
+read as theme-aware; identical in each, so it was not. A mid grey only clears AA
+on the dark side of a pairing — `#888888` is 3.11:1 on `--qlico-subtle` — so
+every muted caption in the app's **default** theme was under AA, with
+`--invert-muted` failing the same way mirrored onto white. Both are now
+differentiated, at the darkest/lightest greys that clear 4.5:1 against every
+surface they actually land on.
+
+`lib/contrast-tokens.test.ts` grew the general form: it parses all three theme
+blocks and pairs each text token with the surfaces it is painted on. Reverting
+either token's value fails five of those, which was checked.
+
+The score across the editor, dashboard, account and insights went from 30
+elements frozen against the theme and 4 unreadable, to **0 and 0**.
+`audit:browser` still reports nothing on the public pages afterwards.
+
+One subtlety worth keeping: an edition preview renders the *book's* theme, not
+the app's, so it is correctly identical in both schemes. Rather than train
+anyone to ignore a permanent finding, `PageRenderer`'s root carries
+`data-own-theme` and the audit skips that subtree. The dashboard's brand glow
+was the last hardcoded `rgba(…)` in the studio chrome and is now
+`--glow-brand` / `--glow-brand-strong`, a violet wash on white and a lighter one
+on black.
 
 ### The last of the uncovered routes, and a filename that chose a storage key
 
@@ -749,6 +804,14 @@ Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
   `'use client'` does not save you — client components are still prerendered.
   Load it with `await import(...)`, or the component with `next/dynamic`
   (`ssr: false`).
+- **The studio is dark-only on purpose.** `bg-neutral-950 text-neutral-100` at
+  its root, so `neutral-*` inside it is the design and not a missing token. Do
+  not "fix" it to follow the system theme. What does matter there is contrast
+  against those grounds: `text-neutral-500` is 4.18:1 on them and is banned.
+- **Resolve a computed colour through a canvas, never by parsing it.** Tailwind
+  v4 emits `oklch(...)` and `color-mix()` yields `oklab(...)`; a digit-scraping
+  contrast check reports black-on-white at 1.0:1. Both audit scripts do this,
+  and both learned it the same way.
 - **A colour that lives in data escapes the contrast tests.** `lib/contrast-tokens.test.ts`
   reads class names, so a hex in `data/templates.ts` is invisible to it. Anything
   painting itself from data has to run through `readableOn` in `lib/contrast.ts`

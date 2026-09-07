@@ -89,7 +89,7 @@ export function FocalPointPicker({
           <div className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
         </div>
       </div>
-      <p className="text-[10px] text-neutral-500">
+      <p className="text-[10px] text-neutral-400">
         Drag to choose what stays in frame when the image is cropped. {x}% × {y}%
       </p>
     </div>

@@ -397,12 +397,35 @@ accurate list.
 
 **Not done, and each is a real piece of work**
 
-1. **The editor's surfaces still hardcode `neutral-*`.** The tokens exist and the
-   bugs are fixed, but a wholesale class sweep across ~2,000 lines of editor JSX
-   is a cosmetic change with real regression risk and no test to catch a
-   mistake. New components (`InsertPanel`, `PublishChecklistModal`,
-   `PostImportModal`) use the tokens. Do the sweep with a screenshot diff, not
-   by hand.
+1. ~~**The editor's surfaces still hardcode `neutral-*`.**~~ **Done, and mostly
+   by deciding not to.** The instrument asked for — a diff rather than a hand
+   sweep — is `npm run audit:theme`: it renders a route twice, under
+   `prefers-color-scheme: light` and `dark`, walks the DOM in the same order
+   both times, and reports every element whose colour is byte-identical across
+   the two, plus anything under AA against what is actually behind it. Colours
+   are resolved through a 1×1 canvas, because Tailwind v4 emits `oklch(...)` and
+   scraping digits out of that reports the whole editor at a flat 1:1 (the first
+   run of the script did exactly that).
+
+   Measured, the premise was wrong. The studio is a **deliberate dark room** —
+   `bg-neutral-950 text-neutral-100` at its root — so those ~540 `neutral-*`
+   classes are the design, not an oversight, and rendering identically in both
+   schemes is the requirement. Of all of them, exactly one was illegible:
+   `text-neutral-500` at 4.18:1 on the studio's own grounds, in 59 places. That
+   one class is now `text-neutral-400`, and a test forbids its return.
+
+   What the sweep would have missed: `--qlico-muted` and `--invert-muted` were
+   `#888888` in all three theme blocks — present in each so the palette read as
+   theme-aware, identical in each so it was not. `#888888` is 3.11:1 on
+   `--qlico-subtle` in light, which put every muted caption in the app's
+   *default* theme under AA. Both tokens are now differentiated per theme, and
+   `lib/contrast-tokens.test.ts` pairs each text token with the surfaces it
+   actually lands on.
+
+   Dashboard, account and insights now report zero. A subtree that paints its
+   own palette on purpose — an edition preview renders the *book's* theme, not
+   the app's — is marked `data-own-theme` on `PageRenderer`, so the audit skips
+   it rather than being trained to ignore a permanent finding.
 2. **Version history** (§6). Undo covers a session; this is "what did this look
    like last Tuesday". Needs storage, and "duplicate" is the manual stand-in.
 3. **Draft comments for the author's reviewers** (§6). The old review drawer was

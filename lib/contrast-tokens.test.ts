@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { contrastRatio } from './contrast'
 import { join, relative } from 'node:path'
 
 /**
@@ -105,5 +106,127 @@ describe('the detector', () => {
       <p className="text-white" />
     `
     expect(offendingClassStrings(sample)).toEqual([])
+  })
+})
+
+/**
+ * A token that is written into every theme block and holds the same value in
+ * all of them.
+ *
+ * `--qlico-muted` and `--invert-muted` were both `#888888` in the light block,
+ * the `[data-theme='dark']` block and the `prefers-color-scheme` block. Present
+ * in each, so the palette read as theme-aware; identical in each, so it was
+ * not. A mid grey only clears AA on the dark side of a pairing — 3.11:1 against
+ * `--qlico-subtle` in light — which put every muted caption in the app's
+ * *default* theme below AA, with `--invert-muted` failing the same way mirrored
+ * onto white.
+ *
+ * `npm run audit:theme` finds this in a browser. This finds it in a second.
+ */
+
+const CSS = readFileSync(join(__dirname, '..', 'app', 'globals.css'), 'utf8')
+
+/** The declarations inside one balanced `{ … }` starting at `from`. */
+function blockAt(from: number): string {
+  const open = CSS.indexOf('{', from)
+  let depth = 0
+  for (let i = open; i < CSS.length; i++) {
+    if (CSS[i] === '{') depth++
+    else if (CSS[i] === '}' && --depth === 0) return CSS.slice(open + 1, i)
+  }
+  throw new Error('unbalanced block')
+}
+
+function tokensOf(selector: string): Record<string, string> {
+  const at = CSS.indexOf(selector)
+  expect(at, `${selector} should exist in globals.css`).toBeGreaterThan(-1)
+  const out: Record<string, string> = {}
+  for (const [, name, value] of blockAt(at).matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/g)) {
+    out[name] = value.trim()
+  }
+  return out
+}
+
+const THEMES = {
+  light: ':root {',
+  'dark (explicit)': ":root[data-theme='dark'] {",
+  'dark (system)': ":root:not([data-theme='light']) {",
+}
+
+/** Text tokens, and the surfaces each is actually painted on. */
+const PAIRINGS: { text: string; grounds: string[] }[] = [
+  {
+    text: '--qlico-muted',
+    grounds: [
+      '--background',
+      '--background-alt',
+      '--qlico-paper',
+      '--qlico-vellum',
+      '--qlico-subtle',
+    ],
+  },
+  // The inverted surface is the dark card on a light page and vice versa, so
+  // its muted text has to be measured against it rather than against the page.
+  { text: '--invert-muted', grounds: ['--invert-surface'] },
+  { text: '--invert-text', grounds: ['--invert-surface'] },
+  { text: '--qlico-ink', grounds: ['--qlico-paper', '--background'] },
+  { text: '--accent-contrast', grounds: ['--accent', '--btn-solid'] },
+]
+
+describe('muted text clears AA on every surface it lands on', () => {
+  for (const [themeName, selector] of Object.entries(THEMES)) {
+    const tokens = tokensOf(selector)
+    for (const { text, grounds } of PAIRINGS) {
+      for (const ground of grounds) {
+        const fg = tokens[text]
+        const bg = tokens[ground]
+        if (!fg || !bg || !fg.startsWith('#') || !bg.startsWith('#')) continue
+        it(`${themeName}: ${text} on ${ground}`, () => {
+          expect(contrastRatio(fg, bg), `${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5)
+        })
+      }
+    }
+  }
+
+  it('does not give a theme-varying token the same value in every block', () => {
+    // The failure was not a missing declaration — it was three identical ones.
+    for (const name of ['--qlico-muted', '--invert-muted']) {
+      const values = Object.values(THEMES).map((sel) => tokensOf(sel)[name])
+      expect(new Set(values).size, `${name} is ${values.join(' / ')}`).toBeGreaterThan(1)
+    }
+  })
+})
+
+describe('the studio is a dark room, so its greys have to be light enough', () => {
+  /**
+   * `text-neutral-500` is `rgb(115,115,115)`, which on the studio's own grounds
+   * — `bg-neutral-950` (#0a0a0a) through `bg-neutral-800` (#262626) — measures
+   * 4.18:1 at best. Every label wearing it was under AA.
+   *
+   * This is the whole of `docs/editor-redesign-spec.md` §9.1 that was worth
+   * doing. The item asks for a sweep of ~540 hardcoded `neutral-*` classes;
+   * `npm run audit:theme` says the studio is a deliberate dark surface where
+   * those classes are the design, and that exactly one of them was illegible.
+   * One class, replaced everywhere, with a number behind it.
+   */
+  const STUDIO = ['components/studio', 'app/(studio)']
+
+  function walk(dir: string): string[] {
+    const full = join(__dirname, '..', dir)
+    if (!statSync(full, { throwIfNoEntry: false })?.isDirectory()) return []
+    return readdirSync(full, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith('.tsx') ? [join(dir, e.name)] : []
+    )
+  }
+
+  const files = STUDIO.flatMap(walk)
+
+  it('has studio files to check', () => {
+    expect(files.length).toBeGreaterThan(10)
+  })
+
+  it.each(files)('%s does not use text-neutral-500', (file) => {
+    const src = readFileSync(join(__dirname, '..', file), 'utf8')
+    expect(src).not.toMatch(/\btext-neutral-500\b/)
   })
 })

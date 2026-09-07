@@ -88,7 +88,7 @@ export function HotspotSettingsForm({
       >
         <div className="flex gap-2 items-center">
           <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-500">X</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-400">X</span>
             <input
               type="number"
               min={0}
@@ -105,7 +105,7 @@ export function HotspotSettingsForm({
             />
           </div>
           <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-500">Y</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-400">Y</span>
             <input
               type="number"
               min={0}
@@ -148,7 +148,7 @@ export function HotspotSettingsForm({
               )}
             >
               <div className="font-semibold">{style.label}</div>
-              <div className="text-[9px] text-neutral-500 truncate">{style.desc}</div>
+              <div className="text-[9px] text-neutral-400 truncate">{style.desc}</div>
             </button>
           ))}
         </div>

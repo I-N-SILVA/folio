@@ -65,7 +65,7 @@ function SortableGridPage({ page, bookId, index, isSelected, onSelect }: { page:
       <div className="text-xs font-bold text-neutral-300">
         Page {page.page_number}
       </div>
-      <div className="text-[10px] text-neutral-500 uppercase tracking-widest -mt-1">
+      <div className="text-[10px] text-neutral-400 uppercase tracking-widest -mt-1">
         {page.type}
       </div>
     </div>
@@ -147,7 +147,7 @@ export function PageManagerModal({ onClose }: PageManagerModalProps) {
 
                   <button
                     onClick={addPage}
-                    className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900 transition-colors text-neutral-500 hover:text-neutral-300 min-h-[200px]"
+                    className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-neutral-300 min-h-[200px]"
                   >
                     <Plus size={32} />
                     <span className="text-xs font-bold uppercase tracking-wider">Add Page</span>

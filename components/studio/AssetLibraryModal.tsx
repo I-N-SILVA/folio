@@ -203,7 +203,7 @@ export function AssetLibraryModal({
       {/* Search & Category Filter Bar */}
       <div className="pt-4 pb-3 space-y-3 shrink-0">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
@@ -233,7 +233,7 @@ export function AssetLibraryModal({
       {/* Asset Grid */}
       <div className="flex-1 overflow-y-auto pr-1 py-2 custom-scrollbar">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center text-neutral-500">
+          <div className="flex flex-col items-center justify-center py-16 text-center text-neutral-400">
             <ImageIcon size={32} className="mb-2 opacity-40" />
             <p className="text-sm font-medium">No assets matching &ldquo;{searchQuery}&rdquo;</p>
             <p className="text-xs text-neutral-600 mt-1">Try searching for silk, concrete, or paper.</p>
@@ -267,7 +267,7 @@ export function AssetLibraryModal({
 
                 <div className="p-2.5">
                   <p className="text-xs font-semibold text-neutral-200 truncate">{asset.title}</p>
-                  <p className="text-[10px] text-neutral-500 truncate mt-0.5">
+                  <p className="text-[10px] text-neutral-400 truncate mt-0.5">
                     {asset.category} · {asset.author}
                   </p>
                 </div>

@@ -572,7 +572,7 @@ export function CreateBookModal({ onClose, initialTemplateId }: Props) {
                       }}
                       className="flex items-center gap-1.5 rounded-full border border-[var(--qlico-border)] px-3 py-1.5 text-xs font-semibold text-[var(--qlico-ink)] hover:bg-[var(--tint-weak)] transition"
                     >
-                      <Eye size={12} className="text-neutral-500" />
+                      <Eye size={12} className="text-neutral-400" />
                       Preview Spread
                     </button>
                     <button

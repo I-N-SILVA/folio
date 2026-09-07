@@ -170,7 +170,7 @@ function SortablePageItem({
               onMovePrev()
             }}
             title="Move page left"
-            className="text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
+            className="text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
           >
             <ChevronLeft size={12} />
           </button>
@@ -185,7 +185,7 @@ function SortablePageItem({
               onMoveNext()
             }}
             title="Move page right"
-            className="text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
+            className="text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
           >
             <ChevronRight size={12} />
           </button>
@@ -201,7 +201,7 @@ function SortablePageItem({
           }}
           title="Insert a page after this one"
           aria-label={`Insert a page after page ${page.page_number}`}
-          className="rounded p-0.5 text-neutral-500 opacity-0 transition hover:text-white group-hover:opacity-100"
+          className="rounded p-0.5 text-neutral-400 opacity-0 transition hover:text-white group-hover:opacity-100"
         >
           <Plus size={12} />
         </button>
@@ -214,7 +214,7 @@ function SortablePageItem({
             onDuplicate()
           }}
           title="Duplicate page"
-          className="text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition"
+          className="text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition"
         >
           <Copy size={11} />
         </button>
@@ -225,7 +225,7 @@ function SortablePageItem({
           {...listeners}
           {...attributes}
           onClick={(e) => e.stopPropagation()}
-          className="cursor-grab text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition active:cursor-grabbing"
+          className="cursor-grab text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition active:cursor-grabbing"
           aria-label={`Drag page ${page.page_number} to reorder`}
           title="Drag to reorder page"
         >
@@ -244,7 +244,7 @@ function SortablePageItem({
             'p-0.5 rounded transition-colors',
             isOnly
               ? 'cursor-not-allowed text-neutral-800'
-              : 'text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-red-400'
+              : 'text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-red-400'
           )}
           aria-label={`Delete page ${page.page_number}`}
           title="Delete page"
@@ -318,7 +318,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
           onClick={() => setActiveTab('pages')}
           className={twMerge(
             'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'pages' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-neutral-500 hover:text-neutral-300'
+            activeTab === 'pages' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-neutral-400 hover:text-neutral-300'
           )}
         >
           <Layers size={13} />
@@ -328,7 +328,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
           onClick={() => setActiveTab('layers')}
           className={twMerge(
             'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'layers' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-neutral-500 hover:text-neutral-300'
+            activeTab === 'layers' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-neutral-400 hover:text-neutral-300'
           )}
         >
           <GripVertical size={13} />
@@ -380,11 +380,11 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
 
         {activeTab === 'layers' && currentPage && (
           <div className="p-4 space-y-4">
-            <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Page {currentPage.page_number} Layers</div>
+            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Page {currentPage.page_number} Layers</div>
             
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-neutral-600 uppercase mb-2">Blocks</div>
-              {currentPage.blocks.length === 0 && <div className="text-xs text-neutral-500 italic px-2">No blocks on this page.</div>}
+              {currentPage.blocks.length === 0 && <div className="text-xs text-neutral-400 italic px-2">No blocks on this page.</div>}
               {currentPage.blocks.map((b) => (
                 <button
                   key={b.id}
@@ -396,13 +396,13 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
                 >
                   <Box size={14} className="opacity-50" />
                   <span className="capitalize">{b.type} block</span>
-                  {b.type === 'text' && <span className="text-[10px] text-neutral-500 truncate max-w-[100px] ml-auto">{(b as any).content}</span>}
-                  {b.type === 'data' && <span className="text-[10px] text-neutral-500 truncate max-w-[100px] ml-auto">{(b as any).label}</span>}
+                  {b.type === 'text' && <span className="text-[10px] text-neutral-400 truncate max-w-[100px] ml-auto">{(b as any).content}</span>}
+                  {b.type === 'data' && <span className="text-[10px] text-neutral-400 truncate max-w-[100px] ml-auto">{(b as any).label}</span>}
                 </button>
               ))}
 
               <div className="text-[10px] font-bold text-neutral-600 uppercase mt-4 mb-2">Hotspots</div>
-              {currentPage.hotspots.length === 0 && <div className="text-xs text-neutral-500 italic px-2">No hotspots on this page.</div>}
+              {currentPage.hotspots.length === 0 && <div className="text-xs text-neutral-400 italic px-2">No hotspots on this page.</div>}
               {currentPage.hotspots.map((h) => (
                 <button
                   key={h.id}

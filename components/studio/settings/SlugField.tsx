@@ -63,7 +63,7 @@ export function SlugField({ bookId, slug }: { bookId: string; slug: string }) {
     >
       <div className="flex items-center gap-2">
         <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-lg border border-neutral-700/80 bg-neutral-950/60 focus-within:border-[var(--studio-select)]">
-          <span className="shrink-0 border-r border-neutral-700/80 px-2 py-2 text-xs text-neutral-500">
+          <span className="shrink-0 border-r border-neutral-700/80 px-2 py-2 text-xs text-neutral-400">
             /book/
           </span>
           <input
