@@ -397,6 +397,9 @@ accurate list.
 
 **Not done, and each is a real piece of work**
 
+*As of this pass, 1–4 are closed. What is left needs a deployment or a CI
+decision, not code.*
+
 1. ~~**The editor's surfaces still hardcode `neutral-*`.**~~ **Done, and mostly
    by deciding not to.** The instrument asked for — a diff rather than a hand
    sweep — is `npm run audit:theme`: it renders a route twice, under
@@ -478,10 +481,15 @@ accurate list.
    needs an entry in `lib/plans.ts` on the way in.
 5. **Send the weekly digest by hand and read the email.** Needs a deployed
    environment with `CRON_SECRET`; it cannot be done from a sandbox.
-6. **No automated visual coverage** for canvas, spreads, or the container-query
-   phone fallback. A Chromium harness has been used by hand this session (see
-   §9 note below) and it works; wiring it into CI is a separate decision, since
-   it needs a built app and a running server on every push.
+6. **Partial automated visual coverage.** Two Chromium harnesses now exist and
+   both are run by hand: `npm run audit:browser` (sideways scroll, unloaded
+   fonts, text in its own background colour, contrast, non-200s, broken images,
+   at four widths) and `npm run audit:theme` (light vs dark on the same DOM,
+   plus contrast against the real composited ground; `--dark-only` marks a
+   surface that chose one theme, `data-own-theme` marks a subtree that paints
+   its own palette). Neither covers canvas, spreads, or the container-query
+   phone fallback specifically, and wiring either into CI is still a separate
+   decision — both need a built app and a running server on every push.
 
 **Worth knowing before the next change**
 

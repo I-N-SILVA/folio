@@ -817,6 +817,37 @@ in the events table until someone exported a CSV.
 
 ---
 
+## 2c. Where the editor-redesign spec stands
+
+`docs/editor-redesign-spec.md` §9 was the outstanding list. All four code items
+are now closed:
+
+| | |
+|---|---|
+| §9.1 `neutral-*` sweep | Closed by measuring it — the studio is dark by design; one illegible class fixed, and two palette tokens that were never theme-aware |
+| §9.2 Version history | Shipped — 018, throttled in the database, restore leaves its own way back |
+| §9.3 Draft comments | Shipped — 019, a reviewer is a capability rather than an identity. **Beyond the MVP sentence; optional for launch** |
+| §9.4 Commerce | Cut, deliberately |
+
+What remains in §9 needs a deployment (send the digest and read the email) or a
+CI decision (wiring the two Chromium audits into every push), not code.
+
+Every harness, run together at the end of this pass:
+
+```
+verify:migration    applies, re-applies, accepts every value
+verify:appsumo:e2e  12 tests
+verify:routes:e2e   11 assertions
+verify:mvp:e2e      12 assertions
+verify:author:e2e   70 assertions
+audit:browser       nothing found
+audit:theme         0 frozen, 0 unreadable
+```
+
+Plus `tsc`, 458 unit tests, `lint` (0 errors), and `next build`.
+
+---
+
 ## 3. Known-remaining risks
 
 Ordered by how much they'd hurt.
