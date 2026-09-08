@@ -144,10 +144,17 @@ APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>  # the whole lic
 ```
 
 - [ ] `preflight` clean. It reads the deployment's own environment (presence,
-      never values) and probes the live database, including whether the CHECK
-      constraints accept everything this code can produce. That last one is the
-      gap the unit tests cannot close: they compare the app to the `.sql` files,
-      which catches a migration nobody wrote, not one nobody applied.
+      never values) and probes the live database: the tables, the columns, the
+      **functions**, and whether the CHECK constraints accept everything this
+      code can produce. Those last two are the gap the unit tests cannot close —
+      they compare the app to the `.sql` files, which catches a migration nobody
+      wrote, not one nobody applied.
+
+      Read the `function …()` lines specifically. `claim_appsumo_license` absent
+      means **every redemption on launch day answers "We could not find that
+      license code"**, and until this check existed a deployment in exactly that
+      state reported the same clean bill as a working one. Each failing line
+      names the migration to apply and what a buyer experiences without it.
 - [ ] `verify:appsumo` clean. Sends the `test` event AppSumo's checklist asks
       for — and confirms the webhook refuses unsigned and wrongly-signed
       requests, that the redemption API refuses anonymous callers, and that a
@@ -155,6 +162,9 @@ APPSUMO_API_KEY=…  npm run verify:appsumo -- https://<domain>  # the whole lic
       carried across rather than shown the word "Unauthorized". Safe against
       production: `test` touches no rows.
 - [ ] `audit:browser` clean. Both colour schemes at four widths.
+- [ ] `audit:theme` clean. The same DOM under light and dark: anything rendering
+      identically in both has stopped following the theme, and contrast is
+      measured against what is actually behind the text.
 - [ ] Confirm `Sign in with magic link` works on the deployed domain.
 
 **Dry-run with a real code** — the one thing no script can do

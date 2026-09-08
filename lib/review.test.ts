@@ -19,6 +19,15 @@ describe('a review token is a credential', () => {
     const page = read('app/review/[token]/page.tsx')
     expect(page).toContain('robots')
     expect(page).toMatch(/index:\s*false/)
+    // And before the page is even fetched. `noindex` is the control that binds;
+    // the robots rule keeps a draft out of a crawl in the first place.
+    const robots = read('app/robots.ts')
+    expect(robots).toContain("'/review/'")
+    expect(robots).not.toMatch(/sitemap[\s\S]*\/review\//)
+  })
+
+  it('is not in the sitemap', () => {
+    expect(read('app/sitemap.ts')).not.toContain('/review/')
   })
 
   it('expires by default', () => {

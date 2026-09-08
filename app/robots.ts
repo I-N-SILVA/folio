@@ -12,9 +12,15 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/dashboard/',
           '/editor/',
+          '/insights/',
           '/account/',
           '/redeem/',
           '/auth/',
+          // A review link's URL *is* its credential. The page itself sends
+          // `noindex`, which is the control that actually binds; this is the
+          // belt to that pair of braces, and keeps drafts out of a crawl even
+          // before the page is fetched.
+          '/review/',
         ],
       },
       // Explicitly welcome AI & Answer Search Crawlers for AEO
@@ -31,7 +37,7 @@ export default function robots(): MetadataRoute.Robots {
           'OAI-SearchBot',
         ],
         allow: ['/', '/book/*', '/help', '/press', '/terms', '/privacy', '/llms.txt'],
-        disallow: ['/api/', '/dashboard/', '/editor/', '/account/'],
+        disallow: ['/api/', '/dashboard/', '/editor/', '/insights/', '/account/', '/review/'],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
