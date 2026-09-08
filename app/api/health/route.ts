@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { REQUIRED_FUNCTIONS } from '@/lib/required-functions'
 import crypto from 'node:crypto'
 import { supabaseAdmin } from '@/lib/supabase'
 import { PageSchema, EVENT_TYPES } from '@/lib/book-schema'
@@ -75,14 +76,27 @@ async function schemaChecks(): Promise<Check[]> {
   })
   if (reachErr) return checks
 
-  // Tables migration 009 adds. Absent means the app degrades silently — no
-  // slug history, no weekly digest, no engagement insight.
-  for (const table of ['profiles', 'appsumo_licenses', 'book_slug_history']) {
+  // Tables the app writes to beyond the core three. Absent means the app
+  // degrades silently — no slug history, no weekly digest, no engagement
+  // insight, no version history, no review links.
+  //
+  // `critical` is the difference between "a buyer cannot pay" and "a feature is
+  // missing": only the AppSumo path and the profile it writes to are the
+  // former.
+  const TABLES: [string, boolean][] = [
+    ['profiles', true],
+    ['appsumo_licenses', true],
+    ['book_slug_history', false],
+    ['book_versions', false],
+    ['book_review_links', false],
+    ['book_comments', false],
+  ]
+  for (const [table, critical] of TABLES) {
     const { error } = await supabaseAdmin.from(table).select('*').limit(1)
     checks.push({
       name: `table ${table}`,
       ok: !error,
-      critical: table !== 'book_slug_history',
+      critical,
       detail: error ? `${error.message} — apply supabase/master_migration.sql` : 'present',
     })
   }
@@ -91,7 +105,9 @@ async function schemaChecks(): Promise<Check[]> {
   // cannot redeem, on launch day, in public.
   const { error: licenseCols } = await supabaseAdmin
     .from('appsumo_licenses')
-    .select('license_key, prev_license_key, tier, plan, status, activation_email, invoice_item_uuid, redeemed_by, redeemed_at')
+    .select(
+      'license_key, prev_license_key, tier, plan, status, activation_email, invoice_item_uuid, redeemed_by, redeemed_at'
+    )
     .limit(1)
   checks.push({
     name: 'appsumo_licenses columns',
@@ -108,10 +124,57 @@ async function schemaChecks(): Promise<Check[]> {
     name: 'profiles columns',
     ok: !profileCols,
     critical: true,
-    detail: profileCols ? `${profileCols.message} — apply supabase/master_migration.sql` : 'all present',
+    detail: profileCols
+      ? `${profileCols.message} — apply supabase/master_migration.sql`
+      : 'all present',
   })
 
   return checks
+}
+
+/**
+ * Are the database functions this app calls actually installed?
+ *
+ * Nothing checked these, and two of them carry the whole launch:
+ * `claim_appsumo_license` absent means every redemption answers "We could not
+ * find that license code" — the bug this branch opened with — and
+ * `replace_book_pages` absent means the page save silently falls back to a
+ * non-atomic delete-then-insert. A deployment running an older
+ * `master_migration.sql` has all the tables, all the columns, and neither
+ * function, and every other check here reports green.
+ *
+ * Read-only, through the inventory migration 020 adds. Calling each function
+ * with harmless arguments was the obvious alternative and is not taken: it
+ * would mean a health endpoint that runs an UPDATE and a DELETE every time
+ * somebody polls it.
+ */
+async function functionChecks(): Promise<Check[]> {
+  const { data, error } = await supabaseAdmin.rpc('installed_functions')
+
+  if (error) {
+    return [
+      {
+        name: 'database functions',
+        ok: false,
+        // The inventory itself is missing, which says nothing about the rest of
+        // the list — but an unverified function list is how the redemption path
+        // broke unnoticed, so it cannot pass quietly either.
+        critical: false,
+        detail: `could not read — apply supabase/master_migration.sql (migration 020). ${error.message}`,
+      },
+    ]
+  }
+
+  const installed = new Set(((data as { name: string }[] | null) ?? []).map((r) => r.name))
+
+  return REQUIRED_FUNCTIONS.map((fn) => ({
+    name: `function ${fn.name}()`,
+    ok: installed.has(fn.name),
+    critical: fn.critical,
+    detail: installed.has(fn.name)
+      ? 'present'
+      : `missing — apply migration ${fn.migration}. Without it, ${fn.cost}.`,
+  }))
 }
 
 /**
@@ -199,9 +262,17 @@ export async function GET(request: NextRequest) {
     envCheck('CRON_SECRET', true, 'missing — the weekly digest never sends'),
     envCheck('RESEND_API_KEY', false, 'missing — no digest email and no lead notification'),
     envCheck('EMAIL_FROM', false, 'missing — Resend has no From address, so nothing sends'),
-    envCheck('STRIPE_SECRET_KEY', false, 'missing — the ongoing Pro channel is off (fine for an LTD-only launch)'),
+    envCheck(
+      'STRIPE_SECRET_KEY',
+      false,
+      'missing — the ongoing Pro channel is off (fine for an LTD-only launch)'
+    ),
     envCheck('STRIPE_WEBHOOK_SECRET', false, 'missing — Stripe subscription changes are ignored'),
-    envCheck('GOOGLE_GENERATIVE_AI_API_KEY', false, 'missing — hotspot detection falls back to the heuristic'),
+    envCheck(
+      'GOOGLE_GENERATIVE_AI_API_KEY',
+      false,
+      'missing — hotspot detection falls back to the heuristic'
+    ),
     envCheck('NEXT_PUBLIC_SUPPORT_EMAIL', false, 'missing — /help shows support@qlico.app'),
   ]
 
@@ -217,6 +288,7 @@ export async function GET(request: NextRequest) {
 
   try {
     checks.push(...(await schemaChecks()))
+    checks.push(...(await functionChecks()))
     checks.push(...(await constraintChecks()))
   } catch (err) {
     checks.push({

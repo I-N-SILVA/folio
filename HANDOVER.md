@@ -817,6 +817,46 @@ in the events table until someone exported a CSV.
 
 ---
 
+### The health check verified tables and constraints, and no functions at all
+
+`/api/health` — the thing `preflight` reads before you decide a deployment is
+ready — checked env vars, tables, columns and live CHECK constraints. It did not
+check a single database function, and eight of them carry load. Two carry the
+launch:
+
+- **`claim_appsumo_license` (015).** Absent, `redeemLicense` has nothing to call
+  and every AppSumo redemption answers "We could not find that license code" —
+  the bug this branch opened with, to every buyer, on day one.
+- **`replace_book_pages` (009).** Absent, the page save falls back to a
+  non-atomic delete-then-insert, which is the data-loss shape that function
+  exists to prevent. The route logs it; nothing surfaced it.
+
+A deployment running an older `master_migration.sql` has every table, every
+column, every constraint — and neither function. **Before this change it
+reported the same two blockers as a perfectly healthy one.**
+
+020 adds `installed_functions()`, a read-only inventory from `pg_proc`, the same
+shape as `constraint_allowed_values` (014) and for the same reason: calling each
+function with harmless arguments would mean a health endpoint that runs an
+UPDATE and a DELETE every time somebody polls it. `lib/required-functions.ts`
+lists what the app calls, which migration adds it, whether its absence is
+launch-blocking, and what a user experiences without it — so the output reads
+"apply migration 015. Without it, every AppSumo redemption answers …" rather
+than naming a symbol.
+
+Verified by dropping `claim_appsumo_license` and `replace_book_pages` from a
+complete schema: `launchBlocking` went 2 → 4 and `preflight` named both, the
+migration for each, and the consequence. Re-applying the master migration put it
+back to 2.
+
+`lib/required-functions.test.ts` greps shipped code for `.rpc('…')` and fails if
+anything called is not listed, if anything listed is not called, or if a listed
+function is not in `master_migration.sql`. That last one fired on its first run
+— I had added 020 without regenerating the master — which is the test doing its
+job before a human could. The same run also picked up the tables 018 and 019
+add, so a deployment missing version history or review links says so instead of
+failing silently in the editor.
+
 ## 2c. Where the editor-redesign spec stands
 
 `docs/editor-redesign-spec.md` §9 was the outstanding list. All four code items
@@ -937,6 +977,10 @@ Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
   v4 emits `oklch(...)` and `color-mix()` yields `oklab(...)`; a digit-scraping
   contrast check reports black-on-white at 1.0:1. Both audit scripts do this,
   and both learned it the same way.
+- **A new `.rpc()` needs an entry in `lib/required-functions.ts`.** Otherwise
+  `/api/health` reports a deployment green while the function it depends on is
+  absent — which is how the redemption path stayed broken. The test greps for
+  the call, so forgetting fails the build rather than the launch.
 - **A colour that lives in data escapes the contrast tests.** `lib/contrast-tokens.test.ts`
   reads class names, so a hex in `data/templates.ts` is invisible to it. Anything
   painting itself from data has to run through `readableOn` in `lib/contrast.ts`
