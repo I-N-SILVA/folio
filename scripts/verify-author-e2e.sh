@@ -348,9 +348,27 @@ REVIEW_PATH=$(echo "$LINK" | python3 -c 'import json,sys;print(json.load(sys.std
 TOKEN=${REVIEW_PATH#/review/}
 
 # No cookie at all from here: this is somebody who has never signed in.
+# A confidential draft: a passcode gate and a lead webhook, both of which live
+# in `books.settings` and neither of which a reviewer may see.
+su postgres -c "psql -v ON_ERROR_STOP=1 -q -d $DB -c \"
+  UPDATE public.books SET settings = settings
+    || '{\\\"webhookUrl\\\":\\\"https://hooks.example.com/SECRET-HOOK\\\"}'::jsonb
+    || jsonb_build_object('gating', (settings->'gating') || '{\\\"type\\\":\\\"passcode\\\",\\\"passcode\\\":\\\"Q3-NDA-2026\\\"}'::jsonb)
+  WHERE id = '$BOOK';\"" >/dev/null
+
 DRAFT=$(curl -s --noproxy '*' "$A/api/review/$TOKEN")
 echo "$DRAFT" | grep -q 'The Silk Trench' \
   && pass "an anonymous visitor can open the draft" || fail "the review API answered: $(echo "$DRAFT" | head -c 200)"
+
+# `gating.passcode` is the plaintext value /api/books/unlock compares against,
+# so handing it to a reviewer hands over every gated page through the front
+# door — and revoking the link afterwards does not take it back. `webhookUrl` is
+# an unauthenticated capability URL into the author's CRM.
+if echo "$DRAFT" | grep -q 'Q3-NDA-2026\|SECRET-HOOK\|webhookUrl\|passcode'; then
+  fail "the draft response leaks the gate passcode or the lead webhook"
+else
+  pass "and gets none of the edition's settings — no passcode, no webhook"
+fi
 [[ "$(status "$A$REVIEW_PATH")" == "200" ]] && pass "and the page renders" \
   || fail "the review page returned $(status "$A$REVIEW_PATH")"
 curl -s --noproxy '*' "$A$REVIEW_PATH" | grep -qi 'noindex' \
@@ -384,6 +402,20 @@ RESOLVED=$(status -X PATCH "$A/api/books/$BOOK/comments/$COMMENT_ID" -H "Cookie:
 [[ "$(status -H "Cookie: $IC" "$A/api/books/$BOOK/review-links")" == "403" ]] \
   && pass "and another author cannot see the links" \
   || fail "a stranger listing links got $(status -H "Cookie: $IC" "$A/api/books/$BOOK/review-links")"
+
+# A second reviewer, with their own link, must not read the first one's notes.
+LINK2=$(curl -s --noproxy '*' -X POST "$A/api/books/$BOOK/review-links" -H "Cookie: $AC" \
+  -H 'content-type: application/json' -d '{"label":"Other client"}')
+TOKEN2=$(echo "$LINK2" | python3 -c 'import json,sys;print(json.load(sys.stdin)["path"].rsplit("/",1)[-1])')
+OTHER=$(curl -s --noproxy '*' "$A/api/review/$TOKEN2")
+if echo "$OTHER" | grep -q 'wider crop'; then
+  fail "a second review link shows the first reviewer's comments"
+else
+  pass "a second link sees its own thread, not the first reviewer's"
+fi
+# The author still sees everything, which is the point of the author's view.
+curl -s --noproxy '*' -H "Cookie: $AC" "$A/api/books/$BOOK/comments" | grep -q 'wider crop' \
+  && pass "while the author sees them all" || fail "the author lost sight of a comment"
 
 LINK_ID=$(echo "$LINK" | python3 -c 'import json,sys;print(json.load(sys.stdin)["id"])')
 [[ "$(status -X DELETE "$A/api/books/$BOOK/review-links/$LINK_ID" -H "Cookie: $AC")" == "200" ]] \

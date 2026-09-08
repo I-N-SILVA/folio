@@ -88,3 +88,36 @@ describe('what a token may and may not reach', () => {
     expect(read('app/api/books/[id]/comments/[commentId]/route.ts')).toContain('resolved_at:')
   })
 })
+
+describe('what the anonymous route hands out', () => {
+  const route = read('app/api/review/[token]/route.ts')
+
+  it('never selects settings', () => {
+    // `books.settings` is not a display blob. It carries `gating.passcode` —
+    // the plaintext value `/api/books/unlock` compares against, so leaking it
+    // hands an anonymous reviewer every gated page through the front door — and
+    // `webhookUrl`, the author's lead-delivery endpoint, which is an
+    // unauthenticated capability URL. Revoking the link afterwards takes
+    // neither of them back.
+    const selects = [...route.matchAll(/\.select\(\s*'([^']+)'/g)].map((m) => m[1])
+    expect(selects.length).toBeGreaterThan(0)
+    for (const select of selects) {
+      expect(select).not.toMatch(/\bsettings\b/)
+    }
+  })
+
+  it('asks only for what the reviewer UI renders', () => {
+    const ui = read('components/review/ReviewClient.tsx')
+    // If the UI starts reading a new field, this fails until the route is
+    // widened deliberately rather than by copying a select from elsewhere.
+    for (const field of ['settings', 'owner_id']) {
+      expect(ui).not.toMatch(new RegExp(`book\\.${field}\\b`))
+    }
+  })
+
+  it('scopes comments to the link they came through', () => {
+    // Reading by book_id alone made every live link a window onto every other
+    // reviewer's notes — including ones left through links since revoked.
+    expect(route).toContain("eq('review_link_id', link.link_id)")
+  })
+})

@@ -817,6 +817,47 @@ in the events table until someone exported a CSV.
 
 ---
 
+### A security review of the review surface, and it found something
+
+Worth running because the review feature is the first **unauthenticated write
+path** in this app — anyone holding a link can read a draft and post to it. Two
+findings; the first was mine and it was real.
+
+**The anonymous route returned `books.settings` verbatim.** `settings` is not a
+display blob. It carries `gating.passcode` — the plaintext value
+`/api/books/unlock` compares against, so `if (!passcode || passcode !==
+gating.passcode)` — and `webhookUrl`, the author's lead-delivery endpoint, which
+is an unauthenticated capability URL into their CRM. Both went to an anonymous
+holder of a review link, for a **draft**, and revoking the link afterwards would
+not have taken the passcode back: the contractor keeps reading the gated edition
+through the front door once it publishes. `ReviewClient` never read either
+field; it was pure over-fetch. The route now selects
+`id, title, description, theme, pages(*)`.
+
+**Comments were scoped to the edition, not to the link.** `review_link_id`
+exists so a revoked link can be traced to what it produced, and the read ignored
+it — so every live link was a window onto every other reviewer's notes,
+including ones left through links since revoked. An agency circulating one draft
+to two competing clients, a link each, would have shown each of them the other's
+candid feedback. Silently, with revocation no help. It would also have published
+the author's own notes (`review_link_id IS NULL`, already in the schema) to
+every reviewer the moment that write path existed. Now `.eq('review_link_id',
+link.link_id)`; the author still sees all of them in the editor, where that is
+the point.
+
+Both are locked by `lib/review.test.ts` (reverting either fails it, which was
+checked) and proved end to end: `verify:author:e2e` plants a real passcode and a
+real webhook in the edition's settings, asserts neither appears in the anonymous
+response, and opens a second link to confirm it cannot see the first reviewer's
+comments while the author still can.
+
+The review also confirmed clean: no IDOR on the four authenticated routes (every
+one pins `book_id` to an owner-verified book), the token cannot reach another
+edition or any management action, `randomBytes(32).toString('base64url')` is
+256 bits of CSPRNG, no `anon` grant on either table, both `SECURITY DEFINER`
+functions set `search_path` and are `service_role`-only, and the reviewer UI
+renders comment text as JSX text nodes with no `dangerouslySetInnerHTML`.
+
 ### The health check verified tables and constraints, and no functions at all
 
 `/api/health` — the thing `preflight` reads before you decide a deployment is
@@ -977,6 +1018,10 @@ Read `AGENTS.md` first — this Next.js (16.2.6) differs from training data, and
   v4 emits `oklch(...)` and `color-mix()` yields `oklab(...)`; a digit-scraping
   contrast check reports black-on-white at 1.0:1. Both audit scripts do this,
   and both learned it the same way.
+- **`books.settings` is not safe to return to anyone but its owner.** It carries
+  `gating.passcode` (the plaintext the unlock route compares against) and
+  `webhookUrl` (a capability URL into the author's CRM). Any route reachable
+  without the owner's session must project columns explicitly, never `settings`.
 - **A new `.rpc()` needs an entry in `lib/required-functions.ts`.** Otherwise
   `/api/health` reports a deployment green while the function it depends on is
   absent — which is how the redemption path stayed broken. The test greps for

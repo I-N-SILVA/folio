@@ -46,9 +46,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
     return NextResponse.json({ error: 'This review link is no longer active.' }, { status: 404 })
   }
 
+  // Exactly what the reviewer UI renders, and nothing else.
+  //
+  // This selected `settings` too, which is not a display blob: it carries
+  // `gating.passcode` — the plaintext value `/api/books/unlock` compares
+  // against, so leaking it hands over every gated page through the front door —
+  // and `webhookUrl`, the author's lead-delivery endpoint, which is an
+  // unauthenticated capability URL. Both would have gone to an anonymous holder
+  // of a review link, for a *draft*, and revoking the link afterwards would not
+  // have taken the passcode back. `ReviewClient` never read either.
   const { data: book } = await supabaseAdmin
     .from('books')
-    .select('id, title, description, theme, settings, pages(*)')
+    .select('id, title, description, theme, pages(*)')
     .eq('id', link.book_id)
     .maybeSingle()
 
@@ -60,10 +69,22 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
     ;(book.pages as { page_number: number }[]).sort((a, b) => a.page_number - b.page_number)
   }
 
+  // Scoped to this link, not to the edition.
+  //
+  // `review_link_id` exists so a revoked link can be traced to what it
+  // produced; reading by `book_id` alone made every live link a window onto
+  // every other reviewer's notes, including ones left through links since
+  // revoked. An agency sending the same draft to two competing clients, a link
+  // each, would have shown each of them the other's candid feedback — silently,
+  // and with revocation no help. It also keeps the author's own notes
+  // (`review_link_id IS NULL`, already in the schema) out of a reviewer's view.
+  //
+  // The author sees all of them, in the editor, where that is the point.
   const { data: comments } = await supabaseAdmin
     .from('book_comments')
     .select('id, page_number, author_name, body, resolved_at, created_at')
     .eq('book_id', link.book_id)
+    .eq('review_link_id', link.link_id)
     .order('created_at', { ascending: true })
 
   return NextResponse.json({
