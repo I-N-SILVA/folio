@@ -46,6 +46,26 @@ const draftableHref = z.string().refine(
   { message: 'Must be a link, or empty while you are still drafting' }
 )
 
+/**
+ * A number that came from a `type="number"` input the author is still editing.
+ *
+ * Clearing such an input yields `NaN` with `valueAsNumber`, and JSON turns that
+ * into `null` on the way to the server — so a plain `z.number()` rejects a
+ * field somebody merely selected in order to retype it. The save routes
+ * validate a whole edition (or a whole settings object) at once, so that one
+ * value fails the entire save, the same way a half-typed URL used to. Clamp
+ * into range rather than refuse: the bounds are what the field means, and an
+ * author is allowed to pass through an invalid value on the way to a valid one.
+ */
+function draftableNumber(fallback: number, min: number, max: number) {
+  return z.preprocess((v) => {
+    if (v === null || v === undefined || v === '') return fallback
+    const n = typeof v === 'number' ? v : Number(v)
+    if (!Number.isFinite(n)) return fallback
+    return Math.min(max, Math.max(min, n))
+  }, z.number())
+}
+
 // ─── Block Schemas ─────────────────────────────────────────────────────────────
 
 /**
@@ -158,7 +178,7 @@ export const EmbedBlockSchema = z.object({
   id: z.string(),
   frame: FrameSchema.optional(),
   html: z.string(),
-  height: z.number(),
+  height: draftableNumber(300, 20, 5000),
 })
 
 // Living editions — a value bound to a JSON source that updates after publish.
@@ -234,9 +254,13 @@ export const BlockSchema = z.discriminatedUnion('type', [
 
 export const HotspotMediaSchema = z.object({
   type: z.enum(['image', 'video']),
-  src: z.string().url(),
+  // draftableUrl, like every other media field. These three were missed by the
+  // sweep that introduced it, and a hotspot whose modal media had not been
+  // chosen yet 400'd the save for the entire edition — while `.url()` went on
+  // accepting `javascript:`, which is what `new URL()` does.
+  src: draftableUrl,
   alt: z.string().optional(),
-  poster: z.string().url().optional(),
+  poster: draftableUrl.optional(),
 })
 
 export const HotspotSchema = z.object({
@@ -249,7 +273,7 @@ export const HotspotSchema = z.object({
     .enum(['pulse', 'shopping', 'audio', 'step', 'minimal'])
     .default('pulse')
     .optional(),
-  stepNumber: z.number().int().min(1).max(99).optional(),
+  stepNumber: draftableNumber(1, 1, 99).optional(),
   pinColor: z.string().optional(),
   modal: z.object({
     title: z.string(),
@@ -298,7 +322,7 @@ export const BackgroundSchema = z.object({
 })
 
 export const AmbientAudioSchema = z.object({
-  src: z.string().url(),
+  src: draftableUrl,
   loop: z.boolean().default(true),
   volume: z.number().min(0).max(1).default(0.5),
   title: z.string().optional(),
@@ -341,7 +365,7 @@ export const ThemeSchema = z.object({
 
 export const GatingSchema = z.object({
   enabled: z.boolean().default(false),
-  page_number: z.number().default(3),
+  page_number: draftableNumber(3, 1, 9999).default(3),
   type: z.enum(['email', 'passcode', 'domain']).default('email'),
   title: z.string().default('Unlock the full version'),
   description: z.string().default('Enter your credentials to continue reading.'),
