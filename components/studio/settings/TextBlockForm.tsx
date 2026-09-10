@@ -19,7 +19,7 @@ const VARIANTS: { id: TextBlock['variant']; label: string; desc: string }[] = [
 
 export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: string }) {
   const { updateBlock } = useEditorStore()
-  const { register, watch, setValue } = useForm<Partial<TextBlock>>({
+  const form = useForm<Partial<TextBlock>>({
     defaultValues: {
       variant: block.variant,
       content: block.content,
@@ -32,6 +32,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
       letterSpacing: block.letterSpacing ?? 'normal',
     },
   })
+  const { register, watch, setValue } = form
 
   const currentVariant = watch('variant') ?? block.variant
   const currentAlign = watch('align') ?? block.align ?? 'left'

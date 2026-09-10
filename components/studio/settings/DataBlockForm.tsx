@@ -5,11 +5,12 @@ import { useForm } from 'react-hook-form'
 import * as Lucide from 'lucide-react'
 import { useEditorStore } from '@/lib/editor-store'
 import type { Block, DataBlock } from '@/lib/book-schema'
+import { urlField } from './useBlockForm'
 import { Field, inputCls, selectCls } from './shared'
 
 export function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: string }) {
   const { updateBlock } = useEditorStore()
-  const { register, watch, getValues } = useForm<Partial<DataBlock>>({
+  const form = useForm<Partial<DataBlock>>({
     defaultValues: {
       label: block.label,
       source: block.source,
@@ -20,6 +21,7 @@ export function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: str
       align: block.align ?? 'left',
     },
   })
+  const { register, watch, getValues } = form
 
   const [test, setTest] = useState<{ state: 'idle' | 'loading' | 'ok' | 'err'; value?: string; msg?: string }>({
     state: 'idle',
@@ -73,7 +75,7 @@ export function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: str
         <input {...register('label')} className={inputCls} placeholder="e.g. Live price" />
       </Field>
       <Field label="Data source (URL or path)">
-        <input {...register('source')} className={inputCls} placeholder="/demo-live.json or https://…" />
+        <input {...urlField(form, 'source')} className={inputCls} placeholder="/demo-live.json or https://…" />
       </Field>
       <Field label="JSON path">
         <input {...register('path')} className={inputCls} placeholder="e.g. product.price" />

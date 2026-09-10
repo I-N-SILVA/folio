@@ -8,6 +8,7 @@ import { useEditorStore } from '@/lib/editor-store'
 import type { Block, ImageBlock } from '@/lib/book-schema'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
 import { FocalPointPicker } from './FocalPointPicker'
+import { urlField } from './useBlockForm'
 import { Field, inputCls } from './shared'
 
 /** The same five positions the preset dropdown has always meant. */
@@ -21,7 +22,7 @@ const PRESET_POINTS: Record<'center' | 'top' | 'bottom' | 'left' | 'right', [num
 
 export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: string }) {
   const { updateBlock } = useEditorStore()
-  const { register, watch, setValue } = useForm<Partial<ImageBlock>>({
+  const form = useForm<Partial<ImageBlock>>({
     defaultValues: {
       src: block.src,
       alt: block.alt,
@@ -38,6 +39,7 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
       focalPoint: block.focalPoint ?? 'center',
     },
   })
+  const { register, watch, setValue } = form
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
@@ -120,7 +122,7 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
       {/* Image Source & Upload */}
       <Field label="Image File & URL">
         <div className="space-y-2">
-          <input {...register('src')} className={inputCls} placeholder="https://…" />
+          <input {...urlField(form, 'src')} className={inputCls} placeholder="https://…" />
           <input
             ref={fileRef}
             type="file"

@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { twMerge } from 'tailwind-merge'
 import { useEditorStore } from '@/lib/editor-store'
 import type { Hotspot } from '@/lib/book-schema'
+import { urlField } from './useBlockForm'
 import { Field, IconPicker, inputCls, selectCls } from './shared'
 
 export function HotspotSettingsForm({
@@ -15,7 +16,7 @@ export function HotspotSettingsForm({
   pageId: string
 }) {
   const { updateHotspot, removeHotspot } = useEditorStore()
-  const { register, watch, setValue } = useForm<{
+  const form = useForm<{
     label: string
     icon: string
     beaconStyle: Hotspot['beaconStyle']
@@ -42,6 +43,7 @@ export function HotspotSettingsForm({
       ctaLabel: hotspot.ctaLabel || '',
     },
   })
+  const { register, watch, setValue } = form
 
   useEffect(() => {
     const sub = watch((values) => {
@@ -187,14 +189,14 @@ export function HotspotSettingsForm({
 
       {action === 'link' && (
         <Field label="Link URL">
-          <input {...register('linkUrl')} className={inputCls} placeholder="https://..." />
+          <input {...urlField(form, 'linkUrl')} className={inputCls} placeholder="https://..." />
         </Field>
       )}
 
       {action === 'checkout' && (
         <>
           <Field label="Stripe Payment Link URL">
-            <input {...register('stripeUrl')} className={inputCls} placeholder="https://buy.stripe.com/..." />
+            <input {...urlField(form, 'stripeUrl')} className={inputCls} placeholder="https://buy.stripe.com/..." />
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Price">

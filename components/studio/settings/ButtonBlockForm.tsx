@@ -4,11 +4,12 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useEditorStore } from '@/lib/editor-store'
 import type { Block, ButtonBlock } from '@/lib/book-schema'
+import { urlField } from './useBlockForm'
 import { Field, inputCls, selectCls } from './shared'
 
 export function ButtonBlockForm({ block, pageId }: { block: ButtonBlock; pageId: string }) {
   const { updateBlock } = useEditorStore()
-  const { register, watch, setValue } = useForm<Partial<ButtonBlock>>({
+  const form = useForm<Partial<ButtonBlock>>({
     defaultValues: {
       label: block.label,
       href: block.href,
@@ -20,6 +21,7 @@ export function ButtonBlockForm({ block, pageId }: { block: ButtonBlock; pageId:
       textColor: block.textColor,
     },
   })
+  const { register, watch, setValue } = form
 
   const currentShape = watch('shape') ?? block.shape ?? 'pill'
   const currentSize = watch('size') ?? block.size ?? 'md'
@@ -39,7 +41,7 @@ export function ButtonBlockForm({ block, pageId }: { block: ButtonBlock; pageId:
       </Field>
 
       <Field label="Destination Link (URL)">
-        <input {...register('href')} className={inputCls} placeholder="https://…" />
+        <input {...urlField(form, 'href')} className={inputCls} placeholder="https://…" />
       </Field>
 
       <Field label="Style Treatment">
