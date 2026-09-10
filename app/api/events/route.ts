@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { EVENT_TYPES } from '@/lib/book-schema'
 import { z } from 'zod'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin, hasServiceRoleKey } from '@/lib/supabase'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 
 const EventBodySchema = z.object({
@@ -41,6 +41,14 @@ export async function POST(request: NextRequest) {
     // flipping through a twenty-page edition fires a `page_view` per page and a
     // `page_click` per click, and each one was paying for a lookup whose only
     // possible answers the FK already enforces.
+    // Analytics must never be the reason a reader sees a failure. Without a
+    // service key there is nowhere to record to, so accept and drop rather than
+    // 500 on every page view of every published edition.
+    if (!hasServiceRoleKey()) {
+      console.error('[events] SUPABASE_SERVICE_ROLE_KEY is not set — analytics is not being recorded.')
+      return new NextResponse(null, { status: 204 })
+    }
+
     const { error: insertError } = await supabaseAdmin.from('events').insert({
       book_id: bookId,
       session_id: sessionId,
