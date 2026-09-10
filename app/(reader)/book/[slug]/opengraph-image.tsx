@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { createServerSupabase } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin, hasServiceRoleKey } from '@/lib/supabase'
 
 // Runs on the Node.js runtime: this route imports the Supabase clients, which
 // push the bundle past Vercel's 1 MB Edge Function limit. Node serverless
@@ -16,11 +15,24 @@ export const size = {
 export const contentType = 'image/png'
 
 export default async function Image({ params }: { params: { slug: string } }) {
-  const { data: book } = await supabaseAdmin
-    .from('books')
-    .select('title, description, theme, settings, pages(*)')
-    .eq('slug', params.slug)
-    .single()
+  // A social crawler must get an image back, never an error page, so a
+  // misconfigured or unreachable database falls through to the card below
+  // rather than throwing out of the route.
+  async function loadBook() {
+    if (!hasServiceRoleKey()) return null
+    try {
+      const { data } = await supabaseAdmin
+        .from('books')
+        .select('title, description, theme, settings, pages(*)')
+        .eq('slug', params.slug)
+        .single()
+      return data
+    } catch {
+      return null
+    }
+  }
+
+  const book = await loadBook()
 
   if (!book) {
     return new ImageResponse(

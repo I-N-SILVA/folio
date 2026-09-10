@@ -93,7 +93,17 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       if (!container) return
 
       const obs = new ResizeObserver(([entry]) => {
-        containerWidth.current = entry.contentRect.width
+        const width = entry.contentRect.width
+        // A zero width is not a measurement — it is the container before it has
+        // been laid out, which is what a ResizeObserver reports first when the
+        // reader mounts inside a collapsed parent, a backgrounded tab, or an
+        // embed iframe that has not been sized yet. `applySize` already bails
+        // on it, so letting `measured` through anyway mounted react-pageflip
+        // with the *defaults* — landscape, 600px pages — which is exactly the
+        // "two-page spread crammed into a phone width" the note above is about.
+        // The orientation is fixed at mount, so this has to wait for a real one.
+        if (!width) return
+        containerWidth.current = width
         applySize()
         setMeasured(true)
       })

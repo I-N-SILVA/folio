@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin, hasServiceRoleKey } from '@/lib/supabase'
 import { PageSchema } from '@/lib/book-schema'
 import { z } from 'zod'
 import { revalidateReader } from '@/lib/revalidate-reader'
@@ -50,13 +50,50 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // After the 401 — a signed-out caller has no business learning how this
+  // deployment is configured — but before the ownership lookup, because that
+  // lookup is what fails without a service key, and it fails as a 403 telling
+  // the actual owner they do not own their own edition.
+  if (!hasServiceRoleKey()) {
+    console.error(
+      '[pages] SUPABASE_SERVICE_ROLE_KEY is not set — saving cannot work on this deployment.'
+    )
+    return NextResponse.json(
+      {
+        error:
+          'Saving is not configured on this deployment — the server is missing its Supabase service key.',
+      },
+      { status: 503 }
+    )
+  }
+
   const slug = await getOwnedSlug(id, user.id)
   if (!slug) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await request.json()
   const parsed = z.array(PageSchema.omit({ book_id: true })).safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    // A 400 here reaches an author mid-sentence, so it has to name the page and
+    // the field. `flatten()` on an array keys everything by index, which is how
+    // "Could not save these pages" ended up being the whole story — the editor
+    // showed that for a schema rejection, and the author had nothing to act on.
+    const pages: unknown[] = Array.isArray(body) ? body : []
+    const detail = parsed.error.issues.slice(0, 3).map((issue) => {
+      const [index, ...rest] = issue.path
+      const pageNumber =
+        typeof index === 'number'
+          ? ((pages[index] as { page_number?: number } | undefined)?.page_number ?? index + 1)
+          : undefined
+      const field = rest.join('.') || 'page'
+      return pageNumber
+        ? `page ${pageNumber} (${field}): ${issue.message}`
+        : `${field}: ${issue.message}`
+    })
+    console.error('[pages] rejected a save:', JSON.stringify(parsed.error.issues.slice(0, 10)))
+    return NextResponse.json(
+      { error: `This edition could not be saved — ${detail.join('; ')}`, issues: parsed.error.issues },
+      { status: 400 }
+    )
   }
 
   const rows = parsed.data.map((p) => ({

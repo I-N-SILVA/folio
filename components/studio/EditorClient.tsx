@@ -93,6 +93,18 @@ export function EditorClient({ book, entitlements }: Props) {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saveInFlight = useRef(false)
+  /**
+   * A save was asked for while one was already running.
+   *
+   * The early return below dropped that request on the assumption that "the
+   * trailing edit will schedule its own" — which only holds while the author
+   * keeps typing. Stop editing during a slow save and the request queued behind
+   * it was discarded: no timer pending, no error, `isDirty` still true, and the
+   * last edit gone. The only symptom was the beforeunload prompt on the way out.
+   */
+  const saveQueued = useRef(false)
+  /** The current `save`, so the drain can re-enter it without self-reference. */
+  const saveRef = useRef<() => Promise<void>>(async () => {})
 
   /**
    * What the last successful save wrote, by object identity.
@@ -119,9 +131,23 @@ export function EditorClient({ book, entitlements }: Props) {
     setBook(book)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** The route says which page and field it refused; the toast should repeat it. */
+  const reasonFrom = async (res: Response, fallback: string) => {
+    try {
+      const body = await res.json()
+      if (typeof body?.error === 'string') return body.error
+    } catch {
+      // no JSON body — fall through to the generic message
+    }
+    return fallback
+  }
+
   // Autosave: debounced 2s after any dirty change
   const save = useCallback(async () => {
-    if (saveInFlight.current) return // a save is already in flight — the trailing edit will schedule its own
+    if (saveInFlight.current) {
+      saveQueued.current = true // taken up once the in-flight save settles
+      return
+    }
     const current = useEditorStore.getState()
     if (!current.book || !current.isDirty) return
 
@@ -148,7 +174,9 @@ export function EditorClient({ book, entitlements }: Props) {
             description: bookAtSaveStart.description ?? undefined,
           }),
         })
-        if (!bookRes.ok) throw new Error('Could not save this edition’s settings')
+        if (!bookRes.ok) {
+          throw new Error(await reasonFrom(bookRes, 'Could not save this edition’s settings'))
+        }
       }
 
       // Pages go through the transactional replace route.
@@ -175,12 +203,20 @@ export function EditorClient({ book, entitlements }: Props) {
               type: p.type,
               layout: p.layout,
               background: p.background ?? undefined,
+              // This list is hand-written, so anything added to PageSchema and
+              // not added here is dropped on the next autosave. That is what
+              // happened to ambientAudio: ViewerChrome reads it, and the first
+              // save after opening a template or an imported PDF wiped it.
+              // lib/editor-save.test.ts holds the two lists to each other.
+              ambientAudio: p.ambientAudio ?? undefined,
               blocks: p.blocks,
               hotspots: p.hotspots,
             }))
           ),
         })
-        if (!pagesRes.ok) throw new Error('Could not save these pages')
+        if (!pagesRes.ok) {
+          throw new Error(await reasonFrom(pagesRes, 'Could not save these pages'))
+        }
       }
 
       saved.current = { pages: bookAtSaveStart.pages, meta }
@@ -203,8 +239,19 @@ export function EditorClient({ book, entitlements }: Props) {
     } finally {
       saveInFlight.current = false
       setIsSaving(false)
+      // Whatever asked to save while this one was running gets its turn.
+      if (saveQueued.current) {
+        saveQueued.current = false
+        if (useEditorStore.getState().isDirty) {
+          setTimeout(() => void saveRef.current(), 0)
+        }
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    saveRef.current = save
+  }, [save])
 
   /**
    * Save and actually wait for it — including waiting out an autosave that is

@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { useEditorStore } from '@/lib/editor-store'
 import type { Block, ProductGridBlock, ProductItem } from '@/lib/book-schema'
 import { AssetLibraryModal } from '@/components/studio/AssetLibraryModal'
+import { urlField } from './useBlockForm'
 import { Field, inputCls, selectCls } from './shared'
 
 const SAMPLE_PRODUCTS: ProductItem[] = [
@@ -53,7 +54,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
   const [showAssetLibrary, setShowAssetLibrary] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const { register, control, watch, setValue } = useForm<Partial<ProductGridBlock>>({
+  const form = useForm<Partial<ProductGridBlock>>({
     defaultValues: {
       columns: block.columns ?? '2',
       cardStyle: block.cardStyle ?? 'bordered',
@@ -61,6 +62,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
       items: block.items?.length ? block.items : SAMPLE_PRODUCTS.slice(0, 2),
     },
   })
+  const { register, control, watch, setValue } = form
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -240,7 +242,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
             {/* Photo URL & Upload */}
             <Field label="Photo URL">
               <input
-                {...register(`items.${idx}.image` as const)}
+                {...urlField(form, `items.${idx}.image` as const)}
                 className={inputCls}
                 placeholder="https://images.unsplash.com/…"
               />
@@ -283,7 +285,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                 ended at a checkout QLICO could not honour, so it is gone. */}
             <Field label="Where to buy it">
               <input
-                {...register(`items.${idx}.buyUrl` as const)}
+                {...urlField(form, `items.${idx}.buyUrl` as const)}
                 className={inputCls}
                 placeholder="https://your-shop.com/the-product"
               />

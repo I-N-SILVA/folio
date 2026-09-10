@@ -1,5 +1,5 @@
 import 'server-only'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin, hasServiceRoleKey } from '@/lib/supabase'
 
 /**
  * Where an old link should go now.
@@ -9,6 +9,16 @@ import { supabaseAdmin } from '@/lib/supabase'
  * arrives. Called only on the miss path, so a normal read costs nothing.
  */
 export async function findCurrentSlug(oldSlug: string): Promise<string | null> {
+  // This runs on the reader's miss path, so it must never be able to turn a
+  // "no such edition" into a 500. Without a service key there is nothing to
+  // look forwarding up in, and "not found" is the right answer anyway.
+  if (!hasServiceRoleKey()) {
+    console.error(
+      '[slug-history] SUPABASE_SERVICE_ROLE_KEY is not set — a renamed edition’s old link cannot forward.'
+    )
+    return null
+  }
+
   const { data, error } = await supabaseAdmin
     .from('book_slug_history')
     .select('book_id')
