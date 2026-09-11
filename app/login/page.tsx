@@ -80,8 +80,9 @@ function LoginForm() {
               mark takes its colour from the surface, which also retires the
               theme-gated pair. */}
           <h1>
-            <span className="sr-only">QLICO</span>
-            <Mark size={38} wordClassName="text-[2.5rem] leading-none" aria-hidden />
+            {/* No sr-only twin: the mark renders "QLICO" as real text, so the
+                two together announced the name twice. */}
+            <Mark size={38} wordClassName="text-[2.5rem] leading-none" />
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
             {isResuming
