@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, memo } from 'react'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { Plus, Trash2, GripVertical, Layers, Box, Layout as LayoutIcon, Crosshair, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -48,7 +48,21 @@ interface SortablePageItemProps {
   onMoveNext: () => void
 }
 
-function SortablePageItem({
+/**
+ * Every thumbnail draws a full `PageRenderer` — the real page, every block,
+ * every image. Unmemoised, one keystroke in the inspector re-rendered the whole
+ * book: a twenty-page edition did twenty complete page renders per character,
+ * which is what made a single `<select>` change block the UI for over a second.
+ *
+ * `updateBlock` and friends rebuild only the page they touch and return the
+ * same reference for the rest, so comparing `page` by identity is exactly the
+ * right test. The six callbacks are deliberately excluded from the comparison:
+ * the call site declares them inline so they are new on every render and would
+ * defeat the memo entirely, and each one closes over nothing but `page`,
+ * `index` and stable store actions — both of which are compared here, so a
+ * stale closure cannot outlive the data it captured.
+ */
+const SortablePageItem = memo(function SortablePageItem({
   page,
   index,
   bookId,
@@ -254,7 +268,16 @@ function SortablePageItem({
       </div>
     </div>
   )
-}
+},
+(prev, next) =>
+  prev.page === next.page &&
+  prev.index === next.index &&
+  prev.bookId === next.bookId &&
+  prev.isSelected === next.isSelected &&
+  prev.isOnly === next.isOnly &&
+  prev.canMovePrev === next.canMovePrev &&
+  prev.canMoveNext === next.canMoveNext
+)
 
 interface PageListSidebarProps {
   /** Lets the mobile sheet dismiss itself once a page is chosen. */
