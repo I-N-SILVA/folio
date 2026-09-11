@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import Image from 'next/image'
+import { Mark } from '@/components/landing/Mark'
 import { motion } from 'framer-motion'
 import { trackProduct } from '@/lib/product-analytics'
 import { useSearchParams } from 'next/navigation'
@@ -73,10 +74,14 @@ function LoginForm() {
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--qlico-teal)]">
             {isResuming ? 'Save your edition' : 'Creator Studio'}
           </p>
+          {/* Inlined, not <Image>: next/image answers 400 for SVG unless
+              `dangerouslyAllowSVG` is set, so both lockups rendered as nothing
+              on the page a buyer lands on straight after "Get started". The
+              mark takes its colour from the surface, which also retires the
+              theme-gated pair. */}
           <h1>
             <span className="sr-only">QLICO</span>
-            <Image src="/brand/logo-light.svg" alt="" width={181} height={50} priority className="theme-light-only h-[50px] w-auto object-contain" />
-            <Image src="/brand/logo-dark.svg" alt="" width={181} height={50} priority className="theme-dark-only h-[50px] w-auto object-contain" />
+            <Mark size={38} wordClassName="text-[2.5rem] leading-none" aria-hidden />
           </h1>
           <p className="mt-3 text-sm leading-6 text-[var(--qlico-muted)]">
             {isResuming

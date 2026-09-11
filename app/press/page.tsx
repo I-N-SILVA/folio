@@ -54,16 +54,22 @@ export default function PressPage() {
         {/* Logo lockup */}
         <section className="mt-12">
           <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--qlico-muted)]">Logo</h2>
-          {/* These are specimens, not UI: each panel has to be the literal
+          {/* `unoptimized` because these are the real brand files on offer, not
+              decoration — and next/image refuses SVG through the optimiser
+              (400, "image type is not allowed") unless `dangerouslyAllowSVG` is
+              set, which it deliberately is not. Unoptimised emits a plain <img>
+              and the specimen is the actual asset a journalist downloads.
+
+              These are specimens, not UI: each panel has to be the literal
               background the lockup is approved against, or the swatch stops
               telling the truth. Themed tokens put the dark lockup on a dark
               panel and it vanished. */}
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="flex h-40 items-center justify-center rounded-2xl bg-white p-8 sm:h-48">
-              <Image src="/brand/logo-light.svg" alt="QLICO logo on white" width={217} height={60} className="h-[60px] w-auto object-contain" />
+              <Image src="/brand/logo-light.svg" alt="QLICO logo on white" width={217} height={60} unoptimized className="h-[60px] w-auto object-contain" />
             </div>
             <div className="flex h-40 items-center justify-center rounded-2xl bg-[var(--qlico-ink)] p-8 sm:h-48">
-              <Image src="/brand/logo-dark.svg" alt="QLICO logo on ink" width={217} height={60} className="h-[60px] w-auto object-contain" />
+              <Image src="/brand/logo-dark.svg" alt="QLICO logo on ink" width={217} height={60} unoptimized className="h-[60px] w-auto object-contain" />
             </div>
           </div>
         </section>

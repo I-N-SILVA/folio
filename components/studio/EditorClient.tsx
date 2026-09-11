@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import Link from 'next/link'
+import { MarkSymbol } from '@/components/landing/Mark'
 import { twMerge } from 'tailwind-merge'
 import {
   ArrowLeft,
@@ -500,7 +501,7 @@ export function EditorClient({ book, entitlements }: Props) {
           className="flex items-center gap-2 rounded-lg p-1 transition hover:bg-neutral-800"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/icon.svg" alt="QLICO" width={28} height={28} className="h-7 w-7 rounded-md object-contain" />
+          <MarkSymbol size={28} className="h-7 w-7" />
         </Link>
         <Link
           href="/dashboard"

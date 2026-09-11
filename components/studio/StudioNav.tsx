@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import Image from 'next/image'
+import { MarkSymbol } from '@/components/landing/Mark'
 import { SignOutButton } from './SignOutButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
@@ -13,13 +13,9 @@ export function StudioNav({ current }: { current?: 'library' | 'insights' | 'acc
     <header className="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-3 sm:gap-4 border-b border-[var(--qlico-border)] pb-4">
       <div className="flex items-center gap-3 sm:gap-6 min-w-0">
         <Link href="/dashboard" className="flex items-center gap-2 shrink-0" aria-label="QLICO dashboard">
-          <Image
-            src="/brand/icon.svg"
-            alt=""
-            width={28}
-            height={28}
-            className="h-7 w-7 rounded-md object-contain"
-          />
+          {/* Inlined: next/image answers 400 for SVG unless dangerouslyAllowSVG
+              is set, so this header rendered no logo at all. */}
+          <MarkSymbol size={28} className="h-7 w-7 text-[var(--qlico-ink)]" />
           <span className="sr-only">QLICO</span>
         </Link>
 
