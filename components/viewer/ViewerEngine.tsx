@@ -92,23 +92,47 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       const container = containerRef.current
       if (!container) return
 
+      // Declared first: the observer callback clears it, and a ResizeObserver
+      // never fires synchronously from observe(), but relying on that for a
+      // temporal-dead-zone reference is not worth the cleverness.
+      let fallback: ReturnType<typeof setTimeout>
+
       const obs = new ResizeObserver(([entry]) => {
         const width = entry.contentRect.width
         // A zero width is not a measurement — it is the container before it has
         // been laid out, which is what a ResizeObserver reports first when the
         // reader mounts inside a collapsed parent, a backgrounded tab, or an
-        // embed iframe that has not been sized yet. `applySize` already bails
-        // on it, so letting `measured` through anyway mounted react-pageflip
-        // with the *defaults* — landscape, 600px pages — which is exactly the
-        // "two-page spread crammed into a phone width" the note above is about.
-        // The orientation is fixed at mount, so this has to wait for a real one.
+        // embed iframe that has not been sized yet. `applySize` bails on it, so
+        // letting `measured` through anyway mounted react-pageflip with the
+        // *defaults* — landscape, 600px pages — the "two-page spread crammed
+        // into a phone width" the note above is about. Orientation is fixed at
+        // mount, so a real measurement is worth waiting for.
         if (!width) return
         containerWidth.current = width
         applySize()
         setMeasured(true)
+        clearTimeout(fallback)
       })
       obs.observe(container)
-      return () => obs.disconnect()
+
+      // ...but only worth waiting so long. Refusing to mount without a real
+      // measurement trades "mounts wrong, then corrects itself on the remount
+      // keyed by `isMobile`" for "never mounts at all", and a reader stuck on
+      // the skeleton forever is far worse than one that reflows once. If no
+      // usable width has arrived by now, go with the last resort: measure the
+      // element directly, else fall back to the viewport.
+      fallback = setTimeout(() => {
+        if (containerWidth.current) return
+        containerWidth.current =
+          container.getBoundingClientRect().width || window.innerWidth || 600
+        applySize()
+        setMeasured(true)
+      }, 600)
+
+      return () => {
+        obs.disconnect()
+        clearTimeout(fallback)
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
