@@ -65,6 +65,27 @@ One line per thing that broke, why, and the test that now guards it.
   the "two-page spread crammed into a phone width" the comment above it warns
   about. Orientation is fixed at mount, so the guard has to wait for a real one.
 
+- **PGRST202 cannot tell "no such function" from "no such signature".** Probing a
+  Supabase RPC with `{}` for arguments answers "could not find the function without
+  parameters" — the same error a present function gives when you guess its parameter
+  names wrong. That produced a confident, false report that the save function and the
+  AppSumo claim function were both missing from production. Read the argument names off
+  the real `.rpc('fn', { ... })` call site before concluding anything.
+
+- **A hidden browser tab reproduces "the page is blank" perfectly.** The Browser pane runs
+  with `document.hidden === true` and `innerWidth === 0`, and a viewport-dependent
+  component then sits on its Suspense fallback forever — at *every* emulated width, which
+  is what makes it read as a mobile bug. Check `document.hidden` and `innerWidth` before
+  believing any rendering or timing measurement taken there. Assert on
+  `document.body.innerText.length`, never on a screenshot, and never quote a load time
+  measured in a hidden pane.
+
+- **Minified bundles do not contain their libraries' names.** Grepping built chunks for
+  `framer-motion` or `recharts` returns nothing whether or not they are in there, and
+  chunk hashes change every build so names from an older network log no longer exist on
+  disk. To find out what a route actually ships, read
+  `performance.getEntriesByType('resource')` from the live page.
+
 ## Duplication
 
 - **Eight inspector forms carried an identical `useForm` + `watch` +
