@@ -205,10 +205,16 @@ export function EditorClient({ book, entitlements }: Props) {
               layout: p.layout,
               background: p.background ?? undefined,
               // This list is hand-written, so anything added to PageSchema and
-              // not added here is dropped on the next autosave. That is what
-              // happened to ambientAudio: ViewerChrome reads it, and the first
-              // save after opening a template or an imported PDF wiped it.
+              // not added here is dropped on the next autosave, which is why
               // lib/editor-save.test.ts holds the two lists to each other.
+              //
+              // `ambientAudio` is sent for that consistency, but be aware it
+              // still goes nowhere: `pages` has no column for it and
+              // `replace_book_pages` does not write one, so the database
+              // discards it. The field is declared in PageSchema and played by
+              // ViewerChrome, yet no editor control sets it — the feature only
+              // ever reaches a reader through a bundled demo book's JSON.
+              // Finishing it needs a column, a line in that function, and a UI.
               ambientAudio: p.ambientAudio ?? undefined,
               blocks: p.blocks,
               hotspots: p.hotspots,

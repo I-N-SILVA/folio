@@ -123,7 +123,30 @@ One line per thing that broke, why, and the test that now guards it.
   the other five. Scan for the element and read to its closing `>`, and strip
   block comments first or the prose explaining the bug gets reported as the bug.
 
+## Half-built features
+
+- **`ambientAudio` is declared, played, and stored nowhere.** `PageSchema` has
+  the field and `ViewerChrome` plays it, but `pages` has no column for it and
+  `replace_book_pages` does not write one, so the database discards it on every
+  save. No editor control sets it either. It only reaches a reader through a
+  bundled demo book's JSON. Verified end to end: a save carrying it returns 204
+  and the field comes back absent. **Rule: a field in the schema is not a
+  feature. Trace it to a column and to a control before believing it works.**
+
+- **Free-tier quota enforcement is genuinely server-side.** Confirmed against
+  the live database with a disposable account: the fourth edition is refused
+  with 403 `plan_limit`, `used: 3, limit: 3`, and `/api/entitlements` flips to
+  `allowed: false`. This is not UI-only gating.
+
 ## QA
+
+- **A hidden tab never reveals a Suspense boundary.** Proven, not guessed: a
+  same-origin fetch of `/dashboard` from inside the signed-in page returned 63KB
+  of real server HTML while the tab still showed `loading.tsx`'s skeleton and
+  `body.innerText.length` was 0. `document.hidden` was true. So in the Browser
+  pane, **every route with a `loading.tsx` appears permanently blank** — reader,
+  dashboard, editor, analytics — at every viewport, desktop included. That is
+  the environment, not the app. Check `document.hidden` before believing it.
 
 - **Screenshots of the reader are not evidence.** Its transforms make the pane
   capture a blank frame while the DOM is fully populated. Check
