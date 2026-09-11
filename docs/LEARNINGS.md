@@ -105,6 +105,24 @@ One line per thing that broke, why, and the test that now guards it.
   once the admin client stopped falling back to anon, turning a missing edition
   into a 500 instead of a 404.
 
+## Brand assets
+
+- **`next/image` will not serve an SVG.** It routes even a local `/public` file
+  through `/_next/image`, which answers 400 "image type is not allowed" unless
+  `images.dangerouslyAllowSVG` is set. Six logos shipped rendering nothing
+  because of this, including the login page, and nothing caught it: a missing
+  logo throws no error and fails no test. `dangerouslyAllowSVG` is not the fix
+  here, because `*.supabase.co` is an allowed remote pattern and authors upload
+  images there, so it would serve user-supplied SVG through the optimiser.
+  **Rule: inline a first-party SVG (it costs no request, no layout shift, and
+  can inherit `currentColor`), or pass `unoptimized` when the file itself is
+  the deliverable.** Guarded by `components/landing/logo-rendering.test.ts`.
+
+- **A grep for `<Image ... src=` on one line misses the multi-line ones.**
+  That is how the dashboard header's broken logo survived a sweep that found
+  the other five. Scan for the element and read to its closing `>`, and strip
+  block comments first or the prose explaining the bug gets reported as the bug.
+
 ## QA
 
 - **Screenshots of the reader are not evidence.** Its transforms make the pane
