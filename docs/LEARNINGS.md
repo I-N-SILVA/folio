@@ -161,6 +161,26 @@ One line per thing that broke, why, and the test that now guards it.
   layouts are identical, the narrow one was cropped, not broken. Use the DOM
   (`--dump-dom`) or an emulated viewport for anything below 500.
 
+## Responsive testing
+
+- **`npm run audit:responsive` is the instrument.** It drives Chrome over CDP
+  across eight real viewports and reports overflow, blank routes, oversized
+  images, reader orientation and unreachable touch targets per route. Run it
+  before believing anything about how a page behaves at a given width.
+
+- **Measure the hit area by hit-testing it, not by reading the box.** A control
+  can carry a transparent pseudo-element that enlarges its touch area without
+  changing `getBoundingClientRect`, so a box-size check reports a false failure.
+  Probe `document.elementFromPoint` 20px off-centre instead. That also catches
+  the opposite case, a big-looking control that something else is covering,
+  which is how the pricing tier labels turned out to be losing their taps to the
+  dial painted after them.
+
+- **A `sr-only` input is not a touch target.** The 1x1 element the audit kept
+  flagging on the home page is the file input behind the drag-and-drop, which is
+  exactly how that should be built. Exclude visually-hidden controls or the
+  report cries wolf.
+
 ## QA
 
 - **A hidden tab never reveals a Suspense boundary.** Proven, not guessed: a
