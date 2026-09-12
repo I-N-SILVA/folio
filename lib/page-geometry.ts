@@ -87,3 +87,31 @@ export function spreadFor(
   const right = left + 1
   return { left, right: right < total ? right : null }
 }
+
+/**
+ * The `minWidth` to hand react-pageflip, given the page width and whether the
+ * reader is in its mobile layout.
+ *
+ * `usePortrait` alone does not make the library go portrait. Internally it only
+ * switches when `blockWidth < 2 * minWidth`, so a flat `minWidth` of 200 meant
+ * portrait below a 400px container while this app calls anything under 768
+ * mobile. Between those two numbers a phone got pages sized one-up but laid out
+ * as a two-page spread: the cover crammed into the right half, dead space
+ * beside it.
+ *
+ * On mobile the answer is the page width itself, which is both what the value
+ * means there (in portrait the page *is* the container) and enough to make the
+ * library's test true for any block it can compute. The library also floors the
+ * root element at `minWidth` in portrait, so this can never overflow.
+ */
+export const PAGEFLIP_DESKTOP_MIN_WIDTH = 200
+
+export function pageflipMinWidth(pageWidth: number, isMobile: boolean): number {
+  if (!isMobile) return PAGEFLIP_DESKTOP_MIN_WIDTH
+  return Math.max(PAGEFLIP_DESKTOP_MIN_WIDTH, Math.round(pageWidth))
+}
+
+/** The library's own rule, so a test can assert against it rather than a number. */
+export function pageflipWouldUsePortrait(blockWidth: number, minWidth: number): boolean {
+  return blockWidth < 2 * minWidth
+}

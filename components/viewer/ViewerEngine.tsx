@@ -14,7 +14,7 @@ import { PageRenderer } from './PageRenderer'
 import { HotspotLayer } from './HotspotLayer'
 import { getSessionId, trackEvent } from '@/lib/tracking'
 import type { Book } from '@/lib/book-schema'
-import { PAGE_DESIGN_WIDTH, PAGE_RATIO, pageSideFor } from '@/lib/page-geometry'
+import { PAGE_DESIGN_WIDTH, PAGE_RATIO, pageSideFor, pageflipMinWidth } from '@/lib/page-geometry'
 
 export interface ViewerEngineHandle {
   flipNext: () => void
@@ -296,7 +296,20 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
           ref={bookRef}
           width={dims.w}
           height={dims.h}
-          minWidth={200}
+          // page-flip decides orientation itself, and `usePortrait` alone does
+          // not make it happen: internally it only goes portrait when
+          // `blockWidth < 2 * minWidth`. With a flat `minWidth={200}` that
+          // meant portrait below a 400px container, while this component calls
+          // anything under 768 mobile — so between those two numbers a phone
+          // got pages sized one-up but laid out as a two-page spread, the cover
+          // crammed into the right half with dead space beside it.
+          //
+          // On mobile `minWidth` therefore tracks the page width, which makes
+          // the library's test true by construction. It is also what the value
+          // means here: in portrait the page *is* the full container. The
+          // library additionally floors the root at `minWidth * 1` in portrait,
+          // so this cannot overflow the container either.
+          minWidth={pageflipMinWidth(dims.w, isMobile)}
           maxWidth={2000}
           minHeight={280}
           maxHeight={2800}
