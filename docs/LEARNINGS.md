@@ -138,6 +138,29 @@ One line per thing that broke, why, and the test that now guards it.
   with 403 `plan_limit`, `used: 3, limit: 3`, and `/api/entitlements` flips to
   `allowed: false`. This is not UI-only gating.
 
+## Reader orientation
+
+- **`usePortrait` does not make react-pageflip go portrait.** Its rule is
+  `blockWidth < 2 * minWidth && usePortrait`, so `minWidth` is what actually
+  decides. A flat `minWidth={200}` meant portrait only below a 400px container
+  while the app called anything under 768 mobile, and every width in between
+  rendered a two-page spread on a phone. **Rule: when a library takes both a
+  flag and a threshold, the threshold is the real switch. Read its source
+  before trusting the flag.** Guarded by `lib/pageflip-orientation.test.ts`.
+
+- **Assert on what the library writes, not on the screenshot.** The proof here
+  was `stf__wrapper --landscape` and `padding-bottom: 70.5%` in the DOM. The
+  pixels were ambiguous three times over; the class was unambiguous once.
+
+## Headless Chrome
+
+- **macOS Chrome clamps a headless window to roughly 500px wide.** Asking for
+  `--window-size=375,812` yields a 375px *screenshot* of a ~500px *layout*, so
+  the page looks catastrophically overflowing when it is fine. Content centred
+  on x=250 in a 375px image is the tell. Render at 500 and compare: if the
+  layouts are identical, the narrow one was cropped, not broken. Use the DOM
+  (`--dump-dom`) or an emulated viewport for anything below 500.
+
 ## QA
 
 - **A hidden tab never reveals a Suspense boundary.** Proven, not guessed: a
