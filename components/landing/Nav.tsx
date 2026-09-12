@@ -60,7 +60,7 @@ export function Nav() {
               : 'w-full border-transparent bg-transparent'
           }`}
         >
-          <Link href="/" className="flex items-center text-white" aria-label="QLICO home">
+          <Link href="/" className="tap-target flex items-center text-white" aria-label="QLICO home">
             <Mark size={22} wordClassName="text-lg" />
           </Link>
 
@@ -88,7 +88,7 @@ export function Nav() {
                 which is what `hidden md:flex` used to do to the whole nav. */}
             <Link
               href="/login"
-              className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[14px] font-medium text-white shadow-sm transition-all hover:bg-white hover:text-black active:scale-[0.98] sm:px-5"
+              className="flex min-h-11 items-center rounded-full border border-white/20 bg-white/5 px-4 text-[14px] font-medium text-white shadow-sm transition-all hover:bg-white hover:text-black active:scale-[0.98] sm:px-5"
             >
               Get started
             </Link>

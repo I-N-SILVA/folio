@@ -427,7 +427,7 @@ export function Hero() {
                       setStatus('ready')
                       trackProduct('demo_opened', { slug: 'demo' })
                     }}
-                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors underline underline-offset-4"
+                    className="tap-target mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors underline underline-offset-4"
                   >
                     Or explore sample interactive edition (Vol. 01) →
                   </button>

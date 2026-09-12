@@ -119,7 +119,7 @@ export function Pricing() {
               <button
                 type="button"
                 onClick={() => scrollToTier(1)}
-                className="absolute -top-8 text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors duration-300 hover:text-zinc-300"
+                className="tap-target z-20 absolute -top-8 text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors duration-300 hover:text-zinc-300"
                 style={{ color: activeIndex === 1 ? 'white' : undefined }}
               >
                 Pro
@@ -127,7 +127,7 @@ export function Pricing() {
               <button
                 type="button"
                 onClick={() => scrollToTier(0)}
-                className="absolute -left-8 top-[80%] text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors duration-300 hover:text-zinc-300"
+                className="tap-target z-20 absolute -left-8 top-[80%] text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors duration-300 hover:text-zinc-300"
                 style={{ color: activeIndex === 0 ? 'white' : undefined }}
               >
                 Free
@@ -135,7 +135,7 @@ export function Pricing() {
               <button
                 type="button"
                 onClick={() => scrollToTier(2)}
-                className="absolute -right-12 top-[80%] text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors duration-300 hover:text-zinc-300"
+                className="tap-target z-20 absolute -right-12 top-[80%] text-xs font-medium uppercase tracking-widest text-zinc-500 transition-colors duration-300 hover:text-zinc-300"
                 style={{ color: activeIndex === 2 ? 'white' : undefined }}
               >
                 Lifetime

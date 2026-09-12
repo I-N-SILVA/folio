@@ -473,3 +473,26 @@ section[id] {
     background: none !important;
   }
 }
+
+/**
+ * A touch target of at least 44px, without moving anything.
+ *
+ * Several controls are deliberately small type — the pricing dial's tier
+ * labels are 12px uppercase and 16px tall, the hero's secondary link 14px —
+ * and padding them to 44px would push them off the positions the layout
+ * places them at. This expands the *hit* area instead, via a transparent
+ * pseudo-element, so the pixels stay exactly where the design put them and a
+ * thumb still lands. 14px on each side takes a 16px control to 44px.
+ *
+ * Only for controls that stand alone: on a tight vertical stack the expanded
+ * areas would overlap and steal each other's taps.
+ */
+.tap-target {
+  position: relative;
+}
+
+.tap-target::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+}
