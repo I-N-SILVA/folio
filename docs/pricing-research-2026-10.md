@@ -176,7 +176,7 @@ Vercel's transformation pricing, or with pre-sized images (§3).
 | | **Free** | **Pro** | **Studio** *(when built)* |
 |---|---|---|---|
 | Price | $0 | **$29/mo or $290/yr** | **$79/mo or $790/yr** |
-| Editions | 3 | Unlimited | Unlimited |
+| Editions | 3 | 100 | 500 |
 | Analytics | 30 days | 365 days | 365 days |
 | Lead gate + CSV, live data, remove badge | — | ✓ | ✓ |
 | Storage / AI pages | 500 MB / 50 | 10 GB / 1,000 | 50 GB / 3,000 |
@@ -226,6 +226,10 @@ Vercel's transformation pricing, or with pre-sized images (§3).
    channel.
 
 ## 9. Sustainable at scale — what breaks first, and what to do
+
+> **Status:** items 1–4 are fixed (migration 022, see `HANDOVER.md` §2), along
+> with a bug found while fixing them: reader events were stored with no page
+> number. Edition limits are finite on every plan now (Pro 100, Tier 3 200).
 
 Read off the code on `claude/monetisation-guardrails`. Ordered by which bites
 first as usage grows.

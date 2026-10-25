@@ -53,6 +53,8 @@ describe('the pricing page against lib/plans.ts', () => {
     if (claims(pro, /csv|export/i)) expect(e.csvExport).toBe(true)
     if (claims(pro, /badge|watermark/i)) expect(e.whiteLabel).toBe(true)
     if (claims(pro, /unlimited/i)) expect(e.maxBooks).toBe(Infinity)
+    const editions = pro.find((f) => /editions/i.test(f))
+    if (editions && Number.isFinite(e.maxBooks)) expect(editions).toContain(formatQuota(e.maxBooks))
   })
 
   it('does not claim the lifetime tiers match Pro', () => {

@@ -417,3 +417,140 @@ BEGIN
 END $$;
 
 ROLLBACK;
+
+-- ── Analytics at scale (022) ─────────────────────────────────────────────────
+--
+-- The route used to count raw rows in JavaScript and PostgREST stops a
+-- response at 1,000 rows, so every figure past that was an undercount. This
+-- writes 1,500 page views across 300 sessions and checks the function counts
+-- all of them, groups them by page, and that the prune keeps the leads.
+
+BEGIN;
+
+INSERT INTO auth.users (id, email) VALUES
+  ('88888888-8888-8888-8888-888888888888', 'analytics@example.com');
+INSERT INTO public.books (id, slug, title, owner_id) VALUES
+  ('a8888888-8888-8888-8888-888888888888', 'analytics-scale', 'Scale',
+   '88888888-8888-8888-8888-888888888888');
+
+-- 300 sessions × 5 pages, each page viewed once with 1,000 ms of dwell.
+INSERT INTO public.events (book_id, session_id, event_type, page_number, payload)
+SELECT 'a8888888-8888-8888-8888-888888888888', 's' || s, 'page_view', p,
+       jsonb_build_object('page_number', p, 'dwell_ms', 1000)
+FROM generate_series(1, 300) s, generate_series(1, 5) p;
+
+-- Every session opens; a third finish; ten give an email at the gate.
+INSERT INTO public.events (book_id, session_id, event_type, payload)
+SELECT 'a8888888-8888-8888-8888-888888888888', 's' || s, 'book_open', '{}'::jsonb
+FROM generate_series(1, 300) s;
+INSERT INTO public.events (book_id, session_id, event_type, payload)
+SELECT 'a8888888-8888-8888-8888-888888888888', 's' || s, 'book_complete',
+       jsonb_build_object('session_duration_ms', 60000)
+FROM generate_series(1, 100) s;
+INSERT INTO public.events (book_id, session_id, event_type, page_number, payload)
+SELECT 'a8888888-8888-8888-8888-888888888888', 's' || s, 'gate_unlock', 3,
+       jsonb_build_object('email', 'reader' || s || '@example.com')
+FROM generate_series(1, 10) s;
+
+DO $$
+DECLARE
+  a jsonb := public.edition_analytics('a8888888-8888-8888-8888-888888888888', now() - interval '1 day');
+  views bigint;
+BEGIN
+  IF (a->'summary'->>'uniqueSessions')::int <> 300 THEN
+    RAISE EXCEPTION 'uniqueSessions is %, not 300', a->'summary'->>'uniqueSessions';
+  END IF;
+  IF (a->'summary'->>'totalOpens')::int <> 300 THEN
+    RAISE EXCEPTION 'totalOpens is %, not 300', a->'summary'->>'totalOpens';
+  END IF;
+  IF (a->'summary'->>'completionRate')::int <> 33 THEN
+    RAISE EXCEPTION 'completionRate is %, not 33', a->'summary'->>'completionRate';
+  END IF;
+  IF (a->'summary'->>'avgSessionMs')::int <> 60000 THEN
+    RAISE EXCEPTION 'avgSessionMs is %, not 60000', a->'summary'->>'avgSessionMs';
+  END IF;
+
+  SELECT SUM((p->>'views')::bigint) INTO views FROM jsonb_array_elements(a->'pageViewData') p;
+  IF views <> 1500 THEN
+    RAISE EXCEPTION 'page views summed to %, not all 1,500 — the 1,000-row ceiling is back', views;
+  END IF;
+  IF jsonb_array_length(a->'pageViewData') <> 5 THEN
+    RAISE EXCEPTION 'page views grouped into % pages, not 5', jsonb_array_length(a->'pageViewData');
+  END IF;
+  IF (a->'pageViewData'->0->>'avgDwellMs')::int <> 1000 THEN
+    RAISE EXCEPTION 'average dwell is %, not 1000', a->'pageViewData'->0->>'avgDwellMs';
+  END IF;
+  IF (a->'funnelData'->0->>'pct')::int <> 100 THEN
+    RAISE EXCEPTION 'the funnel says % of sessions reached page 1, not 100', a->'funnelData'->0->>'pct';
+  END IF;
+  IF jsonb_array_length(a->'leadData') <> 10 THEN
+    RAISE EXCEPTION '% leads reported, not 10', jsonb_array_length(a->'leadData');
+  END IF;
+  IF (a->'gate'->>'unlocks')::int <> 10 THEN
+    RAISE EXCEPTION 'gate unlocks is %, not 10', a->'gate'->>'unlocks';
+  END IF;
+
+  RAISE NOTICE 'ok  edition analytics count every row past 1,000 and group by page';
+END $$;
+
+-- An empty window is a well-formed document, not NULLs the dashboard trips on.
+DO $$
+DECLARE a jsonb := public.edition_analytics('a8888888-8888-8888-8888-888888888888', now() + interval '1 day');
+BEGIN
+  IF a->'pageViewData' <> '[]'::jsonb OR a->'heatmapData' <> '{}'::jsonb
+     OR (a->'summary'->>'uniqueSessions')::int <> 0 THEN
+    RAISE EXCEPTION 'an empty window returned %', a;
+  END IF;
+  RAISE NOTICE 'ok  an empty window returns empty lists and zeros';
+END $$;
+
+-- Age everything, then prune: reading telemetry goes, leads stay.
+UPDATE public.events SET created_at = now() - interval '500 days'
+WHERE book_id = 'a8888888-8888-8888-8888-888888888888';
+
+DO $$
+DECLARE
+  first_batch int;
+  total int := 0;
+  n int;
+  left_reading int;
+  left_leads int;
+BEGIN
+  first_batch := public.prune_events(now() - interval '400 days', 1000);
+  IF first_batch <> 1000 THEN
+    RAISE EXCEPTION 'a full batch deleted %, not 1,000', first_batch;
+  END IF;
+  total := first_batch;
+  LOOP
+    n := public.prune_events(now() - interval '400 days', 1000);
+    total := total + n;
+    EXIT WHEN n < 1000;
+  END LOOP;
+
+  SELECT COUNT(*) FILTER (WHERE event_type <> 'gate_unlock'),
+         COUNT(*) FILTER (WHERE event_type = 'gate_unlock')
+  INTO left_reading, left_leads
+  FROM public.events WHERE book_id = 'a8888888-8888-8888-8888-888888888888';
+
+  IF left_reading <> 0 THEN RAISE EXCEPTION '% old reading events survived the prune', left_reading; END IF;
+  IF left_leads <> 10 THEN RAISE EXCEPTION 'the prune deleted leads: % of 10 left', left_leads; END IF;
+  IF total <> 1900 THEN RAISE EXCEPTION 'pruned %, expected 1,900', total; END IF;
+
+  IF public.prune_events(now() - interval '400 days', 0) <> 0 THEN
+    RAISE EXCEPTION 'a zero batch deleted something';
+  END IF;
+
+  RAISE NOTICE 'ok  the prune deletes old reading events in batches and never deletes leads';
+END $$;
+
+ROLLBACK;
+
+-- No plan is unlimited.
+DO $$
+BEGIN
+  IF public.book_limit_for_plan('pro') <> 100 OR public.book_limit_for_plan('ltd_tier3') <> 200 THEN
+    RAISE EXCEPTION 'edition ladder is pro=%, ltd_tier3=%',
+      public.book_limit_for_plan('pro'), public.book_limit_for_plan('ltd_tier3');
+  END IF;
+  RAISE NOTICE 'ok  every plan has a finite edition limit';
+END $$;

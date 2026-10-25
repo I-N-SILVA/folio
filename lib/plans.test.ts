@@ -41,7 +41,7 @@ describe('getPlan', () => {
 describe('getEntitlements', () => {
   it('mirrors the plan entitlements', () => {
     expect(getEntitlements('free')).toEqual(PLANS.free.entitlements)
-    expect(getEntitlements('pro').maxBooks).toBe(Infinity)
+    expect(getEntitlements('pro').maxBooks).toBe(PLANS.pro.entitlements.maxBooks)
   })
 })
 
@@ -91,6 +91,13 @@ describe('formatQuota', () => {
 })
 
 describe('usage allowances', () => {
+  it('gives no plan unlimited editions', () => {
+    // An unlimited lifetime plan is an open-ended cost sold for one payment.
+    for (const plan of Object.values(PLANS)) {
+      expect(Number.isFinite(plan.entitlements.maxBooks), plan.id).toBe(true)
+    }
+  })
+
   it('gives no plan unlimited storage, lifetime tiers included', () => {
     // Storage is the cost that grows for as long as an account exists, and a
     // lifetime plan pays for it once.

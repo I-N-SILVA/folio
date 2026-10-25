@@ -4,7 +4,7 @@ import { Check, Crown, Gift, Minus, CreditCard } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getProfile, effectivePlan, countUserBooks, aiPagesUsed } from '@/lib/entitlements'
 import { supabaseAdmin } from '@/lib/supabase'
-import { PRO_PRICING, formatQuota, formatStorage } from '@/lib/plans'
+import { PLANS as PLANS_CATALOG, PRO_PRICING, formatQuota, formatStorage } from '@/lib/plans'
 import { isAnnualBillingEnabled, isBillingEnabled } from '@/lib/stripe'
 import { UpgradeButton, ManageBillingButton } from '@/components/studio/BillingButtons'
 import { DigestToggle } from '@/components/studio/DigestToggle'
@@ -184,7 +184,7 @@ export default async function AccountPage({
                 <Crown size={20} className="text-[var(--qlico-brass)]" />
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Go Pro</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--qlico-muted)]">
-                  Unlimited editions, email capture with lead export, and 12-month analytics —
+                  {formatQuota(PLANS_CATALOG.pro.entitlements.maxBooks)} editions, email capture with lead export, and 12-month analytics —
                   ${PRO_PRICING.monthlyUSD}/mo
                   {annualOn && <>, or ${PRO_PRICING.annualUSD}/yr — two months free</>}.
                 </p>

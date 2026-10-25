@@ -35,7 +35,15 @@ const DIGEST_INTERVAL_DAYS = 6
  */
 const DIGEST_WINDOW_DAYS = 7
 
-/** Bounds one invocation. Remaining profiles are picked up by the next run. */
+/**
+ * Bounds one invocation. Remaining profiles are picked up by the next run.
+ *
+ * The next run used to be the next *week*: the cron fired once, Mondays at
+ * 09:00, so past 200 eligible authors each one got a digest every few weeks.
+ * It now fires every ten minutes through Monday daytime (`vercel.json`), which
+ * is 78 runs and room for ~15,000 digests a week. The slot claim makes the
+ * extra runs free: a profile already sent this week is not selected.
+ */
 const BATCH_SIZE = 200
 
 function authorized(request: NextRequest): boolean {

@@ -21,7 +21,14 @@
 export type PlanId = 'free' | 'pro' | 'ltd_tier1' | 'ltd_tier2' | 'ltd_tier3'
 
 export type Entitlements = {
-  /** Maximum number of editions a user may own. Enforced: POST /api/books, POST /api/import/pdf, DB trigger. */
+  /**
+   * Maximum number of editions a user may own. Enforced: POST /api/books,
+   * POST /api/import/pdf, DB trigger (`book_limit_for_plan`, 022).
+   *
+   * Finite on every plan. Pro and lifetime Tier 3 used to be unlimited, and an
+   * unlimited lifetime plan is an open-ended cost sold for one payment. The
+   * caps sit well above what one author or a small agency uses.
+   */
   maxBooks: number
   /** How many days of reader analytics are queryable. Enforced: GET /api/analytics/[slug]. */
   analyticsDays: number
@@ -109,7 +116,7 @@ export const PLANS: Record<PlanId, Plan> = {
     tagline: 'For anyone whose editions have to bring something back.',
     lifetime: false,
     entitlements: {
-      maxBooks: Infinity,
+      maxBooks: 100,
       analyticsDays: 365,
       leadGating: true,
       csvExport: true,
@@ -155,10 +162,10 @@ export const PLANS: Record<PlanId, Plan> = {
   ltd_tier3: {
     id: 'ltd_tier3',
     name: 'Qlico LTD — Tier 3',
-    tagline: 'Unlimited lifetime access for agencies.',
+    tagline: 'Lifetime access for agencies.',
     lifetime: true,
     entitlements: {
-      maxBooks: Infinity,
+      maxBooks: 200,
       analyticsDays: 365,
       leadGating: true,
       csvExport: true,
@@ -305,3 +312,14 @@ export const PRO_PRICING = {
 } as const
 
 export type BillingInterval = 'month' | 'year'
+
+/**
+ * How long reading events are kept, in days.
+ *
+ * The longest analytics window any plan has, plus a month of slack so an
+ * account that upgrades sees a full window straight away. Older rows are
+ * deleted daily by /api/cron/prune-events, except leads (`gate_unlock`),
+ * which are kept for as long as the edition exists.
+ */
+export const EVENT_RETENTION_DAYS =
+  Math.max(...Object.values(PLANS).map((p) => p.entitlements.analyticsDays)) + 35

@@ -35,7 +35,7 @@ const PLANS = [
       ? `For creators whose editions have to bring something back. Or $${PRO_PRICING.annualUSD}/yr — two months free.`
       : 'For creators whose editions have to bring something back.',
     features: [
-      'Unlimited Editions',
+      '100 Editions',
       '365 Days Analytics',
       '10 GB Storage',
       'Remove QLICO Badge',
@@ -55,7 +55,7 @@ const PLANS = [
     // the entry price — and they match lib/plans.ts.
     description: 'One-time, from Tier 1. Stack codes to move up. Yours forever.',
     features: [
-      '10 Editions (Tier 1) — up to Unlimited',
+      '10 Editions (Tier 1) — up to 200',
       '90 Days Analytics (Tier 1) — up to 365',
       'Email Capture, CSV Export, Live Data',
       'Stack Codes to Move Up a Tier',

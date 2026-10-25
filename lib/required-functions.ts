@@ -87,4 +87,16 @@ export const REQUIRED_FUNCTIONS: readonly RequiredFunction[] = [
     critical: false,
     cost: 'storage allowances are not enforced, so no account is ever stopped for size',
   },
+  {
+    name: 'edition_analytics',
+    migration: '022',
+    critical: false,
+    cost: 'per-edition Insights fall back to counting rows in the app, capped at 50,000',
+  },
+  {
+    name: 'prune_events',
+    migration: '022',
+    critical: false,
+    cost: 'old reading events are never deleted, and the events table grows without bound',
+  },
 ] as const

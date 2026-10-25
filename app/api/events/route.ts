@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { EVENT_TYPES } from '@/lib/book-schema'
 import { z } from 'zod'
 import { supabaseAdmin, hasServiceRoleKey } from '@/lib/supabase'
-import { rateLimit, clientIp } from '@/lib/rate-limit'
+import { rateLimitCost, clientIp } from '@/lib/rate-limit'
+import { MAX_BATCH, pageNumberOf } from '@/lib/events'
 
 const EventBodySchema = z.object({
   bookId: z.string(),
@@ -13,26 +14,39 @@ const EventBodySchema = z.object({
   payload: z.record(z.string(), z.unknown()).optional(),
 })
 
+/**
+ * One event, or a batch of them.
+ *
+ * The reader used to send one request per event — a page turn was a `page_view`
+ * and a `page_flip`, each its own serverless invocation and its own insert.
+ * `lib/tracking.ts` now queues them and sends a batch. A single event is still
+ * accepted, so a reader holding an old bundle keeps recording.
+ */
+const BodySchema = z.union([
+  z.object({ events: z.array(EventBodySchema).min(1).max(MAX_BATCH) }),
+  EventBodySchema,
+])
+
 export async function POST(request: NextRequest) {
   try {
-    // Analytics is unauthenticated by design (public readers). Throttle per IP
-    // so a single client cannot flood the events table.
-    const limit = rateLimit(`events:${clientIp(request)}`, 240, 60_000)
+    const body = await request.json()
+    const parsed = BodySchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+    }
+
+    const events = 'events' in parsed.data ? parsed.data.events : [parsed.data]
+
+    // Analytics is unauthenticated by design (public readers). Throttled per IP
+    // and charged per event, so batching cannot be used to get round it.
+    const limit = rateLimitCost(`events:${clientIp(request)}`, 240, 60_000, events.length)
     if (!limit.ok) {
       return new NextResponse(null, {
         status: 429,
         headers: { 'Retry-After': String(limit.retryAfter) },
       })
     }
-
-    const body = await request.json()
-    const parsed = EventBodySchema.safeParse(body)
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
-    }
-
-    const { bookId, sessionId, eventType, pageNumber, payload } = parsed.data
 
     // Insert first and let the foreign key answer "does this book exist?".
     //
@@ -49,13 +63,16 @@ export async function POST(request: NextRequest) {
       return new NextResponse(null, { status: 204 })
     }
 
-    const { error: insertError } = await supabaseAdmin.from('events').insert({
-      book_id: bookId,
-      session_id: sessionId,
-      event_type: eventType,
-      page_number: pageNumber ?? null,
-      payload: payload ?? {},
-    })
+    // One statement for the whole batch.
+    const { error: insertError } = await supabaseAdmin.from('events').insert(
+      events.map((e) => ({
+        book_id: e.bookId,
+        session_id: e.sessionId,
+        event_type: e.eventType,
+        page_number: pageNumberOf(e),
+        payload: e.payload ?? {},
+      }))
+    )
 
     if (insertError) {
       // 23503 = foreign_key_violation: no such book.
@@ -67,7 +84,8 @@ export async function POST(request: NextRequest) {
       // live example — see supabase/migrations/009.
       if (insertError.code === '23514') {
         console.error(
-          `[events] the events_event_type_check constraint rejects "${eventType}" — ` +
+          `[events] the events_event_type_check constraint rejects one of ` +
+            `"${[...new Set(events.map((e) => e.eventType))].join('", "')}" — ` +
             'apply the pending migrations in supabase/migrations/'
         )
         return new NextResponse(null, { status: 204 })

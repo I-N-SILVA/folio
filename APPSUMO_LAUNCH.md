@@ -33,12 +33,13 @@ via `APPSUMO_TIER_TO_PLAN`.
 | ---- | --------------- | ----- | --------- | ------- | ---------------- | ----------- | ------------ |
 | **1** | ~$59 | 10 | 90 days | 2 GB | 200 | — | Solo creators, freelancers |
 | **2** | ~$119 | 50 | 180 days | 10 GB | 500 | ✓ | Studios, small agencies |
-| **3** | ~$239 | Unlimited | 365 days | 25 GB | 1,000 | ✓ | Agencies, power users |
+| **3** | ~$239 | 200 | 365 days | 25 GB | 1,000 | ✓ | Agencies, power users |
 
 Custom domain is not built and is not in this table on purpose (see
 `HANDOVER.md` §4). Storage and AI pages are capped on every tier, Tier 3
 included: a lifetime plan is paid once, and storage is a cost that grows for as
-long as the account exists. Put both numbers on the listing — an "unlimited"
+long as the account exists. No tier is unlimited on anything, editions
+included (022). Put the numbers on the listing — an "unlimited"
 buyer who meets a cap they were not told about is a refund.
 
 All tiers include: interactive reader, hotspots, PDF import, lead gating, CSV
@@ -56,7 +57,7 @@ storage + edge), which makes LTD viable.
 
 | Piece | Location | Notes |
 | ----- | -------- | ----- |
-| Plan catalog & entitlements | `lib/plans.ts` | Single source of truth; `Infinity` = unlimited |
+| Plan catalog & entitlements | `lib/plans.ts` | Single source of truth; every limit is finite |
 | Server entitlement helpers | `lib/entitlements.ts` | `getUserPlan`, `checkBookQuota`, profile auto-provision |
 | AppSumo license logic | `lib/appsumo.ts` | Signature verify, event apply, redeem, profile sync |
 | Webhook endpoint | `app/api/appsumo/webhook/route.ts` | `POST` events, `GET` health check |
@@ -248,8 +249,9 @@ and review count.
 - **Support overload:** tiered limits + good docs keep volume down; templatize
   the top 10 answers.
 - **Over-promising:** only list what's shipped. Mark roadmap items clearly.
-- **Infra cost creep:** monitor heavy users; unlimited (Tier 3) is capped by
-  fair-use in Terms.
+- **Infra cost creep:** every tier has hard limits on editions, storage and
+  AI pages, enforced by the server (`lib/plans.ts`). Watch cost per active
+  edition.
 
 ---
 

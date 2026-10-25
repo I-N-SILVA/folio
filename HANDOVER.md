@@ -180,6 +180,32 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### Analytics at scale, and no plan is unlimited (migration 022)
+
+- **Every reader event was stored with no page number.** The reader sends
+  `page_number` in the payload and `/api/events` only read a top-level
+  `pageNumber` nobody sends, so per-page views, the funnel and the heatmap had
+  never had data. `pageNumberOf` (`lib/events.ts`) reads the payload; 022
+  backfills existing rows.
+- **Insights were capped at 1,000 rows** (PostgREST's default) and silently
+  undercounted past ~70 reads. `edition_analytics` counts in Postgres; the JS
+  path (`lib/analytics.ts`) is now a fallback that pages through every row.
+- **Events are pruned daily** past `EVENT_RETENTION_DAYS` (400) by
+  `/api/cron/prune-events`, in batches. **`gate_unlock` rows — the leads — are
+  never pruned.**
+- **The reader batches events**: one request per ~2 s / 20 events / page hide,
+  instead of one per event. `/api/events` still accepts a single event.
+- **The digest runs every 10 minutes through Monday 08:00–20:00 UTC** instead
+  of once, so it reaches ~15,000 authors a week rather than 200. **This needs
+  Vercel Pro** — Hobby only allows daily crons and rejects the deploy. (Pro is
+  needed for a commercial app anyway.)
+- **No plan is unlimited.** Pro 100 editions, lifetime Tier 3 200. Accounts
+  already above keep what they have; they cannot create more.
+
+`npm run verify:migration` covers it: 1,500 events counted exactly and grouped
+by page, the prune emptying old telemetry while keeping every lead, and the
+new ladder.
+
 ### Usage allowances and a yearly Pro price (migration 021)
 
 Two costs grew with use and had no limit that outlived a cold start: Gemini
