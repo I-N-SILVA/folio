@@ -25,13 +25,13 @@ measurement**.
   valuable thing in the plan, and competitors put it on tiers costing roughly
   $35–125/mo. **Move Pro to $29/mo ($290/yr).** That is still at or below every
   competitor that bundles lead capture with analytics.
-- **Margins are healthy, apart from one cost: page-image bandwidth.** Pages are
-  stored as 2× PNG. At the estimated size, a busy free account costs more to
-  serve than a paying one earns, and a heavy lifetime Tier 3 buyer uses up
-  their whole payment in about 3 months. **Switching page renders to WebP is
-  the highest-value technical change for the business** — about 6× less
-  bandwidth (estimated).
-- **Use AppSumo for cash and reviews, capped, after the WebP change.** Net per
+- **Margins are healthy (~85–90%).** The cost to watch at scale is Vercel image
+  optimisation: on its legacy per-source-image pricing, every imported page is
+  billed, and at ~10,000 editions that alone is ~$1,200/mo. On the opt-in
+  transformation pricing the same load is ~$25–50/mo (§3). *An earlier version
+  of this line blamed raw-PNG bandwidth; readers get optimised images, so it
+  was wrong.*
+- **Use AppSumo for cash and reviews, capped, once the image-pricing model is checked.** Net per
   code is about $16–65. That is fine for the typical buyer and loses money on
   heavy ones.
 
@@ -80,25 +80,25 @@ What this says:
 month. The allowances in `lib/plans.ts` protect against abuse, not against
 normal use. They could be raised without hurting margin.
 
-**Bandwidth is not cheap.** Every reader downloads page images. Assuming a
-reader sees about 12 pages:
+**Correction (same day): readers do not download the raw PNGs.** Page images
+render through `next/image` (`components/blocks/ImageBlock.tsx`), so on Vercel a
+reader gets a resized WebP/AVIF from Vercel's image cache, not the 2× PNG from
+Supabase. Supabase egress is mostly the optimiser fetching each original once.
+The first version of this section billed every read as raw PNG at Supabase's
+rate and overstated the cost several times over. What readers actually cost:
 
-| Page format | ~MB per read | 2,000 reads/mo | 10,000 reads/mo | Pro margin at $19 / $29 (2,000 reads) |
-|---|---|---|---|---|
-| **PNG at 2× (today)** | ~24 (est.) | $4.32 | $21.60 | **68% / 78%** |
-| WebP at 2× | ~4 (est.) | $0.72 | $3.60 | 87% / 90% |
+| Cost | Rate (Vercel Pro, list; verify) | What drives it |
+|---|---|---|
+| Fast Data Transfer | 1 TB/mo included, then ~$0.15/GB (one source says $0.40) | ~2–3 MB per read (est., optimised WebP) → 1 TB ≈ 350–500k reads/mo free |
+| Image Optimization, **legacy model** | ~$5 per 1,000 *source images* | **Every imported page is a unique source image.** 10,000 editions × 24 pages ≈ 240k sources ≈ **~$1,200/mo** |
+| Image Optimization, **transformation model** (opt-in) | ~$0.05 per 1,000 transformations + cache reads/writes | The same 240k pages at ~2 widths ≈ **~$25–50/mo** |
 
-Free accounts carry the same cost and pay nothing. **6,000 active free accounts
-at 200 reads a month ≈ $2,600/mo on PNG, or ≈ $430/mo on WebP.** The badge loop
-is meant to be the main acquisition channel, so this bandwidth is effectively
-the cost of acquiring customers. It is affordable only on WebP.
-
-> **Measure before acting on this.** Import two real catalogs (one photographic,
-> one mostly text), read the object sizes in Supabase Storage, and divide.
-> If PNG pages are already under ~600 KB, the problem is 4× smaller than
-> stated here. Either way, `lib/pdf-renderer.ts` calling
-> `canvas.toBlob(…, 'image/webp', 0.85)` is a one-line change, though it needs
-> a fallback check for Safari < 14.
+So the scale risk is not bandwidth. It is **which Vercel image-pricing model the
+project is on.** Opt into transformation pricing, or have the import write
+pre-sized WebP files and serve them directly with `unoptimized` (see §9).
+The raw PNG still reaches readers through the lightbox and feeds the AI
+pass, so converting pages to WebP at import still cuts storage and those paths.
+It is just no longer the emergency the first version described.
 
 ### Fixed cost
 
@@ -151,19 +151,23 @@ AppSumo does not publish a fixed revenue share. Founders report keeping about
 **20–40%**, with ~30% the most common figure, and buyers have a 60-day refund
 window. At 30% with 10% refunds:
 
-| Tier | Price | Net per code | Typical user (~$0.81/mo, WebP-era) | Heavy user (10k reads/mo, PNG) |
-|---|---|---|---|---|
-| 1 | $59 | ~$16 | ~20 months covered | — |
-| 2 | $119 | ~$32 | ~40 months | — |
-| 3 | $239 | ~$65 | ~80 months | **~3 months** (~12 on WebP) |
+| Tier | Price | Net per code |
+|---|---|---|
+| 1 | $59 | ~$16 |
+| 2 | $119 | ~$32 |
+| 3 | $239 | ~$65 |
+
+A typical buyer costs well under $1/mo to serve, so a code covers years of
+use. A heavy agency importing hundreds of pages a month is covered only on
+Vercel's transformation pricing, or with pre-sized images (§3).
 
 - **Worth doing for cash, reviews and backlinks, not as the revenue model.** Every
   lifetime buyer is a customer who will never pay again, and LTD buyers expect
   support and a roadmap.
 - **Cap the codes** (for example 500–1,000 total) and close the deal on a date.
   An uncapped LTD sells away the recurring revenue the business needs.
-- **Do it after the WebP change**, so the heavy Tier 3 user, who is exactly the
-  agency profile Tier 3 targets, costs ~$5/mo rather than ~$24.
+- **Confirm the image-pricing model first** (§3). The heavy Tier 3 user, who
+  is exactly the agency profile Tier 3 targets, is the one who imports the most pages.
 - **Put storage and AI caps on the listing.** An "unlimited" buyer who hits a
   cap they were not told about asks for a refund.
 
@@ -194,8 +198,9 @@ window. At 30% with 10% refunds:
 1. **No channel works.** Everything above assumes thousands of active free
    accounts. The badge click-through rate and the outreach reply rate are both
    unmeasured.
-2. **Free accounts' bandwidth outruns revenue.** Real on PNG; manageable on WebP.
-   It needs measuring before any launch that brings a spike of readers
+2. **Per-page image billing outruns revenue.** On Vercel's legacy image
+   pricing, free accounts' imports are billed page by page. Check the
+   project's billing model before any launch that brings a spike of imports
    (AppSumo, Product Hunt).
 3. **Being placed in the wrong category.** If buyers compare QLICO with Heyzine
    ($5) rather than DocSend ($45), even $19 looks expensive. The landing page and
@@ -206,8 +211,8 @@ window. At 30% with 10% refunds:
 
 ## 8. How to validate, cheaply, before committing
 
-1. **Measure page-image size** on two real imports (½ day). That one number
-   makes §3 either true or 4× too pessimistic.
+1. **Check the Vercel image-pricing model** on the project's billing page, and
+   opt into transformation pricing if it is still per source image (10 minutes).
 2. **Ask ten design partners the four Van Westendorp questions** — at what price
    is it too cheap to trust, a bargain, getting expensive, too expensive? Ten
    answers give a usable acceptable-price range. Do it in the outreach
@@ -219,6 +224,77 @@ window. At 30% with 10% refunds:
 4. **Track the badge.** Readers who click "Powered by QLICO" ÷ unique readers,
    and signups that follow. Under ~1% and the plan needs a different main
    channel.
+
+## 9. Sustainable at scale — what breaks first, and what to do
+
+Read off the code on `claude/monetisation-guardrails`. Ordered by which bites
+first as usage grows.
+
+### Breaks before 1,000 users
+
+1. **Insights go quietly wrong on any edition with more than ~1,000 events in range.**
+   `app/api/analytics/[slug]/route.ts` selects raw `events` rows and adds them
+   up in JavaScript. Supabase's API returns at most 1,000 rows by default, so
+   past that point opens, completion and the heatmap are computed from a
+   truncated sample, with no error. That is about 70 reads at ~15 events a
+   read, and the most successful authors (the ones most likely to pay) hit it
+   first. **Fix:** aggregate in SQL (an RPC like `edition_engagement`), or keep
+   a daily rollup table.
+2. **The weekly digest reaches only 200 people a week.** It runs once, Mondays
+   09:00 (`vercel.json`), and each run is capped at `BATCH_SIZE = 200`; the
+   rest wait for next Monday. With 1,000 eligible authors, each gets a digest
+   about every five weeks. **Fix:** run the cron hourly on Mondays (or daily).
+   Slot claiming already makes repeat runs safe.
+
+### Breaks at ~10,000 editions or ~1M reads a month
+
+3. **The events table outgrows the database.** At ~15 events × ~500 bytes
+   (row + indexes, est.) a read, 1M reads a month ≈ 7.5 GB a month, against 8
+   GB included on Supabase Pro. Nothing ever deletes events. **Fix:** keep raw
+   events for 13 months at most (the longest plan window), roll older ones up
+   into daily per-page counts, and prune with a cron job.
+4. **One HTTP request and one insert per event.** Each page turn is a
+   serverless invocation and a row write. **Fix:** batch events in the reader
+   (one `sendBeacon` with an array, flushed on page hide) and insert them in one
+   statement. That cuts invocations ~10×.
+5. **Vercel image pricing** (§3): per-source-image billing grows with every
+   imported page. Opt into transformation pricing, or pre-size pages at import.
+6. **In-memory limiters and caches multiply with server instances.** The rate
+   limiter (`lib/rate-limit.ts`) and the 30-second live-data cache
+   (`lib/live-data.ts`) are per instance, so at scale each new instance fetches
+   an author's source again and allows a fresh burst. **Fix:** move both to a
+   shared store (Upstash / Vercel KV, or Next's data cache for live data).
+
+### Business sustainability
+
+7. **Abuse is the existential risk, not cost.** Hosted flipbook and document
+   platforms are regularly used to host phishing pages. If Google Safe
+   Browsing flags `qlico.app`, every customer's links break at once.
+   **Do before scaling free signups:** a "report this edition" link on the
+   reader, URL checks (Safe Browsing API) on hotspot and button links at
+   publish, a kill switch to unpublish an edition, and serving readers from a
+   separate domain from the app (for example `read.qlico.app`), so a flag
+   doesn't take the dashboard down too.
+8. **Sell usage instead of only refusing it.** The new storage and AI caps stop
+   at a wall. Add-on packs (for example +10 GB for $5/mo, +1,000 AI pages for
+   $5) turn heavy users into extra revenue instead of support tickets.
+9. **Archive dead free editions.** A free edition with no reads for 12 months
+   costs storage forever. Email the author, then archive it (unpublish, and
+   move its pages to cold storage or delete them after notice). Paid plans are
+   never archived; that becomes a reason to pay.
+10. **Sales tax / VAT.** Selling subscriptions to EU, UK and many US-state
+    customers means registering and remitting tax. Either turn on Stripe Tax
+    (~0.5% a transaction) and register where thresholds are crossed, or move
+    to a merchant of record (Paddle, Lemon Squeezy: ~5% + fees, and they
+    carry the liability). For a solo founder, a merchant of record is usually
+    the cheaper choice once sales are international.
+11. **Support load scales with LTD buyers and free users, not revenue.** Keep
+    the codes capped, put a self-serve help centre in front of email, and
+    answer AppSumo Q&A fast. That is the one support channel that is public.
+12. **Watch it.** Sentry is not connected (`HANDOVER.md` §1). Add spend alerts
+    on Vercel and Supabase (leave Supabase's spend cap on until revenue
+    covers overage), and a weekly look at cost per active edition. That
+    number tells you whether the plan limits are right.
 
 ## Sources
 
@@ -257,7 +333,14 @@ AppSumo:
 [MEAN CEO — launch statistics](https://blog.mean.ceo/?p=11216) ·
 [Monetizely — marketplace pricing](https://www.getmonetizely.com/articles/should-you-launch-on-appsumo-a-vibe-coders-guide-to-deal-marketplace-pricing)
 
+Abuse:
+[Google Safe Browsing API](https://developers.google.com/safe-browsing)
+
 Costs:
+[Vercel — image optimisation pricing change](https://vercel.com/changelog/faster-transformations-and-reduced-pricing-for-image-optimization) ·
+[Vercel — image limits and pricing](https://vercel.com/docs/concepts/image-optimization/limits-and-pricing) ·
+[Vercel cost 2026 — MakerKit](https://makerkit.dev/blog/saas/vercel-cost) ·
+[Vercel pricing 2026 — Activepieces](https://www.activepieces.com/blog/vercel-pricing-in-2026-how-the-costs-scale.md) ·
 [Supabase pricing — MakerKit](https://makerkit.dev/blog/saas/supabase-pricing) ·
 [Supabase pricing — Schematic](https://schematichq.com/blog/supabase-pricing) ·
 [Stripe fees — Flexprice](https://flexprice.io/blog/stripe-pricing-breakdown-2026) ·
