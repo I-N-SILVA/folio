@@ -2,9 +2,12 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase'
 import {
   DEFAULT_PLAN,
+  aiUsageMonth,
   dunningExpired,
+  formatStorage,
   getEntitlements,
   getPlan,
+  storageAllows,
   type Entitlements,
   type Plan,
 } from '@/lib/plans'
@@ -200,3 +203,86 @@ export function isBookLimitError(error: { code?: string; message?: string } | nu
 }
 
 export { getEntitlements }
+
+/**
+ * Whether the user may store more, and how much they hold.
+ *
+ * Fails open: if `user_storage_bytes` (021) is missing or errors, uploads go
+ * ahead. Refusing every upload on a deployment that has not applied 021 would
+ * break the editor to protect a margin, which is the wrong way round; the
+ * health check reports the missing function instead.
+ */
+export async function checkStorageQuota(
+  userId: string,
+  email?: string | null
+): Promise<{ allowed: boolean; plan: Plan; usedBytes: number; limitMB: number }> {
+  const plan = await getUserPlan(userId, email)
+  const limitMB = plan.entitlements.storageMB
+  try {
+    const { data, error } = await supabaseAdmin.rpc('user_storage_bytes', { p_user_id: userId })
+    if (error) {
+      console.warn('[entitlements] user_storage_bytes unavailable:', error.message)
+      return { allowed: true, plan, usedBytes: 0, limitMB }
+    }
+    const usedBytes = Number(data) || 0
+    return { allowed: storageAllows(usedBytes, plan.entitlements), plan, usedBytes, limitMB }
+  } catch (err) {
+    console.error('[entitlements] checkStorageQuota error fallback:', err)
+    return { allowed: true, plan, usedBytes: 0, limitMB }
+  }
+}
+
+/** The 403 body for an account over its storage allowance. */
+export function storageLimitResponse(quota: { plan: Plan; usedBytes: number; limitMB: number }) {
+  return {
+    error: `You've used your plan's ${formatStorage(quota.limitMB)} of storage. Delete an edition or upgrade to upload more.`,
+    code: 'storage_limit',
+    plan: quota.plan.id,
+    usedBytes: quota.usedBytes,
+    limitMB: quota.limitMB,
+  }
+}
+
+/**
+ * Claims up to `pages` pages of this month's AI allowance; returns how many
+ * were granted.
+ *
+ * Fails closed, unlike storage: a missing `claim_ai_pages` grants nothing and
+ * the caller falls back to the heuristic. Detection still answers, just without
+ * Gemini — so the cost of a deployment missing 021 is worse pins, not an
+ * unmetered bill.
+ */
+export async function claimAiPages(userId: string, pages: number, limit: number): Promise<number> {
+  if (pages <= 0 || limit <= 0) return 0
+  try {
+    const { data, error } = await supabaseAdmin.rpc('claim_ai_pages', {
+      p_user_id: userId,
+      p_month: aiUsageMonth(),
+      p_pages: pages,
+      p_limit: Number.isFinite(limit) ? limit : 2_147_483_647,
+    })
+    if (error) {
+      console.warn('[entitlements] claim_ai_pages unavailable:', error.message)
+      return 0
+    }
+    return Math.max(0, Math.min(pages, Number(data) || 0))
+  } catch (err) {
+    console.error('[entitlements] claimAiPages error fallback:', err)
+    return 0
+  }
+}
+
+/** Pages of AI detection used this month. 0 when unknown. */
+export async function aiPagesUsed(userId: string): Promise<number> {
+  try {
+    const { data } = await supabaseAdmin
+      .from('ai_usage')
+      .select('pages')
+      .eq('user_id', userId)
+      .eq('month', aiUsageMonth())
+      .maybeSingle()
+    return Number(data?.pages) || 0
+  } catch {
+    return 0
+  }
+}

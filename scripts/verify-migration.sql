@@ -333,3 +333,87 @@ BEGIN
 END $$;
 
 ROLLBACK;
+
+-- ── Usage allowances (021) ───────────────────────────────────────────────────
+--
+-- `claimAiPages` trusts the number `claim_ai_pages` returns to decide how many
+-- pages Gemini sees, so the function has to grant partially at the edge of the
+-- allowance and grant nothing past it.
+
+BEGIN;
+
+INSERT INTO auth.users (id, email) VALUES
+  ('55555555-5555-5555-5555-555555555555', 'ai@example.com');
+
+DO $$
+DECLARE
+  u uuid := '55555555-5555-5555-5555-555555555555';
+  g int;
+  used int;
+BEGIN
+  g := public.claim_ai_pages(u, '2026-10-01', 30, 50);
+  IF g <> 30 THEN RAISE EXCEPTION 'a claim inside the allowance granted %, not 30', g; END IF;
+
+  g := public.claim_ai_pages(u, '2026-10-01', 30, 50);
+  IF g <> 20 THEN RAISE EXCEPTION 'a claim across the edge granted %, not the 20 left', g; END IF;
+
+  g := public.claim_ai_pages(u, '2026-10-01', 5, 50);
+  IF g <> 0 THEN RAISE EXCEPTION 'a spent month still granted %', g; END IF;
+
+  SELECT pages INTO used FROM public.ai_usage WHERE user_id = u AND month = '2026-10-01';
+  IF used <> 50 THEN RAISE EXCEPTION 'usage recorded %, not the 50 granted', used; END IF;
+
+  g := public.claim_ai_pages(u, '2026-11-01', 5, 50);
+  IF g <> 5 THEN RAISE EXCEPTION 'a new month did not reset the allowance (granted %)', g; END IF;
+
+  g := public.claim_ai_pages(u, '2026-11-01', 0, 50);
+  IF g <> 0 THEN RAISE EXCEPTION 'asking for nothing granted %', g; END IF;
+
+  RAISE NOTICE 'ok  the AI allowance grants partially at the edge and nothing past it';
+END $$;
+
+-- Plain PostgreSQL has no storage schema. The function has to install anyway
+-- and answer 0, rather than fail the whole migration.
+DO $$
+BEGIN
+  IF public.user_storage_bytes('55555555-5555-5555-5555-555555555555') <> 0 THEN
+    RAISE EXCEPTION 'user_storage_bytes reported storage where there is none';
+  END IF;
+  RAISE NOTICE 'ok  storage usage installs and reads 0 without a storage schema';
+END $$;
+
+ROLLBACK;
+
+-- And with one: a stand-in for Supabase's `storage.objects`, holding only the
+-- columns the function reads, to prove it counts the owner's editions and
+-- nobody else's. Rolled back, so the scratch database keeps no storage schema.
+BEGIN;
+
+CREATE SCHEMA IF NOT EXISTS storage;
+CREATE TABLE storage.objects (bucket_id text, name text, metadata jsonb);
+
+INSERT INTO auth.users (id, email) VALUES
+  ('66666666-6666-6666-6666-666666666666', 'owner@example.com'),
+  ('77777777-7777-7777-7777-777777777777', 'other@example.com');
+
+INSERT INTO public.books (id, slug, title, owner_id) VALUES
+  ('a6666666-6666-6666-6666-666666666666', 'storage-mine', 'Mine', '66666666-6666-6666-6666-666666666666'),
+  ('a7777777-7777-7777-7777-777777777777', 'storage-theirs', 'Theirs', '77777777-7777-7777-7777-777777777777');
+
+INSERT INTO storage.objects (bucket_id, name, metadata) VALUES
+  ('folio-assets', 'books/a6666666-6666-6666-6666-666666666666/pages/1.png', '{"size": 1000}'),
+  ('folio-assets', 'books/a6666666-6666-6666-6666-666666666666/assets/x.jpg', '{"size": 250}'),
+  ('folio-assets', 'books/a7777777-7777-7777-7777-777777777777/pages/1.png', '{"size": 9999}'),
+  ('other-bucket', 'books/a6666666-6666-6666-6666-666666666666/pages/2.png', '{"size": 5000}');
+
+DO $$
+DECLARE total bigint;
+BEGIN
+  total := public.user_storage_bytes('66666666-6666-6666-6666-666666666666');
+  IF total <> 1250 THEN
+    RAISE EXCEPTION 'user_storage_bytes counted %, not the owner''s 1250 bytes in folio-assets', total;
+  END IF;
+  RAISE NOTICE 'ok  storage usage counts the owner''s editions and nobody else''s';
+END $$;
+
+ROLLBACK;

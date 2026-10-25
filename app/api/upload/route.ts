@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { rateLimit } from '@/lib/rate-limit'
+import { checkStorageQuota, storageLimitResponse } from '@/lib/entitlements'
 import { MAX_ASSET_BYTES, isAllowedAssetType, humanBytes, safeAssetExtension } from '@/lib/uploads'
 
 export async function POST(request: NextRequest) {
@@ -51,6 +52,11 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (!book) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const storage = await checkStorageQuota(user.id, user.email)
+  if (!storage.allowed) {
+    return NextResponse.json(storageLimitResponse(storage), { status: 403 })
+  }
 
   // Never the raw filename: it is client-supplied and lands in a storage key.
   const ext = safeAssetExtension(file.name, file.type)

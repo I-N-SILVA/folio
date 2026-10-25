@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
-import { checkBookQuota, isBookLimitError } from '@/lib/entitlements'
+import {
+  checkBookQuota,
+  checkStorageQuota,
+  isBookLimitError,
+  storageLimitResponse,
+} from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { rateLimit } from '@/lib/rate-limit'
 import { MAX_IMPORT_PAGES, pagePath, mapWithConcurrency } from '@/lib/import'
@@ -89,6 +94,14 @@ export async function POST(request: NextRequest) {
       },
       { status: 403 }
     )
+  }
+
+  // Checked before the book is created, so a refusal strands no slug and no
+  // quota slot. The pages go straight to storage on signed URLs, so this is the
+  // last point the server can say no before the bytes land.
+  const storage = await checkStorageQuota(user.id, user.email)
+  if (!storage.allowed) {
+    return NextResponse.json(storageLimitResponse(storage), { status: 403 })
   }
 
   const bookId = uuidv4()

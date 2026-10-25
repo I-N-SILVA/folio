@@ -90,6 +90,7 @@ async function schemaChecks(): Promise<Check[]> {
     ['book_versions', false],
     ['book_review_links', false],
     ['book_comments', false],
+    ['ai_usage', false],
   ]
   for (const [table, critical] of TABLES) {
     const { error } = await supabaseAdmin.from(table).select('*').limit(1)

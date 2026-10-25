@@ -29,11 +29,17 @@ Tier the deal so support cost stays sane and there's an upsell path.
 These map 1:1 to `lib/plans.ts` (`ltd_tier1..3`) and to AppSumo purchase tiers
 via `APPSUMO_TIER_TO_PLAN`.
 
-| Tier | Price (typical) | Books | Analytics | Custom domain | White-label | Target buyer |
-| ---- | --------------- | ----- | --------- | ------------- | ----------- | ------------ |
-| **1** | ~$59 | 10 | 90 days | — | — | Solo creators, freelancers |
-| **2** | ~$119 | 50 | 180 days | ✓ | ✓ | Studios, small agencies |
-| **3** | ~$239 | Unlimited | 365 days | ✓ | ✓ | Agencies, power users |
+| Tier | Price (typical) | Books | Analytics | Storage | AI pages / month | White-label | Target buyer |
+| ---- | --------------- | ----- | --------- | ------- | ---------------- | ----------- | ------------ |
+| **1** | ~$59 | 10 | 90 days | 2 GB | 200 | — | Solo creators, freelancers |
+| **2** | ~$119 | 50 | 180 days | 10 GB | 500 | ✓ | Studios, small agencies |
+| **3** | ~$239 | Unlimited | 365 days | 25 GB | 1,000 | ✓ | Agencies, power users |
+
+Custom domain is not built and is not in this table on purpose (see
+`HANDOVER.md` §4). Storage and AI pages are capped on every tier, Tier 3
+included: a lifetime plan is paid once, and storage is a cost that grows for as
+long as the account exists. Put both numbers on the listing — an "unlimited"
+buyer who meets a cap they were not told about is a refund.
 
 All tiers include: interactive reader, hotspots, PDF import, lead gating, CSV
 export, no QLICO watermark. Stack-friendly (AppSumo buyers can stack codes to

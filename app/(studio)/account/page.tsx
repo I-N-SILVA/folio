@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Check, Crown, Gift, Minus, CreditCard } from 'lucide-react'
 import { createServerSupabase } from '@/lib/supabase-server'
-import { getProfile, effectivePlan, countUserBooks } from '@/lib/entitlements'
-import { formatQuota } from '@/lib/plans'
-import { isBillingEnabled } from '@/lib/stripe'
+import { getProfile, effectivePlan, countUserBooks, aiPagesUsed } from '@/lib/entitlements'
+import { supabaseAdmin } from '@/lib/supabase'
+import { PRO_PRICING, formatQuota, formatStorage } from '@/lib/plans'
+import { isAnnualBillingEnabled, isBillingEnabled } from '@/lib/stripe'
 import { UpgradeButton, ManageBillingButton } from '@/components/studio/BillingButtons'
 import { DigestToggle } from '@/components/studio/DigestToggle'
 import { StudioNav } from '@/components/studio/StudioNav'
@@ -23,6 +24,8 @@ const FEATURE_ROWS: { key: string; label: string }[] = [
   { key: 'leadGating', label: 'Email capture on the reader' },
   { key: 'csvExport', label: 'CSV export' },
   { key: 'whiteLabel', label: 'Remove the QLICO badge' },
+  { key: 'storageMB', label: 'Storage' },
+  { key: 'aiPagesPerMonth', label: 'AI detection, pages a month' },
 ]
 
 export default async function AccountPage({
@@ -50,15 +53,45 @@ export default async function AccountPage({
   } catch {}
   const e = plan.entitlements
 
+  // Both read-only and both best-effort: a deployment without 021 shows zero
+  // rather than failing the page.
+  const aiUsed = await aiPagesUsed(user.id)
+  let storageBytes = 0
+  try {
+    const { data } = await supabaseAdmin.rpc('user_storage_bytes', { p_user_id: user.id })
+    storageBytes = Number(data) || 0
+  } catch {}
+  const storageUsedMB = storageBytes / 1_000_000
+
   const renderValue = (key: string) => {
     if (key === 'maxBooks') return formatQuota(e.maxBooks)
     if (key === 'analyticsDays') return `${e.analyticsDays} days`
+    if (key === 'storageMB') return formatStorage(e.storageMB)
+    if (key === 'aiPagesPerMonth') return e.aiPagesPerMonth.toLocaleString('en-US')
     const on = (e as unknown as Record<string, unknown>)[key]
     return on ? <Check size={16} className="text-[var(--qlico-teal)]" /> : <Minus size={16} className="text-[var(--qlico-muted)]" />
   }
 
   const quotaPct = Number.isFinite(e.maxBooks) ? Math.min(100, Math.round((used / e.maxBooks) * 100)) : 0
   const billingOn = isBillingEnabled()
+  const annualOn = isAnnualBillingEnabled()
+  const meters = [
+    {
+      label: 'Editions used',
+      value: `${used} / ${formatQuota(e.maxBooks)}`,
+      pct: Number.isFinite(e.maxBooks) ? quotaPct : 12,
+    },
+    {
+      label: 'Storage used',
+      value: `${formatStorage(storageUsedMB)} / ${formatStorage(e.storageMB)}`,
+      pct: Math.min(100, Math.round((storageUsedMB / e.storageMB) * 100)),
+    },
+    {
+      label: 'AI pages this month',
+      value: `${aiUsed.toLocaleString('en-US')} / ${e.aiPagesPerMonth.toLocaleString('en-US')}`,
+      pct: Math.min(100, Math.round((aiUsed / e.aiPagesPerMonth) * 100)),
+    },
+  ]
   const isProSubscriber = plan.id === 'pro'
 
   return (
@@ -89,19 +122,21 @@ export default async function AccountPage({
             </p>
           )}
 
-          <div className="mt-7 max-w-md">
-            <div className="flex items-center justify-between text-sm font-bold">
-              <span>Editions used</span>
-              <span className="text-[var(--qlico-muted)]">
-                {used} / {formatQuota(e.maxBooks)}
-              </span>
-            </div>
-            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--tint)]">
-              <div
-                className="h-full rounded-full bg-[var(--qlico-teal)] transition-all"
-                style={{ width: `${Number.isFinite(e.maxBooks) ? quotaPct : 12}%` }}
-              />
-            </div>
+          <div className="mt-7 flex max-w-md flex-col gap-5">
+            {meters.map((m) => (
+              <div key={m.label}>
+                <div className="flex items-center justify-between gap-3 text-sm font-bold">
+                  <span>{m.label}</span>
+                  <span className="text-[var(--qlico-muted)]">{m.value}</span>
+                </div>
+                <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--tint)]">
+                  <div
+                    className="h-full rounded-full bg-[var(--qlico-teal)] transition-all"
+                    style={{ width: `${m.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </Reveal>
 
@@ -150,10 +185,14 @@ export default async function AccountPage({
                 <h2 className="mt-4 font-display text-2xl font-semibold tracking-[-0.04em]">Go Pro</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--qlico-muted)]">
                   Unlimited editions, email capture with lead export, and 12-month analytics —
-                  $19/mo.
+                  ${PRO_PRICING.monthlyUSD}/mo
+                  {annualOn && <>, or ${PRO_PRICING.annualUSD}/yr — two months free</>}.
                 </p>
                 {billingOn ? (
-                  <UpgradeButton className="mt-5" />
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <UpgradeButton label={annualOn ? 'Pro monthly' : 'Upgrade to Pro'} />
+                    {annualOn && <UpgradeButton interval="year" label="Pro yearly" />}
+                  </div>
                 ) : (
                   <Link
                     href="/#pricing"

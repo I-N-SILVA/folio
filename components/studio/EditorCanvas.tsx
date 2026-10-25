@@ -33,6 +33,7 @@ import {
   Rows3,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { aiLimitMessage } from '@/lib/plans'
 import {
   DndContext,
   closestCenter,
@@ -281,6 +282,7 @@ export function EditorCanvas() {
         body: JSON.stringify({ page: currentPage }),
       })
       const data = await res.json()
+      if (data.aiQuota?.limited) toast.info(aiLimitMessage(data.aiQuota.limit))
       if (res.ok && data.detected?.length > 0) {
         for (const spot of data.detected) {
           addHotspot(currentPage.id, spot)

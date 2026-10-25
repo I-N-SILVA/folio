@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader2, ShoppingBag, Link2, Sparkle, Crosshair } from 'lucide-react'
 import { toast } from 'sonner'
+import { aiLimitMessage } from '@/lib/plans'
 import { Modal } from '@/components/ui/Modal'
 import { useEditorStore } from '@/lib/editor-store'
 import { trackProduct } from '@/lib/product-analytics'
@@ -63,7 +64,8 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
       signal: controller.signal,
     })
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error('detect failed'))))
-      .then((data: { byPage?: Found[] }) => {
+      .then((data: { byPage?: Found[]; aiQuota?: { limited?: boolean; limit: number } }) => {
+        if (data.aiQuota?.limited) toast.info(aiLimitMessage(data.aiQuota.limit))
         const hits = (data.byPage ?? []).filter((p) => p.hotspots.length > 0)
         setFound(hits)
         setPhase(hits.length ? 'found' : 'nothing')

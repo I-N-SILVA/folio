@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 import { detectHotspots, analyzeBookSEO, isAiEnabled } from '@/lib/ai'
 import { rateLimit } from '@/lib/rate-limit'
+import { claimAiPages, getUserEntitlements } from '@/lib/entitlements'
 import { MAX_IMPORT_PAGES, pageNumberFromName, pageType, mapWithConcurrency } from '@/lib/import'
 
 /** Parallel Gemini calls. High enough to matter, low enough not to get rate-limited. */
@@ -110,11 +111,29 @@ export async function POST(request: NextRequest) {
   const hotspotsByPage = new Map<number, unknown[]>()
   let seoMetadata: { description: string; keywords: string } | undefined
 
+  // Charged against the same monthly allowance as /api/ai/detect-hotspots;
+  // without it this was a second, unmetered route to Gemini. Pages past the
+  // allowance import without AI pins, and the SEO pass rides along with any
+  // grant rather than being counted as pages of its own.
+  let aiQuota: { limit: number; requested: number; granted: number; limited: boolean } | undefined
+  let aiPages = pageNumbers
   if (aiEnhance && isAiEnabled()) {
+    const entitlements = await getUserEntitlements(user.id, user.email)
+    const granted = await claimAiPages(user.id, pageNumbers.length, entitlements.aiPagesPerMonth)
+    aiQuota = {
+      limit: entitlements.aiPagesPerMonth,
+      requested: pageNumbers.length,
+      granted,
+      limited: granted < pageNumbers.length,
+    }
+    aiPages = pageNumbers.slice(0, granted)
+  }
+
+  if (aiEnhance && isAiEnabled() && aiPages.length > 0) {
     // The images live in storage now rather than in this request, so the AI pass
     // reads them back. Bounded concurrency: at the 50-page ceiling, one awaited
     // Gemini call per page in series can outrun the function budget on its own.
-    const buffers = await mapWithConcurrency(pageNumbers, AI_CONCURRENCY, async (pageNumber) => {
+    const buffers = await mapWithConcurrency(aiPages, AI_CONCURRENCY, async (pageNumber) => {
       const { data, error } = await supabaseAdmin.storage
         .from('folio-assets')
         .download(`books/${bookId}/pages/page-${pageNumber}.png`)
@@ -178,5 +197,5 @@ export async function POST(request: NextRequest) {
       .eq('id', bookId)
   }
 
-  return NextResponse.json({ bookId, pageCount: pageRows.length })
+  return NextResponse.json({ bookId, pageCount: pageRows.length, aiQuota })
 }

@@ -5,6 +5,11 @@ import Link from 'next/link'
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion'
 import { Check, ArrowRight } from 'lucide-react'
 import Reveal from './Reveal'
+import { PRO_PRICING } from '@/lib/plans'
+
+// Public, so it is inlined at build time: the yearly price is offered only on a
+// deployment that can actually sell it.
+const ANNUAL_ON = Boolean(process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL)
 
 const PLANS = [
   {
@@ -15,6 +20,7 @@ const PLANS = [
       '3 Active Editions',
       'Instant PDF Import',
       '30 Days Analytics',
+      '500 MB Storage',
       'Tactile 3D Reader & Riffle',
       'Watermarked Reader',
     ],
@@ -23,12 +29,15 @@ const PLANS = [
   },
   {
     name: 'Pro',
-    price: '$19',
+    price: `$${PRO_PRICING.monthlyUSD}`,
     period: '/mo',
-    description: 'For creators whose editions have to bring something back.',
+    description: ANNUAL_ON
+      ? `For creators whose editions have to bring something back. Or $${PRO_PRICING.annualUSD}/yr — two months free.`
+      : 'For creators whose editions have to bring something back.',
     features: [
       'Unlimited Editions',
       '365 Days Analytics',
+      '10 GB Storage',
       'Remove QLICO Badge',
       'Live Data Binding',
       'CSV Leads & Events Export',

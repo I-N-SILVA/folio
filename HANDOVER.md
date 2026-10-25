@@ -180,6 +180,43 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### Usage allowances and a yearly Pro price (migration 021)
+
+Two costs grew with use and had no limit that outlived a cold start: Gemini
+detection (only a per-minute, per-instance counter) and storage (only a
+per-file cap — and Tier 3 of the lifetime deal is unlimited editions, paid
+once). `lib/plans.ts` now has `aiPagesPerMonth` and `storageMB` on every plan,
+neither ever `Infinity`:
+
+| Plan | Storage | AI pages / month |
+|---|---|---|
+| Free | 500 MB | 50 |
+| Pro | 10 GB | 1,000 |
+| LTD 1 / 2 / 3 | 2 / 10 / 25 GB | 200 / 500 / 1,000 |
+
+- **AI** — both Gemini routes (`/api/ai/detect-hotspots` and the import's
+  finalize) claim through `claim_ai_pages`, which grants atomically and may grant fewer pages than
+  asked; the rest get the free heuristic and the editor says why. It **fails
+  closed**: without 021 nobody gets Gemini, only the heuristic.
+- **Storage** — `user_storage_bytes` sums `storage.objects` under the user's
+  editions, checked before `/api/upload` and before a PDF import creates its
+  book. It **fails open**: without 021 nothing is refused. One import can
+  overshoot by its own size, because its pages upload straight to storage.
+- **Yearly Pro** — set `NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL` and the account
+  page and pricing card offer it. Amounts shown come from `PRO_PRICING` in
+  `lib/plans.ts`; a price change is a new Stripe Price plus that constant.
+
+The numbers are a first guess sized so Free still fits three ordinary editions;
+nothing measured them. `npm run verify:migration` proves the claim grants
+partially at the edge, resets monthly, and that the storage sum counts only
+the owner's objects.
+
+Not done, and the larger remaining cost: **reader bandwidth**. Page images are
+served from Supabase Storage public URLs on every read, on every plan; a popular
+edition costs egress no allowance here bounds. A CDN in front of those URLs (or
+Supabase's image transformation with caching) is the fix, and it is
+infrastructure, not code in this repo.
+
 ### `.or()` on an UPDATE does not work, and it broke two things silently
 
 **Read this before writing another Supabase query.** It is the most expensive

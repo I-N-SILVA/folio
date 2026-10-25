@@ -75,4 +75,16 @@ export const REQUIRED_FUNCTIONS: readonly RequiredFunction[] = [
     critical: false,
     cost: 'review links do not open',
   },
+  {
+    name: 'claim_ai_pages',
+    migration: '021',
+    critical: false,
+    cost: 'AI detection is refused for everyone, and every import falls back to the heuristic',
+  },
+  {
+    name: 'user_storage_bytes',
+    migration: '021',
+    critical: false,
+    cost: 'storage allowances are not enforced, so no account is ever stopped for size',
+  },
 ] as const

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { PLANS, formatQuota, type Entitlements } from '@/lib/plans'
+import { PLANS, PRO_PRICING, formatQuota, formatStorage, type Entitlements } from '@/lib/plans'
 
 /**
  * What the landing page sells against what a plan actually grants.
@@ -108,5 +108,20 @@ describe('every entitlement is enforced somewhere', () => {
       const block = new RegExp(`([\\s\\S]{0,600}?)\\n\\s{2}${field}:`).exec(type![1])
       expect(/Enforced:/i.test(block?.[1] ?? ''), `${field} does not say where it is enforced`).toBe(true)
     }
+  })
+
+  it('states the storage each plan actually has', () => {
+    // A storage line on a card is a limit the upload routes refuse at, so it
+    // has to be the number they refuse at.
+    for (const [card, id] of [['Free', 'free'], ['Pro', 'pro']] as const) {
+      const line = featuresOf(card).find((f) => /storage/i.test(f))
+      if (line) expect(line, card).toContain(formatStorage(PLANS[id].entitlements.storageMB))
+    }
+  })
+
+  it('shows the Pro price that lib/plans.ts records', () => {
+    expect(PRICING).not.toMatch(/price: '\$\d+'[\s\S]{0,40}name: 'Pro'/)
+    expect(PRICING).toContain('PRO_PRICING.monthlyUSD')
+    expect(PRO_PRICING.annualUSD).toBeLessThan(PRO_PRICING.monthlyUSD * 12)
   })
 })

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { aiLimitMessage } from '@/lib/plans'
 import { renderPdfPages, type RenderProgress } from '@/lib/pdf-renderer'
 import { MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
 import { createBrowserSupabase } from '@/lib/supabase'
@@ -275,6 +276,7 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
       } else {
         toast.success(`"${effectiveTitle}" imported — ${data.pageCount} pages ready.`)
       }
+      if (data.aiQuota?.limited) toast.info(aiLimitMessage(data.aiQuota.limit))
 
       setTimeout(() => {
         onClose()

@@ -5,6 +5,9 @@ import {
   isValidPlan,
   planFromAppSumoTier,
   formatQuota,
+  formatStorage,
+  storageAllows,
+  aiUsageMonth,
   DEFAULT_PLAN,
   PLANS,
 } from './plans'
@@ -84,5 +87,60 @@ describe('formatQuota', () => {
 
   it('renders Infinity as "Unlimited"', () => {
     expect(formatQuota(Infinity)).toBe('Unlimited')
+  })
+})
+
+describe('usage allowances', () => {
+  it('gives no plan unlimited storage, lifetime tiers included', () => {
+    // Storage is the cost that grows for as long as an account exists, and a
+    // lifetime plan pays for it once.
+    for (const plan of Object.values(PLANS)) {
+      expect(Number.isFinite(plan.entitlements.storageMB), plan.id).toBe(true)
+      expect(plan.entitlements.storageMB, plan.id).toBeGreaterThan(0)
+    }
+  })
+
+  it('bounds AI detection on every plan, and leaves Free enough to try it', () => {
+    for (const plan of Object.values(PLANS)) {
+      expect(Number.isFinite(plan.entitlements.aiPagesPerMonth), plan.id).toBe(true)
+    }
+    expect(PLANS.free.entitlements.aiPagesPerMonth).toBeGreaterThan(0)
+  })
+
+  it('never gives a higher lifetime tier less than a lower one', () => {
+    const tiers = [PLANS.ltd_tier1, PLANS.ltd_tier2, PLANS.ltd_tier3].map((p) => p.entitlements)
+    for (let i = 1; i < tiers.length; i++) {
+      expect(tiers[i].storageMB).toBeGreaterThanOrEqual(tiers[i - 1].storageMB)
+      expect(tiers[i].aiPagesPerMonth).toBeGreaterThanOrEqual(tiers[i - 1].aiPagesPerMonth)
+    }
+  })
+})
+
+describe('formatStorage', () => {
+  it('writes MB below a gigabyte and GB from one', () => {
+    expect(formatStorage(500)).toBe('500 MB')
+    expect(formatStorage(0)).toBe('0 MB')
+    expect(formatStorage(10_000)).toBe('10 GB')
+    expect(formatStorage(1_500)).toBe('1.5 GB')
+  })
+})
+
+describe('storageAllows', () => {
+  const free = PLANS.free.entitlements
+
+  it('allows an upload under the allowance and refuses one at it', () => {
+    expect(storageAllows(0, free)).toBe(true)
+    expect(storageAllows(free.storageMB * 1_000_000 - 1, free)).toBe(true)
+    expect(storageAllows(free.storageMB * 1_000_000, free)).toBe(false)
+  })
+})
+
+describe('aiUsageMonth', () => {
+  it('keys usage by the first of the month, in UTC', () => {
+    expect(aiUsageMonth(new Date('2026-10-25T12:00:00Z'))).toBe('2026-10-01')
+    // Late on the 31st in a western timezone is already November in UTC, and
+    // the allowance follows UTC so every server agrees.
+    expect(aiUsageMonth(new Date('2026-11-01T02:00:00Z'))).toBe('2026-11-01')
+    expect(aiUsageMonth(new Date('2026-12-31T23:59:59Z'))).toBe('2026-12-01')
   })
 })

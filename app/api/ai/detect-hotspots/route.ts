@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { isAiEnabled, detectHotspots } from '@/lib/ai'
 import { rateLimitCost } from '@/lib/rate-limit'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { claimAiPages, getUserEntitlements } from '@/lib/entitlements'
 import { safeFetch } from '@/lib/safe-fetch'
 import type { Hotspot, Page } from '@/lib/book-schema'
 
@@ -99,10 +100,10 @@ function extractHeuristicHotspots(page: Page): Hotspot[] {
 }
 
 /** Whatever we can find on one page, AI first and structure as the fallback. */
-async function detectForPage(page: Page): Promise<Hotspot[]> {
+async function detectForPage(page: Page, useAi: boolean): Promise<Hotspot[]> {
   let detected: Hotspot[] = []
 
-  if (isAiEnabled() && page.background?.image) {
+  if (useAi && page.background?.image) {
     try {
       // `safeFetch` checks every hop, not just the first: a 302 to the metadata
       // service would otherwise be followed without inspection. Refusing all
@@ -148,9 +149,32 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const pages = 'page' in parsed.data ? [parsed.data.page] : parsed.data.pages
+
+  // The monthly allowance, which unlike the limit above survives a cold start.
+  // Only pages Gemini would actually see are charged — the heuristic is free —
+  // and pages past the allowance fall back to it rather than failing.
+  const aiEligible = isAiEnabled() ? pages.filter((p) => p.background?.image).length : 0
+  const entitlements = await getUserEntitlements(user.id, user.email)
+  const granted =
+    aiEligible > 0 ? await claimAiPages(user.id, aiEligible, entitlements.aiPagesPerMonth) : 0
+  const aiQuota = {
+    limit: entitlements.aiPagesPerMonth,
+    requested: aiEligible,
+    granted,
+    limited: granted < aiEligible,
+  }
+
+  let budget = granted
+  const detectNext = (page: Page) => {
+    const useAi = budget > 0 && Boolean(page.background?.image)
+    if (useAi) budget--
+    return detectForPage(page, useAi)
+  }
+
   if ('page' in parsed.data) {
-    const detected = await detectForPage(parsed.data.page)
-    return NextResponse.json({ detected, count: detected.length })
+    const detected = await detectNext(parsed.data.page)
+    return NextResponse.json({ detected, count: detected.length, aiQuota })
   }
 
   // Sequential, not Promise.all: each page may fetch and hand an image to
@@ -161,12 +185,13 @@ export async function POST(request: NextRequest) {
     byPage.push({
       pageId: page.id,
       pageNumber: page.page_number,
-      hotspots: await detectForPage(page),
+      hotspots: await detectNext(page),
     })
   }
 
   return NextResponse.json({
     byPage,
     count: byPage.reduce((total, p) => total + p.hotspots.length, 0),
+    aiQuota,
   })
 }

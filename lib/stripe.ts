@@ -16,3 +16,14 @@ export function isBillingEnabled(): boolean {
 }
 
 export const PRO_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || ''
+
+/**
+ * Optional. Without it Pro is monthly only and nothing offers a yearly plan;
+ * the webhook needs no change either way, because any active subscription
+ * grants Pro whatever its interval.
+ */
+export const PRO_ANNUAL_PRICE_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL || ''
+
+export function isAnnualBillingEnabled(): boolean {
+  return isBillingEnabled() && Boolean(PRO_ANNUAL_PRICE_ID)
+}
