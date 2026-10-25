@@ -32,8 +32,8 @@ measurement**.
   of this line blamed raw-PNG bandwidth; readers get optimised images, so it
   was wrong.*
 - **Use AppSumo for cash and reviews, capped, once the image-pricing model is checked.** Net per
-  code is about $16–65. That is fine for the typical buyer and loses money on
-  heavy ones.
+  code is about $16–65, which covers years of a typical buyer's use; heavy
+  importers are covered only on the right image pricing.
 
 ## 2. The market — what competitors charge
 
