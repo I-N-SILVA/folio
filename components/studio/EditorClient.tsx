@@ -45,9 +45,11 @@ import type { Book } from '@/lib/book-schema'
 interface Props {
   book: Book
   entitlements: StudioEntitlements
+  /** Set when the operator has taken this edition offline (023). */
+  suspension?: { reason: string | null } | null
 }
 
-export function EditorClient({ book, entitlements }: Props) {
+export function EditorClient({ book, entitlements, suspension }: Props) {
   const { book: storeBook, isDirty, setBook, setIsSaving } = useEditorStore()
   const past = useEditorStore((s) => s.past)
   const future = useEditorStore((s) => s.future)
@@ -72,6 +74,17 @@ export function EditorClient({ book, entitlements }: Props) {
    * answered, and a shared editor link never opens it at all.
    */
   const [showPostImport, setShowPostImport] = useState(false)
+
+  // A suspended edition still opens and saves, but nobody can read it. The
+  // author has to be told, or the first they hear is a reader's 404.
+  useEffect(() => {
+    if (!suspension) return
+    toast.error(
+      `This edition has been taken offline${suspension.reason ? ` (${suspension.reason})` : ''}. ` +
+        'Readers cannot open it. If you think this is a mistake, contact support.',
+      { duration: Infinity, id: 'edition-suspended' }
+    )
+  }, [suspension])
   useEffect(() => {
     const url = new URL(window.location.href)
     if (url.searchParams.get('imported') !== '1') return
@@ -162,24 +175,6 @@ export function EditorClient({ book, entitlements }: Props) {
       const pagesChanged = bookAtSaveStart.pages !== saved.current.pages
       const metaChanged = meta !== saved.current.meta
 
-      // Book-level fields go through the API so the Zod schema applies to what
-      // the editor writes, the same way it applies to every other write path.
-      if (metaChanged) {
-        const bookRes = await fetch(`/api/books/${bookAtSaveStart.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            theme: bookAtSaveStart.theme,
-            settings: bookAtSaveStart.settings,
-            title: bookAtSaveStart.title,
-            description: bookAtSaveStart.description ?? undefined,
-          }),
-        })
-        if (!bookRes.ok) {
-          throw new Error(await reasonFrom(bookRes, 'Could not save this edition’s settings'))
-        }
-      }
-
       // Pages go through the transactional replace route.
       //
       // This used to upsert the page rows straight from the browser on `id`,
@@ -223,6 +218,30 @@ export function EditorClient({ book, entitlements }: Props) {
         })
         if (!pagesRes.ok) {
           throw new Error(await reasonFrom(pagesRes, 'Could not save these pages'))
+        }
+      }
+
+      // Settings after pages, deliberately. Publishing checks the *stored*
+      // pages for links to known phishing and malware sites (PATCH
+      // /api/books/[id]). With settings first, an author whose publish was
+      // refused could never save the fix: every autosave hit the refused
+      // publish before the corrected pages were sent.
+      //
+      // Book-level fields go through the API so the Zod schema applies to what
+      // the editor writes, the same way it applies to every other write path.
+      if (metaChanged) {
+        const bookRes = await fetch(`/api/books/${bookAtSaveStart.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            theme: bookAtSaveStart.theme,
+            settings: bookAtSaveStart.settings,
+            title: bookAtSaveStart.title,
+            description: bookAtSaveStart.description ?? undefined,
+          }),
+        })
+        if (!bookRes.ok) {
+          throw new Error(await reasonFrom(bookRes, 'Could not save this edition’s settings'))
         }
       }
 

@@ -180,6 +180,35 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### Abuse controls, WebP pages, and tax at checkout (migration 023)
+
+Hosted readers get used for phishing, and if Google flags the domain every
+customer's links break at once. There was no defence at all.
+
+- **Takedown.** `SELECT public.suspend_edition('<slug>', '<reason>');` in the
+  SQL editor takes an edition offline within a minute (ISR);
+  `restore_edition('<slug>')` brings it back. Enforced in the public read
+  policies, so the reader, embed and unlock all honour it. A trigger stops the
+  author clearing it; the editor tells them it happened. Routes that read
+  with the service role (unlock, live data, OG image) check `isSuspended` by
+  hand — `lib/abuse.test.ts` fails if one stops. The OG image route also used
+  to render *drafts* for anyone who guessed a slug; it now renders only what
+  the reader would.
+- **Reports.** Every edition, white-labelled ones too, has a "Report" link →
+  `/report` → `edition_reports` + an email to `ABUSE_EMAIL` (falls back to
+  support) containing the suspend command. Nothing auto-suspends on reports.
+- **Link checks.** With `GOOGLE_WEB_RISK_API_KEY` set, a published edition
+  cannot be saved — and an edition cannot be published — while it links to a
+  site on Google's phishing/malware list (422 naming the link). Fails open;
+  results cached a day. **The editor now saves pages before settings**, or a
+  refused publish could never accept the fix.
+- **WebP pages.** Imports render pages as WebP at 0.85 (PNG where the browser
+  cannot encode it); finalize accepts either. Gemini now gets the real image
+  type, which also fixes uploaded JPEGs being sent labelled as PNG.
+- **Stripe Tax.** `STRIPE_AUTOMATIC_TAX=true` turns on automatic tax, address
+  and VAT-number collection at checkout. Only after adding registrations in
+  Stripe → Tax, or it collects addresses and charges nothing.
+
 ### Analytics at scale, and no plan is unlimited (migration 022)
 
 - **Every reader event was stored with no page number.** The reader sends

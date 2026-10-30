@@ -554,3 +554,102 @@ BEGIN
   END IF;
   RAISE NOTICE 'ok  every plan has a finite edition limit';
 END $$;
+
+-- ── Abuse controls (023) ─────────────────────────────────────────────────────
+--
+-- A suspended edition has to vanish from the public read path, and its author
+-- must not be able to bring it back by writing the column themselves —
+-- `owner_all` lets them update their own row.
+
+BEGIN;
+
+INSERT INTO auth.users (id, email) VALUES
+  ('99999999-9999-9999-9999-999999999999', 'author@example.com');
+INSERT INTO public.books (id, slug, title, owner_id, settings) VALUES
+  ('a9999999-9999-9999-9999-999999999999', 'abuse-check', 'Invoice',
+   '99999999-9999-9999-9999-999999999999', '{"published": true}');
+INSERT INTO public.pages (book_id, page_number, type, layout)
+VALUES ('a9999999-9999-9999-9999-999999999999', 1, 'cover', 'blank');
+
+DO $$
+BEGIN
+  IF public.suspend_edition('abuse-check', 'phishing: test') <> 1 THEN
+    RAISE EXCEPTION 'suspend_edition did not find the edition';
+  END IF;
+  IF public.suspend_edition('no-such-slug', 'x') <> 0 THEN
+    RAISE EXCEPTION 'suspend_edition reported a change for a slug that does not exist';
+  END IF;
+END $$;
+
+-- The public, as the reader page sees it.
+SET LOCAL ROLE anon;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.books WHERE slug = 'abuse-check') THEN
+    RAISE EXCEPTION 'a suspended edition is still publicly readable';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.pages WHERE book_id = 'a9999999-9999-9999-9999-999999999999') THEN
+    RAISE EXCEPTION 'a suspended edition''s pages are still publicly readable';
+  END IF;
+  RAISE NOTICE 'ok  a suspended edition disappears from the public read path';
+END $$;
+RESET ROLE;
+
+-- The author, trying to lift it.
+SET LOCAL ROLE authenticated;
+SET LOCAL request.jwt.claim.sub = '99999999-9999-9999-9999-999999999999';
+UPDATE public.books
+SET suspended_at = NULL, suspended_reason = NULL, title = 'Invoice (edited)'
+WHERE id = 'a9999999-9999-9999-9999-999999999999';
+RESET ROLE;
+
+DO $$
+DECLARE b record;
+BEGIN
+  SELECT title, suspended_at, suspended_reason INTO b
+  FROM public.books WHERE id = 'a9999999-9999-9999-9999-999999999999';
+  IF b.suspended_at IS NULL THEN
+    RAISE EXCEPTION 'the author lifted their own suspension';
+  END IF;
+  IF b.title <> 'Invoice (edited)' THEN
+    RAISE EXCEPTION 'pinning the suspension also threw away the author''s other edits';
+  END IF;
+  RAISE NOTICE 'ok  an author cannot lift a suspension, and their other edits still save';
+END $$;
+
+-- An author cannot create an edition already "suspended" to dodge anything
+-- either; and the operator can restore.
+DO $$
+BEGIN
+  IF public.restore_edition('abuse-check') <> 1 THEN
+    RAISE EXCEPTION 'restore_edition did not find the edition';
+  END IF;
+END $$;
+
+SET LOCAL ROLE anon;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.books WHERE slug = 'abuse-check') THEN
+    RAISE EXCEPTION 'a restored edition is still hidden';
+  END IF;
+  RAISE NOTICE 'ok  a restored edition is public again';
+END $$;
+RESET ROLE;
+
+-- Reports accept every reason the app offers, and refuse others.
+DO $$
+BEGIN
+  INSERT INTO public.edition_reports (book_id, reason) VALUES
+    ('a9999999-9999-9999-9999-999999999999', 'phishing'),
+    ('a9999999-9999-9999-9999-999999999999', 'other');
+  BEGIN
+    INSERT INTO public.edition_reports (book_id, reason)
+    VALUES ('a9999999-9999-9999-9999-999999999999', 'nonsense');
+    RAISE EXCEPTION 'a report with an unknown reason was accepted';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
+  RAISE NOTICE 'ok  edition_reports accepts the app''s reasons and refuses others';
+END $$;
+
+ROLLBACK;

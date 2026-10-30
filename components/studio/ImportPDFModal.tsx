@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { FileUp, Loader2, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { aiLimitMessage } from '@/lib/plans'
+import { pageFormatOf } from '@/lib/import'
 import { renderPdfPages, type RenderProgress } from '@/lib/pdf-renderer'
 import { MAX_PDF_BYTES, humanBytes } from '@/lib/uploads'
 import { createBrowserSupabase } from '@/lib/supabase'
@@ -183,6 +184,7 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
             title: effectiveTitle,
             slug: effectiveSlug,
             pageCount: renderedPages.length,
+            format: pageFormatOf(renderedPages[0]?.blob.type),
           }),
         })
         
@@ -229,7 +231,9 @@ export function ImportPDFModal({ onClose, onLimitReached, initialFile }: ImportP
 
         const { error } = await supabase.storage
           .from('folio-assets')
-          .uploadToSignedUrl(target.path, target.token, page.blob, { contentType: 'image/png' })
+          .uploadToSignedUrl(target.path, target.token, page.blob, {
+            contentType: page.blob.type || 'image/png',
+          })
 
         setUploaded((n) => n + 1)
         return error ? target.pageNumber : null

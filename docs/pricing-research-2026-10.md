@@ -227,9 +227,14 @@ Vercel's transformation pricing, or with pre-sized images (§3).
 
 ## 9. Sustainable at scale — what breaks first, and what to do
 
-> **Status:** items 1–4 are fixed (migration 022, see `HANDOVER.md` §2), along
-> with a bug found while fixing them: reader events were stored with no page
-> number. Edition limits are finite on every plan now (Pro 100, Tier 3 200).
+> **Status:** items 1–4 are fixed (migration 022), along with a bug found while
+> fixing them: reader events were stored with no page number. Edition limits
+> are finite on every plan (Pro 100, Tier 3 200). Item 7 (abuse: reports,
+> takedown, link checks) and item 10 (Stripe Tax, as a switch) are built
+> (023). Pages are now stored as WebP. See `HANDOVER.md` §2. Still open: 5
+> (Vercel image-pricing model — a billing setting), 6 (shared rate limiter —
+> needs a Redis/KV account), 8 (usage add-on packs), 9 (archiving), 11–12
+> (help centre, Sentry).
 
 Read off the code on `claude/monetisation-guardrails`. Ordered by which bites
 first as usage grows.

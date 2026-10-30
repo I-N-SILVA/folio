@@ -70,8 +70,10 @@ export async function renderPdfPages(
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (b) => (b ? resolve(b) : reject(new Error(`Failed to render page ${i}`))),
-        'image/png',
-        0.92
+        // WebP, see `PageFormat` in lib/import. A browser that cannot encode it
+        // returns PNG instead, and the import reads the type off the blob.
+        'image/webp',
+        0.85
       )
     })
 

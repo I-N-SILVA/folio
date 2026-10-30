@@ -593,16 +593,29 @@ export function ViewerChrome({
       )}
 
       {/* Branding */}
-      {showBadge && (
+      {/* "Report" is on every edition, white-labelled ones included: it is how a
+          reader tells us an edition is a phishing page, and an abuser is the
+          last person who would leave it switched on if it were optional. */}
+      <div className="fixed bottom-4 right-4 z-[9000] flex items-center gap-2">
         <a
-          href="https://qlico.app/?via=badge#try"
+          href={`/report?edition=${encodeURIComponent(book.slug)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"
+          className="rounded-full px-2 py-1.5 text-[11px] font-semibold text-[var(--qlico-muted)] underline-offset-2 transition-colors hover:text-[var(--qlico-ink)] hover:underline"
         >
-          Powered by <span className="font-display font-semibold text-[var(--qlico-ink)]">QLICO</span>
+          Report
         </a>
-      )}
+        {showBadge && (
+          <a
+            href="https://qlico.app/?via=badge#try"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"
+          >
+            Powered by <span className="font-display font-semibold text-[var(--qlico-ink)]">QLICO</span>
+          </a>
+        )}
+      </div>
     </div>
   )
 }

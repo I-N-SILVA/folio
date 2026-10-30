@@ -42,6 +42,11 @@ export default async function EditorPage({ params }: Props) {
     <EditorClient
       book={book as Book}
       entitlements={{ ...plan.entitlements, planName: plan.name, planId: plan.id }}
+      suspension={
+        (book as { suspended_at?: string | null }).suspended_at
+          ? { reason: (book as { suspended_reason?: string | null }).suspended_reason ?? null }
+          : null
+      }
     />
   )
 }

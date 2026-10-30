@@ -5,6 +5,12 @@ import { PageSchema } from '@/lib/book-schema'
 import { z } from 'zod'
 import { revalidateReader } from '@/lib/revalidate-reader'
 import { AUTO_SNAPSHOT_GAP_MINUTES, VERSIONS_KEPT } from '@/lib/versions'
+import {
+  collectOutboundLinks,
+  findUnsafeLinks,
+  isLinkCheckEnabled,
+  unsafeLinkResponse,
+} from '@/lib/link-safety'
 
 /**
  * The book's public address if this user owns it, `null` if they do not. The
@@ -94,6 +100,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       { error: `This edition could not be saved — ${detail.join('; ')}`, issues: parsed.error.issues },
       { status: 400 }
     )
+  }
+
+  // A published edition does not take a link to a known phishing or malware
+  // site. Checked before anything is written, so the edition stays as it was
+  // and the author is told which link to remove. Drafts are not checked — they
+  // reach nobody — and publishing checks the stored pages (PATCH /api/books/[id]).
+  if (isLinkCheckEnabled()) {
+    const { data: book } = await supabaseAdmin
+      .from('books')
+      .select('settings')
+      .eq('id', id)
+      .single()
+    if ((book?.settings as { published?: boolean } | null)?.published === true) {
+      const unsafe = await findUnsafeLinks(collectOutboundLinks(parsed.data))
+      if (unsafe.length > 0) {
+        console.warn('[pages] refused a save with unsafe links:', id, unsafe)
+        return NextResponse.json(unsafeLinkResponse(unsafe), { status: 422 })
+      }
+    }
   }
 
   const rows = parsed.data.map((p) => ({

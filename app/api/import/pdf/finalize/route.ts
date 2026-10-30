@@ -85,10 +85,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not read the uploaded pages.' }, { status: 500 })
   }
 
-  const pageNumbers = (objects ?? [])
-    .map((o) => pageNumberFromName(o.name))
-    .filter((n): n is number => n !== null)
-    .sort((a, b) => a - b)
+  // Page number → the object's actual name, which ends .webp or .png
+  // depending on what the author's browser could encode.
+  const fileFor = new Map<number, string>()
+  for (const o of objects ?? []) {
+    const n = pageNumberFromName(o.name)
+    if (n !== null && !fileFor.has(n)) fileFor.set(n, o.name)
+  }
+  const pageNumbers = [...fileFor.keys()].sort((a, b) => a - b)
 
   if (pageNumbers.length === 0) {
     // Nothing uploaded: drop the book rather than leave an empty one occupying
@@ -105,7 +109,7 @@ export async function POST(request: NextRequest) {
   const publicUrlFor = (pageNumber: number) =>
     supabaseAdmin.storage
       .from('folio-assets')
-      .getPublicUrl(`books/${bookId}/pages/page-${pageNumber}.png`).data.publicUrl
+      .getPublicUrl(`books/${bookId}/pages/${fileFor.get(pageNumber)}`).data.publicUrl
 
   // ── AI enhancement (optional, and only if a key is configured) ─────────────
   const hotspotsByPage = new Map<number, unknown[]>()
@@ -136,7 +140,7 @@ export async function POST(request: NextRequest) {
     const buffers = await mapWithConcurrency(aiPages, AI_CONCURRENCY, async (pageNumber) => {
       const { data, error } = await supabaseAdmin.storage
         .from('folio-assets')
-        .download(`books/${bookId}/pages/page-${pageNumber}.png`)
+        .download(`books/${bookId}/pages/${fileFor.get(pageNumber)}`)
       if (error || !data) return null
       return { pageNumber, buffer: Buffer.from(await data.arrayBuffer()) }
     })

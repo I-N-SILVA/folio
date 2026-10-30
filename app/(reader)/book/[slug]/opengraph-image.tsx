@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { supabaseAdmin, hasServiceRoleKey } from '@/lib/supabase'
+import { isSuspended } from '@/lib/abuse'
 
 // Runs on the Node.js runtime: this route imports the Supabase clients, which
 // push the bundle past Vercel's 1 MB Edge Function limit. Node serverless
@@ -23,9 +24,13 @@ export default async function Image({ params }: { params: { slug: string } }) {
     try {
       const { data } = await supabaseAdmin
         .from('books')
-        .select('title, description, theme, settings, pages(*)')
+        .select('*, pages(*)')
         .eq('slug', params.slug)
         .single()
+      // Service role reads drafts and suspended editions too, and this image is
+      // public: it used to render a draft's title and cover for anyone who
+      // guessed the slug. Only what the reader would show gets a card.
+      if (!data || data.settings?.published !== true || isSuspended(data)) return null
       return data
     } catch {
       return null

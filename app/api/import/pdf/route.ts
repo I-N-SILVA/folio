@@ -10,7 +10,7 @@ import {
 } from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { rateLimit } from '@/lib/rate-limit'
-import { MAX_IMPORT_PAGES, pagePath, mapWithConcurrency } from '@/lib/import'
+import { MAX_IMPORT_PAGES, pagePath, mapWithConcurrency, type PageFormat } from '@/lib/import'
 
 export const maxDuration = 60
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { title?: unknown; slug?: unknown; pageCount?: unknown }
+  let body: { title?: unknown; slug?: unknown; pageCount?: unknown; format?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
   const title = typeof body.title === 'string' ? body.title.trim() : ''
   const slug = typeof body.slug === 'string' ? body.slug.trim() : ''
   const pageCount = Number(body.pageCount)
+  // What the browser actually rendered. Anything else is PNG, which is what
+  // every client sent before WebP.
+  const format: PageFormat = body.format === 'webp' ? 'webp' : 'png'
 
   if (!title || !slug) {
     return NextResponse.json({ error: 'title and slug are required' }, { status: 400 })
@@ -159,7 +162,7 @@ export async function POST(request: NextRequest) {
   const uploads = await mapWithConcurrency(pageNumbers, 10, async (pageNumber) => {
     const { data, error } = await supabaseAdmin.storage
       .from('folio-assets')
-      .createSignedUploadUrl(pagePath(bookId, pageNumber))
+      .createSignedUploadUrl(pagePath(bookId, pageNumber, format))
     if (error || !data) {
       lastStorageError = error?.message ?? 'Unknown storage error'
       console.error(`[pdf-import] Failed to create signed URL for page ${pageNumber}:`, error)

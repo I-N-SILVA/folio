@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isSuspended } from '@/lib/abuse'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
@@ -84,7 +85,9 @@ export async function POST(request: NextRequest) {
     .eq('settings->>published', 'true')
     .maybeSingle()
 
-  if (error || !data) {
+  // Service role skips the public read policy, so a suspended edition (023)
+  // has to be refused here by hand.
+  if (error || !data || isSuspended(data)) {
     return NextResponse.json({ error: 'Edition not found.' }, { status: 404 })
   }
 

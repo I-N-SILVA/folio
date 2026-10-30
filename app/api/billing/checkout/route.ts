@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import {
   getStripe,
   isAnnualBillingEnabled,
+  isAutomaticTaxEnabled,
   isBillingEnabled,
   PRO_ANNUAL_PRICE_ID,
   PRO_PRICE_ID,
@@ -81,6 +82,17 @@ export async function POST(request: NextRequest) {
     customer: customerId,
     line_items: [{ price, quantity: 1 }],
     allow_promotion_codes: true,
+    // Tax needs the customer's address, and a business buyer needs to give a
+    // VAT number to be charged correctly (reverse charge in the EU). Both only
+    // when Stripe Tax is switched on; see `isAutomaticTaxEnabled`.
+    ...(isAutomaticTaxEnabled()
+      ? {
+          automatic_tax: { enabled: true },
+          billing_address_collection: 'required' as const,
+          tax_id_collection: { enabled: true },
+          customer_update: { address: 'auto' as const, name: 'auto' as const },
+        }
+      : {}),
     success_url: `${SITE_URL}/account?upgraded=1`,
     cancel_url: `${SITE_URL}/#pricing`,
     metadata: { supabase_user_id: user.id },

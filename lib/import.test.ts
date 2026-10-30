@@ -98,3 +98,25 @@ describe('mapWithConcurrency', () => {
     expect(peak).toBe(2)
   })
 })
+
+describe('page formats', () => {
+  it('stores WebP pages under a .webp name, and PNG stays the default', async () => {
+    const { pagePath: path } = await import('./import')
+    expect(path('abc', 3, 'webp')).toBe('books/abc/pages/page-3.webp')
+    expect(path('abc', 3)).toBe('books/abc/pages/page-3.png')
+  })
+
+  it('finds WebP pages when finalising, alongside the PNG pages imported before', () => {
+    expect(pageNumberFromName('page-7.webp')).toBe(7)
+    expect(pageNumberFromName('page-7.png')).toBe(7)
+    expect(pageNumberFromName('page-7.webp.png')).toBeNull()
+  })
+
+  it('reads the format off what the browser actually produced', async () => {
+    const { pageFormatOf } = await import('./import')
+    expect(pageFormatOf('image/webp')).toBe('webp')
+    // A canvas that cannot encode WebP hands back PNG instead of failing.
+    expect(pageFormatOf('image/png')).toBe('png')
+    expect(pageFormatOf(undefined)).toBe('png')
+  })
+})
