@@ -44,8 +44,13 @@ export function ReportForm({ initialEdition }: { initialEdition: string }) {
 
   if (state === 'sent') {
     return (
-      <div role="status" className="rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 p-6">
-        <p className="font-display text-2xl font-semibold tracking-[-0.03em]">Thank you — we have it.</p>
+      <div
+        role="status"
+        className="rounded-[1.5rem] border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/80 p-6"
+      >
+        <p className="font-display text-2xl font-semibold tracking-[-0.03em]">
+          Thank you — we have it.
+        </p>
         <p className="mt-2 text-[15px] leading-7 text-[var(--qlico-muted)]">
           Someone will look at this edition. If it is harmful it will be taken offline; you will
           hear back only if you left an email and we need more from you.
@@ -75,7 +80,10 @@ export function ReportForm({ initialEdition }: { initialEdition: string }) {
         <legend className={label}>What is wrong with it?</legend>
         <div className="mt-3 space-y-2">
           {REPORT_REASONS.map((r) => (
-            <label key={r.value} className="flex items-start gap-3 text-[15px] leading-6 text-[var(--qlico-ink)]">
+            <label
+              key={r.value}
+              className="flex items-start gap-3 text-[15px] leading-6 text-[var(--qlico-ink)]"
+            >
               <input
                 type="radio"
                 name="reason"
@@ -92,7 +100,8 @@ export function ReportForm({ initialEdition }: { initialEdition: string }) {
 
       <div>
         <label htmlFor="report-details" className={label}>
-          Anything that helps us check <span className="font-normal text-[var(--qlico-muted)]">(optional)</span>
+          Anything that helps us check{' '}
+          <span className="font-normal text-[var(--qlico-muted)]">(optional)</span>
         </label>
         <textarea
           id="report-details"
@@ -106,7 +115,10 @@ export function ReportForm({ initialEdition }: { initialEdition: string }) {
 
       <div>
         <label htmlFor="report-email" className={label}>
-          Your email <span className="font-normal text-[var(--qlico-muted)]">(optional — only if we may contact you)</span>
+          Your email{' '}
+          <span className="font-normal text-[var(--qlico-muted)]">
+            (optional — only if we may contact you)
+          </span>
         </label>
         <input
           id="report-email"

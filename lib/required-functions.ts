@@ -99,4 +99,10 @@ export const REQUIRED_FUNCTIONS: readonly RequiredFunction[] = [
     critical: false,
     cost: 'old reading events are never deleted, and the events table grows without bound',
   },
+  {
+    name: 'claim_email_send',
+    migration: '024',
+    critical: false,
+    cost: 'EMAIL_DAILY_LIMIT is not enforced, so a free email plan refuses sends past its limit',
+  },
 ] as const

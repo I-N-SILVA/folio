@@ -24,9 +24,9 @@ export default async function ReportPage({
   return (
     <LegalShell title="Report an edition" updated="October 2026">
       <p className="text-[15px] leading-7 text-[var(--qlico-muted)]">
-        Editions on QLICO are published by their authors. If one is trying to collect passwords
-        or card details, sends people to malware, or breaks the law, tell us here. A person reads
-        every report, and an edition can be taken down within minutes.
+        Editions on QLICO are published by their authors. If one is trying to collect passwords or
+        card details, sends people to malware, or breaks the law, tell us here. A person reads every
+        report, and an edition can be taken down within minutes.
       </p>
       <ReportForm initialEdition={slug} />
     </LegalShell>

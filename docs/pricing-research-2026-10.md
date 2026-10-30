@@ -305,6 +305,43 @@ first as usage grows.
     covers overage), and a weekly look at cost per active edition. That
     number tells you whether the plan limits are right.
 
+## 10. Running the MVP as cheaply as possible
+
+The plan: **Vercel Pro, and free tiers for everything else that has one.**
+Vercel Pro is not optional for a product that takes payments: Vercel's terms
+limit Hobby to personal, non-commercial use, and a revenue-generating project
+on Hobby can be paused.
+
+| Service | Plan | $/month | Why this one |
+|---|---|---|---|
+| Vercel | **Pro, 1 seat** | **20** | Required for commercial use. Includes ~1 TB transfer; crons at any frequency. Add a seat only for someone who deploys. |
+| Supabase | **Pro** | **25** | Free projects pause after a week idle and hold 1 GB of files — fine before launch, not for customers. Pro includes 8 GB database, 100 GB files, 250 GB egress. Keep the spend cap **on**. |
+| Resend (email) | **Free** | 0 | 100/day, 3,000/month. Set `EMAIL_DAILY_LIMIT=95`; the digest spreads over the week and lead emails always get through (024). Move to Pro ($20) past ~400 active authors. |
+| Gemini (AI) | Pay-as-you-go | ~0–2 | ~$0.0014 a page. Or leave the key unset at first: import falls back to the free heuristic. |
+| Google Web Risk | Free tier | 0 | First 100,000 lookups a month. |
+| Stripe | No fixed fee | 0 | 2.9% + 30¢ + 0.7% Billing per charge. Stripe Tax (+0.5%) only when switched on. |
+| Domain | — | ~1–2 | |
+| **Total** | | **≈ $46–49** | **Covered by 2 Pro customers at $29** (or 3 at $19). |
+
+**Not worth paying for yet:** a Redis/KV service for rate limiting (the
+in-memory limiter is fine at MVP traffic; everything billing-sensitive is
+already counted in Postgres), Resend Pro, Sentry paid, extra Vercel seats.
+
+**Settings that keep the bill flat (10 minutes, in dashboards):**
+
+1. **Vercel → Settings → Billing → Spend Management:** set an on-demand budget
+   (e.g. $30) with alerts, so a traffic spike cannot run up an open-ended bill.
+2. **Vercel → Image Optimization:** make sure the project is on the
+   transformation-based pricing, not per-source-image (§3).
+3. **Supabase → Billing:** leave the spend cap on until revenue covers overage.
+4. **Resend:** set `EMAIL_DAILY_LIMIT=95` while on the free plan.
+
+**What would raise the bill, and when:** past ~400 authors who get the digest
+(email), past ~250 GB of image egress or ~8 GB of database (Supabase overage —
+event pruning keeps the database flat), or a viral edition (Vercel transfer
+past 1 TB, ≈ 350–500k reads). Each of these arrives with revenue well above
+its cost if the conversion figures in §4 hold.
+
 ## Sources
 
 Competitor pricing:
@@ -341,6 +378,13 @@ AppSumo:
 [MySignature launch review](https://mysignature.io/blog/appsumo-launch/) ·
 [MEAN CEO — launch statistics](https://blog.mean.ceo/?p=11216) ·
 [Monetizely — marketplace pricing](https://www.getmonetizely.com/articles/should-you-launch-on-appsumo-a-vibe-coders-guide-to-deal-marketplace-pricing)
+
+MVP plans:
+[Vercel — Hobby plan (non-commercial)](https://vercel.com/docs/plans/hobby-plan) ·
+[Vercel — fair use guidelines](https://vercel.com/docs/limits/fair-use-guidelines) ·
+[Vercel Terms](https://vercel.com/terms) ·
+[Resend — sending limits](https://resend.com/docs/knowledge-base/account-quotas-and-limits) ·
+[Resend — pricing](https://resend.com/docs/knowledge-base/what-is-resend-pricing)
 
 Abuse:
 [Google Safe Browsing API](https://developers.google.com/safe-browsing)

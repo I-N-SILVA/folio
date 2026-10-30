@@ -19,17 +19,31 @@ describe('collectOutboundLinks', () => {
       page({
         hotspots: [
           { id: 'h', label: 'x', x: 1, y: 1, action: 'link', linkUrl: 'https://a.example/1' },
-          { id: 'h2', label: 'y', x: 1, y: 1, action: 'checkout', stripeUrl: 'https://pay.example/2' },
+          {
+            id: 'h2',
+            label: 'y',
+            x: 1,
+            y: 1,
+            action: 'checkout',
+            stripeUrl: 'https://pay.example/2',
+          },
         ] as Page['hotspots'],
         blocks: [
           { type: 'button', id: 'b', label: 'Go', href: 'https://b.example/3' },
           {
             type: 'product-grid',
             id: 'g',
-            items: [{ id: 'i', name: 'Coat', price: '$1', image: '', buyUrl: 'https://shop.example/4' }],
+            items: [
+              { id: 'i', name: 'Coat', price: '$1', image: '', buyUrl: 'https://shop.example/4' },
+            ],
           },
           { type: 'text', id: 't', content: 'See https://c.example/5 and https://c.example/5.' },
-          { type: 'embed', id: 'e', html: '<iframe src="https://d.example/6"></iframe>', height: 300 },
+          {
+            type: 'embed',
+            id: 'e',
+            html: '<iframe src="https://d.example/6"></iframe>',
+            height: 300,
+          },
         ] as unknown as Page['blocks'],
       }),
     ])
@@ -75,7 +89,10 @@ describe('findUnsafeLinks', () => {
   it('reports what Web Risk lists, and passes what it does not', async () => {
     globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
       const uri = new URL(String(input)).searchParams.get('uri')
-      const body = uri === 'https://evil.example/login' ? { threat: { threatTypes: ['SOCIAL_ENGINEERING'] } } : {}
+      const body =
+        uri === 'https://evil.example/login'
+          ? { threat: { threatTypes: ['SOCIAL_ENGINEERING'] } }
+          : {}
       return new Response(JSON.stringify(body), { status: 200 })
     }) as typeof fetch
 

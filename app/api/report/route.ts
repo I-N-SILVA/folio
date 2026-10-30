@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { supabaseAdmin, hasServiceRoleKey } from '@/lib/supabase'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
 import { sendEmail } from '@/lib/email'
+import { claimEmailSend } from '@/lib/email-quota'
 import { REPORT_REASONS } from '@/lib/abuse'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://qlico.app'
@@ -78,27 +79,30 @@ export async function POST(request: NextRequest) {
     if (error.code !== '42P01') console.error('[report] could not record a report:', error)
   }
 
-  await sendEmail({
-    to: ABUSE_EMAIL,
-    subject: `[QLICO report] ${reason}: ${book.title}`,
-    text: [
-      `A reader reported an edition.`,
-      ``,
-      `Edition: ${book.title}`,
-      `Link:    ${SITE_URL}/book/${book.slug}`,
-      `Reason:  ${reason}`,
-      `Owner:   ${book.owner_id}`,
-      `Reporter email: ${email?.trim() || '(not given)'}`,
-      ``,
-      `Details:`,
-      details?.trim() || '(none)',
-      ``,
-      `To take it down (Supabase SQL editor):`,
-      `  SELECT public.suspend_edition('${book.slug}', '${reason}: <your note>');`,
-      `To restore it:`,
-      `  SELECT public.restore_edition('${book.slug}');`,
-    ].join('\n'),
-  })
+  // Counted against the day's email budget like a lead notification. Past it
+  // the report is still recorded in edition_reports; only the email waits.
+  if (await claimEmailSend('notice'))
+    await sendEmail({
+      to: ABUSE_EMAIL,
+      subject: `[QLICO report] ${reason}: ${book.title}`,
+      text: [
+        `A reader reported an edition.`,
+        ``,
+        `Edition: ${book.title}`,
+        `Link:    ${SITE_URL}/book/${book.slug}`,
+        `Reason:  ${reason}`,
+        `Owner:   ${book.owner_id}`,
+        `Reporter email: ${email?.trim() || '(not given)'}`,
+        ``,
+        `Details:`,
+        details?.trim() || '(none)',
+        ``,
+        `To take it down (Supabase SQL editor):`,
+        `  SELECT public.suspend_edition('${book.slug}', '${reason}: <your note>');`,
+        `To restore it:`,
+        `  SELECT public.restore_edition('${book.slug}');`,
+      ].join('\n'),
+    })
 
   return new NextResponse(null, { status: 204 })
 }

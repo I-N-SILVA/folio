@@ -653,3 +653,27 @@ BEGIN
 END $$;
 
 ROLLBACK;
+
+-- ── Daily email budget (024) ─────────────────────────────────────────────────
+BEGIN;
+DO $$
+DECLARE i int; ok int := 0;
+BEGIN
+  FOR i IN 1..5 LOOP
+    IF public.claim_email_send('2026-10-30', 3) THEN ok := ok + 1; END IF;
+  END LOOP;
+  IF ok <> 3 THEN RAISE EXCEPTION 'a limit of 3 allowed % sends', ok; END IF;
+
+  -- A higher limit (lead notifications) still has room after the digest's share is spent.
+  IF NOT public.claim_email_send('2026-10-30', 5) THEN
+    RAISE EXCEPTION 'the larger notice limit was refused at 3 of 5';
+  END IF;
+  IF NOT public.claim_email_send('2026-10-31', 3) THEN
+    RAISE EXCEPTION 'a new day did not reset the count';
+  END IF;
+  IF public.claim_email_send('2026-10-30', 0) THEN
+    RAISE EXCEPTION 'a zero limit allowed a send';
+  END IF;
+  RAISE NOTICE 'ok  the email budget counts per day and refuses past each limit';
+END $$;
+ROLLBACK;

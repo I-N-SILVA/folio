@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getEditionEngagement } from '@/lib/insights'
 import { isEmailEnabled, sendWeeklyDigest } from '@/lib/email'
+import { claimEmailSend } from '@/lib/email-quota'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -40,9 +41,11 @@ const DIGEST_WINDOW_DAYS = 7
  *
  * The next run used to be the next *week*: the cron fired once, Mondays at
  * 09:00, so past 200 eligible authors each one got a digest every few weeks.
- * It now fires every ten minutes through Monday daytime (`vercel.json`), which
- * is 78 runs and room for ~15,000 digests a week. The slot claim makes the
- * extra runs free: a profile already sent this week is not selected.
+ * It now fires every half hour through the day, every day (`vercel.json`). Each
+ * author is due six days after their last digest, so sends spread across the
+ * week — which is what lets it run inside a free email plan's daily limit
+ * (`lib/email-quota.ts`). The slot claim makes the extra runs free: a profile
+ * already sent this week is not selected.
  */
 const BATCH_SIZE = 200
 
@@ -97,6 +100,8 @@ export async function GET(request: NextRequest) {
   // due this week" and is how a digest that could never send looked healthy
   // for two branches.
   let failed = 0
+  // Set when today's email budget runs out; the rest wait for a later run.
+  let budgetReached = false
 
   for (const profile of profiles ?? []) {
     // Claim the slot before sending, and only if nothing else claimed it first.
@@ -144,6 +149,18 @@ export async function GET(request: NextRequest) {
       continue
     }
 
+    // Within today's digest budget (024), or stop here. The slot was claimed
+    // above, so give it back first: an author not reached today is reached on
+    // a later run, rather than losing their week to a full inbox quota.
+    if (!(await claimEmailSend('digest'))) {
+      await supabaseAdmin
+        .from('profiles')
+        .update({ digest_last_sent_at: profile.digest_last_sent_at ?? null })
+        .eq('id', profile.id)
+      budgetReached = true
+      break
+    }
+
     const engagement = await getEditionEngagement(
       profile.id,
       published.map((b) => b.id),
@@ -184,6 +201,7 @@ export async function GET(request: NextRequest) {
     sent,
     skipped,
     failed,
-    more: (profiles?.length ?? 0) === BATCH_SIZE,
+    more: (profiles?.length ?? 0) === BATCH_SIZE || budgetReached,
+    budgetReached,
   })
 }

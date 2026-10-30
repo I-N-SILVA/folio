@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isSuspended } from '@/lib/abuse'
+import { claimEmailSend } from '@/lib/email-quota'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { rateLimit, clientIp } from '@/lib/rate-limit'
@@ -38,6 +39,13 @@ async function notifyOwner(book: Book, readerEmail: string): Promise<void> {
 
   const to = owner?.email
   if (!to) return
+
+  // Within the day's email budget (024). Past it, the lead is still recorded
+  // and still in Insights; only the email is skipped.
+  if (!(await claimEmailSend('notice'))) {
+    console.warn('[unlock] daily email limit reached; lead notification skipped')
+    return
+  }
 
   await sendLeadNotification({
     to,

@@ -180,6 +180,23 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### Running on a free email plan (migration 024)
+
+The MVP stack is Vercel Pro + Supabase Pro + free tiers (cost sheet:
+`docs/pricing-research-2026-10.md` §10, ≈ $46–49/month). Resend's free plan
+refuses past 100 emails a day, and the digest sent 200 a run — each refused
+send cost an author their week.
+
+- `EMAIL_DAILY_LIMIT` (set **95** on Resend free) caps every email per UTC
+  day, counted in Postgres by `claim_email_send`. Lead notifications and abuse
+  reports may use all of it; the digest stops at `DIGEST_DAILY_LIMIT`
+  (default total − 20) and **hands the slot back** so the author is reached on
+  a later run. Unset = no counting (paid plan). Fails open.
+- **The digest cron runs every 30 minutes, 08:00–20:00 UTC, every day.**
+  Authors are due six days after their last digest, so sends spread across the
+  week instead of piling onto Monday. Needs Vercel Pro (Hobby allows daily
+  crons only — and Hobby is non-commercial anyway).
+
 ### Abuse controls, WebP pages, and tax at checkout (migration 023)
 
 Hosted readers get used for phishing, and if Google flags the domain every
@@ -224,10 +241,8 @@ customer's links break at once. There was no defence at all.
   never pruned.**
 - **The reader batches events**: one request per ~2 s / 20 events / page hide,
   instead of one per event. `/api/events` still accepts a single event.
-- **The digest runs every 10 minutes through Monday 08:00–20:00 UTC** instead
-  of once, so it reaches ~15,000 authors a week rather than 200. **This needs
-  Vercel Pro** — Hobby only allows daily crons and rejects the deploy. (Pro is
-  needed for a commercial app anyway.)
+- **The digest runs many times a day** instead of once a week, so it reaches
+  everyone rather than the first 200 (schedule since revised by 024, above).
 - **No plan is unlimited.** Pro 100 editions, lifetime Tier 3 200. Accounts
   already above keep what they have; they cannot create more.
 
