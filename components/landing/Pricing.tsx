@@ -102,7 +102,16 @@ export function Pricing() {
   const activePlan = PLANS[activeIndex]
 
   return (
-    <section ref={containerRef} id="pricing" className="relative h-[300vh] bg-[#050505]">
+    <section id="pricing" className="bg-[#050505]">
+      <MobilePricing />
+
+      {/* The dial, from md up. On a phone it was the wrong control twice over:
+          a 300vh scroll-jacked section showed one plan at a time, so nobody
+          could compare them, and the card sat inside a screen-high box with
+          overflow clipped — on a 375×667 phone its button was below the fold
+          at every scroll position, so the pricing section had no way to sign
+          up from it at all. */}
+      <div ref={containerRef} className="relative hidden h-[300vh] md:block">
       {/* Sticky viewport that stays fixed while scrolling the 300vh container */}
       <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden">
         {/* Ambient background light */}
@@ -241,6 +250,71 @@ export function Pricing() {
           </div>
         </div>
       </div>
+      </div>
     </section>
+  )
+}
+
+/**
+ * Every plan, stacked, for phones: read top to bottom, compare by scrolling,
+ * and each with its own button in normal document flow so none can be
+ * clipped. Same data as the dial, from the same PLANS array, so the pricing
+ * claims test covers both.
+ */
+function MobilePricing() {
+  return (
+    <div className="px-5 py-20 md:hidden">
+      <Reveal>
+        <h2 className="font-display text-center text-3xl font-medium tracking-tight text-white">
+          Pricing
+        </h2>
+        <p className="mx-auto mt-3 max-w-xs text-center text-[15px] leading-6 text-zinc-400">
+          Start free. Pay when your editions need to bring something back.
+        </p>
+      </Reveal>
+
+      <div className="mt-10 flex flex-col gap-5">
+        {PLANS.map((plan, i) => (
+          <div
+            key={plan.name}
+            className={`rounded-[2rem] border p-6 ${
+              i === 1 ? 'border-white/40 bg-white/[0.06]' : 'border-white/10 bg-black/40'
+            }`}
+          >
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-display text-2xl font-medium tracking-tight text-white">
+                {plan.name}
+              </h3>
+              <p className="flex items-baseline gap-1">
+                <span className="font-display text-3xl font-medium text-white">{plan.price}</span>
+                {plan.period && <span className="text-sm font-medium text-zinc-400">{plan.period}</span>}
+              </p>
+            </div>
+            <p className="mt-2 text-[14px] leading-6 text-zinc-400">{plan.description}</p>
+
+            <ul className="mt-5 space-y-3">
+              {plan.features.map((feature) => (
+                <li key={feature} className="flex items-start gap-3 text-[15px] leading-6 text-zinc-200">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-black">
+                    <Check size={13} strokeWidth={3} />
+                  </span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href={plan.href}
+              className={`mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full text-[15px] font-semibold transition active:scale-[0.98] ${
+                i === 1 ? 'bg-white text-black' : 'border border-white/25 text-white'
+              }`}
+            >
+              {plan.cta}
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

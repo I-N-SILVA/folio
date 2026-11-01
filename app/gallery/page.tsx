@@ -93,7 +93,7 @@ export default function GalleryPage() {
                   >
                     {tmpl.previewMockup.tag}
                   </span>
-                  <span className="text-[10px] font-medium opacity-60 tabular-nums">
+                  <span className="text-xs font-medium opacity-60 tabular-nums">
                     {tmpl.pagesCount} pages
                   </span>
                 </div>
@@ -102,7 +102,7 @@ export default function GalleryPage() {
                   <h2 className="font-display text-2xl font-semibold leading-none tracking-[-0.03em]">
                     {tmpl.previewMockup.headline}
                   </h2>
-                  <p className="mt-1.5 text-[11px] leading-4 opacity-75">
+                  <p className="mt-1.5 text-xs leading-5 opacity-75">
                     {tmpl.previewMockup.subheadline}
                   </p>
                 </div>
@@ -112,7 +112,7 @@ export default function GalleryPage() {
 
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--qlico-muted)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--qlico-muted)]">
                     {tmpl.category}
                   </p>
                   <h3 className="mt-1 font-display text-lg font-semibold leading-tight tracking-[-0.02em]">
@@ -125,7 +125,7 @@ export default function GalleryPage() {
                   {tmpl.badges.map((badge) => (
                     <li
                       key={badge}
-                      className="rounded-full border border-[var(--qlico-border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--qlico-muted)]"
+                      className="rounded-full border border-[var(--qlico-border)] px-2 py-0.5 text-xs font-semibold text-[var(--qlico-muted)]"
                     >
                       {badge}
                     </li>

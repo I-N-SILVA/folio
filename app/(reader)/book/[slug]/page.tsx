@@ -125,6 +125,9 @@ export default async function BookPage({ params }: Props) {
         background: `radial-gradient(circle at 50% -8%, ${tint} 0%, #f5f5f7 55%, #ececef 100%)`,
       }}
     >
+      {/* The page had no heading at all, so a screen reader announced nothing
+          about which edition this is. The pages themselves are images. */}
+      <h1 className="sr-only">{book.title}</h1>
       <ViewerChrome book={visible} lockedCount={lockedCount} showBadge={showBadge} />
     </main>
   )

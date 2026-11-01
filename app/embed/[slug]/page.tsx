@@ -67,6 +67,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
 
   return (
     <main className="flex h-screen w-full items-center justify-center overflow-hidden bg-transparent">
+      <h1 className="sr-only">{book.title}</h1>
       <ViewerChrome book={visible} lockedCount={lockedCount} showBadge={showBadge} embed />
     </main>
   )

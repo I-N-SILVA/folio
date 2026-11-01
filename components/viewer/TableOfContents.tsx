@@ -104,10 +104,10 @@ export function TableOfContents({
                     </div>
 
                     <div className="mt-2 flex w-full items-center justify-between gap-1 px-1">
-                      <span className="text-[11px] font-bold text-[var(--qlico-ink)]">
+                      <span className="text-xs font-bold text-[var(--qlico-ink)]">
                         Page {index + 1}
                       </span>
-                      <span className="truncate text-[10px] text-[var(--qlico-muted)]">
+                      <span className="truncate text-xs text-[var(--qlico-muted)]">
                         {page.type}
                       </span>
                     </div>

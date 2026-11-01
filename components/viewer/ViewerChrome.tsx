@@ -322,12 +322,18 @@ export function ViewerChrome({
         />
       </motion.div>
 
+      {/* Not on phones. There it took a third of the screen together with the
+          toolbar, shrinking the page the reader came to read, and it does
+          nothing the Contents button (in the toolbar) and a swipe do not —
+          while a 50-page import packs 50 thumbnails into one 360px row. */}
       {!embed && (
-        <FilmstripScrubber
-          book={visibleBook}
-          currentPage={currentPage}
-          onSelectPage={(i) => engineRef.current?.goTo(i)}
-        />
+        <div className="hidden w-full sm:block">
+          <FilmstripScrubber
+            book={visibleBook}
+            currentPage={currentPage}
+            onSelectPage={(i) => engineRef.current?.goTo(i)}
+          />
+        </div>
       )}
 
       {!embed && (
@@ -601,7 +607,7 @@ export function ViewerChrome({
           href={`/report?edition=${encodeURIComponent(book.slug)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-full px-2 py-1.5 text-[11px] font-semibold text-[var(--qlico-muted)] underline-offset-2 transition-colors hover:text-[var(--qlico-ink)] hover:underline"
+          className="flex min-h-[40px] items-center rounded-full px-3 text-xs font-semibold text-[var(--qlico-muted)] underline-offset-2 transition-colors hover:text-[var(--qlico-ink)] hover:underline"
         >
           Report
         </a>

@@ -180,6 +180,25 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### Phone and web UX pass
+
+Measured in a real browser (Playwright) at 320–1440px; the signed-in studio
+was not, because its harness needs the PostgREST binary.
+
+- **The pricing section could not sign anyone up on a small phone.** It was a
+  300vh scroll-jacked dial with the plan card in a screen-high box, overflow
+  clipped; on 375×667 and 320×568 the card's button was off-screen at every
+  scroll position. Phones now get all three plans stacked, each with its own
+  button in normal flow; the dial stays from `md` up.
+- The hero said "Drag & drop your PDF" to phones. Touch screens
+  (`pointer-coarse`) now read "Tap to choose a PDF".
+- The reader hides the page filmstrip and the keyboard-shortcuts button on
+  phones; it gets the Contents button and swipes. It also has an `sr-only`
+  `<h1>` with the edition title (it had no heading), and the home page lost a
+  second, decorative `<h1>`.
+- Text that carries information (gallery card details, the lead gate's privacy
+  line, contents) is at least 12px.
+
 ### Running on a free email plan (migration 024)
 
 The MVP stack is Vercel Pro + Supabase Pro + free tiers (cost sheet:

@@ -126,7 +126,7 @@ export function Features() {
           <div className="w-1/2 h-full relative bg-zinc-100">
             <div className="absolute inset-0 bg-gradient-to-l from-black/10 to-transparent z-10" />
             <div className="p-4 md:p-12 h-full flex flex-col justify-center">
-              <h1 className="font-display text-2xl md:text-5xl text-black mb-2 md:mb-6 tracking-tight">The Fall<br/>Collection</h1>
+              <p className="font-display text-2xl md:text-5xl text-black mb-2 md:mb-6 tracking-tight">The Fall<br/>Collection</p>
               <p className="text-zinc-600 font-sans leading-relaxed text-[10px] md:text-sm hidden sm:block">
                 Exploring the intersection of brutalist architecture and soft, flowing fabrics. This season is defined by sharp contrasts.
               </p>

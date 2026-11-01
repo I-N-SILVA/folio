@@ -25,10 +25,11 @@ export function KeyboardHints() {
 
   return (
     <>
-      {/* Hint trigger button */}
+      {/* Hint trigger button. Not on touch screens: a phone has no keyboard to
+          take shortcuts from, and the button sat in the thumb zone. */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 left-4 w-8 h-8 rounded-full bg-black/60 hover:bg-black/75 text-white text-sm font-medium flex items-center justify-center backdrop-blur-sm transition-colors z-40"
+        className="fixed bottom-4 left-4 w-8 h-8 pointer-coarse:hidden rounded-full bg-black/60 hover:bg-black/75 text-white text-sm font-medium flex items-center justify-center backdrop-blur-sm transition-colors z-40"
         aria-label="Keyboard shortcuts"
         title="Keyboard shortcuts (?)"
       >
