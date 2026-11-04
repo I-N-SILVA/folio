@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isSuspended } from '@/lib/abuse'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { readLiveValue } from '@/lib/live-data'
@@ -67,13 +68,16 @@ export async function GET(request: NextRequest) {
   if (!block) {
     const { data: book } = await supabaseAdmin
       .from('books')
-      .select('id, owner_id, settings, pages(id, blocks)')
+      .select('*, pages(id, blocks)')
       .eq('id', bookId)
       .single()
 
     if (!book) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const published = Boolean((book.settings as { published?: boolean } | null)?.published)
+    // A suspended edition (023) is as private as a draft: service role skips
+    // the public read policy that would otherwise hide it.
+    const published =
+      Boolean((book.settings as { published?: boolean } | null)?.published) && !isSuspended(book)
     if (!published) {
       // A draft's data is the author's alone until they publish it.
       const supabase = await createServerSupabase()

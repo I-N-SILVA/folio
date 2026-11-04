@@ -18,7 +18,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 22, not 20: @supabase/realtime-js needs Node 22's native WebSocket
+          # and throws on 20, which kept lib/supabase-admin.test.ts — and so
+          # this workflow — red on main since September. Node 20 is also
+          # deprecated on GitHub's runners.
+          node-version: 22
           cache: npm
 
       - name: Install dependencies

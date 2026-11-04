@@ -5,6 +5,12 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { ThemeSchema, BookSettingsSchema } from '@/lib/book-schema'
 import { revalidateReader } from '@/lib/revalidate-reader'
 import { VERSIONS_KEPT } from '@/lib/versions'
+import {
+  collectOutboundLinks,
+  findUnsafeLinks,
+  isLinkCheckEnabled,
+  unsafeLinkResponse,
+} from '@/lib/link-safety'
 
 // ─── PATCH /api/books/[id] — partial book update ─────────────────────────────
 
@@ -51,6 +57,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const parsed = PatchBookSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  }
+
+  // Publishing an edition that links to a known phishing or malware site is
+  // refused, before the update. Only on the transition: the pages route checks
+  // every later save of a published edition.
+  const publishing = parsed.data.settings?.published === true && !wasPublished
+  if (publishing && isLinkCheckEnabled()) {
+    const { data: pages } = await supabaseAdmin
+      .from('pages')
+      .select('blocks, hotspots')
+      .eq('book_id', id)
+    const unsafe = await findUnsafeLinks(collectOutboundLinks(pages ?? []))
+    if (unsafe.length > 0) {
+      console.warn('[books] refused to publish with unsafe links:', id, unsafe)
+      return NextResponse.json(unsafeLinkResponse(unsafe), { status: 422 })
+    }
   }
 
   // A rename of the public address. The slug used to be permanent because

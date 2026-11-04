@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader2, ShoppingBag, Link2, Sparkle, Crosshair } from 'lucide-react'
 import { toast } from 'sonner'
+import { aiLimitMessage } from '@/lib/plans'
 import { Modal } from '@/components/ui/Modal'
 import { useEditorStore } from '@/lib/editor-store'
 import { trackProduct } from '@/lib/product-analytics'
@@ -63,7 +64,8 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
       signal: controller.signal,
     })
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error('detect failed'))))
-      .then((data: { byPage?: Found[] }) => {
+      .then((data: { byPage?: Found[]; aiQuota?: { limited?: boolean; limit: number } }) => {
+        if (data.aiQuota?.limited) toast.info(aiLimitMessage(data.aiQuota.limit))
         const hits = (data.byPage ?? []).filter((p) => p.hotspots.length > 0)
         setFound(hits)
         setPhase(hits.length ? 'found' : 'nothing')
@@ -93,23 +95,23 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
     <Modal
       onClose={onClose}
       title="Import complete"
-      className="w-[540px] max-w-[calc(100vw-2rem)] overflow-hidden border border-neutral-700 bg-neutral-900 p-0"
+      className="w-[540px] max-w-[calc(100vw-2rem)] overflow-hidden border border-studio-line-strong bg-studio-panel p-0"
     >
       <div className="p-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-studio-ink-soft">
           {pageCount} page{pageCount === 1 ? '' : 's'} imported
         </p>
 
         {phase === 'scanning' && (
           <>
-            <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-neutral-100">
+            <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-studio-ink">
               Reading your pages…
             </h2>
-            <p className="mt-3 text-sm leading-6 text-neutral-400">
+            <p className="mt-3 text-sm leading-6 text-studio-ink-soft">
               Looking for products with prices, links in your copy, and anything worth turning into
               something a reader can tap. Nothing is added until you say so.
             </p>
-            <div className="mt-6 flex items-center gap-2.5 text-sm text-neutral-400">
+            <div className="mt-6 flex items-center gap-2.5 text-sm text-studio-ink-soft">
               <Loader2 size={16} className="animate-spin text-[var(--studio-select)]" />
               Scanning
             </div>
@@ -118,7 +120,7 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
 
         {phase === 'found' && (
           <>
-            <h2 className="mt-2 font-display text-2xl font-semibold leading-tight tracking-[-0.02em] text-neutral-100">
+            <h2 className="mt-2 font-display text-2xl font-semibold leading-tight tracking-[-0.02em] text-studio-ink">
               Your pages are in.
               <br />
               Here is what QLICO found.
@@ -151,7 +153,7 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
               )}
             </ul>
 
-            <p className="mt-4 text-[12.5px] leading-5 text-neutral-400">
+            <p className="mt-4 text-[12.5px] leading-5 text-studio-ink-soft">
               Across {stats.pages} of your {pageCount} pages. Adding them is one step — a single ⌘Z
               takes all of it back.
             </p>
@@ -160,10 +162,10 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
 
         {phase === 'nothing' && (
           <>
-            <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-neutral-100">
+            <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-studio-ink">
               Your pages are in.
             </h2>
-            <p className="mt-3 text-sm leading-6 text-neutral-400">
+            <p className="mt-3 text-sm leading-6 text-studio-ink-soft">
               Nothing obvious to make interactive — no prices or links in the text. You can place
               pins yourself wherever they belong: hit <Kbd>Add hotspot</Kbd> and click the page.
             </p>
@@ -172,10 +174,10 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
 
         {phase === 'failed' && (
           <>
-            <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-neutral-100">
+            <h2 className="mt-2 font-display text-2xl font-semibold tracking-[-0.02em] text-studio-ink">
               Your pages are in.
             </h2>
-            <p className="mt-3 text-sm leading-6 text-neutral-400">
+            <p className="mt-3 text-sm leading-6 text-studio-ink-soft">
               The scan for products and links didn&apos;t finish, which doesn&apos;t affect your
               import — every page is here. Try <Kbd>Auto-detect pins</Kbd> in the toolbar, or place
               them yourself.
@@ -184,7 +186,7 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-neutral-800 bg-neutral-900/60 px-6 py-4">
+      <div className="flex flex-wrap items-center gap-2 border-t border-studio-line bg-studio-panel/60 px-6 py-4">
         {phase === 'found' ? (
           <>
             <button
@@ -198,11 +200,11 @@ export function PostImportModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-neutral-700 px-4 py-2.5 text-xs font-semibold text-neutral-300 transition-colors hover:bg-neutral-800"
+              className="rounded-full border border-studio-line-strong px-4 py-2.5 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised"
             >
               Not now
             </button>
-            <span className="ml-auto text-[11px] text-neutral-400">
+            <span className="ml-auto text-[11px] text-studio-ink-soft">
               You can always add them later
             </span>
           </>
@@ -233,14 +235,14 @@ function FoundRow({
   detail: string
 }) {
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-800/40 px-3.5 py-2.5">
-      <span className="min-w-[26px] font-display text-xl font-semibold tabular-nums text-neutral-100">
+    <li className="flex items-center gap-3 rounded-xl border border-studio-line bg-studio-raised/40 px-3.5 py-2.5">
+      <span className="min-w-[26px] font-display text-xl font-semibold tabular-nums text-studio-ink">
         {count}
       </span>
-      <span className="text-neutral-400">{icon}</span>
+      <span className="text-studio-ink-soft">{icon}</span>
       <span className="min-w-0">
-        <span className="block text-[13px] font-medium text-neutral-100">{title}</span>
-        <span className="block text-[11.5px] text-neutral-400">{detail}</span>
+        <span className="block text-[13px] font-medium text-studio-ink">{title}</span>
+        <span className="block text-[11.5px] text-studio-ink-soft">{detail}</span>
       </span>
     </li>
   )
@@ -248,7 +250,7 @@ function FoundRow({
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[11px] font-semibold text-neutral-300">
+    <span className="rounded bg-studio-raised px-1.5 py-0.5 text-[11px] font-semibold text-studio-ink">
       {children}
     </span>
   )

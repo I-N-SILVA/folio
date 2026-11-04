@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
-import { checkBookQuota, isBookLimitError } from '@/lib/entitlements'
+import {
+  checkBookQuota,
+  checkStorageQuota,
+  isBookLimitError,
+  storageLimitResponse,
+} from '@/lib/entitlements'
 import { formatQuota } from '@/lib/plans'
 import { rateLimit } from '@/lib/rate-limit'
-import { MAX_IMPORT_PAGES, pagePath, mapWithConcurrency } from '@/lib/import'
+import { MAX_IMPORT_PAGES, pagePath, mapWithConcurrency, type PageFormat } from '@/lib/import'
 
 export const maxDuration = 60
 
@@ -43,7 +48,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { title?: unknown; slug?: unknown; pageCount?: unknown }
+  let body: { title?: unknown; slug?: unknown; pageCount?: unknown; format?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -53,6 +58,9 @@ export async function POST(request: NextRequest) {
   const title = typeof body.title === 'string' ? body.title.trim() : ''
   const slug = typeof body.slug === 'string' ? body.slug.trim() : ''
   const pageCount = Number(body.pageCount)
+  // What the browser actually rendered. Anything else is PNG, which is what
+  // every client sent before WebP.
+  const format: PageFormat = body.format === 'webp' ? 'webp' : 'png'
 
   if (!title || !slug) {
     return NextResponse.json({ error: 'title and slug are required' }, { status: 400 })
@@ -89,6 +97,14 @@ export async function POST(request: NextRequest) {
       },
       { status: 403 }
     )
+  }
+
+  // Checked before the book is created, so a refusal strands no slug and no
+  // quota slot. The pages go straight to storage on signed URLs, so this is the
+  // last point the server can say no before the bytes land.
+  const storage = await checkStorageQuota(user.id, user.email)
+  if (!storage.allowed) {
+    return NextResponse.json(storageLimitResponse(storage), { status: 403 })
   }
 
   const bookId = uuidv4()
@@ -146,7 +162,7 @@ export async function POST(request: NextRequest) {
   const uploads = await mapWithConcurrency(pageNumbers, 10, async (pageNumber) => {
     const { data, error } = await supabaseAdmin.storage
       .from('folio-assets')
-      .createSignedUploadUrl(pagePath(bookId, pageNumber))
+      .createSignedUploadUrl(pagePath(bookId, pageNumber, format))
     if (error || !data) {
       lastStorageError = error?.message ?? 'Unknown storage error'
       console.error(`[pdf-import] Failed to create signed URL for page ${pageNumber}:`, error)

@@ -143,13 +143,13 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
 
       <section>
         <div className="flex items-center justify-between gap-4">
-          <p className="text-sm leading-6 text-neutral-400">
+          <p className="text-sm leading-6 text-studio-ink-soft">
             Send a link to anyone. They do not need an account, and what they leave lands here.
           </p>
           <button
             onClick={createLink}
             disabled={busy !== null}
-            className="shrink-0 flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700 disabled:opacity-50"
+            className="shrink-0 flex items-center gap-1.5 rounded-lg border border-studio-line-strong bg-studio-raised px-3 py-1.5 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised-2 disabled:opacity-50"
           >
             {busy === 'new-link' ? (
               <Loader2 size={13} className="animate-spin" />
@@ -170,7 +170,7 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
                 <li
                   key={l.id}
                   className={twMerge(
-                    'flex items-center gap-2 rounded-xl border border-neutral-800 bg-neutral-900/70 px-3 py-2',
+                    'flex items-center gap-2 rounded-xl border border-studio-line bg-studio-panel/70 px-3 py-2',
                     dead && 'opacity-50'
                   )}
                 >
@@ -178,9 +178,9 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
                     readOnly
                     value={l.path}
                     onFocus={(e) => e.currentTarget.select()}
-                    className="min-w-0 flex-1 truncate bg-transparent font-mono text-[11px] text-neutral-300 outline-none"
+                    className="min-w-0 flex-1 truncate bg-transparent font-mono text-[11px] text-studio-ink outline-none"
                   />
-                  <span className="shrink-0 text-[11px] text-neutral-400">
+                  <span className="shrink-0 text-[11px] text-studio-ink-soft">
                     {l.revoked_at
                       ? 'revoked'
                       : l.expires_at
@@ -191,7 +191,7 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
                     <>
                       <button
                         onClick={() => void copy(l)}
-                        className="shrink-0 rounded-md p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100"
+                        className="shrink-0 rounded-md p-1.5 text-studio-ink-soft transition hover:bg-studio-raised hover:text-studio-ink"
                         title="Copy link"
                       >
                         {copied === l.id ? <Check size={13} /> : <Copy size={13} />}
@@ -199,7 +199,7 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
                       <button
                         onClick={() => void revoke(l)}
                         disabled={busy !== null}
-                        className="shrink-0 rounded-md p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-50"
+                        className="shrink-0 rounded-md p-1.5 text-studio-ink-soft transition hover:bg-studio-raised hover:text-studio-ink disabled:opacity-50"
                         title="Revoke"
                       >
                         <X size={13} />
@@ -214,15 +214,15 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
       </section>
 
       <section className="mt-6">
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-studio-ink-soft">
           {open.length} open
         </h3>
         <div className="mt-2 max-h-[38vh] space-y-1.5 overflow-y-auto custom-scrollbar pr-1">
           {comments === null && (
-            <p className="py-8 text-center text-xs text-neutral-400">Reading the comments…</p>
+            <p className="py-8 text-center text-xs text-studio-ink-soft">Reading the comments…</p>
           )}
           {comments?.length === 0 && (
-            <p className="py-8 text-center text-xs text-neutral-400">
+            <p className="py-8 text-center text-xs text-studio-ink-soft">
               Nothing yet. Send a link and it will show up here.
             </p>
           )}
@@ -230,28 +230,28 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
             <div
               key={c.id}
               className={twMerge(
-                'rounded-xl border border-neutral-800 bg-neutral-900/70 px-3 py-2.5',
+                'rounded-xl border border-studio-line bg-studio-panel/70 px-3 py-2.5',
                 c.resolved_at && 'opacity-60'
               )}
             >
               <div className="flex items-center gap-2">
-                <MessageSquare size={13} className="shrink-0 text-neutral-400" />
+                <MessageSquare size={13} className="shrink-0 text-studio-ink-soft" />
                 <button
                   onClick={() => {
                     setCurrentPageIndex(c.page_number - 1)
                     onClose()
                   }}
-                  className="text-xs font-semibold text-neutral-100 underline-offset-2 hover:underline"
+                  className="text-xs font-semibold text-studio-ink underline-offset-2 hover:underline"
                 >
                   Page {c.page_number}
                 </button>
-                <span className="min-w-0 flex-1 truncate text-[11px] text-neutral-400">
+                <span className="min-w-0 flex-1 truncate text-[11px] text-studio-ink-soft">
                   {c.author_name} · {relativeTime(c.created_at)}
                 </span>
                 <button
                   onClick={() => void setResolved(c, !c.resolved_at)}
                   disabled={busy !== null}
-                  className="shrink-0 flex items-center gap-1 rounded-md border border-neutral-700 px-2 py-1 text-[11px] font-semibold text-neutral-200 transition hover:bg-neutral-800 disabled:opacity-50"
+                  className="shrink-0 flex items-center gap-1 rounded-md border border-studio-line-strong px-2 py-1 text-[11px] font-semibold text-studio-ink transition hover:bg-studio-raised disabled:opacity-50"
                 >
                   {busy === c.id ? (
                     <Loader2 size={11} className="animate-spin" />
@@ -263,7 +263,7 @@ export function ReviewModal({ bookId, onClose }: { bookId: string; onClose: () =
                   {c.resolved_at ? 'Reopen' : 'Resolve'}
                 </button>
               </div>
-              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-neutral-200">
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-studio-ink">
                 {c.body}
               </p>
             </div>

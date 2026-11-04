@@ -12,6 +12,11 @@ Qlico bridges the gap between boring PDFs and expensive custom websites. It targ
 AppSumo is the perfect launchpad for B2B SaaS tools. The audience consists of agency owners, marketers, and solo founders looking for a deal.
 
 ### The Offer
+
+> **Superseded.** These tiers predate `lib/plans.ts` and do not match it (no tier
+> is unlimited, and custom domains are not built). The deal table that ships is
+> `APPSUMO_LAUNCH.md` §2.
+
 *   **Tier 1 ($49):** 5 Books, Standard Analytics, Qlico Branding.
 *   **Tier 2 ($99):** 20 Books, Heatmaps, Lead Gating, Mailchimp/ConvertKit Integrations.
 *   **Tier 3 ($199):** Unlimited Books, CNAME Custom Domains, 100% Whitelabel (No Qlico branding).

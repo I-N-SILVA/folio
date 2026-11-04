@@ -181,6 +181,30 @@ One line per thing that broke, why, and the test that now guards it.
   exactly how that should be built. Exclude visually-hidden controls or the
   report cries wolf.
 
+- **`npm run measure:ux` measures the signed-in studio too.** It needs no
+  PostgREST or PostgreSQL: `scripts/studio-mock-rest.mjs` serves the demo
+  editions as one author's books behind the existing auth gateway. 90 checks,
+  each a number with a pass line. Add a check before trusting a fix.
+
+- **Prove a check can fail before believing its zero.** The clipped-text check
+  reported 0/25 after the reader fix; switching the fix off made it report
+  8/25. Without that second run, 0 meant nothing.
+
+- **Contrast checks must let the browser parse colours.** Tailwind v4 writes
+  translucent colours as `oklab(…)`. A regex for `rgb()` read every translucent
+  background as transparent and flagged white-on-dark-pill labels at 1.03:1.
+  Paint the colour onto a 1×1 canvas and read the pixel back.
+
+- **Exclude what is not UI.** `sr-only` text is 1×1 and never seen, and an
+  author's page content (canvas, thumbnails) is their design. Counting either
+  as studio contrast produced nine false failures.
+
+- **The reader's flip library sizes the book from its box, not its props.**
+  `react-pageflip` in `size="stretch"` fills its parent's width; the `width` it
+  is passed only sets the ratio. To make the spread fit the window's height,
+  the parent box has to be given the width. And a page laid out narrower than
+  `PAGE_DESIGN_WIDTH` clips its own text — scale it, per `lib/page-geometry`.
+
 ## QA
 
 - **A hidden tab never reveals a Suspense boundary.** Proven, not guessed: a

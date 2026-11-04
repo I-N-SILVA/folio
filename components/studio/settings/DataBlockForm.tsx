@@ -99,12 +99,12 @@ export function DataBlockForm({ block, pageId }: { block: DataBlock; pageId: str
         </select>
       </Field>
 
-      <div className="space-y-2 border-t border-neutral-800 pt-3">
+      <div className="space-y-2 border-t border-studio-line pt-3">
         <button
           type="button"
           onClick={runTest}
           disabled={test.state === 'loading'}
-          className="flex w-full items-center justify-center gap-2 rounded-md bg-neutral-800 px-3 py-2 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-studio-raised px-3 py-2 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised-2 disabled:opacity-50"
         >
           <Lucide.RefreshCw size={13} className={test.state === 'loading' ? 'animate-spin' : ''} />
           {test.state === 'loading' ? 'Fetching…' : 'Test data source'}

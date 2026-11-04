@@ -4,11 +4,17 @@ import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { trackProduct } from '@/lib/product-analytics'
+import type { BillingInterval } from '@/lib/plans'
 
-async function go(endpoint: string, setLoading: (b: boolean) => void) {
+async function go(endpoint: string, setLoading: (b: boolean) => void, body?: unknown) {
   setLoading(true)
   try {
-    const res = await fetch(endpoint, { method: 'POST' })
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      ...(body === undefined
+        ? {}
+        : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    })
     const data = await res.json()
     if (!res.ok || !data.url) {
       toast.error(data.error || 'Billing is not available right now.')
@@ -22,19 +28,27 @@ async function go(endpoint: string, setLoading: (b: boolean) => void) {
   }
 }
 
-export function UpgradeButton({ className = '' }: { className?: string }) {
+export function UpgradeButton({
+  className = '',
+  interval = 'month',
+  label = 'Upgrade to Pro',
+}: {
+  className?: string
+  interval?: BillingInterval
+  label?: string
+}) {
   const [loading, setLoading] = useState(false)
   return (
     <button
       onClick={() => {
-        trackProduct('checkout_started', { plan: 'pro' })
-        go('/api/billing/checkout', setLoading)
+        trackProduct('checkout_started', { plan: 'pro', interval })
+        go('/api/billing/checkout', setLoading, { interval })
       }}
       disabled={loading}
       className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--accent-contrast)] transition hover:-translate-y-0.5 hover:bg-[var(--accent-hover)] disabled:opacity-50 ${className}`}
     >
       {loading && <Loader2 size={15} className="animate-spin" />}
-      {loading ? 'Starting…' : 'Upgrade to Pro'}
+      {loading ? 'Starting…' : label}
     </button>
   )
 }

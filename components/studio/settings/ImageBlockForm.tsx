@@ -135,16 +135,16 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="py-2 rounded-lg border border-neutral-700 bg-neutral-900 text-xs font-semibold text-neutral-200 hover:text-white hover:bg-neutral-800 transition disabled:opacity-50"
+              className="py-2 rounded-lg border border-studio-line-strong bg-studio-panel text-xs font-semibold text-studio-ink hover:text-white hover:bg-studio-raised transition disabled:opacity-50"
             >
               {uploading ? 'Uploading…' : '↑ Upload photo'}
             </button>
             <button
               type="button"
               onClick={() => setShowAssetLibrary(true)}
-              className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-neutral-700 bg-neutral-900 text-xs font-semibold text-neutral-200 hover:bg-neutral-800 hover:text-white transition"
+              className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-studio-line-strong bg-studio-panel text-xs font-semibold text-studio-ink hover:bg-studio-raised hover:text-white transition"
             >
-              <FolderOpen size={13} className="text-neutral-400" />
+              <FolderOpen size={13} className="text-studio-ink-soft" />
               <span>Asset Library</span>
             </button>
           </div>
@@ -172,7 +172,7 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
               className={`rounded-lg border px-2 py-1.5 text-center text-xs transition ${
                 currentAspect === asp.id
                   ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10 text-white font-bold'
-                  : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                  : 'border-studio-line bg-studio-panel/60 text-studio-ink-soft hover:border-studio-line-strong hover:text-studio-ink'
               }`}
             >
               {asp.label}
@@ -201,7 +201,7 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
               className={`rounded-md border py-1 text-center text-[11px] font-medium transition ${
                 currentWidth === w.id
                   ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/15 text-white font-bold'
-                  : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                  : 'border-studio-line bg-studio-panel/60 text-studio-ink-soft hover:border-studio-line-strong hover:text-studio-ink'
               }`}
             >
               {w.label}
@@ -358,11 +358,11 @@ export function ImageBlockForm({ block, pageId }: { block: ImageBlock; pageId: s
       <div className="flex items-center justify-between pt-1">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" {...register('lightbox')} className="accent-[var(--studio-select)]" />
-          <span className="text-xs text-neutral-300">Click to expand Lightbox</span>
+          <span className="text-xs text-studio-ink">Click to expand Lightbox</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" {...register('border')} className="accent-[var(--studio-select)]" />
-          <span className="text-xs text-neutral-300">Border Outline</span>
+          <span className="text-xs text-studio-ink">Border Outline</span>
         </label>
       </div>
     </div>

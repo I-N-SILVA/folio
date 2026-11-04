@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { getStripe, isBillingEnabled, PRO_PRICE_ID } from '@/lib/stripe'
+import {
+  getStripe,
+  isAnnualBillingEnabled,
+  isAutomaticTaxEnabled,
+  isBillingEnabled,
+  PRO_ANNUAL_PRICE_ID,
+  PRO_PRICE_ID,
+} from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +20,16 @@ export async function POST(request: NextRequest) {
   }
   const stripe = getStripe()
   if (!stripe) return NextResponse.json({ error: 'Billing unavailable.' }, { status: 503 })
+
+  // An empty body is a monthly checkout, which is what every caller sent before
+  // annual existed. Asking for a yearly plan that is not configured is refused
+  // rather than quietly sold as monthly — the author chose a price.
+  const body = await request.json().catch(() => ({}))
+  const interval = body && (body as { interval?: unknown }).interval === 'year' ? 'year' : 'month'
+  if (interval === 'year' && !isAnnualBillingEnabled()) {
+    return NextResponse.json({ error: 'Yearly billing is not available.' }, { status: 400 })
+  }
+  const price = interval === 'year' ? PRO_ANNUAL_PRICE_ID : PRO_PRICE_ID
 
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
@@ -63,8 +80,19 @@ export async function POST(request: NextRequest) {
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
-    line_items: [{ price: PRO_PRICE_ID, quantity: 1 }],
+    line_items: [{ price, quantity: 1 }],
     allow_promotion_codes: true,
+    // Tax needs the customer's address, and a business buyer needs to give a
+    // VAT number to be charged correctly (reverse charge in the EU). Both only
+    // when Stripe Tax is switched on; see `isAutomaticTaxEnabled`.
+    ...(isAutomaticTaxEnabled()
+      ? {
+          automatic_tax: { enabled: true },
+          billing_address_collection: 'required' as const,
+          tax_id_collection: { enabled: true },
+          customer_update: { address: 'auto' as const, name: 'auto' as const },
+        }
+      : {}),
     success_url: `${SITE_URL}/account?upgraded=1`,
     cancel_url: `${SITE_URL}/#pricing`,
     metadata: { supabase_user_id: user.id },

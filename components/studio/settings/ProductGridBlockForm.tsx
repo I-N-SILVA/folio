@@ -158,9 +158,9 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
       />
 
       {/* Product List */}
-      <div className="space-y-3 pt-2 border-t border-neutral-800">
+      <div className="space-y-3 pt-2 border-t border-studio-line">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-studio-ink uppercase tracking-wider">
             Products ({fields.length})
           </span>
           <button
@@ -187,17 +187,17 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
         {fields.map((field, idx) => (
           <div
             key={field.id}
-            className="rounded-xl border border-neutral-800 bg-neutral-900/80 p-3.5 space-y-3"
+            className="rounded-xl border border-studio-line bg-studio-panel/80 p-3.5 space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-neutral-200">
+              <span className="text-xs font-bold text-studio-ink">
                 Item #{idx + 1}
               </span>
               {fields.length > 1 && (
                 <button
                   type="button"
                   onClick={() => remove(idx)}
-                  className="text-neutral-400 hover:text-red-400 p-1 transition"
+                  className="text-studio-ink-soft hover:text-red-400 p-1 transition"
                   title="Remove product"
                 >
                   <Trash2 size={13} />
@@ -253,7 +253,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                     setActiveUploadIndex(idx)
                     fileRef.current?.click()
                   }}
-                  className="flex items-center justify-center gap-1 py-1.5 rounded-lg border border-neutral-700 bg-neutral-900 text-[11px] font-semibold text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+                  className="flex items-center justify-center gap-1 py-1.5 rounded-lg border border-studio-line-strong bg-studio-panel text-[11px] font-semibold text-studio-ink hover:text-white hover:bg-studio-raised transition"
                 >
                   <Upload size={11} />
                   <span>Upload photo</span>
@@ -264,9 +264,9 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                     setActiveUploadIndex(idx)
                     setShowAssetLibrary(true)
                   }}
-                  className="flex items-center justify-center gap-1 py-1.5 rounded-lg border border-neutral-700 bg-neutral-900 text-[11px] font-semibold text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+                  className="flex items-center justify-center gap-1 py-1.5 rounded-lg border border-studio-line-strong bg-studio-panel text-[11px] font-semibold text-studio-ink hover:text-white hover:bg-studio-raised transition"
                 >
-                  <FolderOpen size={11} className="text-neutral-400" />
+                  <FolderOpen size={11} className="text-studio-ink-soft" />
                   <span>Asset library</span>
                 </button>
               </div>
@@ -290,7 +290,7 @@ export function ProductGridBlockForm({ block, pageId }: { block: ProductGridBloc
                 placeholder="https://your-shop.com/the-product"
               />
             </Field>
-            <p className="-mt-1 text-[11px] leading-4 text-neutral-400">
+            <p className="-mt-1 text-[11px] leading-4 text-studio-ink-soft">
               Your own product page, Stripe Payment Link or Shopify listing. Leave it empty and
               the product still shows with its price and description — just without a button.
             </p>

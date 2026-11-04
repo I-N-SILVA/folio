@@ -157,6 +157,8 @@
   --studio-raised-2: #23272f;
   --studio-line: #2a2f38;
   --studio-line-soft: #1e222a;
+  /* Borders that mark a control rather than divide a space: inputs, buttons. */
+  --studio-line-strong: #3b414c;
   --studio-ink: #edeff3;
   --studio-ink-soft: #99a1ad;
   --studio-ink-faint: #69707c;
@@ -224,8 +226,13 @@
   --color-studio-ground: var(--studio-ground);
   --color-studio-panel: var(--studio-panel);
   --color-studio-raised: var(--studio-raised);
+  --color-studio-raised-2: var(--studio-raised-2);
   --color-studio-line: var(--studio-line);
+  --color-studio-line-soft: var(--studio-line-soft);
+  --color-studio-line-strong: var(--studio-line-strong);
   --color-studio-ink: var(--studio-ink);
+  --color-studio-ink-soft: var(--studio-ink-soft);
+  --color-studio-ink-faint: var(--studio-ink-faint);
   --color-studio-select: var(--studio-select);
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-display), ui-serif, Georgia, serif;

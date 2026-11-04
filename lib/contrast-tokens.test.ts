@@ -229,4 +229,47 @@ describe('the studio is a dark room, so its greys have to be light enough', () =
     const src = readFileSync(join(__dirname, '..', file), 'utf8')
     expect(src).not.toMatch(/\btext-neutral-500\b/)
   })
+
+  /**
+   * The dark studio greys are `--studio-*` tokens now (`bg-studio-panel`,
+   * `text-studio-ink-soft`, …), so the editor's palette lives in one place in
+   * globals.css instead of ~590 class names. This keeps a new hard-coded dark
+   * grey from creeping back. The two modals listed open over the light
+   * dashboard and keep Tailwind's greys on purpose.
+   */
+  const LIGHT_SURFACES = ['CreateBookModal.tsx', 'ShareModal.tsx']
+  const DARK_GREY =
+    /(?<![\w-])(?:bg-neutral-(?:950|900|800|700)|border-neutral-(?:800|700|600)|divide-neutral-800|ring-neutral-700|text-neutral-(?:100|200|300|400|600)|placeholder-neutral-500)(?![\w-])/
+
+  it.each(files.filter((f) => !LIGHT_SURFACES.some((l) => f.endsWith(l))))(
+    '%s takes its dark greys from the studio tokens',
+    (file) => {
+      const src = readFileSync(join(__dirname, '..', file), 'utf8')
+      expect(src.match(DARK_GREY)?.[0] ?? null).toBeNull()
+    }
+  )
+
+  it('keeps every studio text token readable on every studio surface', () => {
+    // Read from globals.css, so changing a token re-runs the arithmetic.
+    const css = readFileSync(join(__dirname, '..', 'app', 'globals.css'), 'utf8')
+    const token = (name: string) => {
+      const m = new RegExp(`--studio-${name}:\\s*(#[0-9a-f]{6})`, 'i').exec(css)
+      expect(m, name).not.toBeNull()
+      return m![1]
+    }
+    const lum = (hex: string) => {
+      const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      const l = c.map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+      return 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2]
+    }
+    const ratio = (a: string, b: string) => {
+      const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p)
+      return (x + 0.05) / (y + 0.05)
+    }
+    for (const ink of ['ink', 'ink-soft']) {
+      for (const ground of ['ground', 'panel', 'raised', 'raised-2']) {
+        expect(ratio(token(ink), token(ground)), `${ink} on ${ground}`).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
 })

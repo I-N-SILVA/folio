@@ -298,7 +298,7 @@ export function Hero() {
               </div>
 
               <div className={isFullscreen ? 'flex-1 min-h-0 rounded-2xl overflow-auto bg-black/40 border border-white/10 p-4' : 'w-full rounded-2xl bg-black/40 border border-white/10 p-4 sm:p-6 overflow-hidden'}>
-                <ViewerChrome book={book} showBadge={false} />
+                <ViewerChrome book={book} showBadge={false} inline />
               </div>
               
               <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-[1.5rem] bg-white/5 border border-white/10 p-5">
@@ -403,11 +403,17 @@ export function Hero() {
                       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 group-hover:scale-110 group-hover:bg-white text-white group-hover:text-black transition-all duration-300">
                         <FileUp size={28} strokeWidth={2} />
                       </div>
+                      {/* A phone cannot drag a file anywhere, so on a touch
+                          screen the box says what tapping it does. Decided in
+                          CSS (pointer-coarse) so the server and the browser
+                          render the same markup. */}
                       <p className="mt-6 text-sm font-medium tracking-wide text-white">
-                        Drag & drop your PDF
+                        <span className="pointer-coarse:hidden">Drag & drop your PDF</span>
+                        <span className="hidden pointer-coarse:inline">Tap to choose a PDF</span>
                       </p>
                       <p className="mt-1 text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">
-                        or browse files to begin
+                        <span className="pointer-coarse:hidden">or browse files to begin</span>
+                        <span className="hidden pointer-coarse:inline">from Files, Drive or your email</span>
                       </p>
                     </>
                   )}

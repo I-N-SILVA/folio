@@ -5,14 +5,36 @@
 /** Ceiling on pages taken from one PDF. */
 export const MAX_IMPORT_PAGES = 50
 
+/**
+ * How a rendered page is stored.
+ *
+ * WebP where the browser can encode it, which is every current one: a
+ * photographic catalog page at 2× is several megabytes as PNG and a fraction of
+ * that as WebP at 0.85, and every copy of it — storage, the reader's lightbox,
+ * the AI pass, the image optimiser's first fetch — is paid for in bytes. PNG
+ * remains for browsers whose canvas cannot write WebP (it falls back on its
+ * own) and for every page imported before this.
+ */
+export type PageFormat = 'png' | 'webp'
+
+export const PAGE_MIME: Record<PageFormat, string> = {
+  png: 'image/png',
+  webp: 'image/webp',
+}
+
+/** The format a rendered blob actually came out as. */
+export function pageFormatOf(mimeType: string | undefined): PageFormat {
+  return mimeType === 'image/webp' ? 'webp' : 'png'
+}
+
 /** Storage path for a rendered page. Server-chosen, never client-supplied. */
-export function pagePath(bookId: string, pageNumber: number): string {
-  return `books/${bookId}/pages/page-${pageNumber}.png`
+export function pagePath(bookId: string, pageNumber: number, format: PageFormat = 'png'): string {
+  return `books/${bookId}/pages/page-${pageNumber}.${format}`
 }
 
 /** Recovers the page number from a storage object name, or null if it isn't one. */
 export function pageNumberFromName(name: string): number | null {
-  const match = /^page-(\d+)\.png$/.exec(name)
+  const match = /^page-(\d+)\.(?:png|webp)$/.exec(name)
   if (!match) return null
   const n = Number(match[1])
   return Number.isInteger(n) && n >= 1 && n <= MAX_IMPORT_PAGES ? n : null

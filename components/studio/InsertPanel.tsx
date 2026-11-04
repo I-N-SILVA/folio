@@ -278,10 +278,10 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
       onClose={onClose}
       title="Insert"
       hideCloseButton
-      className="w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden border border-neutral-700 bg-neutral-900 p-0"
+      className="w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden border border-studio-line-strong bg-studio-panel p-0"
     >
-      <div className="flex items-center gap-2.5 border-b border-neutral-800 px-4 py-3">
-        <Search size={15} className="shrink-0 text-neutral-400" />
+      <div className="flex items-center gap-2.5 border-b border-studio-line px-4 py-3">
+        <Search size={15} className="shrink-0 text-studio-ink-soft" />
         <input
           autoFocus
           value={query}
@@ -292,18 +292,18 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
           onKeyDown={handleKeyDown}
           placeholder="Search blocks and layouts…"
           aria-label="Search blocks and layouts"
-          className="flex-1 bg-transparent text-sm text-neutral-100 outline-none placeholder:text-neutral-400"
+          className="flex-1 bg-transparent text-sm text-studio-ink outline-none placeholder:text-studio-ink-soft"
         />
         <button
           onClick={onClose}
           aria-label="Close"
-          className="text-neutral-400 transition-colors hover:text-neutral-100"
+          className="text-studio-ink-soft transition-colors hover:text-studio-ink"
         >
           <X size={15} />
         </button>
       </div>
 
-      <div className="flex gap-1 border-b border-neutral-800 px-3 pt-2" role="tablist">
+      <div className="flex gap-1 border-b border-studio-line px-3 pt-2" role="tablist">
         {(['blocks', 'layouts'] as const).map((key) => (
           <button
             key={key}
@@ -316,8 +316,8 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
             className={twMerge(
               'border-b-2 px-3 pb-2 pt-1 text-xs font-semibold capitalize transition-colors',
               activeTab === key
-                ? 'border-[var(--studio-select)] text-neutral-100'
-                : 'border-transparent text-neutral-400 hover:text-neutral-300'
+                ? 'border-[var(--studio-select)] text-studio-ink'
+                : 'border-transparent text-studio-ink-soft hover:text-studio-ink'
             )}
           >
             {key}
@@ -328,14 +328,14 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
       <div ref={listRef} className="max-h-[52vh] overflow-y-auto p-2">
         {activeTab === 'blocks' ? (
           blocks.length === 0 ? (
-            <p className="px-3 py-8 text-center text-xs text-neutral-400">Nothing matches that.</p>
+            <p className="px-3 py-8 text-center text-xs text-studio-ink-soft">Nothing matches that.</p>
           ) : (
             GROUP_ORDER.map((group) => {
               const inGroup = blocks.filter((b) => b.group === group)
               if (!inGroup.length) return null
               return (
                 <section key={group}>
-                  <h3 className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+                  <h3 className="px-2 pb-1 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-studio-ink-soft">
                     {group}
                   </h3>
                   {inGroup.map((choice) => {
@@ -350,8 +350,8 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
                         className={twMerge(
                           'flex w-full items-center gap-3 rounded-lg border px-2 py-2 text-left transition-colors',
                           index === cursorIndex
-                            ? 'border-neutral-700 bg-neutral-800'
-                            : 'border-transparent hover:bg-neutral-800/60'
+                            ? 'border-studio-line-strong bg-studio-raised'
+                            : 'border-transparent hover:bg-studio-raised/60'
                         )}
                       >
                         <span
@@ -359,16 +359,16 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
                             'grid h-8 w-8 shrink-0 place-items-center rounded-md',
                             index === cursorIndex
                               ? 'bg-[var(--studio-select)] text-white'
-                              : 'bg-neutral-800 text-neutral-300'
+                              : 'bg-studio-raised text-studio-ink'
                           )}
                         >
                           {choice.icon}
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-sm font-medium text-neutral-100">
+                          <span className="block text-sm font-medium text-studio-ink">
                             {choice.label}
                           </span>
-                          <span className="block truncate text-[11px] text-neutral-400">
+                          <span className="block truncate text-[11px] text-studio-ink-soft">
                             {choice.hint}
                           </span>
                         </span>
@@ -380,7 +380,7 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
             })
           )
         ) : layouts.length === 0 ? (
-          <p className="px-3 py-8 text-center text-xs text-neutral-400">Nothing matches that.</p>
+          <p className="px-3 py-8 text-center text-xs text-studio-ink-soft">Nothing matches that.</p>
         ) : (
           <div className="grid grid-cols-2 gap-2 p-1">
             {layouts.map((tpl, index) => (
@@ -390,30 +390,30 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
                 onMouseEnter={() => setCursor(index)}
                 onClick={() => commit(index)}
                 className={twMerge(
-                  'flex flex-col gap-2 rounded-xl border bg-neutral-800/50 p-3 text-left transition-colors',
+                  'flex flex-col gap-2 rounded-xl border bg-studio-raised/50 p-3 text-left transition-colors',
                   index === cursorIndex
-                    ? 'border-[var(--studio-select)] bg-neutral-800'
-                    : 'border-neutral-700 hover:border-neutral-600'
+                    ? 'border-[var(--studio-select)] bg-studio-raised'
+                    : 'border-studio-line-strong hover:border-studio-line-strong'
                 )}
               >
-                <span className="flex flex-col gap-1 rounded-md bg-neutral-950/60 p-2">
+                <span className="flex flex-col gap-1 rounded-md bg-studio-ground/60 p-2">
                   {tpl.blocks.slice(0, 4).map((b, i) => (
                     <span
                       key={i}
-                      className="block rounded-[1px] bg-neutral-700"
+                      className="block rounded-[1px] bg-studio-raised-2"
                       style={{ height: b.type === 'image' ? 14 : b.type === 'divider' ? 1 : 4 }}
                     />
                   ))}
                 </span>
-                <span className="text-xs font-semibold text-neutral-100">{tpl.label}</span>
-                <span className="text-[10px] leading-snug text-neutral-400">{tpl.description}</span>
+                <span className="text-xs font-semibold text-studio-ink">{tpl.label}</span>
+                <span className="text-[10px] leading-snug text-studio-ink-soft">{tpl.description}</span>
               </button>
             ))}
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-neutral-800 px-4 py-2.5 text-[11px] text-neutral-400">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-studio-line px-4 py-2.5 text-[11px] text-studio-ink-soft">
         <span>
           <Key>↑↓</Key> move
         </span>
@@ -435,7 +435,7 @@ export function InsertPanel({ onInsertBlock, onInsertLayout, onClose }: Props) {
 
 function Key({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="rounded bg-neutral-800 px-1.5 py-0.5 font-sans text-[10px] font-semibold text-neutral-300">
+    <kbd className="rounded bg-studio-raised px-1.5 py-0.5 font-sans text-[10px] font-semibold text-studio-ink">
       {children}
     </kbd>
   )

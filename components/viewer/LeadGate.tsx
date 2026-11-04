@@ -161,7 +161,7 @@ export function LeadGate({
           </p>
         )}
 
-        <p className="text-[10px] text-gray-400">We respect your privacy. No spam, ever.</p>
+        <p className="text-xs text-gray-500">We respect your privacy. No spam, ever.</p>
       </motion.div>
     </div>
   )

@@ -24,7 +24,7 @@ export function SettingsPanel() {
 
   if (!book || !currentPage) {
     return (
-      <div className="flex-1 flex items-center justify-center text-neutral-600 text-sm p-4">
+      <div className="flex-1 flex items-center justify-center text-studio-ink-soft text-sm p-4">
         No page loaded
       </div>
     )
@@ -43,8 +43,8 @@ export function SettingsPanel() {
       {/* Segmented control rather than two underlined tabs: at this width the
           underline reads as a stray rule, and the pill makes the active pane
           obvious at a glance. */}
-      <div className="shrink-0 border-b border-neutral-800 p-2">
-        <div className="flex gap-1 rounded-lg bg-neutral-950/60 p-1">
+      <div className="shrink-0 border-b border-studio-line p-2">
+        <div className="flex gap-1 rounded-lg bg-studio-ground/60 p-1">
           {(['selection', 'book'] as const).map((key) => (
             <button
               key={key}
@@ -53,8 +53,8 @@ export function SettingsPanel() {
               className={twMerge(
                 'flex-1 rounded-md py-1.5 text-[11px] font-semibold tracking-wide transition-colors',
                 tab === key
-                  ? 'bg-neutral-800 text-white ring-1 ring-inset ring-white/20 shadow-sm'
-                  : 'text-neutral-400 hover:text-neutral-200'
+                  ? 'bg-studio-raised text-white ring-1 ring-inset ring-white/20 shadow-sm'
+                  : 'text-studio-ink-soft hover:text-studio-ink'
               )}
             >
               {key === 'selection' ? 'Selection' : 'Edition'}
@@ -77,7 +77,7 @@ export function SettingsPanel() {
                 <p className="text-[11px] font-semibold text-white">
                   {selectedBlockIds.length} blocks selected
                 </p>
-                <p className="mt-0.5 text-[10px] leading-4 text-neutral-400">
+                <p className="mt-0.5 text-[10px] leading-4 text-studio-ink-soft">
                   Settings below apply to the highlighted one.
                 </p>
                 <div className="mt-2 flex gap-1.5">
@@ -87,7 +87,7 @@ export function SettingsPanel() {
                       copyBlocks(currentPage.id, selectedBlockIds)
                       pasteBlocks(currentPage.id, selectedBlockIds[selectedBlockIds.length - 1])
                     }}
-                    className="flex-1 rounded-md bg-neutral-800 py-1.5 text-[11px] font-semibold text-neutral-200 transition-colors hover:bg-neutral-700"
+                    className="flex-1 rounded-md bg-studio-raised py-1.5 text-[11px] font-semibold text-studio-ink transition-colors hover:bg-studio-raised-2"
                   >
                     Duplicate all
                   </button>

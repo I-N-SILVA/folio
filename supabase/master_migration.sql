@@ -1285,3 +1285,624 @@ GRANT EXECUTE ON FUNCTION public.installed_functions() TO service_role;
 COMMENT ON FUNCTION public.installed_functions() IS
   'Names of the public schema functions on this deployment. Read-only; /api/health compares it against REQUIRED_FUNCTIONS in lib/required-functions.ts.';
 
+-- --------------------------------------------------------------------------
+-- 021_usage_allowances.sql
+-- --------------------------------------------------------------------------
+
+-- Usage allowances: AI page detection per month, and storage per account.
+--
+-- Two things on every plan cost money in proportion to use, and neither had a
+-- limit that outlived a cold start:
+--
+--   * AI detection spends the project's Gemini quota per page. The only brake
+--     was `rateLimitCost` at 200 pages a minute, held in each serverless
+--     instance's memory — so the effective ceiling was 200 × instances, reset on
+--     every deploy, with no monthly bound at all, on the Free plan included.
+--   * Storage had a per-file size cap and nothing per account. Tier 3 of the
+--     lifetime deal is unlimited editions, paid once, so an account's storage
+--     grew for ever against a single payment.
+--
+-- `lib/plans.ts` now carries `aiPagesPerMonth` and `storageMB`; these are the
+-- two places the server counts against them.
+
+-- ── AI pages, per user per calendar month (UTC) ────────────────────────────
+
+CREATE TABLE IF NOT EXISTS public.ai_usage (
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  -- First day of the month, so the key is a date rather than a string format.
+  month   date NOT NULL,
+  pages   integer NOT NULL DEFAULT 0 CHECK (pages >= 0),
+  PRIMARY KEY (user_id, month)
+);
+
+ALTER TABLE public.ai_usage ENABLE ROW LEVEL SECURITY;
+
+-- An author may read their own usage. Nobody writes it but the server, through
+-- the function below — a user-writable counter is a counter users reset.
+DROP POLICY IF EXISTS "ai_usage_select_own" ON public.ai_usage;
+CREATE POLICY "ai_usage_select_own" ON public.ai_usage
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Claim up to `p_pages` pages of this month's allowance, atomically.
+--
+-- Returns how many were granted, which may be fewer than asked for (the rest
+-- of the request falls back to the free heuristic) and is 0 once the month is
+-- spent. Two requests racing for the last pages cannot both get them: the
+-- upsert takes the row lock, and the grant is computed from the locked value.
+CREATE OR REPLACE FUNCTION public.claim_ai_pages(
+  p_user_id uuid,
+  p_month   date,
+  p_pages   integer,
+  p_limit   integer
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_used    integer;
+  v_granted integer;
+BEGIN
+  IF p_pages IS NULL OR p_pages <= 0 OR p_limit IS NULL OR p_limit <= 0 THEN
+    RETURN 0;
+  END IF;
+
+  INSERT INTO public.ai_usage (user_id, month, pages)
+  VALUES (p_user_id, p_month, 0)
+  ON CONFLICT (user_id, month) DO NOTHING;
+
+  SELECT pages INTO v_used
+  FROM public.ai_usage
+  WHERE user_id = p_user_id AND month = p_month
+  FOR UPDATE;
+
+  v_granted := GREATEST(0, LEAST(p_pages, p_limit - v_used));
+
+  IF v_granted > 0 THEN
+    UPDATE public.ai_usage
+    SET pages = pages + v_granted
+    WHERE user_id = p_user_id AND month = p_month;
+  END IF;
+
+  RETURN v_granted;
+END;
+$$;
+
+-- Server only: exposed to `authenticated`, anyone could spend anyone's month.
+REVOKE ALL ON FUNCTION public.claim_ai_pages(uuid, date, integer, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.claim_ai_pages(uuid, date, integer, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.claim_ai_pages(uuid, date, integer, integer) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_ai_pages(uuid, date, integer, integer) TO service_role;
+
+COMMENT ON FUNCTION public.claim_ai_pages(uuid, date, integer, integer) IS
+  'Grants up to p_pages of a user''s monthly AI allowance and returns how many were granted. Atomic under concurrency.';
+
+-- ── Storage, per account ───────────────────────────────────────────────────
+
+-- Bytes stored under every edition the user owns.
+--
+-- Uploads go straight from the browser to storage on signed URLs (the PDF
+-- import), so the server never sees most of the bytes it is storing; the only
+-- authoritative count is the object metadata Supabase Storage keeps.
+--
+-- plpgsql rather than sql on purpose: a sql body is resolved when the function
+-- is created, and `storage.objects` does not exist in the plain PostgreSQL that
+-- `npm run verify:migration` applies this file to. Resolved at call time, the
+-- function installs anywhere and answers 0 where there is no storage schema.
+CREATE OR REPLACE FUNCTION public.user_storage_bytes(p_user_id uuid)
+RETURNS bigint
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_total bigint;
+BEGIN
+  IF to_regclass('storage.objects') IS NULL THEN
+    RETURN 0;
+  END IF;
+
+  EXECUTE $q$
+    SELECT COALESCE(SUM((o.metadata->>'size')::bigint), 0)
+    FROM storage.objects o
+    JOIN public.books b
+      ON o.name LIKE 'books/' || b.id::text || '/%'
+    WHERE o.bucket_id = 'folio-assets'
+      AND b.owner_id = $1
+  $q$
+  INTO v_total
+  USING p_user_id;
+
+  RETURN v_total;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.user_storage_bytes(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.user_storage_bytes(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.user_storage_bytes(uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.user_storage_bytes(uuid) TO service_role;
+
+COMMENT ON FUNCTION public.user_storage_bytes(uuid) IS
+  'Total bytes in folio-assets under the editions a user owns. 0 where the storage schema is absent.';
+
+-- --------------------------------------------------------------------------
+-- 022_analytics_at_scale.sql
+-- --------------------------------------------------------------------------
+
+-- Analytics that stay correct as editions get read, and a table that stops
+-- growing for ever. Plus finite edition limits on every plan.
+--
+-- Four problems, all invisible at launch and all worse the better an edition
+-- does:
+--
+--   1. **Every reader event was stored with no page number.** The reader puts
+--      `page_number` in the payload (`trackEvent(id, 'page_view', { page_number
+--      })`); `/api/events` only read a top-level `pageNumber`, which no caller
+--      sends. So `events.page_number` was NULL on every page view, click and
+--      hotspot event, and the per-page views, the reading funnel and the
+--      heatmap in Insights had nothing to group by. The route now reads the
+--      payload; this backfills the rows already written.
+--   2. **Insights were computed from at most 1,000 rows.** The analytics route
+--      selected raw events and counted them in JavaScript, and PostgREST caps a
+--      response at 1,000 rows by default. Past ~70 reads in the window, every
+--      figure on the dashboard was a silent undercount. `edition_analytics`
+--      counts where the rows live, the way `edition_engagement` (009) already
+--      does for the Insights list.
+--   3. **Nothing ever deleted an event.** At ~15 events a read the table grows
+--      by gigabytes a month at modest scale. No surface reads further back than
+--      the longest plan window (365 days), so `prune_events` deletes older rows,
+--      in batches, from a daily cron.
+--   4. **Two plans had no edition limit.** See `book_limit_for_plan` below.
+
+-- ── 1. Backfill page numbers from the payload ────────────────────────────────
+--
+-- Only rows that have none, only where the payload holds a plain positive
+-- integer. Idempotent: a second run matches nothing.
+UPDATE public.events
+SET page_number = (payload->>'page_number')::int
+WHERE page_number IS NULL
+  AND payload ? 'page_number'
+  AND payload->>'page_number' ~ '^[1-9][0-9]{0,5}$';
+
+-- ── 2. An index the prune can use ────────────────────────────────────────────
+--
+-- Every existing index leads with book_id, so "everything older than X" would
+-- scan the table. BRIN is a few pages in size for an append-only table whose
+-- rows arrive in created_at order, and costs next to nothing on insert.
+CREATE INDEX IF NOT EXISTS events_created_brin
+  ON public.events USING brin (created_at);
+
+-- ── 3. Per-edition analytics, aggregated in Postgres ─────────────────────────
+--
+-- One call, one JSON document, exact at any volume. The shape matches what
+-- `app/api/analytics/[slug]/route.ts` returns, so the dashboard did not change.
+--
+-- Two lists are bounded on purpose, because they are lists rather than counts:
+-- heatmap points (the most recent 2,000 per page — a sample is what a heatmap
+-- draws) and leads (the most recent 1,000 — the CSV export has all of them).
+--
+-- SECURITY INVOKER, service role only, like `edition_engagement`: the route
+-- establishes ownership first and then calls this for that one book.
+CREATE OR REPLACE FUNCTION public.edition_analytics(
+  p_book_id uuid,
+  p_since   timestamptz
+)
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+AS $$
+  WITH ev AS (
+    SELECT session_id, event_type, page_number, payload, created_at
+    FROM public.events
+    WHERE book_id = p_book_id AND created_at >= p_since
+  ),
+  sessions AS (
+    SELECT COUNT(DISTINCT session_id) AS n FROM ev
+  ),
+  summary AS (
+    SELECT jsonb_build_object(
+      'totalOpens',     COUNT(*) FILTER (WHERE event_type = 'book_open'),
+      'uniqueSessions', (SELECT n FROM sessions),
+      'completionRate', CASE WHEN (SELECT n FROM sessions) > 0
+        THEN ROUND(100.0 * COUNT(DISTINCT session_id) FILTER (WHERE event_type = 'book_complete')
+                   / (SELECT n FROM sessions))::int
+        ELSE 0 END,
+      'avgSessionMs', COALESCE(ROUND(AVG((payload->>'session_duration_ms')::numeric)
+        FILTER (WHERE event_type = 'book_complete'
+                  AND payload->>'session_duration_ms' ~ '^[0-9]+(\.[0-9]+)?$'))::bigint, 0)
+    ) AS j
+    FROM ev
+  ),
+  page_views AS (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+             'page', page, 'views', views, 'avgDwellMs', avg_dwell) ORDER BY page), '[]'::jsonb) AS j
+    FROM (
+      SELECT COALESCE(page_number, 0) AS page,
+             COUNT(*) AS views,
+             COALESCE(ROUND(AVG(CASE WHEN payload->>'dwell_ms' ~ '^[0-9]+(\.[0-9]+)?$'
+                                     THEN (payload->>'dwell_ms')::numeric ELSE 0 END))::bigint, 0) AS avg_dwell
+      FROM ev
+      WHERE event_type = 'page_view'
+      GROUP BY 1
+    ) p
+  ),
+  funnel AS (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+             'page', page,
+             'sessions', reached,
+             'pct', CASE WHEN (SELECT n FROM sessions) > 0
+                         THEN ROUND(100.0 * reached / (SELECT n FROM sessions))::int ELSE 0 END)
+             ORDER BY page), '[]'::jsonb) AS j
+    FROM (
+      SELECT pages.page,
+             COUNT(DISTINCT pv.session_id) AS reached
+      FROM (SELECT DISTINCT page_number AS page FROM ev WHERE page_number IS NOT NULL) pages
+      LEFT JOIN ev pv
+        ON pv.event_type = 'page_view' AND pv.page_number = pages.page
+      GROUP BY pages.page
+    ) f
+  ),
+  hotspots AS (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object('id', id, 'count', n) ORDER BY n DESC, id), '[]'::jsonb) AS j
+    FROM (
+      SELECT payload->>'hotspot_id' AS id, COUNT(*) AS n
+      FROM ev
+      WHERE event_type = 'hotspot_click' AND payload->>'hotspot_id' IS NOT NULL
+      GROUP BY 1
+      ORDER BY n DESC, id
+      LIMIT 10
+    ) h
+  ),
+  ctas AS (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+             'id', id, 'href', href, 'page', page,
+             'clicks', clicks, 'uniqueClicks', unique_clicks)), '[]'::jsonb) AS j
+    FROM (
+      SELECT payload->>'block_id' AS id,
+             (array_agg(payload->>'href' ORDER BY created_at))[1] AS href,
+             (array_agg(page_number ORDER BY created_at))[1] AS page,
+             COUNT(*) AS clicks,
+             COUNT(DISTINCT session_id) AS unique_clicks
+      FROM ev
+      WHERE event_type = 'cta_click' AND payload->>'block_id' IS NOT NULL
+      GROUP BY 1
+    ) c
+  ),
+  heat AS (
+    SELECT COALESCE(jsonb_object_agg(page, points), '{}'::jsonb) AS j
+    FROM (
+      SELECT page, jsonb_agg(jsonb_build_object('x', x, 'y', y)) AS points
+      FROM (
+        SELECT COALESCE(page_number, 0) AS page,
+               (payload->>'x')::numeric AS x,
+               (payload->>'y')::numeric AS y,
+               ROW_NUMBER() OVER (PARTITION BY COALESCE(page_number, 0) ORDER BY created_at DESC) AS rn
+        FROM ev
+        WHERE event_type = 'page_click'
+          AND payload->>'x' ~ '^-?[0-9]+(\.[0-9]+)?$'
+          AND payload->>'y' ~ '^-?[0-9]+(\.[0-9]+)?$'
+      ) pts
+      WHERE rn <= 2000
+      GROUP BY page
+    ) hp
+  ),
+  leads AS (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+             'email', email, 'timestamp', created_at, 'page', page) ORDER BY created_at), '[]'::jsonb) AS j
+    FROM (
+      SELECT payload->>'email' AS email, created_at, COALESCE(page_number, 3) AS page
+      FROM ev
+      WHERE event_type = 'gate_unlock' AND payload->>'email' IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 1000
+    ) l
+  ),
+  gate AS (
+    SELECT jsonb_build_object(
+      'views',   COUNT(DISTINCT session_id) FILTER (WHERE event_type = 'gate_view'),
+      'unlocks', COUNT(DISTINCT session_id) FILTER (WHERE event_type = 'gate_unlock'),
+      'rate', CASE WHEN COUNT(DISTINCT session_id) FILTER (WHERE event_type = 'gate_view') > 0
+        THEN ROUND(100.0 * COUNT(DISTINCT session_id) FILTER (WHERE event_type = 'gate_unlock')
+                   / COUNT(DISTINCT session_id) FILTER (WHERE event_type = 'gate_view'))::int
+        ELSE 0 END
+    ) AS j
+    FROM ev
+  )
+  SELECT jsonb_build_object(
+    'summary',      (SELECT j FROM summary),
+    'pageViewData', (SELECT j FROM page_views),
+    'funnelData',   (SELECT j FROM funnel),
+    'topHotspots',  (SELECT j FROM hotspots),
+    'ctaData',      (SELECT j FROM ctas),
+    'heatmapData',  (SELECT j FROM heat),
+    'leadData',     (SELECT j FROM leads),
+    'gate',         (SELECT j FROM gate)
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.edition_analytics(uuid, timestamptz) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.edition_analytics(uuid, timestamptz) FROM anon;
+REVOKE ALL ON FUNCTION public.edition_analytics(uuid, timestamptz) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.edition_analytics(uuid, timestamptz) TO service_role;
+
+COMMENT ON FUNCTION public.edition_analytics(uuid, timestamptz) IS
+  'Everything the per-edition Insights page shows, aggregated in Postgres. Exact at any volume; heatmap points and leads are capped lists.';
+
+-- ── 4. Retention ─────────────────────────────────────────────────────────────
+--
+-- Deletes up to `p_batch` events older than `p_before` and returns how many it
+-- deleted; the cron calls it until it returns less than a full batch, so no
+-- single statement holds a long lock on a large table.
+--
+-- **Leads are never pruned.** A `gate_unlock` row is the only copy of an email
+-- a reader gave an author, and deleting it on a schedule would delete the
+-- author's customer list. Everything else is reading telemetry that no surface
+-- shows past the longest plan window.
+CREATE OR REPLACE FUNCTION public.prune_events(
+  p_before timestamptz,
+  p_batch  integer
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_deleted integer;
+BEGIN
+  IF p_batch IS NULL OR p_batch <= 0 THEN
+    RETURN 0;
+  END IF;
+
+  WITH doomed AS (
+    SELECT id FROM public.events
+    WHERE created_at < p_before
+      AND event_type <> 'gate_unlock'
+    LIMIT p_batch
+  )
+  DELETE FROM public.events e
+  USING doomed
+  WHERE e.id = doomed.id;
+
+  GET DIAGNOSTICS v_deleted = ROW_COUNT;
+  RETURN v_deleted;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.prune_events(timestamptz, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.prune_events(timestamptz, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.prune_events(timestamptz, integer) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.prune_events(timestamptz, integer) TO service_role;
+
+COMMENT ON FUNCTION public.prune_events(timestamptz, integer) IS
+  'Deletes up to p_batch reading events older than p_before, never gate_unlock (leads). Returns the number deleted.';
+
+-- ── 5. No plan is unlimited any more ─────────────────────────────────────────
+--
+-- `pro` and `ltd_tier3` were int4 max. An edition limit nobody reaches costs
+-- nothing to keep, and an unlimited one on a lifetime plan is a liability sold
+-- at a fixed price. Mirrors `lib/plans.ts`; `lib/plan-limits.test.ts` enforces
+-- the mirror.
+--
+-- Accounts already above a new limit keep every edition they have — the
+-- trigger only refuses new inserts.
+CREATE OR REPLACE FUNCTION public.book_limit_for_plan(p text)
+RETURNS int LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE p
+    WHEN 'pro'       THEN 100
+    WHEN 'ltd_tier3' THEN 200
+    WHEN 'ltd_tier2' THEN 50
+    WHEN 'ltd_tier1' THEN 10
+    ELSE 3 -- free
+  END;
+$$;
+
+-- --------------------------------------------------------------------------
+-- 023_abuse_controls.sql
+-- --------------------------------------------------------------------------
+
+-- Abuse controls: reader reports, and a takedown the author cannot undo.
+--
+-- Hosted document readers are a standard phishing host: an attacker signs up
+-- free, publishes a page that looks like a bank login or an invoice, and sends
+-- the link. If that happens at volume, Google Safe Browsing flags the domain,
+-- and every customer's edition — on the same host — shows a red warning screen
+-- to every reader. That is the failure that ends a product like this, and it
+-- had no defence at all: no way for a reader to report an edition, and no way
+-- for the operator to take one down short of deleting the author's data.
+--
+--   * `books.suspended_at` takes an edition off the public internet. It is
+--     enforced in the public read policies themselves, so the reader, the
+--     embed, the unlock route and anything written later all honour it without
+--     having to remember to.
+--   * Only the server can set or clear it. `owner_all` lets an author update
+--     their own row, so a trigger pins the two columns for every other role.
+--   * `edition_reports` records what readers report; the API mails the
+--     operator. Nothing is suspended automatically on reports — a report count
+--     is something a competitor can manufacture.
+
+ALTER TABLE public.books
+  ADD COLUMN IF NOT EXISTS suspended_at     timestamptz,
+  ADD COLUMN IF NOT EXISTS suspended_reason text;
+
+COMMENT ON COLUMN public.books.suspended_at IS
+  'Set by the operator (suspend_edition) to take an edition off the public internet. Authors cannot change it.';
+
+-- ── Authors cannot lift their own suspension ─────────────────────────────────
+--
+-- The same shape as the profiles UPDATE policy in 009, which pins plan and
+-- status: a row the owner may write, with columns that are not theirs to write.
+-- Silently keeps the old values rather than raising, so an ordinary save of a
+-- suspended edition still saves everything else.
+CREATE OR REPLACE FUNCTION public.pin_book_suspension()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF current_user NOT IN ('postgres', 'service_role', 'supabase_admin') THEN
+    IF TG_OP = 'INSERT' THEN
+      NEW.suspended_at := NULL;
+      NEW.suspended_reason := NULL;
+    ELSE
+      NEW.suspended_at := OLD.suspended_at;
+      NEW.suspended_reason := OLD.suspended_reason;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS books_pin_suspension ON public.books;
+CREATE TRIGGER books_pin_suspension
+  BEFORE INSERT OR UPDATE ON public.books
+  FOR EACH ROW EXECUTE FUNCTION public.pin_book_suspension();
+
+-- ── Suspended editions are not public ────────────────────────────────────────
+
+DROP POLICY IF EXISTS "public_read_published" ON public.books;
+CREATE POLICY "public_read_published" ON public.books
+  FOR SELECT
+  USING ((settings->>'published')::boolean = true AND suspended_at IS NULL);
+
+DROP POLICY IF EXISTS "public_read_published" ON public.pages;
+CREATE POLICY "public_read_published" ON public.pages
+  FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM public.books
+    WHERE books.id = pages.book_id
+      AND (books.settings->>'published')::boolean = true
+      AND books.suspended_at IS NULL
+  ));
+
+-- ── Operator controls ────────────────────────────────────────────────────────
+--
+-- Run from the Supabase SQL editor:
+--   SELECT public.suspend_edition('the-slug', 'phishing: fake invoice login');
+--   SELECT public.restore_edition('the-slug');
+-- Each returns the number of editions changed (0 means no such slug).
+-- The reader caches for up to 60 seconds (ISR), so a takedown is live within a
+-- minute.
+
+CREATE OR REPLACE FUNCTION public.suspend_edition(p_slug text, p_reason text)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE n integer;
+BEGIN
+  UPDATE public.books
+  SET suspended_at = now(), suspended_reason = NULLIF(trim(p_reason), '')
+  WHERE slug = p_slug;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  RETURN n;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.restore_edition(p_slug text)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE n integer;
+BEGIN
+  UPDATE public.books
+  SET suspended_at = NULL, suspended_reason = NULL
+  WHERE slug = p_slug;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  RETURN n;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.suspend_edition(text, text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.restore_edition(text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.suspend_edition(text, text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.restore_edition(text) TO service_role;
+
+-- ── Reader reports ───────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS public.edition_reports (
+  id            bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  book_id       uuid NOT NULL REFERENCES public.books(id) ON DELETE CASCADE,
+  reason        text NOT NULL CHECK (reason IN (
+    'phishing', 'malware', 'scam', 'illegal', 'copyright', 'hate', 'other'
+  )),
+  details       text CHECK (char_length(details) <= 2000),
+  reporter_email text CHECK (char_length(reporter_email) <= 320),
+  -- A hash, not the address: enough to spot one person filing fifty reports,
+  -- without keeping readers' IPs.
+  reporter_hash text,
+  created_at    timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS edition_reports_book
+  ON public.edition_reports (book_id, created_at DESC);
+
+-- No policies: written and read by the server only.
+ALTER TABLE public.edition_reports ENABLE ROW LEVEL SECURITY;
+
+COMMENT ON TABLE public.edition_reports IS
+  'Reader reports of abusive editions. Server-only; POST /api/report writes it and mails the operator.';
+
+-- --------------------------------------------------------------------------
+-- 024_email_quota.sql
+-- --------------------------------------------------------------------------
+
+-- A daily count of emails sent, so the app can live inside a free email plan.
+--
+-- Resend's free plan allows 100 emails a day and 3,000 a month, and refuses
+-- the rest. The weekly digest sent up to 200 per run, so on that plan half of
+-- every run failed — and because a profile's digest slot is claimed before
+-- sending, each failure cost that author their week. Lead notifications, the
+-- email an author most wants, competed for the same 100.
+--
+-- `claim_email_send` counts sends per UTC day and refuses one past the limit
+-- the caller passes. The digest asks with a lower limit than lead
+-- notifications, so the digest can never use up the room a lead needs.
+-- Without the env limits set (a paid email plan), the app never calls this.
+
+CREATE TABLE IF NOT EXISTS public.email_sends (
+  day   date PRIMARY KEY,
+  count integer NOT NULL DEFAULT 0 CHECK (count >= 0)
+);
+
+-- Server only.
+ALTER TABLE public.email_sends ENABLE ROW LEVEL SECURITY;
+
+-- True if one more email may go out today under `p_limit`, counting it.
+-- Atomic: the row lock makes two senders racing for the last slot get one
+-- each, not both.
+CREATE OR REPLACE FUNCTION public.claim_email_send(p_day date, p_limit integer)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE v_count integer;
+BEGIN
+  IF p_limit IS NULL OR p_limit <= 0 THEN
+    RETURN false;
+  END IF;
+
+  INSERT INTO public.email_sends (day, count) VALUES (p_day, 0)
+  ON CONFLICT (day) DO NOTHING;
+
+  SELECT count INTO v_count FROM public.email_sends WHERE day = p_day FOR UPDATE;
+  IF v_count >= p_limit THEN
+    RETURN false;
+  END IF;
+
+  UPDATE public.email_sends SET count = count + 1 WHERE day = p_day;
+  RETURN true;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.claim_email_send(date, integer) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_email_send(date, integer) TO service_role;
+
+COMMENT ON FUNCTION public.claim_email_send(date, integer) IS
+  'Counts one email against today''s total if it is under p_limit; returns whether it may be sent.';
+

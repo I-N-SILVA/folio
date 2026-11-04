@@ -23,13 +23,13 @@ function LockedFeature({
   planName: string
 }) {
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-950/40 p-3">
+    <div className="rounded-lg border border-studio-line bg-studio-ground/40 p-3">
       <div className="flex items-start gap-2">
-        <Lock size={13} className="mt-0.5 shrink-0 text-neutral-400" />
+        <Lock size={13} className="mt-0.5 shrink-0 text-studio-ink-soft" />
         <div className="min-w-0">
-          <p className="text-sm text-neutral-400">{label}</p>
-          {hint && <p className="mt-1 text-[11px] leading-4 text-neutral-400">{hint}</p>}
-          <p className="mt-2 text-[11px] leading-4 text-neutral-400">
+          <p className="text-sm text-studio-ink-soft">{label}</p>
+          {hint && <p className="mt-1 text-[11px] leading-4 text-studio-ink-soft">{hint}</p>}
+          <p className="mt-2 text-[11px] leading-4 text-studio-ink-soft">
             Not included in {planName}.{' '}
             <Link
               href="/account"
@@ -159,7 +159,7 @@ export function BookSettingsForm({ book }: { book: any }) {
         </Field>
 
         <Field label="Edition style">
-          <p className="pb-2 text-[11px] leading-4 text-neutral-400">
+          <p className="pb-2 text-[11px] leading-4 text-studio-ink-soft">
             One choice sets the type for the whole edition — the pairing, the
             scale, the weights. Per-block overrides still win.
           </p>
@@ -177,7 +177,7 @@ export function BookSettingsForm({ book }: { book: any }) {
                     'rounded-xl border p-3 text-left transition',
                     active
                       ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10'
-                      : 'border-neutral-800 bg-neutral-900/60 hover:border-neutral-700'
+                      : 'border-studio-line bg-studio-panel/60 hover:border-studio-line-strong'
                   )}
                 >
                   {/* A specimen in the actual faces, at the actual weights and
@@ -195,12 +195,12 @@ export function BookSettingsForm({ book }: { book: any }) {
                     {t.label}
                   </div>
                   <div
-                    className="mt-1 truncate text-[11px] leading-4 text-neutral-400"
+                    className="mt-1 truncate text-[11px] leading-4 text-studio-ink-soft"
                     style={{ fontFamily: `var(${t.bodyVar})` }}
                   >
                     {t.description}
                   </div>
-                  <div className="mt-1.5 text-[10px] text-neutral-600">
+                  <div className="mt-1.5 text-[10px] text-studio-ink-soft">
                     {t.headingName}
                     {t.bodyName !== t.headingName ? ` · ${t.bodyName}` : ''}
                   </div>
@@ -274,7 +274,7 @@ export function BookSettingsForm({ book }: { book: any }) {
         )}
 
         {entitlements.leadGating && watch('gatingEnabled') && (
-          <div className="space-y-3 border-l border-neutral-800 pl-4">
+          <div className="space-y-3 border-l border-studio-line pl-4">
             <Field label="Security & Gating Mode">
               <select {...register('gatingType')} className={selectCls}>
                 <option value="email">Email Lead Capture (Public)</option>
@@ -348,7 +348,7 @@ export function BookSettingsForm({ book }: { book: any }) {
                   type="button"
                   onClick={handleTestWebhook}
                   disabled={testingWebhook || !currentWebhookUrl}
-                  className="flex items-center gap-1 shrink-0 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white disabled:opacity-40"
+                  className="flex items-center gap-1 shrink-0 rounded-lg border border-studio-line bg-studio-panel px-3 py-1.5 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised hover:text-white disabled:opacity-40"
                 >
                   {testingWebhook ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
                   Test
@@ -376,7 +376,7 @@ export function BookSettingsForm({ book }: { book: any }) {
           hint="Point a CNAME record for your domain (e.g. catalog.brand.com) to cname.qlico.app"
         >
           <div className="relative">
-            <Globe size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <Globe size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-studio-ink-soft" />
             <input
               type="text"
               placeholder="editions.yourbrand.com"

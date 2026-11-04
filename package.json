@@ -22,7 +22,8 @@
     "verify:mvp:e2e": "bash scripts/verify-mvp-e2e.sh",
     "verify:author:e2e": "bash scripts/verify-author-e2e.sh",
     "audit:theme": "node scripts/audit-theme.mjs",
-    "audit:responsive": "node scripts/responsive-audit.mjs"
+    "audit:responsive": "node scripts/responsive-audit.mjs",
+    "measure:ux": "bash scripts/measure-ux.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

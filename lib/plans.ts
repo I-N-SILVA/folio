@@ -21,7 +21,14 @@
 export type PlanId = 'free' | 'pro' | 'ltd_tier1' | 'ltd_tier2' | 'ltd_tier3'
 
 export type Entitlements = {
-  /** Maximum number of editions a user may own. Enforced: POST /api/books, POST /api/import/pdf, DB trigger. */
+  /**
+   * Maximum number of editions a user may own. Enforced: POST /api/books,
+   * POST /api/import/pdf, DB trigger (`book_limit_for_plan`, 022).
+   *
+   * Finite on every plan. Pro and lifetime Tier 3 used to be unlimited, and an
+   * unlimited lifetime plan is an open-ended cost sold for one payment. The
+   * caps sit well above what one author or a small agency uses.
+   */
   maxBooks: number
   /** How many days of reader analytics are queryable. Enforced: GET /api/analytics/[slug]. */
   analyticsDays: number
@@ -45,6 +52,29 @@ export type Entitlements = {
    * fetches the author's source on their behalf, on a schedule, forever.
    */
   liveData: boolean
+  /**
+   * Pages of AI detection per calendar month (UTC). Enforced:
+   * POST /api/ai/detect-hotspots and POST /api/import/pdf/finalize, through
+   * `claim_ai_pages` (021).
+   *
+   * Every page sent to Gemini costs the project money, and the only brake used
+   * to be a per-minute counter held in each server instance's memory. Pages
+   * past the allowance still get the structural heuristic, which is free, so
+   * running out degrades detection rather than refusing it.
+   */
+  aiPagesPerMonth: number
+  /**
+   * Storage across every edition the account owns, in MB. Enforced:
+   * POST /api/upload and POST /api/import/pdf, through `user_storage_bytes`
+   * (021).
+   *
+   * Never `Infinity`, on any plan. Storage is the cost that grows with an
+   * account for as long as it exists, and a lifetime plan pays for it once —
+   * an unlimited tier would be an unbounded liability sold at a fixed price.
+   * The check runs before an upload starts, so one import can overshoot the
+   * cap by its own size; the next is refused.
+   */
+  storageMB: number
 }
 
 export type Plan = {
@@ -76,6 +106,8 @@ export const PLANS: Record<PlanId, Plan> = {
       csvExport: false,
       whiteLabel: false,
       liveData: false,
+      aiPagesPerMonth: 50,
+      storageMB: 500,
     },
   },
   pro: {
@@ -84,12 +116,14 @@ export const PLANS: Record<PlanId, Plan> = {
     tagline: 'For anyone whose editions have to bring something back.',
     lifetime: false,
     entitlements: {
-      maxBooks: Infinity,
+      maxBooks: 100,
       analyticsDays: 365,
       leadGating: true,
       csvExport: true,
       whiteLabel: true,
       liveData: true,
+      aiPagesPerMonth: 1_000,
+      storageMB: 10_000,
     },
   },
   // ── AppSumo lifetime deal tiers ──────────────────────────────────────────
@@ -105,6 +139,8 @@ export const PLANS: Record<PlanId, Plan> = {
       csvExport: true,
       whiteLabel: false,
       liveData: true,
+      aiPagesPerMonth: 200,
+      storageMB: 2_000,
     },
   },
   ltd_tier2: {
@@ -119,20 +155,24 @@ export const PLANS: Record<PlanId, Plan> = {
       csvExport: true,
       whiteLabel: true,
       liveData: true,
+      aiPagesPerMonth: 500,
+      storageMB: 10_000,
     },
   },
   ltd_tier3: {
     id: 'ltd_tier3',
     name: 'Qlico LTD — Tier 3',
-    tagline: 'Unlimited lifetime access for agencies.',
+    tagline: 'Lifetime access for agencies.',
     lifetime: true,
     entitlements: {
-      maxBooks: Infinity,
+      maxBooks: 200,
       analyticsDays: 365,
       leadGating: true,
       csvExport: true,
       whiteLabel: true,
       liveData: true,
+      aiPagesPerMonth: 1_000,
+      storageMB: 25_000,
     },
   },
 }
@@ -218,3 +258,68 @@ export function clampAnalyticsDays(requested: number | null, entitlements: Entit
   if (requested === null || !Number.isFinite(requested) || requested <= 0) return limit
   return Math.min(requested, limit)
 }
+
+// Decimal, to match how `formatStorage` writes it: "10 GB" means 10,000 MB here.
+const MB = 1_000_000
+
+/** Human-readable storage allowance, e.g. "500 MB" or "10 GB". */
+export function formatStorage(mb: number): string {
+  if (!Number.isFinite(mb)) return 'Unlimited'
+  if (mb >= 1000) {
+    const gb = mb / 1000
+    return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`
+  }
+  return `${Math.round(mb)} MB`
+}
+
+/** Whether an account holding `usedBytes` may start another upload. */
+export function storageAllows(usedBytes: number, entitlements: Entitlements): boolean {
+  return usedBytes < entitlements.storageMB * MB
+}
+
+/**
+ * The key `ai_usage` is counted under: the first day of the month, in UTC.
+ *
+ * UTC so that the allowance resets at one instant for everyone, and so two
+ * server regions never disagree about which month a request belongs to.
+ */
+export function aiUsageMonth(now: Date = new Date()): string {
+  const y = now.getUTCFullYear()
+  const m = String(now.getUTCMonth() + 1).padStart(2, '0')
+  return `${y}-${m}-01`
+}
+
+/** What the editor says when a detection ran past the month's AI allowance. */
+export function aiLimitMessage(limit: number): string {
+  return `This month's ${limit.toLocaleString('en-US')} AI pages are used up, so some pins came from the page structure instead. Your allowance resets on the 1st.`
+}
+
+/**
+ * What Pro costs, in one place.
+ *
+ * Stripe holds the real prices; these are what the pricing card and the
+ * account page say, and they have to match the Price objects that
+ * `NEXT_PUBLIC_STRIPE_PRICE_PRO` and `NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL` point
+ * at. Changing the price is a new Stripe Price plus this — Stripe Prices are
+ * immutable, so existing subscribers stay on what they signed up for.
+ *
+ * Annual is ten months for twelve: the usual discount, and the cheapest
+ * churn reduction a subscription has.
+ */
+export const PRO_PRICING = {
+  monthlyUSD: 19,
+  annualUSD: 190,
+} as const
+
+export type BillingInterval = 'month' | 'year'
+
+/**
+ * How long reading events are kept, in days.
+ *
+ * The longest analytics window any plan has, plus a month of slack so an
+ * account that upgrades sees a full window straight away. Older rows are
+ * deleted daily by /api/cron/prune-events, except leads (`gate_unlock`),
+ * which are kept for as long as the edition exists.
+ */
+export const EVENT_RETENTION_DAYS =
+  Math.max(...Object.values(PLANS).map((p) => p.entitlements.analyticsDays)) + 35

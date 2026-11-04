@@ -40,8 +40,8 @@ function SortableGridPage({ page, bookId, index, isSelected, onSelect }: { page:
       style={style}
       onClick={onSelect}
       className={twMerge(
-        'group relative flex flex-col items-center gap-2 p-2 rounded-xl cursor-pointer border-2 transition-all bg-neutral-900',
-        isSelected ? 'border-[var(--studio-select)]' : 'border-transparent hover:border-neutral-700',
+        'group relative flex flex-col items-center gap-2 p-2 rounded-xl cursor-pointer border-2 transition-all bg-studio-panel',
+        isSelected ? 'border-[var(--studio-select)]' : 'border-transparent hover:border-studio-line-strong',
         isDragging && 'opacity-50 z-50 shadow-2xl scale-105'
       )}
     >
@@ -62,10 +62,10 @@ function SortableGridPage({ page, bookId, index, isSelected, onSelect }: { page:
       </div>
 
       {/* Label */}
-      <div className="text-xs font-bold text-neutral-300">
+      <div className="text-xs font-bold text-studio-ink">
         Page {page.page_number}
       </div>
-      <div className="text-[10px] text-neutral-400 uppercase tracking-widest -mt-1">
+      <div className="text-[10px] text-studio-ink-soft uppercase tracking-widest -mt-1">
         {page.type}
       </div>
     </div>
@@ -101,20 +101,20 @@ export function PageManagerModal({ onClose }: PageManagerModalProps) {
         onClick={onClose}
       >
         <motion.div
-          className="bg-neutral-950 border border-neutral-800 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+          className="bg-studio-ground border border-studio-line rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between p-6 border-b border-neutral-800 shrink-0">
+          <div className="flex items-center justify-between p-6 border-b border-studio-line shrink-0">
             <div>
               <h2 className="text-xl font-bold text-white">Visual Page Manager</h2>
-              <p className="text-sm text-neutral-400 mt-1">Drag and drop to rearrange this edition.</p>
+              <p className="text-sm text-studio-ink-soft mt-1">Drag and drop to rearrange this edition.</p>
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-neutral-900 hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+              className="w-10 h-10 rounded-full bg-studio-panel hover:bg-studio-raised flex items-center justify-center text-studio-ink-soft hover:text-white transition-colors"
             >
               <X size={20} />
             </button>
@@ -147,7 +147,7 @@ export function PageManagerModal({ onClose }: PageManagerModalProps) {
 
                   <button
                     onClick={addPage}
-                    className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-neutral-300 min-h-[200px]"
+                    className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-studio-line hover:border-studio-line-strong hover:bg-studio-panel transition-colors text-studio-ink-soft hover:text-studio-ink min-h-[200px]"
                   >
                     <Plus size={32} />
                     <span className="text-xs font-bold uppercase tracking-wider">Add Page</span>

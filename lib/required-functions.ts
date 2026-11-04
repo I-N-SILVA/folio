@@ -75,4 +75,34 @@ export const REQUIRED_FUNCTIONS: readonly RequiredFunction[] = [
     critical: false,
     cost: 'review links do not open',
   },
+  {
+    name: 'claim_ai_pages',
+    migration: '021',
+    critical: false,
+    cost: 'AI detection is refused for everyone, and every import falls back to the heuristic',
+  },
+  {
+    name: 'user_storage_bytes',
+    migration: '021',
+    critical: false,
+    cost: 'storage allowances are not enforced, so no account is ever stopped for size',
+  },
+  {
+    name: 'edition_analytics',
+    migration: '022',
+    critical: false,
+    cost: 'per-edition Insights fall back to counting rows in the app, capped at 50,000',
+  },
+  {
+    name: 'prune_events',
+    migration: '022',
+    critical: false,
+    cost: 'old reading events are never deleted, and the events table grows without bound',
+  },
+  {
+    name: 'claim_email_send',
+    migration: '024',
+    critical: false,
+    cost: 'EMAIL_DAILY_LIMIT is not enforced, so a free email plan refuses sends past its limit',
+  },
 ] as const

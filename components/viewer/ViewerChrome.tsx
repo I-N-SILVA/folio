@@ -88,11 +88,21 @@ function luminance(hex: string): number {
 export function ViewerChrome({
   book,
   embed = false,
+  inline = false,
   lockedCount = 0,
   showBadge = true,
 }: {
   book: Book
   embed?: boolean
+  /**
+   * Rendered inside another page — the home page's try-it preview — rather
+   * than as the page. Leaves out what is pinned to the screen (the page riffle,
+   * the report link, keyboard hints): fixed to the viewport, they floated over
+   * whatever the host page had there, and the riffle handle sat on top of the
+   * "Save this edition" card. The preview is not published, so there is
+   * nothing to report either.
+   */
+  inline?: boolean
   /** Pages the server withheld behind the lead gate. */
   lockedCount?: number
   /**
@@ -322,15 +332,21 @@ export function ViewerChrome({
         />
       </motion.div>
 
+      {/* Not on phones. There it took a third of the screen together with the
+          toolbar, shrinking the page the reader came to read, and it does
+          nothing the Contents button (in the toolbar) and a swipe do not —
+          while a 50-page import packs 50 thumbnails into one 360px row. */}
       {!embed && (
-        <FilmstripScrubber
-          book={visibleBook}
-          currentPage={currentPage}
-          onSelectPage={(i) => engineRef.current?.goTo(i)}
-        />
+        <div className="hidden w-full sm:block">
+          <FilmstripScrubber
+            book={visibleBook}
+            currentPage={currentPage}
+            onSelectPage={(i) => engineRef.current?.goTo(i)}
+          />
+        </div>
       )}
 
-      {!embed && (
+      {!embed && !inline && (
         <ForeEdge
           total={navigablePages}
           current={currentPage}
@@ -537,7 +553,7 @@ export function ViewerChrome({
           )}
       </div>
 
-      {!embed && <KeyboardHints />}
+      {!embed && !inline && <KeyboardHints />}
 
       {/* Accessible page announcements */}
       <div className="sr-only" aria-live="polite">
@@ -593,15 +609,30 @@ export function ViewerChrome({
       )}
 
       {/* Branding */}
-      {showBadge && (
+      {/* "Report" is on every edition, white-labelled ones included: it is how a
+          reader tells us an edition is a phishing page, and an abuser is the
+          last person who would leave it switched on if it were optional. */}
+      {!inline && (
+      <div className="fixed bottom-4 right-4 z-[9000] flex items-center gap-2">
         <a
-          href="https://qlico.app/?via=badge#try"
+          href={`/report?edition=${encodeURIComponent(book.slug)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-4 right-4 z-[9000] rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"
+          className="flex min-h-[40px] items-center rounded-full px-3 text-xs font-semibold text-[var(--qlico-muted)] underline-offset-2 transition-colors hover:text-[var(--qlico-ink)] hover:underline"
         >
-          Powered by <span className="font-display font-semibold text-[var(--qlico-ink)]">QLICO</span>
+          Report
         </a>
+        {showBadge && (
+          <a
+            href="https://qlico.app/?via=badge#try"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-[var(--qlico-border)] bg-[var(--qlico-paper)]/85 px-3 py-1.5 text-xs font-semibold text-[var(--qlico-muted)] shadow-sm backdrop-blur-md transition-colors hover:text-[var(--qlico-ink)]"
+          >
+            Powered by <span className="font-display font-semibold text-[var(--qlico-ink)]">QLICO</span>
+          </a>
+        )}
+      </div>
       )}
     </div>
   )

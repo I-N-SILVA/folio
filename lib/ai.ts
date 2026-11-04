@@ -17,6 +17,22 @@ export function isAiEnabled(): boolean {
   return Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
 }
 
+/**
+ * The image type, read from the file's first bytes.
+ *
+ * Every image used to be sent to Gemini labelled `image/png`. Imported pages
+ * are WebP now, and an author's uploaded JPEG never was PNG; the label is what
+ * the model decodes by, so it has to be the truth.
+ */
+export function imageMimeType(buf: Buffer): string {
+  if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') {
+    return 'image/webp'
+  }
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg'
+  if (buf.length >= 6 && buf.toString('ascii', 0, 3) === 'GIF') return 'image/gif'
+  return 'image/png'
+}
+
 export async function detectHotspots(imageBuffer: Buffer, pageNumber: number): Promise<Hotspot[]> {
   if (!isAiEnabled()) return []
   try {
@@ -39,7 +55,7 @@ export async function detectHotspots(imageBuffer: Buffer, pageNumber: number): P
       {
         inlineData: {
           data: imageBuffer.toString('base64'),
-          mimeType: 'image/png',
+          mimeType: imageMimeType(imageBuffer),
         },
       },
     ])
@@ -85,7 +101,7 @@ export async function analyzeBookSEO(imageBuffers: Buffer[], title: string): Pro
     const imageParts = imageBuffers.map(buf => ({
       inlineData: {
         data: buf.toString('base64'),
-        mimeType: 'image/png',
+        mimeType: imageMimeType(buf),
       },
     }))
 

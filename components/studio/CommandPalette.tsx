@@ -288,26 +288,26 @@ export function CommandPalette({
       onClose={onClose}
       title="Command Palette"
       hideCloseButton
-      className="max-w-xl w-full rounded-2xl border border-neutral-800 bg-neutral-950 p-0 text-neutral-100 shadow-2xl overflow-hidden"
+      className="max-w-xl w-full rounded-2xl border border-studio-line bg-studio-ground p-0 text-studio-ink shadow-2xl overflow-hidden"
     >
-      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-neutral-800">
-        <Search size={16} className="text-neutral-400 shrink-0" />
+      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-studio-line">
+        <Search size={16} className="text-studio-ink-soft shrink-0" />
         <input
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a command, page number, or block name..."
-          className="w-full bg-transparent text-sm text-neutral-100 placeholder-neutral-500 outline-none"
+          className="w-full bg-transparent text-sm text-studio-ink placeholder-studio-ink-faint outline-none"
         />
-        <span className="rounded border border-neutral-800 bg-neutral-900 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400">
+        <span className="rounded border border-studio-line bg-studio-panel px-1.5 py-0.5 text-[10px] font-mono text-studio-ink-soft">
           ESC
         </span>
       </div>
 
       <div className="max-h-[340px] overflow-y-auto p-2 custom-scrollbar space-y-1">
         {filtered.length === 0 ? (
-          <div className="py-8 text-center text-xs text-neutral-400">
+          <div className="py-8 text-center text-xs text-studio-ink-soft">
             No commands matching &ldquo;{query}&rdquo;
           </div>
         ) : (
@@ -319,11 +319,11 @@ export function CommandPalette({
               className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-left transition text-xs ${
                 selectedIndex === idx
                   ? 'bg-white text-black font-semibold shadow'
-                  : 'text-neutral-300 hover:bg-neutral-900'
+                  : 'text-studio-ink hover:bg-studio-panel'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className={selectedIndex === idx ? 'text-black' : 'text-neutral-400'}>
+                <span className={selectedIndex === idx ? 'text-black' : 'text-studio-ink-soft'}>
                   {item.icon}
                 </span>
                 <span className="truncate">{item.title}</span>
@@ -332,7 +332,7 @@ export function CommandPalette({
               <div className="flex items-center gap-2 shrink-0 ml-2">
                 <span
                   className={`text-[10px] uppercase font-mono tracking-wider ${
-                    selectedIndex === idx ? 'text-neutral-700' : 'text-neutral-400'
+                    selectedIndex === idx ? 'text-neutral-700' : 'text-studio-ink-soft'
                   }`}
                 >
                   {item.category}
@@ -342,7 +342,7 @@ export function CommandPalette({
                     className={`rounded px-1.5 py-0.5 text-[10px] font-mono ${
                       selectedIndex === idx
                         ? 'bg-neutral-200 text-black'
-                        : 'border border-neutral-800 bg-neutral-900 text-neutral-400'
+                        : 'border border-studio-line bg-studio-panel text-studio-ink-soft'
                     }`}
                   >
                     {item.shortcut}
@@ -354,7 +354,7 @@ export function CommandPalette({
         )}
       </div>
 
-      <div className="flex items-center justify-between px-4 py-2 border-t border-neutral-800/80 bg-neutral-950 text-[10px] text-neutral-400">
+      <div className="flex items-center justify-between px-4 py-2 border-t border-studio-line/80 bg-studio-ground text-[10px] text-studio-ink-soft">
         <span>Use ↑ ↓ to navigate</span>
         <span>Press ↵ to run command</span>
       </div>

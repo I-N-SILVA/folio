@@ -180,6 +180,169 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### Studio and reader UX, measured (`npm run measure:ux`, 90/90)
+
+The signed-in studio had never been looked at by anything automated.
+`npm run measure:ux` now builds the app against a local stand-in (no PostgREST
+needed), signs in, and measures reader, editor, contrast, preview and pricing
+at phone, tablet and laptop sizes. What it found and what changed:
+
+- **Editor on phones cut the page off at both edges** — a 460px page in a
+  ~330px frame, centred so its left edge could not be scrolled to. The canvas
+  now fits its frame until the author zooms by hand (`shownZoom`), with safe
+  centring. A callback ref, because the frame is not in the first render.
+- **The editor's top bar ran 273px off a 1024px screen**, so Publish could not
+  be reached on a small laptop or a landscape iPad (17px over at 1280).
+  Labels now give way to icons as the bar narrows (every icon keeps a
+  tooltip and a screen-reader name); on a phone the edition title gets the
+  room. The canvas toolbar hides spread and zoom below 1280px.
+- **Reader on short screens:** the spread was sized by width only, so at 900px
+  tall or less the sticky toolbar sat on the page and the filmstrip hid
+  behind it. The page now fits the window's height (`READER_CHROME_RESERVE`);
+  a spread page narrower than 460px is laid out at 460 and scaled, as
+  `lib/page-geometry` requires — laid out narrower it clipped 8 of 25 text
+  elements at 1280×720.
+- **Reader cover is centred** on desktop instead of sitting on the right half;
+  the book slides half a page while closed, and drops the spread shadow that
+  outlined the empty half.
+- **Studio colours are tokens.** ~590 hard-coded `neutral-*` classes became
+  `--studio-*` (plus `--studio-line-strong`); measured change is 1–3/255 on
+  average, i.e. the same look with one source. `lib/contrast-tokens.test.ts`
+  keeps new dark greys out and checks every text token against every surface.
+- "Published" was white on emerald-600 (3.65:1); it is emerald-700 (5.48:1).
+- The home page's try-it preview no longer has the reader's fixed overlays
+  (report link, riffle handle) floating over its "Save this edition" card.
+  Try-before-signup itself already worked; measured on a phone.
+
+### Phone and web UX pass
+
+Measured in a real browser (Playwright) at 320–1440px; the signed-in studio
+was not, because its harness needs the PostgREST binary.
+
+- **The pricing section could not sign anyone up on a small phone.** It was a
+  300vh scroll-jacked dial with the plan card in a screen-high box, overflow
+  clipped; on 375×667 and 320×568 the card's button was off-screen at every
+  scroll position. Phones now get all three plans stacked, each with its own
+  button in normal flow; the dial stays from `md` up.
+- The hero said "Drag & drop your PDF" to phones. Touch screens
+  (`pointer-coarse`) now read "Tap to choose a PDF".
+- The reader hides the page filmstrip and the keyboard-shortcuts button on
+  phones; it gets the Contents button and swipes. It also has an `sr-only`
+  `<h1>` with the edition title (it had no heading), and the home page lost a
+  second, decorative `<h1>`.
+- Text that carries information (gallery card details, the lead gate's privacy
+  line, contents) is at least 12px.
+
+### Running on a free email plan (migration 024)
+
+The MVP stack is Vercel Pro + Supabase Pro + free tiers (cost sheet:
+`docs/pricing-research-2026-10.md` §10, ≈ $46–49/month). Resend's free plan
+refuses past 100 emails a day, and the digest sent 200 a run — each refused
+send cost an author their week.
+
+- `EMAIL_DAILY_LIMIT` (set **95** on Resend free) caps every email per UTC
+  day, counted in Postgres by `claim_email_send`. Lead notifications and abuse
+  reports may use all of it; the digest stops at `DIGEST_DAILY_LIMIT`
+  (default total − 20) and **hands the slot back** so the author is reached on
+  a later run. Unset = no counting (paid plan). Fails open.
+- **The digest cron runs daily at 09:00 UTC** (up to 200 authors a run, so
+  ~1,400 a week). Authors are due six days after their last digest, so sends
+  spread across the week instead of piling onto Monday. Daily because Vercel
+  Hobby rejects any deploy whose crons run more often — the first version of
+  this ran every 30 minutes and its deploy failed. On Pro, `0 * * * *` in
+  `vercel.json` raises the ceiling with no code change. (Hobby is still
+  non-commercial: the move to Pro is needed before taking payments.)
+
+### Abuse controls, WebP pages, and tax at checkout (migration 023)
+
+Hosted readers get used for phishing, and if Google flags the domain every
+customer's links break at once. There was no defence at all.
+
+- **Takedown.** `SELECT public.suspend_edition('<slug>', '<reason>');` in the
+  SQL editor takes an edition offline within a minute (ISR);
+  `restore_edition('<slug>')` brings it back. Enforced in the public read
+  policies, so the reader, embed and unlock all honour it. A trigger stops the
+  author clearing it; the editor tells them it happened. Routes that read
+  with the service role (unlock, live data, OG image) check `isSuspended` by
+  hand — `lib/abuse.test.ts` fails if one stops. The OG image route also used
+  to render *drafts* for anyone who guessed a slug; it now renders only what
+  the reader would.
+- **Reports.** Every edition, white-labelled ones too, has a "Report" link →
+  `/report` → `edition_reports` + an email to `ABUSE_EMAIL` (falls back to
+  support) containing the suspend command. Nothing auto-suspends on reports.
+- **Link checks.** With `GOOGLE_WEB_RISK_API_KEY` set, a published edition
+  cannot be saved — and an edition cannot be published — while it links to a
+  site on Google's phishing/malware list (422 naming the link). Fails open;
+  results cached a day. **The editor now saves pages before settings**, or a
+  refused publish could never accept the fix.
+- **WebP pages.** Imports render pages as WebP at 0.85 (PNG where the browser
+  cannot encode it); finalize accepts either. Gemini now gets the real image
+  type, which also fixes uploaded JPEGs being sent labelled as PNG.
+- **Stripe Tax.** `STRIPE_AUTOMATIC_TAX=true` turns on automatic tax, address
+  and VAT-number collection at checkout. Only after adding registrations in
+  Stripe → Tax, or it collects addresses and charges nothing.
+
+### Analytics at scale, and no plan is unlimited (migration 022)
+
+- **Every reader event was stored with no page number.** The reader sends
+  `page_number` in the payload and `/api/events` only read a top-level
+  `pageNumber` nobody sends, so per-page views, the funnel and the heatmap had
+  never had data. `pageNumberOf` (`lib/events.ts`) reads the payload; 022
+  backfills existing rows.
+- **Insights were capped at 1,000 rows** (PostgREST's default) and silently
+  undercounted past ~70 reads. `edition_analytics` counts in Postgres; the JS
+  path (`lib/analytics.ts`) is now a fallback that pages through every row.
+- **Events are pruned daily** past `EVENT_RETENTION_DAYS` (400) by
+  `/api/cron/prune-events`, in batches. **`gate_unlock` rows — the leads — are
+  never pruned.**
+- **The reader batches events**: one request per ~2 s / 20 events / page hide,
+  instead of one per event. `/api/events` still accepts a single event.
+- **The digest runs many times a day** instead of once a week, so it reaches
+  everyone rather than the first 200 (schedule since revised by 024, above).
+- **No plan is unlimited.** Pro 100 editions, lifetime Tier 3 200. Accounts
+  already above keep what they have; they cannot create more.
+
+`npm run verify:migration` covers it: 1,500 events counted exactly and grouped
+by page, the prune emptying old telemetry while keeping every lead, and the
+new ladder.
+
+### Usage allowances and a yearly Pro price (migration 021)
+
+Two costs grew with use and had no limit that outlived a cold start: Gemini
+detection (only a per-minute, per-instance counter) and storage (only a
+per-file cap — and Tier 3 of the lifetime deal is unlimited editions, paid
+once). `lib/plans.ts` now has `aiPagesPerMonth` and `storageMB` on every plan,
+neither ever `Infinity`:
+
+| Plan | Storage | AI pages / month |
+|---|---|---|
+| Free | 500 MB | 50 |
+| Pro | 10 GB | 1,000 |
+| LTD 1 / 2 / 3 | 2 / 10 / 25 GB | 200 / 500 / 1,000 |
+
+- **AI** — both Gemini routes (`/api/ai/detect-hotspots` and the import's
+  finalize) claim through `claim_ai_pages`, which grants atomically and may grant fewer pages than
+  asked; the rest get the free heuristic and the editor says why. It **fails
+  closed**: without 021 nobody gets Gemini, only the heuristic.
+- **Storage** — `user_storage_bytes` sums `storage.objects` under the user's
+  editions, checked before `/api/upload` and before a PDF import creates its
+  book. It **fails open**: without 021 nothing is refused. One import can
+  overshoot by its own size, because its pages upload straight to storage.
+- **Yearly Pro** — set `NEXT_PUBLIC_STRIPE_PRICE_PRO_ANNUAL` and the account
+  page and pricing card offer it. Amounts shown come from `PRO_PRICING` in
+  `lib/plans.ts`; a price change is a new Stripe Price plus that constant.
+
+The numbers are a first guess sized so Free still fits three ordinary editions;
+nothing measured them. `npm run verify:migration` proves the claim grants
+partially at the edge, resets monthly, and that the storage sum counts only
+the owner's objects.
+
+Not done, and the larger remaining cost: **reader bandwidth**. Page images are
+served from Supabase Storage public URLs on every read, on every plan; a popular
+edition costs egress no allowance here bounds. A CDN in front of those URLs (or
+Supabase's image transformation with caching) is the fix, and it is
+infrastructure, not code in this repo.
+
 ### `.or()` on an UPDATE does not work, and it broke two things silently
 
 **Read this before writing another Supabase query.** It is the most expensive
