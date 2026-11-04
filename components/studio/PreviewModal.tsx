@@ -20,34 +20,34 @@ export function PreviewModal({ onClose }: PreviewModalProps) {
   return createPortal(
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[9999] flex flex-col bg-neutral-950/95"
+        className="fixed inset-0 z-[9999] flex flex-col bg-studio-ground/95"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 h-12 shrink-0">
-          <span className="text-sm text-neutral-400">
+          <span className="text-sm text-studio-ink-soft">
             Preview — {book.title}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => viewerRef.current?.flipPrev()}
-              className="p-1.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              className="p-1.5 rounded text-studio-ink-soft hover:text-white hover:bg-studio-raised transition-colors"
               title="Previous page"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={() => viewerRef.current?.flipNext()}
-              className="p-1.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              className="p-1.5 rounded text-studio-ink-soft hover:text-white hover:bg-studio-raised transition-colors"
               title="Next page"
             >
               <ChevronRight size={18} />
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              className="p-1.5 rounded text-studio-ink-soft hover:text-white hover:bg-studio-raised transition-colors"
               title="Close (Esc)"
             >
               <X size={18} />
@@ -63,7 +63,7 @@ export function PreviewModal({ onClose }: PreviewModalProps) {
         </div>
 
         {/* Footer hint */}
-        <div className="text-center py-3 text-xs text-neutral-600">
+        <div className="text-center py-3 text-xs text-studio-ink-soft">
           Use ← → arrow keys to navigate · Press Esc to close
         </div>
       </motion.div>

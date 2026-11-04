@@ -517,26 +517,33 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
 
   return (
     <EntitlementsProvider value={entitlements}>
-    <div className="flex flex-col h-screen bg-neutral-950 text-neutral-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-studio-ground text-studio-ink overflow-hidden">
       {/* Top toolbar */}
-      <header className="flex items-center gap-3 px-4 h-13 border-b border-neutral-800 shrink-0 py-2">
+      {/* Labels give way to icons as the bar narrows; every icon-only control
+          keeps its name for screen readers (sr-only). Measured: with every
+          label showing the bar needs ~1,300px, so on a 1024px laptop or a
+          landscape iPad it ran 273px off the screen and Publish could not be
+          reached. Below 420px the publish state is the icon alone, so the
+          edition's title keeps some room. */}
+      <header className="flex items-center gap-2 px-3 h-13 border-b border-studio-line shrink-0 py-2 sm:gap-3 sm:px-4">
         <Link
           href="/dashboard"
           aria-label="QLICO dashboard"
-          className="flex items-center gap-2 rounded-lg p-1 transition hover:bg-neutral-800"
+          title="Back to your editions"
+          className="flex items-center gap-2 rounded-lg p-1 transition hover:bg-studio-raised"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <MarkSymbol size={28} className="h-7 w-7" />
         </Link>
         <Link
           href="/dashboard"
-          className="hidden sm:flex items-center gap-1 text-neutral-400 hover:text-neutral-200 transition-colors text-xs font-medium"
+          className="hidden 2xl:flex items-center gap-1 text-studio-ink-soft hover:text-studio-ink transition-colors text-xs font-medium"
         >
           <ArrowLeft size={13} />
           <span>Dashboard</span>
         </Link>
 
-        <div className="w-px h-5 bg-neutral-800 mx-1" />
+        <div className="w-px h-5 bg-studio-raised mx-1" />
 
         {/* Editable title */}
         {titleEditing ? (
@@ -546,22 +553,24 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
             onChange={(e) => setTitleValue(e.target.value)}
             onBlur={handleTitleBlur}
             onKeyDown={(e) => e.key === 'Enter' && handleTitleBlur()}
-            className="bg-neutral-800 border border-neutral-600 rounded px-2 py-0.5 text-sm font-medium text-neutral-100 outline-none focus:border-neutral-400 min-w-[160px] max-w-[360px]"
+            className="bg-studio-raised border border-studio-line-strong rounded px-2 py-0.5 text-sm font-medium text-studio-ink outline-none focus:border-neutral-400 min-w-[160px] max-w-[360px]"
           />
         ) : (
           <button
             onClick={() => setTitleEditing(true)}
-            className="text-sm font-medium text-neutral-200 hover:text-white px-1 rounded hover:bg-neutral-800 transition-colors max-w-[360px] truncate"
+            className="min-w-0 flex-1 truncate rounded px-1 text-left text-sm font-medium text-studio-ink transition-colors hover:bg-studio-raised hover:text-white sm:max-w-[360px] sm:flex-none"
           >
             {titleValue}
           </button>
         )}
 
-        <div className="flex-1" />
+        {/* On a phone the title takes the free space instead, so it is the
+            last thing to shrink; it used to be squeezed to one character. */}
+        <div className="hidden flex-1 sm:block" />
 
         {/* Live Autosave & Sync Status Badge */}
         <div
-          className="flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900/90 px-3 py-1 text-xs text-neutral-300 select-none shadow-sm"
+          className="flex shrink-0 items-center gap-2 rounded-full border border-studio-line bg-studio-panel/90 px-2.5 py-1 text-xs text-studio-ink select-none shadow-sm sm:px-3"
           aria-live="polite"
         >
           {saveStatus === 'saving' ? (
@@ -577,12 +586,12 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
           ) : isDirty ? (
             <>
               <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
-              <span className="text-neutral-300">Unsaved edits</span>
+              <span className="text-studio-ink">Unsaved edits</span>
             </>
           ) : (
             <>
               <span className="h-2 w-2 rounded-full bg-emerald-500/80 shrink-0" />
-              <span className="hidden sm:inline text-neutral-400 font-normal">
+              <span className="hidden sm:inline text-studio-ink-soft font-normal">
                 <SavedAgo at={lastSavedAt} />
               </span>
             </>
@@ -590,11 +599,11 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
         </div>
 
         {/* Undo / Redo controls */}
-        <div className="hidden items-center gap-0.5 rounded-md border border-neutral-800 bg-neutral-900/80 p-0.5 sm:flex">
+        <div className="hidden items-center gap-0.5 rounded-md border border-studio-line bg-studio-panel/80 p-0.5 sm:flex">
           <button
             onClick={() => useEditorStore.getState().undo()}
             disabled={past.length === 0}
-            className="rounded p-1 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
+            className="rounded p-1 text-studio-ink-soft transition hover:bg-studio-raised hover:text-studio-ink disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-studio-ink-soft"
             title="Undo (⌘Z)"
           >
             <Undo2 size={14} />
@@ -602,38 +611,39 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
           <button
             onClick={() => useEditorStore.getState().redo()}
             disabled={future.length === 0}
-            className="rounded p-1 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-neutral-400"
+            className="rounded p-1 text-studio-ink-soft transition hover:bg-studio-raised hover:text-studio-ink disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-studio-ink-soft"
             title="Redo (⇧⌘Z)"
           >
             <Redo2 size={14} />
           </button>
         </div>
 
-        {/* Quick Action Command Palette Trigger */}
+        {/* Quick Action Command Palette Trigger. From sm up: on a phone the
+            title needs the room, and the dock below carries the actions. */}
         <button
           onClick={() => setShowCommandPalette(true)}
-          className="flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900/90 px-2.5 py-1 text-xs text-neutral-300 transition hover:border-neutral-700 hover:bg-neutral-800 hover:text-white"
+          className="hidden shrink-0 items-center gap-1.5 rounded-lg border border-studio-line bg-studio-panel/90 px-2.5 py-1 text-xs text-studio-ink transition hover:border-studio-line-strong hover:bg-studio-raised hover:text-white sm:flex"
           title="Search actions (⌘K)"
         >
-          <Search size={13} className="text-neutral-400" />
-          <span className="hidden md:inline font-medium">Quick Actions</span>
-          <kbd className="hidden md:inline rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400">⌘K</kbd>
+          <Search size={13} className="text-studio-ink-soft" />
+          <span className="sr-only font-medium 2xl:not-sr-only">Quick Actions</span>
+          <kbd className="hidden 2xl:inline rounded bg-studio-raised px-1.5 py-0.5 text-[10px] font-mono text-studio-ink-soft">⌘K</kbd>
         </button>
 
         {/* High-Res Asset & Texture Library Trigger */}
         <button
           onClick={() => setShowAssetLibrary(true)}
-          className="hidden sm:flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-neutral-200 transition hover:bg-neutral-800 hover:text-white"
+          className="hidden sm:flex items-center gap-1.5 rounded-lg border border-studio-line-strong bg-studio-panel px-2.5 py-1 text-xs font-semibold text-studio-ink transition hover:bg-studio-raised hover:text-white"
           title="Curated Asset & Texture Library"
         >
-          <FolderOpen size={13} className="text-neutral-400" />
-          <span className="hidden lg:inline">Asset Library</span>
+          <FolderOpen size={13} className="text-studio-ink-soft" />
+          <span className="sr-only 2xl:not-sr-only">Asset Library</span>
         </button>
 
         {/* Shortcuts cheatsheet */}
         <button
           onClick={() => setShowShortcuts(true)}
-          className="hidden items-center rounded-md border border-neutral-800 bg-neutral-900/80 p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 sm:flex"
+          className="hidden items-center rounded-md border border-studio-line bg-studio-panel/80 p-1.5 text-studio-ink-soft transition hover:bg-studio-raised hover:text-studio-ink sm:flex"
           title="Keyboard shortcuts (?)"
         >
           <Keyboard size={14} />
@@ -642,7 +652,7 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
         {/* Draft comments */}
         <button
           onClick={() => setShowReview(true)}
-          className="hidden items-center rounded-md border border-neutral-800 bg-neutral-900/80 p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 sm:flex"
+          className="hidden items-center rounded-md border border-studio-line bg-studio-panel/80 p-1.5 text-studio-ink-soft transition hover:bg-studio-raised hover:text-studio-ink sm:flex"
           title="Review comments"
         >
           <MessageSquare size={14} />
@@ -651,7 +661,7 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
         {/* Version history */}
         <button
           onClick={() => setShowHistory(true)}
-          className="hidden items-center rounded-md border border-neutral-800 bg-neutral-900/80 p-1.5 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100 sm:flex"
+          className="hidden items-center rounded-md border border-studio-line bg-studio-panel/80 p-1.5 text-studio-ink-soft transition hover:bg-studio-raised hover:text-studio-ink sm:flex"
           title="Version history"
         >
           <History size={14} />
@@ -660,21 +670,21 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
         {/* Visual page manager */}
         <button
           onClick={() => setShowPageManager(true)}
-          className="hidden items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700 sm:flex"
+          className="hidden items-center gap-1.5 rounded-md border border-studio-line-strong bg-studio-raised px-3 py-1.5 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised-2 sm:flex"
           title="Arrange pages"
         >
           <Grid size={13} />
-          Pages
+          <span className="sr-only xl:not-sr-only">Pages</span>
         </button>
 
         {/* Preview button */}
         <button
           onClick={() => setShowPreview(true)}
-          className="flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700"
+          className="flex items-center gap-1.5 rounded-md border border-studio-line-strong bg-studio-raised px-3 py-1.5 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised-2"
           title="Preview (⌘P)"
         >
           <Eye size={13} />
-          <span className="hidden sm:inline">Preview</span>
+          <span className="sr-only xl:not-sr-only">Preview</span>
         </button>
 
         {/* Share. There was no way to copy an edition's link or get its embed
@@ -682,11 +692,11 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
             it. */}
         <button
           onClick={() => setShowShare(true)}
-          className="flex items-center gap-1.5 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-700"
+          className="flex items-center gap-1.5 rounded-md border border-studio-line-strong bg-studio-raised px-3 py-1.5 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised-2"
           title="Share or embed"
         >
           <Share2 size={13} />
-          <span className="hidden sm:inline">Share</span>
+          <span className="sr-only xl:not-sr-only">Share</span>
         </button>
 
         {/* Publish toggle */}
@@ -694,10 +704,10 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
           onClick={handlePublishToggle}
           disabled={publishing}
           className={twMerge(
-            'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60',
+            'flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60 sm:px-3',
             isPublished
-              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-              : 'border border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
+              ? 'bg-emerald-700 text-white hover:bg-emerald-800'
+              : 'border border-studio-line-strong bg-studio-raised text-studio-ink hover:bg-studio-raised-2'
           )}
         >
           {publishing ? (
@@ -707,7 +717,9 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
           ) : (
             <EyeOff size={13} />
           )}
-          {publishing ? 'Publishing…' : isPublished ? 'Published' : 'Draft'}
+          <span className="sr-only min-[420px]:not-sr-only">
+            {publishing ? 'Publishing…' : isPublished ? 'Published' : 'Draft'}
+          </span>
         </button>
 
         {/* View Live */}
@@ -715,7 +727,7 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
           <Link
             href={`/book/${storeBook.slug}`}
             target="_blank"
-            className="hidden whitespace-nowrap text-xs text-neutral-400 underline underline-offset-2 transition-colors hover:text-neutral-100 sm:inline"
+            className="hidden whitespace-nowrap text-xs text-studio-ink-soft underline underline-offset-2 transition-colors hover:text-studio-ink xl:inline"
           >
             View Live
           </Link>
@@ -724,7 +736,7 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
 
       {/* Three-panel layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[240px_1fr_320px] overflow-hidden">
-        <aside className="hidden lg:flex flex-col border-r border-neutral-800 overflow-hidden">
+        <aside className="hidden lg:flex flex-col border-r border-studio-line overflow-hidden">
           <PageListSidebar />
         </aside>
 
@@ -732,7 +744,7 @@ export function EditorClient({ book, entitlements, suspension }: Props) {
           <EditorCanvas />
         </main>
 
-        <aside className="hidden lg:flex flex-col border-l border-neutral-800 overflow-hidden">
+        <aside className="hidden lg:flex flex-col border-l border-studio-line overflow-hidden">
           <SettingsPanel />
         </aside>
       </div>

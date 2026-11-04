@@ -21,8 +21,8 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
-        <span className="text-xs font-bold text-neutral-200 uppercase tracking-wider">
+      <div className="flex items-center justify-between border-b border-studio-line pb-2.5">
+        <span className="text-xs font-bold text-studio-ink uppercase tracking-wider">
           {block.type === 'product-grid' ? 'Product Grid' : block.type} block
         </span>
         <div className="flex items-center gap-1">
@@ -31,7 +31,7 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
             disabled={!canMoveUp}
             onClick={() => moveBlock(pageId, block.id, 'up')}
             title="Move block up"
-            className="p-1 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-25"
+            className="p-1 rounded text-studio-ink-soft hover:text-white hover:bg-studio-raised disabled:opacity-25"
           >
             <ArrowUp size={13} />
           </button>
@@ -40,7 +40,7 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
             disabled={!canMoveDown}
             onClick={() => moveBlock(pageId, block.id, 'down')}
             title="Move block down"
-            className="p-1 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-25"
+            className="p-1 rounded text-studio-ink-soft hover:text-white hover:bg-studio-raised disabled:opacity-25"
           >
             <ArrowDown size={13} />
           </button>
@@ -48,7 +48,7 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
             type="button"
             onClick={() => duplicateBlock(pageId, block.id)}
             title="Duplicate block"
-            className="p-1 rounded text-neutral-400 hover:text-white hover:bg-neutral-800"
+            className="p-1 rounded text-studio-ink-soft hover:text-white hover:bg-studio-raised"
           >
             <Copy size={13} />
           </button>
@@ -69,7 +69,7 @@ export function BlockSettingsForm({ block, pageId }: { block: Block; pageId: str
       {block.type === 'audio' && <AudioBlockForm block={block} pageId={pageId} />}
       {block.type === 'button' && <ButtonBlockForm block={block} pageId={pageId} />}
       {block.type === 'divider' && (
-        <p className="text-xs text-neutral-400">No settings for divider block.</p>
+        <p className="text-xs text-studio-ink-soft">No settings for divider block.</p>
       )}
       {block.type === 'embed' && <EmbedBlockForm block={block} pageId={pageId} />}
       {block.type === 'data' && <DataBlockForm block={block} pageId={pageId} />}

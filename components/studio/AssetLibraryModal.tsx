@@ -178,23 +178,23 @@ export function AssetLibraryModal({
     <Modal
       onClose={onClose}
       title="High-Res Asset & Texture Library"
-      className="max-w-4xl w-full rounded-2xl border border-neutral-800 bg-neutral-950 p-6 text-neutral-100 max-h-[85vh] flex flex-col"
+      className="max-w-4xl w-full rounded-2xl border border-studio-line bg-studio-ground p-6 text-studio-ink max-h-[85vh] flex flex-col"
     >
-      <div className="flex items-center justify-between border-b border-neutral-800 pb-4 shrink-0">
+      <div className="flex items-center justify-between border-b border-studio-line pb-4 shrink-0">
         <div>
           <div className="flex items-center gap-2">
-            <FolderOpen size={16} className="text-neutral-300" />
+            <FolderOpen size={16} className="text-studio-ink" />
             <h2 className="font-display text-xl font-bold tracking-tight text-white">
               Curated Asset & Texture Library
             </h2>
           </div>
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-studio-ink-soft">
             Editorial photography, tactile paper textures, and luxury backgrounds ready to insert.
           </p>
         </div>
         <button
           onClick={onClose}
-          className="rounded-full p-2 text-neutral-400 hover:bg-neutral-900 hover:text-white transition"
+          className="rounded-full p-2 text-studio-ink-soft hover:bg-studio-panel hover:text-white transition"
         >
           <X size={18} />
         </button>
@@ -203,13 +203,13 @@ export function AssetLibraryModal({
       {/* Search & Category Filter Bar */}
       <div className="pt-4 pb-3 space-y-3 shrink-0">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-studio-ink-soft" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search fashion, architecture, washi paper, linen, textures..."
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-100 placeholder-neutral-500 outline-none focus:border-neutral-600"
+            className="w-full bg-studio-panel border border-studio-line rounded-xl pl-9 pr-4 py-2 text-xs text-studio-ink placeholder-studio-ink-faint outline-none focus:border-studio-line-strong"
           />
         </div>
 
@@ -221,7 +221,7 @@ export function AssetLibraryModal({
               className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition ${
                 selectedCategory === cat
                   ? 'bg-white text-black font-bold'
-                  : 'bg-neutral-900 text-neutral-400 hover:text-neutral-200 border border-neutral-800'
+                  : 'bg-studio-panel text-studio-ink-soft hover:text-studio-ink border border-studio-line'
               }`}
             >
               {cat}
@@ -233,10 +233,10 @@ export function AssetLibraryModal({
       {/* Asset Grid */}
       <div className="flex-1 overflow-y-auto pr-1 py-2 custom-scrollbar">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center text-neutral-400">
+          <div className="flex flex-col items-center justify-center py-16 text-center text-studio-ink-soft">
             <ImageIcon size={32} className="mb-2 opacity-40" />
             <p className="text-sm font-medium">No assets matching &ldquo;{searchQuery}&rdquo;</p>
-            <p className="text-xs text-neutral-600 mt-1">Try searching for silk, concrete, or paper.</p>
+            <p className="text-xs text-studio-ink-soft mt-1">Try searching for silk, concrete, or paper.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -247,9 +247,9 @@ export function AssetLibraryModal({
                   onSelect(asset.url, asset.title)
                   onClose()
                 }}
-                className="group relative cursor-pointer overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60 transition hover:border-[var(--studio-select)] hover:shadow-xl flex flex-col"
+                className="group relative cursor-pointer overflow-hidden rounded-xl border border-studio-line bg-studio-panel/60 transition hover:border-[var(--studio-select)] hover:shadow-xl flex flex-col"
               >
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-950">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-studio-ground">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={asset.thumbnailUrl}
@@ -266,8 +266,8 @@ export function AssetLibraryModal({
                 </div>
 
                 <div className="p-2.5">
-                  <p className="text-xs font-semibold text-neutral-200 truncate">{asset.title}</p>
-                  <p className="text-[10px] text-neutral-400 truncate mt-0.5">
+                  <p className="text-xs font-semibold text-studio-ink truncate">{asset.title}</p>
+                  <p className="text-[10px] text-studio-ink-soft truncate mt-0.5">
                     {asset.category} · {asset.author}
                   </p>
                 </div>

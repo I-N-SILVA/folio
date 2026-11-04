@@ -14,7 +14,14 @@ import { PageRenderer } from './PageRenderer'
 import { HotspotLayer } from './HotspotLayer'
 import { getSessionId, trackEvent } from '@/lib/tracking'
 import type { Book } from '@/lib/book-schema'
-import { PAGE_DESIGN_WIDTH, PAGE_RATIO, pageSideFor, pageflipMinWidth } from '@/lib/page-geometry'
+import {
+  PAGE_DESIGN_HEIGHT,
+  PAGE_DESIGN_WIDTH,
+  PAGE_RATIO,
+  pageScale,
+  pageSideFor,
+  pageflipMinWidth,
+} from '@/lib/page-geometry'
 
 export interface ViewerEngineHandle {
   flipNext: () => void
@@ -46,6 +53,13 @@ interface Dims {
 // every preview lays out at, so exceeding it here would make the previews
 // wrong rather than the reader right.
 const MAX_PAGE_WIDTH = PAGE_DESIGN_WIDTH
+
+/**
+ * Vertical room the full-page reader leaves around the page: the filmstrip
+ * (~70px), the sticky toolbar (~90px), the page padding and the gaps between.
+ * Measured: at 260 a 1024×768 window still scrolled by 45px.
+ */
+const READER_CHROME_RESERVE = 310
 
 export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
   ({ book, onFlip, embed = false, zoom = 1, lockedCount = 0, slug = '', onUnlocked }, ref) => {
@@ -144,7 +158,23 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
       // MAX_PAGE_WIDTH keeps the default at a comfortable "book on a table"
       // size; zoom lets a large display actually use its space, still bounded
       // by the container so the spread can't overflow.
-      const base = mobile ? cw : Math.min(cw / 2, MAX_PAGE_WIDTH)
+      let base = mobile ? cw : Math.min(cw / 2, MAX_PAGE_WIDTH)
+
+      // On a desktop page the spread was sized by width alone, so on any
+      // screen 900px tall or less the page, the filmstrip and the sticky
+      // toolbar were taller than the window: the toolbar sat on the bottom of
+      // the page and the filmstrip hid behind it. Fit the 100% view to the
+      // window's height too, leaving room for those two and the page padding.
+      // Zoom still multiplies past it, for anyone who wants to read close up.
+      //
+      // One page at a time too (`mobile` here means narrower than 768px of
+      // container, which includes a portrait tablet): a 768×1024 iPad drew a
+      // 950px page with the toolbar over its bottom edge. A phone's page is
+      // bounded by its width long before this, so nothing changes there.
+      if (!embed && typeof window !== 'undefined') {
+        const available = window.innerHeight - READER_CHROME_RESERVE
+        if (available > 300) base = Math.min(base, available / PAGE_RATIO)
+      }
       let pageWidth = mobile ? base : Math.min(base * zoom, cw / 2)
 
       // An embed lives in whatever box the host sized the iframe to, and that
@@ -161,6 +191,10 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
 
     useEffect(() => {
       applySize()
+      // Height changes do not reach the width observer, and the desktop size
+      // now depends on the window's height.
+      window.addEventListener('resize', applySize)
+      return () => window.removeEventListener('resize', applySize)
     }, [applySize])
 
     // Keyboard navigation
@@ -286,9 +320,60 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
 
     if (pages.length === 0) return null
 
+    // A closed book sits on one half of its spread: the cover on the right, a
+    // back cover on the left. On a laptop that left the cover beside half a
+    // screen of empty page. While the book is closed, slide it half a page
+    // towards the middle; it slides back as the first spread opens.
+    const totalPages = pages.length + (isLocked ? 1 : 0)
+    const closedAtBack = totalPages % 2 === 0 && currentPage === totalPages - 1
+    const centreShift = isMobile
+      ? 0
+      : currentPage === 0
+        ? -dims.w / 2
+        : closedAtBack
+          ? dims.w / 2
+          : 0
+
+    // A spread page narrower than the design width — a short laptop window,
+    // now that the spread fits the window's height — is laid out at the design
+    // width and scaled down, as `lib/page-geometry` says every preview must be:
+    // block styles are absolute, so laying it out narrower clipped headings and
+    // paragraphs off the page. A phone keeps laying out at its own width, where
+    // text reflows at a readable size, which is what the editor's phone preview
+    // shows. Wider pages (zoomed in) also lay out at their own width, as before.
+    const scaleDown = !isMobile && dims.w < PAGE_DESIGN_WIDTH
+    const designFrame: React.CSSProperties = scaleDown
+      ? {
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: PAGE_DESIGN_WIDTH,
+          height: PAGE_DESIGN_HEIGHT,
+          transform: `scale(${pageScale(dims.w)})`,
+          transformOrigin: 'top left',
+        }
+      : { position: 'absolute', inset: 0 }
+
     return (
       <div ref={containerRef} className="w-full flex justify-center" style={{ minHeight: measured ? undefined : dims.h }}>
         {measured && (
+        <div
+          style={{
+            transform: `translateX(${centreShift}px)`,
+            transition: 'transform 700ms cubic-bezier(0.22, 1, 0.36, 1)',
+            // The library sizes the book from this box ("stretch"), not from
+            // the width it is passed, so the computed size has to be the box's.
+            // Without it a desktop spread filled the container's width whatever
+            // the window's height, and ran under the toolbar.
+            // One page wide in portrait, two in a spread.
+            width: isMobile ? dims.w : dims.w * 2,
+            maxWidth: '100%',
+          }}
+          // Full width and centring, like the container it sits in: the library
+          // sizes the book from its parent's width ("stretch"), and a wrapper
+          // that shrank to its content collapsed the book to a sliver.
+          className="flex w-full justify-center motion-reduce:transition-none"
+        >
         <HTMLFlipBook
           // Force a clean remount if the container crosses the mobile
           // breakpoint — the library won't reorient a live instance.
@@ -319,7 +404,10 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
           onInit={() => setReady(true)}
           showCover={true}
           useMouseEvents={!modalOpen}
-          className="shadow-2xl"
+          // The shadow is drawn around both halves of the spread, so while the
+          // book is closed it outlined the empty half as a pale ghost page.
+          // The pages carry their own shadows (`drawShadow`).
+          className={centreShift === 0 ? 'shadow-2xl' : ''}
           style={{}}
           startPage={0}
           drawShadow={true}
@@ -350,19 +438,21 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
                   style={{ width: dims.w, height: dims.h }}
                   onClick={(e) => handlePageClick(e, idx)}
                 >
-                  <PageRenderer
-                    page={page}
-                    bookId={book.id}
-                    theme={book.theme}
-                    hideGutter={isMobile}
-                    pageSide={pageSide}
-                  />
-                  <HotspotLayer
-                    hotspots={page.hotspots}
-                    bookId={book.id}
-                    pageNumber={idx + 1}
-                    onModalOpenChange={setModalOpen}
-                  />
+                  <div style={designFrame}>
+                    <PageRenderer
+                      page={page}
+                      bookId={book.id}
+                      theme={book.theme}
+                      hideGutter={isMobile}
+                      pageSide={pageSide}
+                    />
+                    <HotspotLayer
+                      hotspots={page.hotspots}
+                      bookId={book.id}
+                      pageNumber={idx + 1}
+                      onModalOpenChange={setModalOpen}
+                    />
+                  </div>
                 </div>
               )
             }),
@@ -388,6 +478,7 @@ export const ViewerEngine = forwardRef<ViewerEngineHandle, ViewerEngineProps>(
               : []),
           ]}
         </HTMLFlipBook>
+        </div>
         )}
       </div>
     )

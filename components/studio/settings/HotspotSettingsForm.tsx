@@ -73,7 +73,7 @@ export function HotspotSettingsForm({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider">
+        <span className="text-xs font-semibold text-studio-ink uppercase tracking-wider">
           Hotspot
         </span>
         <button
@@ -90,7 +90,7 @@ export function HotspotSettingsForm({
       >
         <div className="flex gap-2 items-center">
           <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-400">X</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-studio-ink-soft">X</span>
             <input
               type="number"
               min={0}
@@ -103,11 +103,11 @@ export function HotspotSettingsForm({
                   updateHotspot(pageId, hotspot.id, { x: Math.min(100, Math.max(0, val)) })
                 }
               }}
-              className={twMerge(inputCls, 'pl-7 text-neutral-200')}
+              className={twMerge(inputCls, 'pl-7 text-studio-ink')}
             />
           </div>
           <div className="relative flex-1">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-400">Y</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-studio-ink-soft">Y</span>
             <input
               type="number"
               min={0}
@@ -120,7 +120,7 @@ export function HotspotSettingsForm({
                   updateHotspot(pageId, hotspot.id, { y: Math.min(100, Math.max(0, val)) })
                 }
               }}
-              className={twMerge(inputCls, 'pl-7 text-neutral-200')}
+              className={twMerge(inputCls, 'pl-7 text-studio-ink')}
             />
           </div>
         </div>
@@ -146,11 +146,11 @@ export function HotspotSettingsForm({
                 'rounded-lg border px-2 py-1.5 text-left transition text-xs',
                 beaconStyle === style.id
                   ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10 text-white font-bold'
-                  : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                  : 'border-studio-line bg-studio-panel/60 text-studio-ink-soft hover:border-studio-line-strong hover:text-studio-ink'
               )}
             >
               <div className="font-semibold">{style.label}</div>
-              <div className="text-[9px] text-neutral-400 truncate">{style.desc}</div>
+              <div className="text-[9px] text-studio-ink-soft truncate">{style.desc}</div>
             </button>
           ))}
         </div>

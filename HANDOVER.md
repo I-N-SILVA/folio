@@ -180,6 +180,40 @@ reporting and no way to exercise the billing paths.
 
 ## 2. What changed most recently, and the reasoning you'd otherwise rediscover
 
+### Studio and reader UX, measured (`npm run measure:ux`, 90/90)
+
+The signed-in studio had never been looked at by anything automated.
+`npm run measure:ux` now builds the app against a local stand-in (no PostgREST
+needed), signs in, and measures reader, editor, contrast, preview and pricing
+at phone, tablet and laptop sizes. What it found and what changed:
+
+- **Editor on phones cut the page off at both edges** — a 460px page in a
+  ~330px frame, centred so its left edge could not be scrolled to. The canvas
+  now fits its frame until the author zooms by hand (`shownZoom`), with safe
+  centring. A callback ref, because the frame is not in the first render.
+- **The editor's top bar ran 273px off a 1024px screen**, so Publish could not
+  be reached on a small laptop or a landscape iPad (17px over at 1280).
+  Labels now give way to icons as the bar narrows (every icon keeps a
+  tooltip and a screen-reader name); on a phone the edition title gets the
+  room. The canvas toolbar hides spread and zoom below 1280px.
+- **Reader on short screens:** the spread was sized by width only, so at 900px
+  tall or less the sticky toolbar sat on the page and the filmstrip hid
+  behind it. The page now fits the window's height (`READER_CHROME_RESERVE`);
+  a spread page narrower than 460px is laid out at 460 and scaled, as
+  `lib/page-geometry` requires — laid out narrower it clipped 8 of 25 text
+  elements at 1280×720.
+- **Reader cover is centred** on desktop instead of sitting on the right half;
+  the book slides half a page while closed, and drops the spread shadow that
+  outlined the empty half.
+- **Studio colours are tokens.** ~590 hard-coded `neutral-*` classes became
+  `--studio-*` (plus `--studio-line-strong`); measured change is 1–3/255 on
+  average, i.e. the same look with one source. `lib/contrast-tokens.test.ts`
+  keeps new dark greys out and checks every text token against every surface.
+- "Published" was white on emerald-600 (3.65:1); it is emerald-700 (5.48:1).
+- The home page's try-it preview no longer has the reader's fixed overlays
+  (report link, riffle handle) floating over its "Save this edition" card.
+  Try-before-signup itself already worked; measured on a phone.
+
 ### Phone and web UX pass
 
 Measured in a real browser (Playwright) at 320–1440px; the signed-in studio

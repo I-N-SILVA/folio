@@ -62,8 +62,8 @@ export function SlugField({ bookId, slug }: { bookId: string; slug: string }) {
       hint="Anything already shared at the old address keeps working — it redirects here."
     >
       <div className="flex items-center gap-2">
-        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-lg border border-neutral-700/80 bg-neutral-950/60 focus-within:border-[var(--studio-select)]">
-          <span className="shrink-0 border-r border-neutral-700/80 px-2 py-2 text-xs text-neutral-400">
+        <div className="flex min-w-0 flex-1 items-center overflow-hidden rounded-lg border border-studio-line-strong/80 bg-studio-ground/60 focus-within:border-[var(--studio-select)]">
+          <span className="shrink-0 border-r border-studio-line-strong/80 px-2 py-2 text-xs text-studio-ink-soft">
             /book/
           </span>
           <input
@@ -75,7 +75,7 @@ export function SlugField({ bookId, slug }: { bookId: string; slug: string }) {
             onKeyDown={(e) => e.key === 'Enter' && rename()}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? 'slug-error' : undefined}
-            className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-neutral-100 outline-none"
+            className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-studio-ink outline-none"
           />
         </div>
         <button

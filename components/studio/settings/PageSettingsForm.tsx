@@ -169,7 +169,7 @@ export function PageSettingsForm({ page }: { page: Page }) {
 
   return (
     <div className="space-y-5">
-      <span className="text-xs font-semibold text-neutral-300 uppercase tracking-wider block">
+      <span className="text-xs font-semibold text-studio-ink uppercase tracking-wider block">
         Page Configuration
       </span>
 
@@ -211,7 +211,7 @@ export function PageSettingsForm({ page }: { page: Page }) {
               key={c.hex}
               type="button"
               onClick={() => setValue('bgColor', c.hex, { shouldDirty: true })}
-              className="flex-1 py-1 rounded border border-neutral-800 text-[10px] text-neutral-400 hover:text-white hover:border-neutral-700 transition"
+              className="flex-1 py-1 rounded border border-studio-line text-[10px] text-studio-ink-soft hover:text-white hover:border-studio-line-strong transition"
               style={{ backgroundColor: c.hex }}
             >
               <span className="bg-black/60 px-1 py-0.5 rounded text-[9px] text-white">
@@ -223,9 +223,9 @@ export function PageSettingsForm({ page }: { page: Page }) {
       </Field>
 
       {/* Page Background Image & Texture */}
-      <div className="space-y-3 pt-2 border-t border-neutral-800">
+      <div className="space-y-3 pt-2 border-t border-studio-line">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-neutral-200">
+          <label className="text-xs font-medium text-studio-ink">
             Background Photo / Texture
           </label>
           {currentBgImage && (
@@ -259,7 +259,7 @@ export function PageSettingsForm({ page }: { page: Page }) {
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-neutral-700 bg-neutral-900 text-xs font-semibold text-neutral-200 hover:text-white hover:bg-neutral-800 transition disabled:opacity-50"
+            className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-studio-line-strong bg-studio-panel text-xs font-semibold text-studio-ink hover:text-white hover:bg-studio-raised transition disabled:opacity-50"
           >
             <Upload size={12} />
             <span>{uploading ? 'Uploading…' : 'Upload photo'}</span>
@@ -267,16 +267,16 @@ export function PageSettingsForm({ page }: { page: Page }) {
           <button
             type="button"
             onClick={() => setShowAssetLibrary(true)}
-            className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-neutral-700 bg-neutral-900 text-xs font-semibold text-neutral-200 hover:bg-neutral-800 hover:text-white transition"
+            className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-studio-line-strong bg-studio-panel text-xs font-semibold text-studio-ink hover:bg-studio-raised hover:text-white transition"
           >
-            <FolderOpen size={12} className="text-neutral-400" />
+            <FolderOpen size={12} className="text-studio-ink-soft" />
             <span>Curated textures</span>
           </button>
         </div>
 
         {/* 1-Click Curated Luxury Textures */}
         <div>
-          <span className="text-[11px] text-neutral-400 block mb-1.5">Preset Textures:</span>
+          <span className="text-[11px] text-studio-ink-soft block mb-1.5">Preset Textures:</span>
           <div className="grid grid-cols-3 gap-1.5">
             {CURATED_TEXTURES.map((t) => (
               <button
@@ -287,7 +287,7 @@ export function PageSettingsForm({ page }: { page: Page }) {
                   'rounded-lg border px-2 py-1.5 text-center text-[11px] transition truncate',
                   currentBgImage === t.url
                     ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/15 text-white font-bold'
-                    : 'border-neutral-800 bg-neutral-900/70 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                    : 'border-studio-line bg-studio-panel/70 text-studio-ink-soft hover:border-studio-line-strong hover:text-studio-ink'
                 )}
               >
                 {t.label}
@@ -298,7 +298,7 @@ export function PageSettingsForm({ page }: { page: Page }) {
 
         {/* Image Controls if Image is Active */}
         {currentBgImage && (
-          <div className="space-y-3 pt-2 border-t border-neutral-800/60">
+          <div className="space-y-3 pt-2 border-t border-studio-line/60">
             <div className="grid grid-cols-2 gap-3">
               <Field label="Fit Mode">
                 <select {...register('bgFit')} className={selectCls}>
@@ -355,7 +355,7 @@ export function PageSettingsForm({ page }: { page: Page }) {
                 {...register('overlayOpacity', { valueAsNumber: true })}
                 className="w-full accent-[var(--studio-select)] cursor-pointer"
               />
-              <span className="text-[10px] text-neutral-400">
+              <span className="text-[10px] text-studio-ink-soft">
                 Darkens background to ensure headlines and body copy remain 100% legible.
               </span>
             </Field>
@@ -374,7 +374,7 @@ export function PageSettingsForm({ page }: { page: Page }) {
       </div>
 
       {/* Tactile Paper Texture */}
-      <div className="pt-2 border-t border-neutral-800">
+      <div className="pt-2 border-t border-studio-line">
         <Field label="Paper Finish & Tactile Noise">
           <select {...register('paperTexture')} className={selectCls}>
             <option value="none">Smooth Standard</option>

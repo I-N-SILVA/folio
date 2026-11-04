@@ -19,11 +19,11 @@ export function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-400">
+      <label className="text-[11px] font-semibold uppercase tracking-[0.08em] text-studio-ink-soft">
         {label}
       </label>
       {children}
-      {hint && <p className="text-[11px] leading-4 text-neutral-400">{hint}</p>}
+      {hint && <p className="text-[11px] leading-4 text-studio-ink-soft">{hint}</p>}
     </div>
   )
 }
@@ -34,7 +34,7 @@ export function Field({
  * ties the inspector to the selection highlight on the canvas.
  */
 const controlBase =
-  'w-full rounded-lg border border-neutral-700/80 bg-neutral-950/60 px-2.5 py-2 text-sm text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 hover:border-neutral-600 focus:border-[var(--studio-select)] focus:ring-2 focus:ring-[var(--studio-select)]/25'
+  'w-full rounded-lg border border-studio-line-strong/80 bg-studio-ground/60 px-2.5 py-2 text-sm text-studio-ink outline-none transition-colors placeholder:text-studio-ink-soft hover:border-studio-line-strong focus:border-[var(--studio-select)] focus:ring-2 focus:ring-[var(--studio-select)]/25'
 
 export const inputCls = controlBase
 
@@ -49,13 +49,13 @@ export const selectCls = twMerge(controlBase, 'studio-select appearance-none pr-
 
 /** Colour inputs render as a bevelled OS swatch unless the chrome is stripped. */
 export const colorInputCls =
-  'h-9 w-9 shrink-0 cursor-pointer rounded-lg border border-neutral-700/80 bg-neutral-950/60 p-1 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0'
+  'h-9 w-9 shrink-0 cursor-pointer rounded-lg border border-studio-line-strong/80 bg-studio-ground/60 p-1 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0'
 
 /** Groups related fields so a long inspector reads as sections, not a list. */
 export function FieldGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 border-b border-neutral-800 pb-4 last:border-0 last:pb-0">
-      <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+    <section className="flex flex-col gap-3 border-b border-studio-line pb-4 last:border-0 last:pb-0">
+      <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-studio-ink-soft">
         {title}
       </h3>
       {children}
@@ -79,13 +79,13 @@ export function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-3 rounded-lg border border-neutral-700/80 bg-neutral-950/60 px-2.5 py-2 text-left text-sm text-neutral-200 transition-colors hover:border-neutral-600"
+      className="flex w-full items-center justify-between gap-3 rounded-lg border border-studio-line-strong/80 bg-studio-ground/60 px-2.5 py-2 text-left text-sm text-studio-ink transition-colors hover:border-studio-line-strong"
     >
       <span>{label}</span>
       <span
         className={twMerge(
           'relative h-5 w-9 shrink-0 rounded-full transition-colors',
-          checked ? 'bg-[var(--studio-select)]' : 'bg-neutral-700'
+          checked ? 'bg-[var(--studio-select)]' : 'bg-studio-raised-2'
         )}
       >
         <span
@@ -116,7 +116,7 @@ export function IconPicker({ value, onChange }: { value?: string; onChange: (nam
               'flex aspect-square items-center justify-center rounded-lg border transition-colors',
               active
                 ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/20 text-[var(--studio-select)]'
-                : 'border-neutral-700/80 bg-neutral-950/60 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200'
+                : 'border-studio-line-strong/80 bg-studio-ground/60 text-studio-ink-soft hover:border-studio-line-strong hover:text-studio-ink'
             )}
           >
             <Ic size={16} />

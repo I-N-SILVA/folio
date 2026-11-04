@@ -74,7 +74,7 @@ export function MobileEditorDock() {
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-1 border-t border-neutral-800 bg-neutral-900 px-2 py-1.5 lg:hidden">
+      <div className="flex shrink-0 items-center gap-1 border-t border-studio-line bg-studio-panel px-2 py-1.5 lg:hidden">
         <DockTab
           active={panel === 'pages'}
           onClick={() => setPanel(panel === 'pages' ? null : 'pages')}
@@ -88,11 +88,11 @@ export function MobileEditorDock() {
             onClick={() => closeOnPick(Math.max(0, currentPageIndex - 1))}
             disabled={currentPageIndex === 0}
             aria-label="Previous page"
-            className="grid h-9 w-9 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white disabled:opacity-30"
+            className="grid h-9 w-9 place-items-center rounded-md text-studio-ink-soft transition-colors hover:bg-studio-raised hover:text-white disabled:opacity-30"
           >
             ‹
           </button>
-          <span className="min-w-[54px] text-center text-xs font-semibold tabular-nums text-neutral-300">
+          <span className="min-w-[54px] text-center text-xs font-semibold tabular-nums text-studio-ink">
             {currentPageIndex + 1} / {total}
           </span>
           <button
@@ -100,7 +100,7 @@ export function MobileEditorDock() {
             onClick={() => closeOnPick(Math.min(total - 1, currentPageIndex + 1))}
             disabled={currentPageIndex >= total - 1}
             aria-label="Next page"
-            className="grid h-9 w-9 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white disabled:opacity-30"
+            className="grid h-9 w-9 place-items-center rounded-md text-studio-ink-soft transition-colors hover:bg-studio-raised hover:text-white disabled:opacity-30"
           >
             ›
           </button>
@@ -119,7 +119,7 @@ export function MobileEditorDock() {
           onClose={() => setPanel(null)}
           title="Pages"
           variant="sheet"
-          className="bg-neutral-900 text-neutral-100"
+          className="bg-studio-panel text-studio-ink"
         >
           <SheetHeader title="Pages" />
           <div className="h-[62vh]">
@@ -133,7 +133,7 @@ export function MobileEditorDock() {
           onClose={() => setPanel(null)}
           title="Edit selection"
           variant="sheet"
-          className="bg-neutral-900 text-neutral-100"
+          className="bg-studio-panel text-studio-ink"
         >
           <SheetHeader title="Edit" />
           <div className="h-[62vh]">
@@ -166,7 +166,7 @@ function DockTab({
         'flex min-h-[44px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors',
         active
           ? 'bg-[var(--studio-select)]/20 text-white'
-          : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'
+          : 'text-studio-ink-soft hover:bg-studio-raised hover:text-studio-ink'
       )}
     >
       {icon}
@@ -177,9 +177,9 @@ function DockTab({
 
 function SheetHeader({ title }: { title: string }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-4 py-3">
-      <span className="absolute left-1/2 top-1.5 h-1 w-10 -translate-x-1/2 rounded-full bg-neutral-700" />
-      <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400">
+    <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-studio-line bg-studio-panel px-4 py-3">
+      <span className="absolute left-1/2 top-1.5 h-1 w-10 -translate-x-1/2 rounded-full bg-studio-raised-2" />
+      <span className="text-[11px] font-bold uppercase tracking-widest text-studio-ink-soft">
         {title}
       </span>
     </div>

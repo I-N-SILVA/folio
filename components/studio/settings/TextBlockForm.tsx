@@ -67,11 +67,11 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
                 'rounded-lg border px-2 py-1.5 text-left transition text-xs',
                 currentVariant === v.id
                   ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/10 text-white font-bold'
-                  : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
+                  : 'border-studio-line bg-studio-panel/60 text-studio-ink-soft hover:border-studio-line-strong hover:text-studio-ink'
               )}
             >
               <div className="font-semibold capitalize">{v.label}</div>
-              <div className="text-[9px] text-neutral-400 truncate">{v.desc}</div>
+              <div className="text-[9px] text-studio-ink-soft truncate">{v.desc}</div>
             </button>
           ))}
         </div>
@@ -152,7 +152,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
                 'px-2.5 py-1 rounded-md text-[11px] font-semibold border transition',
                 currentColor === c.color
                   ? 'border-[var(--studio-select)] bg-[var(--studio-select)]/20 text-white'
-                  : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
+                  : 'border-studio-line bg-studio-panel text-studio-ink-soft hover:text-white'
               )}
             >
               {c.label}
@@ -165,7 +165,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
       <Field label="Card Highlight Box">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-[10px] text-neutral-400 block mb-1">Background Fill</label>
+            <label className="text-[10px] text-studio-ink-soft block mb-1">Background Fill</label>
             <select
               value={currentBg}
               onChange={(e) => {
@@ -184,7 +184,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
           </div>
 
           <div>
-            <label className="text-[10px] text-neutral-400 block mb-1">Padding & Inset</label>
+            <label className="text-[10px] text-studio-ink-soft block mb-1">Padding & Inset</label>
             <select
               value={currentPadding}
               onChange={(e) => {
@@ -204,7 +204,7 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
 
       {/* Alignment Bar */}
       <Field label="Alignment">
-        <div className="flex items-center gap-1 bg-neutral-950 p-1 rounded-lg border border-neutral-800">
+        <div className="flex items-center gap-1 bg-studio-ground p-1 rounded-lg border border-studio-line">
           {[
             { id: 'left', icon: AlignLeft, label: 'Left' },
             { id: 'center', icon: AlignCenter, label: 'Center' },
@@ -220,8 +220,8 @@ export function TextBlockForm({ block, pageId }: { block: TextBlock; pageId: str
               className={twMerge(
                 'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-semibold transition',
                 currentAlign === id
-                  ? 'bg-neutral-800 text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-neutral-300'
+                  ? 'bg-studio-raised text-white shadow-sm'
+                  : 'text-studio-ink-soft hover:text-studio-ink'
               )}
             >
               <Icon size={13} />

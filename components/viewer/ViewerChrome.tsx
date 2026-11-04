@@ -88,11 +88,21 @@ function luminance(hex: string): number {
 export function ViewerChrome({
   book,
   embed = false,
+  inline = false,
   lockedCount = 0,
   showBadge = true,
 }: {
   book: Book
   embed?: boolean
+  /**
+   * Rendered inside another page — the home page's try-it preview — rather
+   * than as the page. Leaves out what is pinned to the screen (the page riffle,
+   * the report link, keyboard hints): fixed to the viewport, they floated over
+   * whatever the host page had there, and the riffle handle sat on top of the
+   * "Save this edition" card. The preview is not published, so there is
+   * nothing to report either.
+   */
+  inline?: boolean
   /** Pages the server withheld behind the lead gate. */
   lockedCount?: number
   /**
@@ -336,7 +346,7 @@ export function ViewerChrome({
         </div>
       )}
 
-      {!embed && (
+      {!embed && !inline && (
         <ForeEdge
           total={navigablePages}
           current={currentPage}
@@ -543,7 +553,7 @@ export function ViewerChrome({
           )}
       </div>
 
-      {!embed && <KeyboardHints />}
+      {!embed && !inline && <KeyboardHints />}
 
       {/* Accessible page announcements */}
       <div className="sr-only" aria-live="polite">
@@ -602,6 +612,7 @@ export function ViewerChrome({
       {/* "Report" is on every edition, white-labelled ones included: it is how a
           reader tells us an edition is a phishing page, and an abuser is the
           last person who would leave it switched on if it were optional. */}
+      {!inline && (
       <div className="fixed bottom-4 right-4 z-[9000] flex items-center gap-2">
         <a
           href={`/report?edition=${encodeURIComponent(book.slug)}`}
@@ -622,6 +633,7 @@ export function ViewerChrome({
           </a>
         )}
       </div>
+      )}
     </div>
   )
 }

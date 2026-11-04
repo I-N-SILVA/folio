@@ -63,10 +63,10 @@ export function QRCodeStudioModal({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-neutral-800 bg-[#0a0a0c] text-white shadow-2xl"
+            className="relative z-10 flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-studio-line bg-[#0a0a0c] text-white shadow-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-800 p-6">
+            <div className="flex items-center justify-between border-b border-studio-line p-6">
               <div className="flex items-center gap-3">
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-white">
                   <QrCode size={20} />
@@ -87,7 +87,7 @@ export function QRCodeStudioModal({
             {/* Content Body */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
               {/* Live Preview Card */}
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-950/80 p-6 text-center">
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-studio-line bg-studio-ground/80 p-6 text-center">
                 <div
                   ref={qrRef}
                   className={`flex flex-col items-center justify-center rounded-2xl bg-white p-6 text-black shadow-xl transition-all ${
@@ -165,7 +165,7 @@ export function QRCodeStudioModal({
                         className={`rounded-xl border p-2.5 text-left text-xs font-medium transition-colors ${
                           frameStyle === f.id
                             ? 'border-white bg-white/10 text-white'
-                            : 'border-neutral-800 bg-neutral-900/60 text-zinc-400 hover:text-white'
+                            : 'border-studio-line bg-studio-panel/60 text-zinc-400 hover:text-white'
                         }`}
                       >
                         {f.label}
@@ -180,17 +180,17 @@ export function QRCodeStudioModal({
                     type="text"
                     value={ctaText}
                     onChange={(e) => setCtaText(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs text-white outline-none focus:border-zinc-500"
+                    className="w-full rounded-xl border border-studio-line bg-studio-panel px-3 py-2 text-xs text-white outline-none focus:border-zinc-500"
                   />
 
-                  <div className="mt-4 rounded-xl border border-neutral-800/80 bg-neutral-950 p-3 text-[11px] text-zinc-400 flex items-start gap-2">
+                  <div className="mt-4 rounded-xl border border-studio-line/80 bg-studio-ground p-3 text-[11px] text-zinc-400 flex items-start gap-2">
                     <Printer size={14} className="shrink-0 text-zinc-500 mt-0.5" />
                     <span>Vector SVGs remain tack-sharp at any print size from 2x2cm packaging stickers to billboard posters.</span>
                   </div>
                 </div>
 
                 {/* Download Actions */}
-                <div className="space-y-2 pt-2 border-t border-neutral-800">
+                <div className="space-y-2 pt-2 border-t border-studio-line">
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDownload('svg')}
@@ -201,7 +201,7 @@ export function QRCodeStudioModal({
                     </button>
                     <button
                       onClick={() => handleDownload('png')}
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-800 py-2.5 text-xs font-semibold text-white transition hover:bg-neutral-700"
+                      className="flex-1 flex items-center justify-center gap-1.5 rounded-full border border-studio-line-strong bg-studio-raised py-2.5 text-xs font-semibold text-white transition hover:bg-studio-raised-2"
                     >
                       <Download size={13} />
                       Download PNG (300 DPI)

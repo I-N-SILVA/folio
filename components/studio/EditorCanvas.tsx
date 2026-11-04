@@ -122,7 +122,7 @@ function SortableBlock({
       {/* In-Canvas Floating Action Bar */}
       <div
         className={twMerge(
-          'absolute -top-3.5 left-2 z-50 flex items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 py-0.5 text-white shadow-xl border border-neutral-700 transition-all select-none',
+          'absolute -top-3.5 left-2 z-50 flex items-center gap-0.5 rounded-full bg-studio-panel px-1.5 py-0.5 text-white shadow-xl border border-studio-line-strong transition-all select-none',
           isAnchor
             ? 'opacity-100 scale-100'
             : 'opacity-0 scale-95 pointer-events-none group-hover/block:opacity-100 group-hover/block:scale-100 group-hover/block:pointer-events-auto'
@@ -136,12 +136,12 @@ function SortableBlock({
           tabIndex={0}
           aria-label={onCanvasDragStart ? 'Drag to move block' : 'Drag to reorder block'}
           title={onCanvasDragStart ? 'Drag to move — hold shift to ignore snapping' : 'Drag to reorder block'}
-          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 cursor-grab active:cursor-grabbing"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-studio-ink-soft hover:text-white hover:bg-studio-raised cursor-grab active:cursor-grabbing"
         >
           <GripVertical size={12} />
         </div>
 
-        <span className="h-3 w-px bg-neutral-700 mx-0.5" />
+        <span className="h-3 w-px bg-studio-raised-2 mx-0.5" />
 
         {/* Move Up */}
         <button
@@ -152,7 +152,7 @@ function SortableBlock({
             onMoveUp?.()
           }}
           title="Move block up"
-          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-studio-ink hover:text-white hover:bg-studio-raised disabled:opacity-30 disabled:hover:bg-transparent"
         >
           <ArrowUp size={11} />
         </button>
@@ -166,12 +166,12 @@ function SortableBlock({
             onMoveDown?.()
           }}
           title="Move block down"
-          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-studio-ink hover:text-white hover:bg-studio-raised disabled:opacity-30 disabled:hover:bg-transparent"
         >
           <ArrowDown size={11} />
         </button>
 
-        <span className="h-3 w-px bg-neutral-700 mx-0.5" />
+        <span className="h-3 w-px bg-studio-raised-2 mx-0.5" />
 
         {/* Duplicate */}
         <button
@@ -181,7 +181,7 @@ function SortableBlock({
             onDuplicate?.()
           }}
           title="Duplicate block"
-          className="flex h-5 w-5 items-center justify-center rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800"
+          className="flex h-5 w-5 items-center justify-center rounded-full text-studio-ink hover:text-white hover:bg-studio-raised"
         >
           <Copy size={11} />
         </button>
@@ -199,7 +199,7 @@ function SortableBlock({
           <Trash2 size={11} />
         </button>
 
-        <span className="h-3 w-px bg-neutral-700 mx-0.5" />
+        <span className="h-3 w-px bg-studio-raised-2 mx-0.5" />
 
         {/* Block Type Badge */}
         <span className="px-1 text-[9px] font-bold uppercase tracking-wider text-[var(--studio-select)]">
@@ -220,7 +220,7 @@ function SortableBlock({
             onInsertAfter?.()
           }}
           title="Insert block below"
-          className="flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold text-neutral-300 shadow-md border border-neutral-700 hover:bg-[var(--studio-select)] hover:text-white hover:border-transparent transition-all scale-90 hover:scale-100"
+          className="flex items-center gap-1 rounded-full bg-studio-panel px-2 py-0.5 text-[10px] font-semibold text-studio-ink shadow-md border border-studio-line-strong hover:bg-[var(--studio-select)] hover:text-white hover:border-transparent transition-all scale-90 hover:scale-100"
         >
           <Plus size={10} strokeWidth={2.5} />
           Add below
@@ -267,8 +267,36 @@ export function EditorCanvas() {
    */
   const [viewMode, setViewMode] = useState<'page' | 'spread'>('page')
   const [cursorCoords, setCursorCoords] = useState<{ x: number; y: number } | null>(null)
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoomState] = useState(1)
   const canvasRef = useRef<HTMLDivElement>(null)
+
+  /**
+   * The canvas fits its frame until the author zooms by hand.
+   *
+   * On a phone the page is 460 design pixels wide inside a ~330px frame, and it
+   * was drawn at 100% regardless — text cut off at both edges, and the left
+   * edge unreachable because the frame centred it. Now the shown zoom is the
+   * smaller of what was asked for and what fits; once the author uses the zoom
+   * controls, what they ask for wins and the frame scrolls.
+   */
+  // A callback ref, not an effect: the frame is not in the first render (the
+  // editor shows a placeholder until the book is loaded), and an effect that
+  // ran then would never see it.
+  const [areaWidth, setAreaWidth] = useState<number | null>(null)
+  const [zoomedByHand, setZoomedByHand] = useState(false)
+  const areaObserver = useRef<ResizeObserver | null>(null)
+  const areaRef = useCallback((el: HTMLDivElement | null) => {
+    areaObserver.current?.disconnect()
+    areaObserver.current = null
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(([entry]) => setAreaWidth(entry.contentRect.width))
+    observer.observe(el)
+    areaObserver.current = observer
+  }, [])
+  const setZoom = (next: number | ((z: number) => number)) => {
+    setZoomedByHand(true)
+    setZoomState(next)
+  }
 
   const currentPage = book?.pages?.[currentPageIndex]
 
@@ -298,15 +326,21 @@ export function EditorCanvas() {
     }
   }
 
-  const zoomIndex = ZOOM_STEPS.indexOf(zoom)
-  const prevStep = ZOOM_STEPS[Math.max(0, (zoomIndex === -1 ? 2 : zoomIndex) - 1)]
-  const nextStep = ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, (zoomIndex === -1 ? 2 : zoomIndex) + 1)]
   const isMobile = viewportMode === 'mobile'
-  const pageWidth = isMobile ? 380 : Math.round(PAGE_DESIGN_WIDTH * zoom)
-  const pageHeight = isMobile ? 740 : Math.round(pageWidth * PAGE_RATIO)
-
   // A phone reader gets one page at a time, so a spread there would be a lie.
   const spreadView = viewMode === 'spread' && !isMobile
+  const fitZoom = areaWidth
+    ? Math.min(1, areaWidth / (PAGE_DESIGN_WIDTH * (spreadView ? 2 : 1)))
+    : 1
+  const shownZoom = zoomedByHand ? zoom : Math.min(zoom, fitZoom)
+  // The device preview keeps its phone proportions, scaled down to fit too.
+  const deviceScale = areaWidth ? Math.min(1, (areaWidth - 36) / 380) : 1
+  const pageWidth = isMobile ? Math.round(380 * deviceScale) : Math.round(PAGE_DESIGN_WIDTH * shownZoom)
+  const pageHeight = isMobile ? Math.round(740 * deviceScale) : Math.round(pageWidth * PAGE_RATIO)
+  // Step from what is on screen, which after fitting is often between steps.
+  const prevStep = [...ZOOM_STEPS].reverse().find((z) => z < shownZoom - 0.001) ?? ZOOM_STEPS[0]
+  const nextStep =
+    ZOOM_STEPS.find((z) => z > shownZoom + 0.001) ?? ZOOM_STEPS[ZOOM_STEPS.length - 1]
   const pages = book?.pages ?? []
   const spread = spreadFor(currentPageIndex, pages.length)
   const facingIndex = spreadView
@@ -671,26 +705,32 @@ export function EditorCanvas() {
 
   if (!book || !currentPage) {
     return (
-      <div className="flex-1 flex items-center justify-center text-neutral-600 text-sm">
+      <div className="flex-1 flex items-center justify-center text-studio-ink-soft text-sm">
         No page selected
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-neutral-900">
+    <div className="flex flex-col h-full overflow-hidden bg-studio-panel">
       {/* Canvas toolbar */}
-      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-neutral-800 px-3">
-        <span className="flex items-center gap-2 text-xs text-neutral-400">
-          <span className="font-medium text-neutral-200">Page {currentPage.page_number}</span>
-          <span className="text-neutral-600">/</span>
+      {/* Scrolls sideways rather than squeezing: squeezed, the labels wrapped
+          onto two and three lines even on a laptop. Measured, and sized so it
+          does not need to: below 1280px the spread and zoom groups are hidden
+          (the canvas fits itself, and a spread in a 464px canvas is two
+          unreadable pages), the hotspot buttons are icons until 1536px, and on
+          a phone the preview group goes too. */}
+      <div className="flex h-11 shrink-0 items-center gap-2 overflow-x-auto border-b border-studio-line px-3 [scrollbar-width:none]">
+        <span className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs text-studio-ink-soft">
+          <span className="font-medium text-studio-ink">Page {currentPage.page_number}</span>
+          <span className="text-studio-ink-soft">/</span>
           <span className="capitalize">{currentPage.layout}</span>
         </span>
 
         <div className="flex-1" />
 
         {/* Viewport Mode Switcher: Desktop vs Mobile */}
-        <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+        <div className="hidden shrink-0 items-center rounded-lg border border-studio-line bg-studio-ground/60 p-0.5 sm:flex">
           <button
             onClick={() => setViewportMode('desktop')}
             aria-pressed={viewportMode === 'desktop'}
@@ -698,12 +738,12 @@ export function EditorCanvas() {
             className={twMerge(
               'flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition',
               viewportMode === 'desktop'
-                ? 'bg-neutral-800 text-white font-semibold shadow-sm'
-                : 'text-neutral-400 hover:text-neutral-200'
+                ? 'bg-studio-raised text-white font-semibold shadow-sm'
+                : 'text-studio-ink-soft hover:text-studio-ink'
             )}
           >
             <Monitor size={13} />
-            <span className="hidden sm:inline">Desktop</span>
+            <span className="sr-only 2xl:not-sr-only">Desktop</span>
           </button>
           <button
             onClick={() => setViewportMode('mobile')}
@@ -712,12 +752,12 @@ export function EditorCanvas() {
             className={twMerge(
               'flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition',
               viewportMode === 'mobile'
-                ? 'bg-neutral-800 text-white font-semibold shadow-sm'
-                : 'text-neutral-400 hover:text-neutral-200'
+                ? 'bg-studio-raised text-white font-semibold shadow-sm'
+                : 'text-studio-ink-soft hover:text-studio-ink'
             )}
           >
             <Smartphone size={13} />
-            <span className="hidden sm:inline">Mobile</span>
+            <span className="sr-only 2xl:not-sr-only">Mobile</span>
           </button>
         </div>
 
@@ -726,7 +766,7 @@ export function EditorCanvas() {
             rendered into a flex column with no position at all. This is the
             page saying which of the two it actually is. */}
         {!isMobile && currentPage && (
-          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+          <div className="flex shrink-0 items-center rounded-lg border border-studio-line bg-studio-ground/60 p-0.5">
             {(['flow', 'canvas'] as const).map((mode) => {
               const active = mode === 'canvas' ? isCanvasPage : !isCanvasPage
               return (
@@ -742,12 +782,12 @@ export function EditorCanvas() {
                   className={twMerge(
                     'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium capitalize transition',
                     active
-                      ? 'bg-neutral-800 font-semibold text-white shadow-sm'
-                      : 'text-neutral-400 hover:text-neutral-200'
+                      ? 'bg-studio-raised font-semibold text-white shadow-sm'
+                      : 'text-studio-ink-soft hover:text-studio-ink'
                   )}
                 >
                   {mode === 'canvas' ? <Move size={13} /> : <Rows3 size={13} />}
-                  <span className="hidden sm:inline">{mode}</span>
+                  <span className="sr-only 2xl:not-sr-only">{mode}</span>
                 </button>
               )
             })}
@@ -758,7 +798,7 @@ export function EditorCanvas() {
             the same question — what am I looking at — and the reader's own
             answer depends on both. */}
         {!isMobile && (
-          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+          <div className="hidden shrink-0 items-center rounded-lg border border-studio-line bg-studio-ground/60 p-0.5 xl:flex">
             <button
               onClick={() => setViewMode('page')}
               aria-pressed={viewMode === 'page'}
@@ -766,12 +806,12 @@ export function EditorCanvas() {
               className={twMerge(
                 'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition',
                 viewMode === 'page'
-                  ? 'bg-neutral-800 font-semibold text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-neutral-200'
+                  ? 'bg-studio-raised font-semibold text-white shadow-sm'
+                  : 'text-studio-ink-soft hover:text-studio-ink'
               )}
             >
               <FileText size={13} />
-              <span className="hidden sm:inline">Page</span>
+              <span className="sr-only 2xl:not-sr-only">Page</span>
             </button>
             <button
               onClick={() => {
@@ -785,39 +825,41 @@ export function EditorCanvas() {
               className={twMerge(
                 'flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition',
                 viewMode === 'spread'
-                  ? 'bg-neutral-800 font-semibold text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-neutral-200'
+                  ? 'bg-studio-raised font-semibold text-white shadow-sm'
+                  : 'text-studio-ink-soft hover:text-studio-ink'
               )}
             >
               <BookOpen size={13} />
-              <span className="hidden sm:inline">Spread</span>
+              <span className="sr-only 2xl:not-sr-only">Spread</span>
             </button>
           </div>
         )}
 
         {/* Zoom (Desktop only) */}
         {!isMobile && (
-          <div className="flex items-center rounded-lg border border-neutral-800 bg-neutral-950/60 p-0.5">
+          <div className="hidden shrink-0 items-center rounded-lg border border-studio-line bg-studio-ground/60 p-0.5 xl:flex">
             <button
               onClick={() => setZoom(prevStep)}
-              disabled={zoom <= ZOOM_STEPS[0]}
+              disabled={shownZoom <= ZOOM_STEPS[0]}
               aria-label="Zoom out"
-              className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
+              title="Zoom out"
+              className="grid h-7 w-7 place-items-center rounded-md text-studio-ink-soft transition-colors hover:bg-studio-raised hover:text-studio-ink disabled:opacity-30 disabled:hover:bg-transparent"
             >
               <Minimize2 size={13} />
             </button>
             <button
               onClick={() => setZoom(1)}
-              aria-label={`Zoom ${Math.round(zoom * 100)} percent — reset to 100 percent`}
-              className="min-w-[46px] rounded-md px-1 py-1 text-[11px] font-semibold tabular-nums text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-neutral-100"
+              aria-label={`Zoom ${Math.round(shownZoom * 100)} percent — reset to 100 percent`}
+              className="min-w-[46px] rounded-md px-1 py-1 text-[11px] font-semibold tabular-nums text-studio-ink transition-colors hover:bg-studio-raised hover:text-studio-ink"
             >
-              {Math.round(zoom * 100)}%
+              {Math.round(shownZoom * 100)}%
             </button>
             <button
               onClick={() => setZoom(nextStep)}
-              disabled={zoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]}
+              disabled={shownZoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]}
               aria-label="Zoom in"
-              className="grid h-7 w-7 place-items-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-100 disabled:opacity-30 disabled:hover:bg-transparent"
+              title="Zoom in"
+              className="grid h-7 w-7 place-items-center rounded-md text-studio-ink-soft transition-colors hover:bg-studio-raised hover:text-studio-ink disabled:opacity-30 disabled:hover:bg-transparent"
             >
               <Maximize2 size={13} />
             </button>
@@ -830,29 +872,34 @@ export function EditorCanvas() {
           aria-pressed={showGuides}
           title={showGuides ? 'Hide alignment guidelines' : 'Show alignment guidelines'}
           className={twMerge(
-            'grid h-8 w-8 place-items-center rounded-lg border text-xs transition-colors',
+            'grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-xs transition-colors',
             showGuides
               ? 'border-cyan-500/60 bg-cyan-500/10 text-cyan-400'
-              : 'border-neutral-800 bg-neutral-950/60 text-neutral-400 hover:text-neutral-100'
+              : 'border-studio-line bg-studio-ground/60 text-studio-ink-soft hover:text-studio-ink'
           )}
         >
           <Grid3X3 size={14} />
         </button>
 
-        <span className="h-5 w-px bg-neutral-800" aria-hidden="true" />
+        <span className="h-5 w-px bg-studio-raised" aria-hidden="true" />
 
         <button
           onClick={() => setHotspotMode(!hotspotMode)}
           aria-pressed={hotspotMode}
+          title={hotspotMode ? 'Click the page to place a pin' : 'Add a hotspot pin to this page'}
           className={twMerge(
-            'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
+            'flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
             hotspotMode
               ? 'bg-amber-400 text-amber-950 font-bold border border-amber-500 shadow-md'
-              : 'border border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800 hover:text-white'
+              : 'border border-studio-line-strong bg-studio-panel text-studio-ink hover:bg-studio-raised hover:text-white'
           )}
         >
           <Crosshair size={13} />
-          {hotspotMode ? 'Click page to place pin' : 'Add hotspot'}
+          {/* The instruction stays visible while placing: it is the only thing
+              that says what the next click does. */}
+          <span className={hotspotMode ? '' : 'sr-only 2xl:not-sr-only'}>
+            {hotspotMode ? 'Click page to place pin' : 'Add hotspot'}
+          </span>
         </button>
 
         {/* AI Hotspot Detector */}
@@ -861,24 +908,31 @@ export function EditorCanvas() {
           onClick={handleAutoDetect}
           disabled={isDetecting}
           title="Auto-detect interactive product pins"
-          className="flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-xs font-semibold text-neutral-200 transition-colors hover:bg-neutral-800 hover:text-white disabled:opacity-40"
+          className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-studio-line-strong bg-studio-panel px-2.5 py-1.5 text-xs font-semibold text-studio-ink transition-colors hover:bg-studio-raised hover:text-white disabled:opacity-40"
         >
           {isDetecting ? (
-            <Loader2 size={13} className="animate-spin text-neutral-400" />
+            <Loader2 size={13} className="animate-spin text-studio-ink-soft" />
           ) : (
-            <Crosshair size={13} className="text-neutral-400" />
+            <Crosshair size={13} className="text-studio-ink-soft" />
           )}
-          {isDetecting ? 'Detecting…' : 'Auto-detect pins'}
+          <span className="sr-only 2xl:not-sr-only">
+            {isDetecting ? 'Detecting…' : 'Auto-detect pins'}
+          </span>
         </button>
       </div>
 
       {/* Canvas area */}
-      <div className="flex-1 overflow-auto bg-[radial-gradient(#232323_1px,transparent_1px)] p-8 [background-size:22px_22px] flex items-center justify-center">
+      {/* Safe centring: a page wider than the frame starts at its left edge,
+          so it can be scrolled to, instead of being cut off on both sides. */}
+      <div
+        ref={areaRef}
+        className="flex-1 overflow-auto bg-[radial-gradient(#232323_1px,transparent_1px)] p-3 sm:p-8 [background-size:22px_22px] flex items-center-safe justify-center-safe"
+      >
         {/* Mobile Device Bezel Frame if in mobile mode */}
-        <div className={twMerge('transition-all duration-300', isMobile && 'p-3 bg-neutral-950 rounded-[44px] border-[6px] border-neutral-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] ring-1 ring-neutral-700/50')}>
+        <div className={twMerge('transition-all duration-300', isMobile && 'p-3 bg-studio-ground rounded-[44px] border-[6px] border-studio-line shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] ring-1 ring-studio-line-strong/50')}>
           {isMobile && (
-            <div className="w-24 h-4 bg-neutral-800 rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="w-2.5 h-2.5 bg-neutral-900 rounded-full" />
+            <div className="w-24 h-4 bg-studio-raised rounded-full mx-auto mb-2 flex items-center justify-center">
+              <span className="w-2.5 h-2.5 bg-studio-panel rounded-full" />
             </div>
           )}
 
@@ -957,7 +1011,7 @@ export function EditorCanvas() {
                   🎯 Click anywhere to drop beacon
                 </p>
                 {cursorCoords && (
-                  <span className="rounded bg-neutral-950/80 px-2 py-0.5 text-[10px] font-mono text-amber-300 shadow-md">
+                  <span className="rounded bg-studio-ground/80 px-2 py-0.5 text-[10px] font-mono text-amber-300 shadow-md">
                     X: {cursorCoords.x}% · Y: {cursorCoords.y}%
                   </span>
                 )}
@@ -970,11 +1024,11 @@ export function EditorCanvas() {
                 a fourth surface. */}
             {currentPage.blocks.length === 0 && !hotspotMode && (
               <div className="absolute inset-4 z-20 flex flex-col items-center justify-center p-6 text-center">
-                <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-neutral-800 bg-neutral-900 text-[var(--studio-select)] shadow-md">
+                <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-studio-line bg-studio-panel text-[var(--studio-select)] shadow-md">
                   <LayoutTemplate size={22} />
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-200">This page is empty</h3>
-                <p className="mt-1 mb-5 max-w-xs text-xs text-neutral-400">
+                <h3 className="text-sm font-semibold text-studio-ink">This page is empty</h3>
+                <p className="mt-1 mb-5 max-w-xs text-xs text-studio-ink-soft">
                   Add a block, or start from a layout.
                 </p>
                 <button
@@ -1073,9 +1127,9 @@ export function EditorCanvas() {
                 />
                 
                 {/* Hover Peek */}
-                <div className="absolute left-1/2 bottom-full mb-3 -translate-x-1/2 w-48 p-3 bg-neutral-900 text-white rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all origin-bottom z-40">
+                <div className="absolute left-1/2 bottom-full mb-3 -translate-x-1/2 w-48 p-3 bg-studio-panel text-white rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 transition-all origin-bottom z-40">
                   <div className="text-xs font-bold mb-1 truncate">{hotspot.modal?.title || hotspot.label || 'Untitled Hotspot'}</div>
-                  <div className="text-[10px] text-neutral-400 line-clamp-2">{hotspot.modal?.body || 'No description provided.'}</div>
+                  <div className="text-[10px] text-studio-ink-soft line-clamp-2">{hotspot.modal?.body || 'No description provided.'}</div>
                   {/* Triangle pointer */}
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900" />
                 </div>
@@ -1110,11 +1164,11 @@ export function EditorCanvas() {
             <div
               style={{ width: pageWidth, height: pageHeight }}
               className={twMerge(
-                'grid place-items-center rounded-[3px] border border-dashed border-neutral-800 bg-neutral-950/40 text-center',
+                'grid place-items-center rounded-[3px] border border-dashed border-studio-line bg-studio-ground/40 text-center',
                 currentSide === 'right' ? 'order-first' : ''
               )}
             >
-              <p className="max-w-[70%] text-[11px] leading-4 text-neutral-600">
+              <p className="max-w-[70%] text-[11px] leading-4 text-studio-ink-soft">
                 {currentPageIndex === 0
                   ? 'The cover stands alone — readers see it by itself before the first spread.'
                   : 'Nothing faces this page yet. Add one and it will pair up here.'}
@@ -1126,7 +1180,7 @@ export function EditorCanvas() {
       </div>
 
       {/* Add block */}
-      <div className="flex shrink-0 justify-center border-t border-neutral-800 px-4 py-3">
+      <div className="flex shrink-0 justify-center border-t border-studio-line px-4 py-3">
         <button
           onClick={() => {
             setInsertIndex(null)
@@ -1206,9 +1260,9 @@ function FacingPage({
 
       {/* Dimmed until hovered, so the eye stays on the page being edited while
           the composition of the whole spread is still readable. */}
-      <span className="pointer-events-none absolute inset-0 bg-neutral-950/25 transition-colors group-hover:bg-neutral-950/5" />
+      <span className="pointer-events-none absolute inset-0 bg-studio-ground/25 transition-colors group-hover:bg-studio-ground/5" />
 
-      <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-neutral-900/90 px-2.5 py-1 text-[10px] font-semibold text-neutral-300 opacity-0 shadow transition-opacity group-hover:opacity-100">
+      <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-studio-panel/90 px-2.5 py-1 text-[10px] font-semibold text-studio-ink opacity-0 shadow transition-opacity group-hover:opacity-100">
         Page {page.page_number} — click to edit
       </span>
     </button>

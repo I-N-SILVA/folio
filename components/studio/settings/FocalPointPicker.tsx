@@ -52,7 +52,7 @@ export function FocalPointPicker({
         ref={frameRef}
         role="application"
         aria-label="Focal point"
-        className="relative w-full cursor-crosshair overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 select-none"
+        className="relative w-full cursor-crosshair overflow-hidden rounded-lg border border-studio-line bg-studio-ground select-none"
         style={{ aspectRatio: '16 / 9' }}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId)
@@ -89,7 +89,7 @@ export function FocalPointPicker({
           <div className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
         </div>
       </div>
-      <p className="text-[10px] text-neutral-400">
+      <p className="text-[10px] text-studio-ink-soft">
         Drag to choose what stays in frame when the image is cropped. {x}% × {y}%
       </p>
     </div>

@@ -28,7 +28,7 @@ import { PAGE_ASPECT, PAGE_DESIGN_HEIGHT, PAGE_DESIGN_WIDTH, pageScale } from '@
 
 const PAGE_TYPE_COLORS: Record<Page['type'], string> = {
   cover: 'bg-violet-700 text-violet-100',
-  content: 'bg-neutral-700 text-neutral-200',
+  content: 'bg-studio-raised-2 text-studio-ink',
   back: 'bg-amber-700 text-amber-100',
 }
 
@@ -157,7 +157,7 @@ const SortablePageItem = memo(function SortablePageItem({
         <span
           className={twMerge(
             'min-w-[16px] text-center text-[11px] font-semibold tabular-nums transition-colors',
-            isSelected ? 'text-[var(--studio-select)]' : 'text-neutral-400'
+            isSelected ? 'text-[var(--studio-select)]' : 'text-studio-ink-soft'
           )}
         >
           {page.page_number}
@@ -184,7 +184,7 @@ const SortablePageItem = memo(function SortablePageItem({
               onMovePrev()
             }}
             title="Move page left"
-            className="text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
+            className="text-studio-ink-soft opacity-0 group-hover:opacity-100 hover:text-studio-ink p-0.5 rounded transition"
           >
             <ChevronLeft size={12} />
           </button>
@@ -199,7 +199,7 @@ const SortablePageItem = memo(function SortablePageItem({
               onMoveNext()
             }}
             title="Move page right"
-            className="text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-neutral-200 p-0.5 rounded transition"
+            className="text-studio-ink-soft opacity-0 group-hover:opacity-100 hover:text-studio-ink p-0.5 rounded transition"
           >
             <ChevronRight size={12} />
           </button>
@@ -215,7 +215,7 @@ const SortablePageItem = memo(function SortablePageItem({
           }}
           title="Insert a page after this one"
           aria-label={`Insert a page after page ${page.page_number}`}
-          className="rounded p-0.5 text-neutral-400 opacity-0 transition hover:text-white group-hover:opacity-100"
+          className="rounded p-0.5 text-studio-ink-soft opacity-0 transition hover:text-white group-hover:opacity-100"
         >
           <Plus size={12} />
         </button>
@@ -228,7 +228,7 @@ const SortablePageItem = memo(function SortablePageItem({
             onDuplicate()
           }}
           title="Duplicate page"
-          className="text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition"
+          className="text-studio-ink-soft opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition"
         >
           <Copy size={11} />
         </button>
@@ -239,7 +239,7 @@ const SortablePageItem = memo(function SortablePageItem({
           {...listeners}
           {...attributes}
           onClick={(e) => e.stopPropagation()}
-          className="cursor-grab text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition active:cursor-grabbing"
+          className="cursor-grab text-studio-ink-soft opacity-0 group-hover:opacity-100 hover:text-white p-0.5 rounded transition active:cursor-grabbing"
           aria-label={`Drag page ${page.page_number} to reorder`}
           title="Drag to reorder page"
         >
@@ -258,7 +258,7 @@ const SortablePageItem = memo(function SortablePageItem({
             'p-0.5 rounded transition-colors',
             isOnly
               ? 'cursor-not-allowed text-neutral-800'
-              : 'text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-red-400'
+              : 'text-studio-ink-soft opacity-0 group-hover:opacity-100 hover:text-red-400'
           )}
           aria-label={`Delete page ${page.page_number}`}
           title="Delete page"
@@ -334,14 +334,14 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-neutral-900 border-r border-neutral-800">
+    <div className="flex flex-col h-full overflow-hidden bg-studio-panel border-r border-studio-line">
       {/* Tab Switcher */}
-      <div className="flex p-1 gap-1 bg-neutral-950 border-b border-neutral-800 shrink-0">
+      <div className="flex p-1 gap-1 bg-studio-ground border-b border-studio-line shrink-0">
         <button
           onClick={() => setActiveTab('pages')}
           className={twMerge(
             'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'pages' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-neutral-400 hover:text-neutral-300'
+            activeTab === 'pages' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-studio-ink-soft hover:text-studio-ink'
           )}
         >
           <Layers size={13} />
@@ -351,7 +351,7 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
           onClick={() => setActiveTab('layers')}
           className={twMerge(
             'flex-1 min-w-0 flex flex-col items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-tight transition-all',
-            activeTab === 'layers' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-neutral-400 hover:text-neutral-300'
+            activeTab === 'layers' ? 'bg-[var(--studio-select)]/15 text-white ring-1 ring-inset ring-[var(--studio-select)]/30' : 'text-studio-ink-soft hover:text-studio-ink'
           )}
         >
           <GripVertical size={13} />
@@ -403,36 +403,36 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
 
         {activeTab === 'layers' && currentPage && (
           <div className="p-4 space-y-4">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Page {currentPage.page_number} Layers</div>
+            <div className="text-[10px] font-bold text-studio-ink-soft uppercase tracking-widest mb-2">Page {currentPage.page_number} Layers</div>
             
             <div className="space-y-1">
-              <div className="text-[10px] font-bold text-neutral-600 uppercase mb-2">Blocks</div>
-              {currentPage.blocks.length === 0 && <div className="text-xs text-neutral-400 italic px-2">No blocks on this page.</div>}
+              <div className="text-[10px] font-bold text-studio-ink-soft uppercase mb-2">Blocks</div>
+              {currentPage.blocks.length === 0 && <div className="text-xs text-studio-ink-soft italic px-2">No blocks on this page.</div>}
               {currentPage.blocks.map((b) => (
                 <button
                   key={b.id}
                   onClick={() => selectBlock(b.id)}
                   className={twMerge(
                     "flex items-center gap-2 w-full p-2 text-left text-xs rounded transition-colors",
-                    selectedBlockId === b.id ? "bg-[var(--studio-select)]/20 text-[var(--studio-select)]" : "hover:bg-neutral-800 text-neutral-300"
+                    selectedBlockId === b.id ? "bg-[var(--studio-select)]/20 text-[var(--studio-select)]" : "hover:bg-studio-raised text-studio-ink"
                   )}
                 >
                   <Box size={14} className="opacity-50" />
                   <span className="capitalize">{b.type} block</span>
-                  {b.type === 'text' && <span className="text-[10px] text-neutral-400 truncate max-w-[100px] ml-auto">{(b as any).content}</span>}
-                  {b.type === 'data' && <span className="text-[10px] text-neutral-400 truncate max-w-[100px] ml-auto">{(b as any).label}</span>}
+                  {b.type === 'text' && <span className="text-[10px] text-studio-ink-soft truncate max-w-[100px] ml-auto">{(b as any).content}</span>}
+                  {b.type === 'data' && <span className="text-[10px] text-studio-ink-soft truncate max-w-[100px] ml-auto">{(b as any).label}</span>}
                 </button>
               ))}
 
-              <div className="text-[10px] font-bold text-neutral-600 uppercase mt-4 mb-2">Hotspots</div>
-              {currentPage.hotspots.length === 0 && <div className="text-xs text-neutral-400 italic px-2">No hotspots on this page.</div>}
+              <div className="text-[10px] font-bold text-studio-ink-soft uppercase mt-4 mb-2">Hotspots</div>
+              {currentPage.hotspots.length === 0 && <div className="text-xs text-studio-ink-soft italic px-2">No hotspots on this page.</div>}
               {currentPage.hotspots.map((h) => (
                 <button
                   key={h.id}
                   onClick={() => selectHotspot(h.id)}
                   className={twMerge(
                     "flex items-center gap-2 w-full p-2 text-left text-xs rounded transition-colors",
-                    selectedHotspotId === h.id ? "bg-[var(--studio-select)]/20 text-[var(--studio-select)]" : "hover:bg-neutral-800 text-neutral-300"
+                    selectedHotspotId === h.id ? "bg-[var(--studio-select)]/20 text-[var(--studio-select)]" : "hover:bg-studio-raised text-studio-ink"
                   )}
                 >
                   <Crosshair size={14} className="opacity-50" />
@@ -446,10 +446,10 @@ export function PageListSidebar({ onPageSelected }: PageListSidebarProps = {}) {
       </div>
 
       {activeTab === 'pages' && (
-        <div className="p-3 border-t border-neutral-800 shrink-0">
+        <div className="p-3 border-t border-studio-line shrink-0">
           <button
             onClick={addPage}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-bold transition-all border border-neutral-700"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-studio-raised hover:bg-studio-raised-2 text-studio-ink hover:text-white text-xs font-bold transition-all border border-studio-line-strong"
           >
             <Plus size={14} />
             Append New Page

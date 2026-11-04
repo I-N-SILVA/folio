@@ -298,7 +298,7 @@ export function Hero() {
               </div>
 
               <div className={isFullscreen ? 'flex-1 min-h-0 rounded-2xl overflow-auto bg-black/40 border border-white/10 p-4' : 'w-full rounded-2xl bg-black/40 border border-white/10 p-4 sm:p-6 overflow-hidden'}>
-                <ViewerChrome book={book} showBadge={false} />
+                <ViewerChrome book={book} showBadge={false} inline />
               </div>
               
               <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-[1.5rem] bg-white/5 border border-white/10 p-5">
