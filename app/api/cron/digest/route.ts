@@ -41,11 +41,16 @@ const DIGEST_WINDOW_DAYS = 7
  *
  * The next run used to be the next *week*: the cron fired once, Mondays at
  * 09:00, so past 200 eligible authors each one got a digest every few weeks.
- * It now fires every half hour through the day, every day (`vercel.json`). Each
- * author is due six days after their last digest, so sends spread across the
- * week — which is what lets it run inside a free email plan's daily limit
- * (`lib/email-quota.ts`). The slot claim makes the extra runs free: a profile
- * already sent this week is not selected.
+ * It now fires daily (`vercel.json`), so up to 200 authors a day — 1,400 a
+ * week. Each author is due six days after their last digest, so sends spread
+ * across the week, which is also what lets it run inside a free email plan's
+ * daily limit (`lib/email-quota.ts`). The slot claim makes a repeat run free: a
+ * profile already sent this week is not selected.
+ *
+ * Daily, not more often, because Vercel Hobby refuses to deploy a project
+ * whose crons run more than once a day — the PR that tried every 30 minutes
+ * failed its deploy on exactly that. On Pro, a schedule like `0 * * * *` would
+ * lift the ceiling to 4,800 a day without any change here.
  */
 const BATCH_SIZE = 200
 

@@ -245,10 +245,13 @@ send cost an author their week.
   reports may use all of it; the digest stops at `DIGEST_DAILY_LIMIT`
   (default total − 20) and **hands the slot back** so the author is reached on
   a later run. Unset = no counting (paid plan). Fails open.
-- **The digest cron runs every 30 minutes, 08:00–20:00 UTC, every day.**
-  Authors are due six days after their last digest, so sends spread across the
-  week instead of piling onto Monday. Needs Vercel Pro (Hobby allows daily
-  crons only — and Hobby is non-commercial anyway).
+- **The digest cron runs daily at 09:00 UTC** (up to 200 authors a run, so
+  ~1,400 a week). Authors are due six days after their last digest, so sends
+  spread across the week instead of piling onto Monday. Daily because Vercel
+  Hobby rejects any deploy whose crons run more often — the first version of
+  this ran every 30 minutes and its deploy failed. On Pro, `0 * * * *` in
+  `vercel.json` raises the ceiling with no code change. (Hobby is still
+  non-commercial: the move to Pro is needed before taking payments.)
 
 ### Abuse controls, WebP pages, and tax at checkout (migration 023)
 

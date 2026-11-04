@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/digest",
-      "schedule": "*/30 8-20 * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/prune-events",

@@ -314,7 +314,7 @@ on Hobby can be paused.
 
 | Service | Plan | $/month | Why this one |
 |---|---|---|---|
-| Vercel | **Pro, 1 seat** | **20** | Required for commercial use. Includes ~1 TB transfer; crons at any frequency. Add a seat only for someone who deploys. |
+| Vercel | **Pro, 1 seat** | **20** | Required for commercial use. Includes ~1 TB transfer. (Scheduled jobs are daily, so they also run on Hobby.) Add a seat only for someone who deploys. |
 | Supabase | **Pro** | **25** | Free projects pause after a week idle and hold 1 GB of files — fine before launch, not for customers. Pro includes 8 GB database, 100 GB files, 250 GB egress. Keep the spend cap **on**. |
 | Resend (email) | **Free** | 0 | 100/day, 3,000/month. Set `EMAIL_DAILY_LIMIT=95`; the digest spreads over the week and lead emails always get through (024). Move to Pro ($20) past ~400 active authors. |
 | Gemini (AI) | Pay-as-you-go | ~0–2 | ~$0.0014 a page. Or leave the key unset at first: import falls back to the free heuristic. |
